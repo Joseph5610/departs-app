@@ -1,5 +1,6 @@
 import type { AppVehicleDetail, CityRequestContext } from "../../../_core/types";
 import type { VehicleDetailUseCase } from "../../useCases";
+import type { VehiclesService } from "../../vehicles/VehiclesService";
 
 import { ERROR_MESSAGES } from "../../../_core/config";
 import { ApiError } from "../../../_core/errors";
@@ -17,6 +18,8 @@ import { GOLEMIO_CONFIG } from "../../../_feeds/golemio/config";
  * Supports both real-time active vehicle details and static GTFS schedule fallbacks.
  */
 export class GolemioVehicleDetailService implements VehicleDetailUseCase {
+    constructor(private readonly vehicles: VehiclesService) {}
+
     /**
      * Fetches detailed data for a specific vehicle or trip, including its real-time position
      * and upcoming stop times. Falls back to static schedule if real-time fails.
@@ -27,7 +30,6 @@ export class GolemioVehicleDetailService implements VehicleDetailUseCase {
     async getVehicleDetail(ctx: CityRequestContext): Promise<AppVehicleDetail> {
         const { vehicleId: rawVehicleId, tripId: rawTripId } = parseSearchParams(ctx.url.searchParams, vehicleDetailQuerySchema);
         
-        const vehicleId = rawVehicleId ?? null;
         const tripId = rawTripId ?? null;
 
         if (!tripId) {
@@ -37,6 +39,8 @@ export class GolemioVehicleDetailService implements VehicleDetailUseCase {
         // Started, not awaited: independent of the trip fetch and only needed at the mapping step.
         const connectionsPromise = getLiveConnections([tripId]);
         const stopIdsPromise = getTripStopIds(ctx.env, tripId);
+        // Without a vehicle, the one the cached fleet shows on the trip, as the GTFS cities' detail does; none keeps the timetable.
+        const vehicleId = rawVehicleId ?? (await this.vehicles.getSingleLiveVehicle('', tripId)).liveMatch?.properties.vehicle_id ?? null;
         const { data, isStatic } = await getTripDetail(ctx.env, tripId, vehicleId);
 
         const detail = mapGolemioVehicleDetail(data, tripId, vehicleId, isStatic);
