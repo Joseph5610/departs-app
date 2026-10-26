@@ -27,16 +27,6 @@ export class GolemioVehicleDetailService implements VehicleDetailUseCase {
      * @returns {Promise<AppVehicleDetail>} Comprehensive vehicle and route details
      * @throws {ApiError} If tripId is missing or upstream fetch fails
      */
-    /** The vehicle the cached fleet shows running a trip asked for without one, so it is read live; null keeps the timetable. */
-    private async vehicleRunning(tripId: string): Promise<string | null> {
-        try {
-            return (await this.vehicles.getSingleLiveVehicle('', tripId)).liveMatch?.properties.vehicle_id ?? null;
-        } catch (error) {
-            console.warn(`Fleet lookup failed for trip ${tripId}, reading its timetable`, error);
-            return null;
-        }
-    }
-
     async getVehicleDetail(ctx: CityRequestContext): Promise<AppVehicleDetail> {
         const { vehicleId: rawVehicleId, tripId: rawTripId } = parseSearchParams(ctx.url.searchParams, vehicleDetailQuerySchema);
         
@@ -49,7 +39,8 @@ export class GolemioVehicleDetailService implements VehicleDetailUseCase {
         // Started, not awaited: independent of the trip fetch and only needed at the mapping step.
         const connectionsPromise = getLiveConnections([tripId]);
         const stopIdsPromise = getTripStopIds(ctx.env, tripId);
-        const vehicleId = rawVehicleId ?? (await this.vehicleRunning(tripId));
+        // Without a vehicle, the one the cached fleet shows on the trip, as the GTFS cities' detail does; none keeps the timetable.
+        const vehicleId = rawVehicleId ?? (await this.vehicles.getSingleLiveVehicle('', tripId)).liveMatch?.properties.vehicle_id ?? null;
         const { data, isStatic } = await getTripDetail(ctx.env, tripId, vehicleId);
 
         const detail = mapGolemioVehicleDetail(data, tripId, vehicleId, isStatic);
