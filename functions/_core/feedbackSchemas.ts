@@ -25,6 +25,8 @@ const diagnosticDataSchema = z.lazy(() => z.object({
     showVehicles: z.optional(z.boolean()),
     showStops: z.optional(z.boolean()),
     mapBaseStyle: z.optional(z.string()),
+    vehicleFilters: z.optional(z.array(z.string())),
+    lineFilter: z.optional(z.string()),
     theme: z.optional(z.string()),
     locale: z.optional(z.string()),
     isPwa: z.optional(z.boolean()),

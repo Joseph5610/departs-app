@@ -51,6 +51,8 @@ export function getDiagnosticSnapshot(): DiagnosticData {
         showVehicles: preferences.showVehicles,
         showStops: preferences.showStops,
         mapBaseStyle: preferences.mapBaseStyle,
+        vehicleFilters: activeVehicleFilters(preferences),
+        lineFilter: selection.selectedLine ?? undefined,
         
         theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
         locale: navigator.language,
@@ -58,3 +60,12 @@ export function getDiagnosticSnapshot(): DiagnosticData {
         gpsEnabled: geolocation.userLocation !== null,
     };
 }
+
+/** The departure-board vehicle filters left on; they hide departures quietly, so support needs to see them. */
+const activeVehicleFilters = (p: { requireAirConditioned: boolean; requireWheelchairAccessible: boolean }) => {
+    const active = [
+        ...(p.requireAirConditioned ? ['airConditioned'] : []),
+        ...(p.requireWheelchairAccessible ? ['wheelchairAccessible'] : []),
+    ];
+    return active.length > 0 ? active : undefined;
+};

@@ -59,6 +59,16 @@ describe('favoritesFirst', () => {
 });
 
 describe('filterDepartures', () => {
+    it('counts only what the vehicle filters hide, not the line filter', () => {
+        const deps = [
+            departure({ tripId: 'a', line: '9', is_air_conditioned: true }),
+            departure({ tripId: 'b', line: '9', is_air_conditioned: false }),
+            departure({ tripId: 'c', line: '22', is_air_conditioned: false }),
+        ];
+        expect(filterDepartures(deps, '9', true, false).hiddenByVehicleFilters).toBe(1);
+        expect(filterDepartures(deps, null, false, false).hiddenByVehicleFilters).toBe(0);
+    });
+
     // A persisted "AC only" preference must not empty the board at a stop whose feed has no AC data.
     it('applies the AC preference only where some departure reports AC', () => {
         const noData = [departure({ tripId: 'a' }), departure({ tripId: 'b' })];
