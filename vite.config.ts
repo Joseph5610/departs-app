@@ -23,10 +23,16 @@ const cssPackageNotice = (name: string): LicenseNotice => {
   return { name, version: pkg.version, license: pkg.license, licenseText: fs.readFileSync(path.join(dir, 'LICENSE'), 'utf8') }
 }
 
-/** THIRD_PARTY_LICENSES.txt: every bundled package with its full licence text. */
+/** Fonts served from `public/` rather than bundled from a package; the OFL requires their licence to travel with them. */
+const VENDORED_FONTS = [{ name: 'Montserrat SemiBold (map label glyphs)', licenseFile: 'public/fonts/montserrat-semibold/OFL.txt' }]
+
+const vendoredFontNotice = ({ name, licenseFile }: (typeof VENDORED_FONTS)[number]): LicenseNotice =>
+  ({ name, version: null, license: 'OFL-1.1', licenseText: fs.readFileSync(path.resolve(import.meta.dirname, licenseFile), 'utf8') })
+
+/** THIRD_PARTY_LICENSES.txt: every bundled package and vendored font with its full licence text. */
 const thirdPartyNotices = (bundled: LicenseNotice[]): string =>
-  [...bundled, ...CSS_PACKAGES.map(cssPackageNotice)]
-    .map((dep) => `${dep.name} ${dep.version} (${dep.license})\n\n${dep.licenseText?.trim() ?? ''}`)
+  [...bundled, ...CSS_PACKAGES.map(cssPackageNotice), ...VENDORED_FONTS.map(vendoredFontNotice)]
+    .map((dep) => `${dep.name}${dep.version ? ` ${dep.version}` : ''} (${dep.license})\n\n${dep.licenseText?.trim() ?? ''}`)
     .join('\n\n---\n\n')
 
 const fillSitePlaceholders = (text: string): string =>
@@ -111,7 +117,8 @@ export default defineConfig({
         globIgnores: ['**/AdminRoutes-*'],
         importScripts: ['/push-sw.js'],
         // Generated icons aren't picked up by includeManifestIcons; #boot-splash needs pwa-192x192.png offline.
-        globPatterns: ['**/*.{js,css,html}', 'pwa-*.png', 'maskable-icon-*.png', 'apple-touch-icon-*.png', 'favicon.ico'],
+        // The labels' glyphs every user needs (Latin and Czech/Slovak letters) install with the app; other ranges load on use.
+        globPatterns: ['**/*.{js,css,html}', 'pwa-*.png', 'maskable-icon-*.png', 'apple-touch-icon-*.png', 'favicon.ico', 'fonts/*/0-255.pbf', 'fonts/*/256-511.pbf'],
         navigateFallback: '/',
         navigateFallbackDenylist: [/^\/admin/, /^\/mcp/, /^\/api/, /^\/cdn-cgi/, /\.well-known/, /manifest\.webmanifest$/, /\.json$/, /\.xml$/, /\.txt$/],
         manifestTransforms: [
@@ -126,6 +133,17 @@ export default defineConfig({
           }
         ],
         runtimeCaching: [
+          {
+            // Our own label glyphs (`MAP_GLYPHS`): a range is fetched once, when a label first needs it. Same origin only:
+            // a RegExp route matches a cross-origin URL only from its start, so CARTO's glyphs keep their rule below.
+            urlPattern: /\/fonts\/[^/]+\/\d+-\d+\.pbf$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'map-glyphs',
+              expiration: { maxEntries: 50, maxAgeSeconds: 365 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
           {
             // Cache CARTO Map Style & Tiles JSON
             urlPattern: /^https:\/\/([a-z0-9-]+\.)?basemaps\.cartocdn\.com\/(gl|vector)\/.*\.json$/i,

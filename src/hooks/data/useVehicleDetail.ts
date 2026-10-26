@@ -7,7 +7,7 @@ import { LIVE_FETCH_OPTIONS, QUERY_TIMING_MS } from '@/config/constants';
 import { apiFetch } from '@/lib/apiClient';
 import { enrichVehicleDetailRouteMetadata } from '@/domain/vehicles';
 import { useRouteMetadata } from './useRouteMetadata';
-import { networkVehiclesQueryOptions } from './useVehicles';
+import { networkVehiclesReaderOptions } from './useVehicles';
 import { queryKeys } from '@/lib/queryKeys';
 
 const fetchVehicleDetail = async (city: string, vehicleId: string | null, tripId: string): Promise<VehicleDetail> => {
@@ -21,10 +21,10 @@ export const useTripDetail = (city: string, tripId: string | null, vehicleId: st
     const refreshMs = usePreferencesStore(s => s.refreshIntervalS) * 1000;
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { byShortName } = useRouteMetadata();
-    const { dataUpdatedAt: fleetUpdatedAt } = useQuery({
-        ...networkVehiclesQueryOptions(city, refreshMs),
-        enabled: !!city,
-        notifyOnChangeProps: ['dataUpdatedAt'],
+    const { dataUpdatedAt: fleetUpdatedAt, isError: isFleetFailing } = useQuery({
+        ...networkVehiclesReaderOptions(city),
+        enabled: !!city && city === selectedCity,
+        notifyOnChangeProps: ['dataUpdatedAt', 'isError'],
     });
 
     // Keyed by the map's fleet refresh, so the detail is re-read with every map update and never shown from an older one.
@@ -32,8 +32,10 @@ export const useTripDetail = (city: string, tripId: string | null, vehicleId: st
         queryKey: queryKeys.vehicleDetail(city, vehicleId, tripId, fleetUpdatedAt),
         queryFn: () => fetchVehicleDetail(city, vehicleId, tripId!),
         enabled: !!tripId && !!city,
+        // The map polls only the selected city's fleet, whose refresh in the key re-reads the detail; another city's trip,
+        // or one while that fleet fails, polls by itself.
         staleTime: refreshMs,
-        refetchInterval: refreshMs,
+        refetchInterval: city !== selectedCity || isFleetFailing ? refreshMs : false,
         gcTime: QUERY_TIMING_MS.LIVE_GC,
         // Only the same trip's previous detail bridges a refresh, including the moment a planned trip gains its vehicle.
         placeholderData: (previous, previousQuery) =>
