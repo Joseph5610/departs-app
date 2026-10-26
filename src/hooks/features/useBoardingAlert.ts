@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RIDE_PROTOCOL, tripNotificationTag } from '@shared/rides';
-import { isBoardingAlertDue, type BoardingSeen } from '@/domain/rides';
+import { boardingAlertStep, type BoardingSeen } from '@/domain/rides';
 import type { MyTripStatus } from '@/types';
 import { alertRider } from './useRideAlerts';
 
 /**
  * Alerts once when this view sees a trip's boarding come within its lead time: a toast while the server pushes it,
- * else a system notification. A trip already inside its lead when first seen (a reload, a remount) doesn't alert.
+ * else a system notification (`boardingAlertStep` decides).
  */
 export const useBoardingAlert = (status: MyTripStatus | null) => {
     const { t } = useTranslation();
@@ -20,9 +20,9 @@ export const useBoardingAlert = (status: MyTripStatus | null) => {
     const seen = useRef<BoardingSeen | null>(null);
 
     useEffect(() => {
-        const previous = seen.current;
-        seen.current = { tripId, isSoon };
-        if (!tripId || !isBoardingAlertDue(previous, seen.current)) return;
+        const step = boardingAlertStep(seen.current, { tripId, isSoon });
+        seen.current = step.seen;
+        if (!tripId || !step.alert) return;
         void alertRider(title, body, tripNotificationTag(RIDE_PROTOCOL.BOARD_TAG, tripId), pushed);
     }, [tripId, isSoon, title, body, pushed]);
 };

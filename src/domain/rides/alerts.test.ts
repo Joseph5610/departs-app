@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RidePhase } from '@/types';
-import { isBoardingAlertDue, NO_RIDE_ALERTS, rideAlertStep, type RideAlertState } from './alerts';
+import { boardingAlertStep, NO_RIDE_ALERTS, rideAlertStep, type BoardingSeen, type RideAlertState } from './alerts';
 
 /** Feeds a ride's phases through the alert step, as the view sees them update; returns the alerts given. */
 const alertsFor = (phases: (RidePhase | null)[], { ride = 1, afterBoarding = false, silent = false, from = NO_RIDE_ALERTS }: {
@@ -59,16 +59,32 @@ describe('rideAlertStep', () => {
     });
 });
 
-describe('isBoardingAlertDue', () => {
+/** Feeds a view's boarding updates through the step; returns how many alerts it gave. */
+const boardingAlerts = (updates: { tripId: string | null; isSoon: boolean }[]) => {
+    let seen: BoardingSeen | null = null;
+    let given = 0;
+    for (const update of updates) {
+        const step = boardingAlertStep(seen, update);
+        seen = step.seen;
+        if (step.alert) given++;
+    }
+    return given;
+};
+
+describe('boardingAlertStep', () => {
     it('alerts when boarding comes within the lead while shown', () => {
-        expect(isBoardingAlertDue({ tripId: 't1', isSoon: false }, { tripId: 't1', isSoon: true })).toBe(true);
-        expect(isBoardingAlertDue({ tripId: 't1', isSoon: true }, { tripId: 't1', isSoon: true })).toBe(false);
+        expect(boardingAlerts([{ tripId: 't1', isSoon: false }, { tripId: 't1', isSoon: true }, { tripId: 't1', isSoon: true }])).toBe(1);
+    });
+
+    // I1: a delay estimate wobbling across the lead must not alert the same boarding twice.
+    it('alerts a trip once even when it falls back out of its lead and in again', () => {
+        expect(boardingAlerts([false, true, false, true].map(isSoon => ({ tripId: 't1', isSoon })))).toBe(1);
     });
 
     // A reload, a remount or another trip in the same slot must not alert a boarding already inside its lead.
     it('stays quiet for a trip first seen inside its lead', () => {
-        expect(isBoardingAlertDue(null, { tripId: 't1', isSoon: true })).toBe(false);
-        expect(isBoardingAlertDue({ tripId: 't2', isSoon: false }, { tripId: 't1', isSoon: true })).toBe(false);
-        expect(isBoardingAlertDue({ tripId: null, isSoon: false }, { tripId: null, isSoon: true })).toBe(false);
+        expect(boardingAlerts([{ tripId: 't1', isSoon: true }])).toBe(0);
+        expect(boardingAlerts([{ tripId: 't2', isSoon: false }, { tripId: 't1', isSoon: true }])).toBe(0);
+        expect(boardingAlerts([{ tripId: null, isSoon: false }, { tripId: null, isSoon: true }])).toBe(0);
     });
 });

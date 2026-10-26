@@ -29,12 +29,19 @@ export const rideAlertStep = (state: RideAlertState, { ride, phase, afterBoardin
     return { state: { ride, last: phase, alerted: alert ? [...alerted, alert] : alerted }, alert };
 };
 
-/** A trip's boarding as one view saw it last. */
+/** A trip's boarding as one view saw it last, and whether it already alerted it. */
 export interface BoardingSeen {
     tripId: string | null;
     isSoon: boolean;
+    alerted: boolean;
 }
 
-/** Whether boarding just came within its lead for the trip this view already showed; a trip first seen inside it (a reload) doesn't alert. */
-export const isBoardingAlertDue = (previous: BoardingSeen | null, next: BoardingSeen): boolean =>
-    !!next.tripId && next.isSoon && previous?.tripId === next.tripId && !previous.isSoon;
+/**
+ * One update of a trip's boarding: alerts once per trip when it comes within its lead while this view shows it; a trip
+ * first seen inside it (a reload) doesn't alert, nor one falling out of its lead and back in.
+ */
+export const boardingAlertStep = (previous: BoardingSeen | null, { tripId, isSoon }: { tripId: string | null; isSoon: boolean }): { seen: BoardingSeen; alert: boolean } => {
+    const sameTrip = !!tripId && previous?.tripId === tripId;
+    const alert = sameTrip && isSoon && !previous.isSoon && !previous.alerted;
+    return { seen: { tripId, isSoon, alerted: alert || (sameTrip && previous.alerted) }, alert };
+};
