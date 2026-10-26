@@ -23,10 +23,16 @@ const cssPackageNotice = (name: string): LicenseNotice => {
   return { name, version: pkg.version, license: pkg.license, licenseText: fs.readFileSync(path.join(dir, 'LICENSE'), 'utf8') }
 }
 
-/** THIRD_PARTY_LICENSES.txt: every bundled package with its full licence text. */
+/** Fonts served from `public/` rather than bundled from a package; the OFL requires their licence to travel with them. */
+const VENDORED_FONTS = [{ name: 'Montserrat SemiBold (map label glyphs)', licenseFile: 'public/fonts/montserrat-semibold/OFL.txt' }]
+
+const vendoredFontNotice = ({ name, licenseFile }: (typeof VENDORED_FONTS)[number]): LicenseNotice =>
+  ({ name, version: null, license: 'OFL-1.1', licenseText: fs.readFileSync(path.resolve(import.meta.dirname, licenseFile), 'utf8') })
+
+/** THIRD_PARTY_LICENSES.txt: every bundled package and vendored font with its full licence text. */
 const thirdPartyNotices = (bundled: LicenseNotice[]): string =>
-  [...bundled, ...CSS_PACKAGES.map(cssPackageNotice)]
-    .map((dep) => `${dep.name} ${dep.version} (${dep.license})\n\n${dep.licenseText?.trim() ?? ''}`)
+  [...bundled, ...CSS_PACKAGES.map(cssPackageNotice), ...VENDORED_FONTS.map(vendoredFontNotice)]
+    .map((dep) => `${dep.name}${dep.version ? ` ${dep.version}` : ''} (${dep.license})\n\n${dep.licenseText?.trim() ?? ''}`)
     .join('\n\n---\n\n')
 
 const fillSitePlaceholders = (text: string): string =>
