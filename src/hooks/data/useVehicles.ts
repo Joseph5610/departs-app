@@ -48,6 +48,16 @@ export const networkVehiclesQueryOptions = (selectedCity: string, refreshMs: num
     retry: false,
 });
 
+/**
+ * The same fleet query for a consumer that only reads it (a trip's detail, the push patches): it never polls, as
+ * `refetchInterval` runs per subscriber and timers out of step would fetch the fleet once each. The map polls it.
+ */
+export const networkVehiclesReaderOptions = (selectedCity: string) => queryOptions<VehicleCollection | null, AppError>({
+    ...networkVehiclesQueryOptions(selectedCity, 0),
+    refetchInterval: false,
+    refetchOnMount: false,
+});
+
 const brandNetworkVehicles = memoizeLast(enrichVehicleRouteMetadata);
 const indexSlice = memoizeLast(indexStopTimeSlice);
 const estimateDelays = memoizeLast(estimateFleetDelays);
@@ -78,9 +88,8 @@ const usePatchesFor = (fleet: VehicleCollection | null | undefined, fleetUpdated
  */
 export const useEnrichmentPatches = (enabled = true) => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const refreshMs = usePreferencesStore(s => s.refreshIntervalS) * 1000;
     const { data, dataUpdatedAt } = useQuery({
-        ...networkVehiclesQueryOptions(selectedCity, refreshMs),
+        ...networkVehiclesReaderOptions(selectedCity),
         enabled: enabled && !!selectedCity,
     });
     return usePatchesFor(data, dataUpdatedAt);

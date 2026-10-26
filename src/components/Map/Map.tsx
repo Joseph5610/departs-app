@@ -18,6 +18,7 @@ import { FavoritesPanel } from '@/components/DetailPanel/FavoritesPanel/Favorite
 import { LiveStatus } from './LiveStatus';
 import { RideBar } from './RideBar';
 import { getInitialViewState } from '@/lib/map/view';
+import { selfHostedGlyphs } from '@/lib/map/glyphs';
 import { EXTERNAL_URLS, MAP_CAMERA } from '@/config/constants';
 import { SITE } from '@/config/site';
 import { MapLayers } from './MapLayers';
@@ -206,6 +207,7 @@ const MapInner = () => {
             <MapGL
                 ref={mapRef}
                 initialViewState={initialViewState}
+                transformRequest={selfHostedGlyphs}
                 mapStyle={EXTERNAL_URLS.MAP_STYLES[(resolvedTheme as 'dark' | 'light') ?? 'dark'][mapBaseStyle]}
                 onMove={mapEvents?.onMove}
                 onMoveEnd={mapEvents?.onMoveEnd}
