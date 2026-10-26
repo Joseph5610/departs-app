@@ -191,8 +191,6 @@ export const RIDE_PUSH = {
     MAX_FAILURES: 20,
     /** The same for a trip whose detail never answered at all, so a made-up trip id costs almost nothing. */
     MAX_FAILURES_UNSEEN: 2,
-    /** A trip without a known vehicle looks it up in the city's fleet at most this often (a multi-MB read). */
-    VEHICLE_LOOKUP_INTERVAL_MS: 2 * 60_000,
     /** Largest `/api/[city]/ride` body; a real one is under 1 KB. */
     MAX_BODY_BYTES: 8192,
     /**

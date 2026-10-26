@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AppVehicleDetail } from '../../_core/types';
 import { observe } from './observation';
-import { firstCheckAt, initialPhase, needsLiveDetail, riderStep, type WatchRider } from './tripWatch';
+import { firstCheckAt, initialPhase, riderStep, type WatchRider } from './tripWatch';
 
 const NOW = Date.UTC(2026, 9, 20, 10, 0, 0);
 const MIN = 60_000;
@@ -86,12 +86,10 @@ describe('riderStep', () => {
     });
 });
 
-describe('firstCheckAt and needsLiveDetail', () => {
+describe('firstCheckAt', () => {
     it('starts at the boarding alert first check, or now when aboard', () => {
         expect(firstCheckAt(rider(), NOW)).toBe(NOW + 5 * MIN);
         expect(firstCheckAt(rider({ board: null, phase: 'board' }), NOW)).toBe(NOW);
-        expect(needsLiveDetail(rider(), NOW)).toBe(false);
-        expect(needsLiveDetail(rider(), NOW + 6 * MIN)).toBe(true);
     });
 });
 

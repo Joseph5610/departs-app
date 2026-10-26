@@ -114,11 +114,3 @@ export const firstCheckAt = (rider: WatchRider, now: number): number => {
     if (step.send.length > 0 || isWatchingExit(step.phase)) return now;
     return Math.max(now, step.nextAt ?? now);
 };
-
-/** Whether the rider is in the stretch where a live position matters: their boarding alert is close, or they ride to an exit. */
-export const needsLiveDetail = (rider: WatchRequest, now: number): boolean => {
-    const board = rider.board;
-    if (!board) return rider.exitSequence !== null;
-    const leadMs = (board.leadMin ?? 0) * 60_000;
-    return now >= board.scheduledMs - leadMs - RIDE_PUSH.FIRST_CHECK_BEFORE_MS;
-};

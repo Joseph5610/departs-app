@@ -37,7 +37,7 @@ export const city: City = {
         return {
             vehicles,
             departures: new GolemioDeparturesService(),
-            detail: new GolemioVehicleDetailService(),
+            detail: new GolemioVehicleDetailService(vehicles),
             alerts,
             infotexts: new InfotextsService(),
             debugFeed: {

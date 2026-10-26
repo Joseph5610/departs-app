@@ -4,7 +4,7 @@ import { sendPush, type PushTarget, type VapidKeys } from '../_core/push/webPush
 import type { AppVehicleDetail } from '../_core/types';
 import { minutesUntilDeparture } from '../_domain/rides/departureAlert';
 import { currentStop, observe } from '../_domain/rides/observation';
-import { firstCheckAt, initialPhase, isWatchingExit, needsLiveDetail, riderStep, timingOf, type RiderPhase, type TripAlert, type WatchBoard } from '../_domain/rides/tripWatch';
+import { firstCheckAt, initialPhase, isWatchingExit, riderStep, timingOf, type RiderPhase, type TripAlert, type WatchBoard } from '../_domain/rides/tripWatch';
 
 export interface RidePushEnv {
     /** The departs.app origin whose `/api` answers vehicle details (a `[vars]` entry, overridden for local dev). */
@@ -13,11 +13,10 @@ export interface RidePushEnv {
     VAPID_PRIVATE_KEY: string | undefined;
 }
 
+/** The trip watched; its detail is read by trip alone, the API finds the vehicle running it. */
 export interface RideTrip {
     city: string;
     tripId: string;
-    /** The vehicle running the trip; looked up from the city's fleet when a rider registered before it ran. */
-    vehicleId: string | null;
 }
 
 /** The notification a rider gets for each alert they asked for, already in their language; `soon` carries `MINUTES_TOKEN`. */
@@ -86,8 +85,7 @@ export class RideWatch extends DurableObject<RidePushEnv> {
         const riders = await storage.list({ prefix: RIDER_PREFIX });
         if (riders.size >= RIDE_PUSH.MAX_RIDERS && !riders.has(key)) return new Response(null, { status: 429 });
         const trip = await storage.get<RideTrip>('trip');
-        // A device's vehicle id is only a hint, taken while none is known; `readDetail` checks it and drops a wrong one.
-        if (!trip || (!trip.vehicleId && command.trip.vehicleId)) await storage.put<RideTrip>('trip', { ...command.trip, vehicleId: trip?.vehicleId ?? command.trip.vehicleId });
+        if (!trip) await storage.put<RideTrip>('trip', command.trip);
         const phase = initialPhase(command.rider);
         await storage.put<Rider>(key, { ...command.rider, phase, registeredAt: now, expiresAt: expiryOf(command.rider, now) });
         // However often riders are added, the trip is read at most once per near interval.
@@ -117,8 +115,7 @@ export class RideWatch extends DurableObject<RidePushEnv> {
             return storage.deleteAll();
         }
 
-        const needsLive = [...riders.values()].some(rider => needsLiveDetail(rider, now));
-        const observation = observe(await this.readDetail(trip, needsLive));
+        const observation = observe(await this.readDetail(trip));
         const isFailed = observation.kind === 'failed';
         const failures = isFailed ? ((await storage.get<number>('failures')) ?? 0) + 1 : 0;
         await storage.put('failures', failures);
@@ -179,64 +176,16 @@ export class RideWatch extends DurableObject<RidePushEnv> {
         await storage.setAlarm(Math.max(due, now));
     }
 
-    /**
-     * The trip's detail, or null when it can't be read. A trip registered before its vehicle ran has no vehicle id, and
-     * some networks then answer the timetable only: while a live position matters, its vehicle is looked up in the
-     * city's fleet once and kept.
-     */
-    private async readDetail(trip: RideTrip, needsLive: boolean): Promise<AppVehicleDetail | null> {
-        const storage = this.ctx.storage;
-        let current = trip;
-        let detail = await this.fetchDetail(current);
-        // A vehicle id the API doesn't know, or that runs another trip, is wrong (stale, or a device's bad hint): read
-        // without it. A failed read is no proof, so the id stays.
-        if (current.vehicleId && (detail === 'missing' || (detail && detail.gtfs_trip_id !== current.tripId))) {
-            console.log(JSON.stringify({ vehicleDropped: current.vehicleId, trip: current.tripId }));
-            current = { ...current, vehicleId: null };
-            await storage.put<RideTrip>('trip', current);
-            detail = await this.fetchDetail(current);
-        }
-        if (detail === 'missing') return null;
-        if (!detail || !detail.is_static_fallback || !needsLive) return detail;
-        // Timetable-only while a live position matters: no vehicle known yet, or a wrong one (some networks then answer
-        // the timetable for any id). The fleet says which vehicle runs the trip; looked up at most every few minutes.
-        const lookedUpAt = (await storage.get<number>('lookedUpAt')) ?? 0;
-        if (Date.now() - lookedUpAt < RIDE_PUSH.VEHICLE_LOOKUP_INTERVAL_MS) return detail;
-        await storage.put('lookedUpAt', Date.now());
-        const vehicleId = await this.findVehicle(current);
-        if (!vehicleId || vehicleId === current.vehicleId) return detail;
-        const withVehicle = { ...current, vehicleId };
-        await storage.put<RideTrip>('trip', withVehicle);
-        console.log(JSON.stringify({ vehicleFound: vehicleId, replaced: current.vehicleId, trip: current.tripId }));
-        const live = await this.fetchDetail(withVehicle);
-        return live && live !== 'missing' ? live : detail;
-    }
-
-    /** The trip's detail; `missing` when the API knows no such trip or vehicle, null when the read failed. */
-    private async fetchDetail(trip: RideTrip): Promise<AppVehicleDetail | 'missing' | null> {
+    /** The trip's detail, or null when it can't be read (or the API knows no such trip). */
+    private async readDetail(trip: RideTrip): Promise<AppVehicleDetail | null> {
         const url = new URL(`/api/${trip.city}/vehicle-detail`, this.env.API_ORIGIN);
         url.searchParams.set('tripId', trip.tripId);
-        if (trip.vehicleId) url.searchParams.set('vehicleId', trip.vehicleId);
         try {
             const response = await fetch(url);
-            if (response.status === 404) return 'missing';
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return await response.json<AppVehicleDetail>();
         } catch (error) {
             console.error('Ride detail failed', trip.city, trip.tripId, error);
-            return null;
-        }
-    }
-
-    /** The vehicle running the trip, from the city's live fleet (edge-cached); null while none does. */
-    private async findVehicle(trip: RideTrip): Promise<string | null> {
-        try {
-            const response = await fetch(new URL(`/api/${trip.city}/vehicles`, this.env.API_ORIGIN));
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const fleet = await response.json<{ features?: { properties: { gtfs_trip_id?: string; vehicle_id?: string | null } }[] }>();
-            return fleet.features?.find(f => f.properties.gtfs_trip_id === trip.tripId)?.properties.vehicle_id || null;
-        } catch (error) {
-            console.error('Fleet lookup failed', trip.city, trip.tripId, error);
             return null;
         }
     }

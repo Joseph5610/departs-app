@@ -38,7 +38,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params, 
     const command: RideWatchRequest = body.action === 'add'
         ? {
             action: 'add',
-            trip: { city: slug, tripId: body.tripId, vehicleId: body.vehicleId },
+            trip: { city: slug, tripId: body.tripId },
             rider: {
                 subscription: body.subscription,
                 exitSequence: body.exitSequence,

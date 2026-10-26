@@ -1,10 +1,9 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import { useTripDetail } from '@/hooks/data/useVehicleDetail';
-import { networkVehiclesReaderOptions, useEnrichmentPatches } from '@/hooks/data/useVehicles';
+import { useEnrichmentPatches } from '@/hooks/data/useVehicles';
 import { usePreferencesStore } from '@/state/preferencesStore';
-import type { MyTrip, MyTripStatus, Ride, VehicleCollection, VehicleDetail } from '@/types';
-import { liveStopSequence, vehicleIdOnTrip } from '@/domain/vehicles';
+import type { MyTrip, MyTripStatus, Ride, VehicleDetail } from '@/types';
+import { liveStopSequence } from '@/domain/vehicles';
 import { deriveMyTrip } from '@/domain/rides';
 import { applyEnrichment } from '@/domain/realtime';
 import { useCityConfig } from '@/hooks/data/useCities';
@@ -12,13 +11,8 @@ import { useCityConfig } from '@/hooks/data/useCities';
 /** A ride's trip detail, live enrichment applied, bridging a dropped vehicle or failed refresh with the last live one. */
 const useRideDetail = (ride: Ride | null) => {
     const tripId = ride?.tripId ?? null;
-    const selectVehicleOnTrip = useCallback((fleet: VehicleCollection | null) => vehicleIdOnTrip(fleet, tripId), [tripId]);
-    const { data: vehicleOnTrip } = useQuery({
-        ...networkVehiclesReaderOptions(ride?.city ?? ''),
-        enabled: !!ride && !ride.vehicleId,
-        select: selectVehicleOnTrip,
-    });
-    const { data, isError, dataUpdatedAt } = useTripDetail(ride?.city ?? '', tripId, ride?.vehicleId ?? vehicleOnTrip ?? null);
+    // Without a vehicle the detail API finds the one running the trip.
+    const { data, isError, dataUpdatedAt } = useTripDetail(ride?.city ?? '', tripId, ride?.vehicleId ?? null);
 
     // The last live detail stands in when the feed drops the vehicle (timetable fallback, delay lost) or a refresh fails,
     // so a late vehicle isn't taken as arrived on its scheduled time.
