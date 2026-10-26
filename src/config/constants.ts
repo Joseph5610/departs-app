@@ -373,9 +373,6 @@ export const RIDE_CONFIG = {
     VIBRATE_PATTERN: [200, 100, 200],
 };
 
-/** Notification tag of boarding alerts, the server's `RIDE_PUSH.BOARD_TAG`, so the app's own alert and a push replace each other. */
-export const DEPARTURE_REMINDER_TAG = 'departure-reminder';
-
 /** My trip: a trip the user takes, from a stop (with an alert before it leaves) and/or to an exit (with an alert before it). */
 export const MY_TRIP_CONFIG = {
     /** Trips the user can have active at once, e.g. a tram and the metro they change to. */
@@ -384,20 +381,14 @@ export const MY_TRIP_CONFIG = {
     LEAD_MINUTES: [2, 5, 10, 15] as const,
     /** The lead preselected when the user's walk to the stop is unknown. */
     DEFAULT_LEAD_MIN: 5,
-    /** Longest lead the server accepts (`RIDE_PUSH.MAX_LEAD_MIN`), so a long walk is capped there. */
-    MAX_LEAD_MIN: 60,
     /** A trip counts as under way (e.g. for where the map opens) from this long before its departure from the user's stop. */
     UNDERWAY_BEFORE_MS: 10 * MINUTE_MS,
-    /** Placeholder the server puts the minutes left into, `RIDE_PUSH.MINUTES_TOKEN`. */
-    MINUTES_TOKEN: '{min}',
     /** How often the trip re-checks which reminder leads still fit before the departure. */
     CLOCK_MS: 30_000,
 };
 
 /** Ride-mode Web Push through the `departs-ride-push` Worker. */
 export const RIDE_PUSH_CONFIG = {
-    /** Tag of the own ride's notifications, pushed (`RIDE_PUSH.TAG` on the server) or shown by the app. */
-    NOTIFICATION_TAG: 'ride-own',
     /** VAPID public key; its private half is that Worker's `VAPID_PRIVATE_KEY` secret. */
     VAPID_PUBLIC_KEY: 'BOg0cjMBsc0ZcGSg1MglKtCPV2ZCuGl1yQulhaknouJAs0T2kJVPrTn4f7odTc173XYIVP-f4oLTdN_JR0qJL2Q',
 };

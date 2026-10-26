@@ -1,3 +1,4 @@
+import { RIDE_PROTOCOL } from '@shared/rides';
 import { MY_TRIP_CONFIG, WALKING } from '@/config/constants';
 import type { StopDistanceInfo } from '@/domain/stops';
 import { addSecondsToTime, calculateTimeDifferenceSecs, formatClock, secondsOfDayIn, timeToSeconds, wrapDaySeconds } from '@/domain/time';
@@ -19,7 +20,7 @@ export const fittingLeads = (scheduledMs: number, delaySecs: number | null | und
 
 /** A lead that leaves time to walk to the stop and catch the vehicle; null at the stop or without a location. */
 export const walkLeadMinutes = (distance: StopDistanceInfo | null): number | null =>
-    !distance || distance.isAtStop ? null : Math.min(MY_TRIP_CONFIG.MAX_LEAD_MIN, distance.time + Math.ceil(WALKING.CATCH_BUFFER_S / 60));
+    !distance || distance.isAtStop ? null : Math.min(RIDE_PROTOCOL.MAX_LEAD_MIN, distance.time + Math.ceil(WALKING.CATCH_BUFFER_S / 60));
 
 /** The lead preselected at a stop: the user's walk there, else the default, else the longest that still fits. */
 export const defaultLead = (leads: readonly number[], walkLead: number | null): number | null =>

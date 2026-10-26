@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { MY_TRIP_CONFIG } from '@/config/constants';
+import { RIDE_PROTOCOL } from '@shared/rides';
 import { SITE } from '@/config/site';
 import { tripPushKey, withPushState } from '@/domain/rides';
 import { requestNotificationPermission } from '@/lib/notifications';
@@ -28,14 +29,15 @@ export const useMyTripActions = () => {
         }
         toast(previous ? t('myTrip.updated') : t('myTrip.saved'));
         const key = tripPushKey(trip);
-        if (key === null || key === (previous ? tripPushKey(previous) : null)) return true;
+        // An unchanged trip the server already pushes needs nothing; one whose registration failed gets another try.
+        if (key === null || (previous?.pushed && key === tripPushKey(previous))) return true;
 
         const board = trip.board;
         const boardTitle = board ? t('myTrip.boardPushTitle', { line, stop: board.stopName }) : '';
         void startTripPush({ ...trip, startedAt: previous?.startedAt ?? Date.now() }, {
             next: trip.toEnd ? undefined : { title: t('ride.nextStop'), body: exitStopName },
             arrived: trip.toEnd ? undefined : { title: t('ride.arrived', { stop: exitStopName }), body: SITE.NAME },
-            soon: board?.leadMin != null ? { title: boardTitle, body: t('myTrip.boardPushBody', { min: MY_TRIP_CONFIG.MINUTES_TOKEN }) } : undefined,
+            soon: board?.leadMin != null ? { title: boardTitle, body: t('myTrip.boardPushBody', { min: RIDE_PROTOCOL.MINUTES_TOKEN }) } : undefined,
             cancelled: board?.leadMin != null ? { title: boardTitle, body: t('myTrip.cancelledBody') } : undefined,
         }, paths.trip(trip.city, trip.tripId, trip.vehicleId)).then(result => {
             if (result.ok) {

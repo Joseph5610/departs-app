@@ -8,6 +8,20 @@ export const TRIP_RULES = {
     BOARD_GRACE_MS: 2 * 60_000,
 };
 
+/** The push protocol between the app and the server's ride watch. */
+export const RIDE_PROTOCOL = {
+    /** Notification tags, per trip (`tripNotificationTag`): `arrived` replaces `next`, `cancelled` replaces `soon`, trips never each other. */
+    EXIT_TAG: 'ride-own',
+    BOARD_TAG: 'departure-reminder',
+    /** Placeholder in a boarding alert's texts the server puts the minutes left into. */
+    MINUTES_TOKEN: '{min}',
+    /** Longest lead (minutes before the departure) a boarding alert may ask for: the app's fixed leads or the user's walk. */
+    MAX_LEAD_MIN: 60,
+};
+
+/** A trip's notification tag, so the app's own alert and a push of the same kind replace each other. */
+export const tripNotificationTag = (base: string, tripId: string): string => `${base}:${tripId}`;
+
 /** A trip's live position as the vehicle-detail API reports it. */
 export interface TripPosition {
     is_static_fallback?: boolean;

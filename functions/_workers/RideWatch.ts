@@ -1,4 +1,5 @@
 import { DurableObject } from 'cloudflare:workers';
+import { RIDE_PROTOCOL, tripNotificationTag } from '../../shared/rides';
 import { RIDE_PUSH } from '../_core/config';
 import { sendPush, type PushTarget, type VapidKeys } from '../_core/push/webPush';
 import type { AppVehicleDetail } from '../_core/types';
@@ -19,7 +20,7 @@ export interface RideTrip {
     tripId: string;
 }
 
-/** The notification a rider gets for each alert they asked for, already in their language; `soon` carries `MINUTES_TOKEN`. */
+/** The notification a rider gets for each alert they asked for, already in their language; `soon` carries `RIDE_PROTOCOL.MINUTES_TOKEN`. */
 export type RideTexts = Partial<Record<TripAlert, { title: string; body: string }>>;
 
 export interface Rider {
@@ -48,15 +49,15 @@ export type RideWatchRequest =
 const ridePayload = (rider: Rider, alert: TripAlert, tripId: string, minutes: number): string | null => {
     const text = rider.texts[alert];
     if (!text) return null;
-    const fill = (value: string) => value.replaceAll(RIDE_PUSH.MINUTES_TOKEN, String(minutes));
-    const tag = alert === 'soon' || alert === 'cancelled' ? RIDE_PUSH.BOARD_TAG : RIDE_PUSH.TAG;
+    const fill = (value: string) => value.replaceAll(RIDE_PROTOCOL.MINUTES_TOKEN, String(minutes));
+    const tag = alert === 'soon' || alert === 'cancelled' ? RIDE_PROTOCOL.BOARD_TAG : RIDE_PROTOCOL.EXIT_TAG;
     return JSON.stringify({
         web_push: 8030,
-        notification: { title: fill(text.title), body: fill(text.body), ...RIDE_PUSH.ALERT_OPTIONS[alert], navigate: rider.navigate, tag: `${tag}:${tripId}` },
+        notification: { title: fill(text.title), body: fill(text.body), ...RIDE_PUSH.ALERT_OPTIONS[alert], navigate: rider.navigate, tag: tripNotificationTag(tag, tripId) },
     });
 };
 
-/** A rider's phase; one registered before 0.88 is aboard, with `next` sent or not. Drop with the legacy key in `ride.ts`. */
+/** A rider's phase; one registered before 0.88 is aboard, with `next` sent or not (gone `MAX_AGE_MS` after that deploy). */
 const phaseOf = (rider: Rider & { alerted?: string[] }): RiderPhase => rider.phase ?? (rider.alerted?.includes('next') ? 'near' : 'ride');
 
 const RIDER_PREFIX = 'rider:';
@@ -132,6 +133,7 @@ export class RideWatch extends DurableObject<RidePushEnv> {
         for (const [key, rider] of riders) {
             const step = riderStep({ ...rider, phase: phaseOf(rider) }, observation, now);
             let isGone = false;
+            let isUndelivered = false;
             for (const alert of step.send) {
                 const minutes = rider.board ? minutesUntilDeparture(observation, timingOf(rider.board), now) : 0;
                 const payload = ridePayload(rider, alert, trip.tripId, minutes);
@@ -142,7 +144,8 @@ export class RideWatch extends DurableObject<RidePushEnv> {
                     return 0;
                 });
                 console.log(JSON.stringify({ push: alert, trip: trip.tripId, status }));
-                if (status === 0 || status === 404 || status === 410) isGone = true;
+                if (status === 404 || status === 410) isGone = true;
+                else if (status < 200 || status >= 300) isUndelivered = true;
             }
             // A trip that keeps failing (or was never found) is given up for everyone; a vanished vehicle ends the exit watches.
             const isStranded = isGivenUp || (isWatchingExit(step.phase) && isLost);
@@ -150,11 +153,14 @@ export class RideWatch extends DurableObject<RidePushEnv> {
             if (!stored) continue;
             // Replaced by the device meanwhile: the new registration keeps its own phase and schedule.
             if (stored.registeredAt !== rider.registeredAt) continue;
-            if (step.phase === 'done' || isGone || isStranded) await storage.delete(key);
-            else {
+            if (isGone || isStranded || (step.phase === 'done' && !isUndelivered)) await storage.delete(key);
+            else if (isUndelivered) {
+                // The push service didn't take it: the phase stays, so the next alarm sends the alert again.
+                next = Math.min(next, now + RIDE_PUSH.RETRY_INTERVAL_S * 1000);
+            } else {
                 if (step.phase !== rider.phase) await storage.put<Rider>(key, { ...stored, phase: step.phase });
-                // After a failed read everyone retries later each time, so a failing trip reaches `isGivenUp` in about an hour.
-                const at = isFailed && step.nextAt !== null ? Math.max(step.nextAt, backoffAt) : step.nextAt;
+                // After a failed read the trip is retried later each time, but never past a boarding alert still to go.
+                const at = isFailed && step.phase !== 'remind' && step.nextAt !== null ? Math.max(step.nextAt, backoffAt) : step.nextAt;
                 if (at !== null) next = Math.min(next, at);
             }
         }

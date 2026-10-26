@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useRideStore } from '@/state/rideStore';
 import { tripPushKey } from '@/domain/rides';
-import { DEPARTURE_REMINDER_TAG, RIDE_PUSH_CONFIG } from '@/config/constants';
-import { closeRideNotifications, stopTripPush, tripNotificationTag } from '@/lib/push';
+import { RIDE_PROTOCOL, tripNotificationTag } from '@shared/rides';
+import { closeRideNotifications, stopTripPush } from '@/lib/push';
 import type { MyTrip } from '@/types';
 
 /**
@@ -21,8 +21,8 @@ export const useRidePush = () => {
             if (current === old) continue;
             if (tripPushKey(old) !== null && (!current || tripPushKey(current) === null)) void stopTripPush(old);
             if (current) continue;
-            void closeRideNotifications(tripNotificationTag(RIDE_PUSH_CONFIG.NOTIFICATION_TAG, old.tripId));
-            void closeRideNotifications(tripNotificationTag(DEPARTURE_REMINDER_TAG, old.tripId));
+            void closeRideNotifications(tripNotificationTag(RIDE_PROTOCOL.EXIT_TAG, old.tripId));
+            void closeRideNotifications(tripNotificationTag(RIDE_PROTOCOL.BOARD_TAG, old.tripId));
         }
     }, [trips]);
 };

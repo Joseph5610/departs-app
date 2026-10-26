@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
-import { PUSH_SERVICE_HOSTS, RIDE_PUSH } from './config';
+import { RIDE_PROTOCOL } from '../../shared/rides';
+import { PUSH_SERVICE_HOSTS } from './config';
 
 const isPushEndpoint = (value: string): boolean => {
     try {
@@ -26,7 +27,7 @@ const boardSchema = z.object({
     sequence: sequenceSchema,
     /** Timetable departure from the boarding stop, epoch ms. */
     scheduledMs: z.number().check(z.int(), z.positive()),
-    leadMin: z.nullable(z.number().check(z.int(), z.minimum(1), z.maximum(RIDE_PUSH.MAX_LEAD_MIN))),
+    leadMin: z.nullable(z.number().check(z.int(), z.minimum(1), z.maximum(RIDE_PROTOCOL.MAX_LEAD_MIN))),
 });
 
 /**
@@ -37,7 +38,6 @@ export const ridePushRequestSchema = z.discriminatedUnion('action', [
     z.object({
         action: z.literal('add'),
         tripId: idSchema,
-        vehicleId: z.nullable(idSchema),
         exitSequence: z.nullable(sequenceSchema),
         board: z.optional(z.nullable(boardSchema)),
         subscription: subscriptionSchema,
@@ -47,7 +47,6 @@ export const ridePushRequestSchema = z.discriminatedUnion('action', [
     z.object({
         action: z.literal('remove'),
         tripId: idSchema,
-        vehicleId: z.optional(z.nullable(idSchema)),
         endpoint: endpointSchema,
     }),
 ]);

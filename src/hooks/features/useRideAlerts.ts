@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { RIDE_CONFIG, RIDE_PUSH_CONFIG } from '@/config/constants';
-import { tripNotificationTag } from '@/lib/push';
+import { RIDE_CONFIG } from '@/config/constants';
+import { RIDE_PROTOCOL, tripNotificationTag } from '@shared/rides';
 import { SITE } from '@/config/site';
 import type { RideKind, RidePhase, RideStatus } from '@/types';
 import { rideAlertFor } from '@/domain/rides';
@@ -67,7 +67,7 @@ export const useRideAlerts = (status: RideStatus | null, kind: RideKind, { isOve
         const alert = rideAlertFor(previous, phase, alerted.current.phases);
         if (!alert || silent) return;
         alerted.current.phases.add(alert);
-        const tag = watching ? 'ride-followed' : tripNotificationTag(RIDE_PUSH_CONFIG.NOTIFICATION_TAG, tripId);
+        const tag = watching ? 'ride-followed' : tripNotificationTag(RIDE_PROTOCOL.EXIT_TAG, tripId);
         if (alert === 'next') void alertRider(t(watching ? 'share.watchNext' : 'ride.nextStop'), exitStopName, tag, pushed);
         else void alertRider(t(watching ? 'share.watchArrived' : 'ride.arrived', { stop: exitStopName }), SITE.NAME, tag, pushed);
     }, [phase, exitStopName, rideKey, watching, kind, pushed, silent, tripId, afterBoarding, t]);

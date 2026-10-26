@@ -151,12 +151,6 @@ export const STOP_SEARCH_CONFIG = {
  * the rider's stop and before their exit) and its push sender (`_core/push/webPush.ts`).
  */
 export const RIDE_PUSH = {
-    /** Notification tag of a ride's exit alerts, with the trip id appended, so `arrived` replaces `next`; the app's own alerts use it too. */
-    TAG: 'ride-own',
-    /** Notification tag of a boarding alert, with the trip id appended, so `cancelled` replaces `soon` and trips don't replace each other. */
-    BOARD_TAG: 'departure-reminder',
-    /** Longest lead (minutes before the departure) a boarding alert may ask for: the app's fixed leads or the user's walk. */
-    MAX_LEAD_MIN: 60,
     /** Checks start this long before a boarding alert is due (and before the departure, for the exit watch), so the delay is known in time. */
     FIRST_CHECK_BEFORE_MS: 10 * 60_000,
     /** Checks closing in on a boarding alert halve the time left, but never come closer together than this. */
@@ -165,8 +159,6 @@ export const RIDE_PUSH = {
     SEND_WINDOW_MS: 30_000,
     /** How far ahead a boarding stop may be; a timetable time is compared within one day either way. */
     MAX_AHEAD_MS: 12 * 3600_000,
-    /** Placeholder in a boarding alert's texts the minutes left are put into. */
-    MINUTES_TOKEN: '{min}',
     /** VAPID `sub` claim; Apple rejects pushes without one. */
     VAPID_SUBJECT: 'mailto:info@departs.app',
     /** How long a VAPID token stays valid; push services refuse more than 24 h. */

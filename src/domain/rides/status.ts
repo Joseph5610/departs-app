@@ -62,7 +62,10 @@ export const deriveRide = (ride: Ride | null, detail: VehicleDetail | undefined,
 
     const stopsLeft = current !== null ? countStopsLeft(stops, current, ride.exitSequence) : null;
 
+    // A trip planned ahead hasn't run yet: its timetable clock, which wraps at 12 h, can't tell an end hours away from one just past.
+    const isAhead = current === null && now < ride.startedAt;
     const phase: RidePhase = !detail ? (isError ? 'unavailable' : 'loading')
+        : isAhead ? 'waiting'
         : (current !== null && current >= ride.exitSequence) || isTripEnded(stops, detail.delay, current, now, timeZone) ? 'arrived'
         : current === null ? 'waiting'
         : stopsLeft === 1 ? 'next'

@@ -31,6 +31,13 @@ const trip = (extra: Partial<MyTrip> = {}): MyTrip => ({
 });
 
 describe('deriveMyTrip', () => {
+    // A trip planned ahead ends more than 12 h away: the wrapped timetable clock must not read it as long arrived.
+    it('waits for a trip saved hours ahead without a boarding stop, rather than ending it', () => {
+        const late = detail(null, { stop_times: { type: 'FeatureCollection', features: [stop(1, '23:50:00'), stop(2, '00:10:00'), stop(3, '00:20:00')] } });
+        const planned = trip({ board: null, exitSequence: 3, toEnd: true, start: { sequence: 1, scheduledMs: NOW + (11 * 60 + 50) * MIN } });
+        expect(deriveMyTrip(planned, late, false, NOW, TZ)).toMatchObject({ phase: 'riding', ride: { phase: 'waiting' } });
+    });
+
     it('counts down to boarding until the vehicle reaches the stop', () => {
         const status = deriveMyTrip(trip(), detail(1), false, NOW, TZ);
         expect(status).toMatchObject({ phase: 'boarding', stopName: 'Stop 3', departureTime: '12:10', minutes: 10, isSoon: false });

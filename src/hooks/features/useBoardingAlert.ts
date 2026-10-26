@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DEPARTURE_REMINDER_TAG } from '@/config/constants';
-import { tripNotificationTag } from '@/lib/push';
+import { RIDE_PROTOCOL, tripNotificationTag } from '@shared/rides';
 import type { MyTripStatus } from '@/types';
 import { alertRider } from './useRideAlerts';
 
@@ -23,6 +22,6 @@ export const useBoardingAlert = (status: MyTripStatus | null) => {
         const previous = seen.current;
         seen.current = { tripId, isSoon };
         if (!tripId || !isSoon || previous?.tripId !== tripId || previous.isSoon) return;
-        void alertRider(title, body, tripNotificationTag(DEPARTURE_REMINDER_TAG, tripId), pushed);
+        void alertRider(title, body, tripNotificationTag(RIDE_PROTOCOL.BOARD_TAG, tripId), pushed);
     }, [tripId, isSoon, title, body, pushed]);
 };

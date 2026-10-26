@@ -14,7 +14,7 @@ const parseJson = (raw: string): unknown => {
 };
 
 /** Starts or stops ride-mode push for one subscription, in the trip's `RideWatch` Durable Object. */
-export const onRequestPost: PagesFunction<Env> = async ({ request, env, params, waitUntil }) => {
+export const onRequestPost: PagesFunction<Env> = async ({ request, env, params }) => {
     const slug = String(params.city);
     if (!getCity(slug)) return createErrorResponse('City not found', 404);
     if (!env.RIDE_WATCH) return createErrorResponse('Ride push is not available.', 503);
@@ -50,10 +50,6 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env, params, 
         : { action: 'remove', endpoint: body.endpoint };
     // One watch per trip, whatever vehicle a device knew: it finds the vehicle itself, so every rider reads the same detail.
     const stub = env.RIDE_WATCH.get(env.RIDE_WATCH.idFromName(`${slug}:${body.tripId}`));
-    // A ride registered before 0.88 sits under its old per-vehicle key: withdraw it there, until those have expired (`MAX_AGE_MS`).
-    const endpoint = body.action === 'add' ? body.subscription.endpoint : body.endpoint;
-    const legacy = env.RIDE_WATCH.get(env.RIDE_WATCH.idFromName(`${slug}:${body.tripId}:${body.vehicleId ?? ''}`));
-    waitUntil(legacy.fetch('https://ride.internal/', { method: 'POST', body: JSON.stringify({ action: 'remove', endpoint } satisfies RideWatchRequest) }).catch(() => undefined));
     const response = await stub.fetch('https://ride.internal/', { method: 'POST', body: JSON.stringify(command) });
     if (response.status === 429) return createErrorResponse('Too many riders on this trip.', 429);
     return response.ok ? createSuccessResponse({ ok: true }, 0) : createErrorResponse('Ride push failed.', 502);
