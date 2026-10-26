@@ -10,7 +10,7 @@ import { useNow } from '@/hooks/useNow';
 import { useMyTripStatus } from '@/hooks/derived/useRide';
 import { useBoardingAlert } from '@/hooks/features/useBoardingAlert';
 import type { BoardingStatus, MyTrip, MyTripStatus, Ride, RideKind, RideStatus } from '@/types';
-import { byUrgency, followedUrgency, isRideShown, isTripExpired, tripUrgency } from '@/domain/rides';
+import { isTripExpired, rideBarState, tripBars } from '@/domain/rides';
 import { useRideAlerts } from '@/hooks/features/useRideAlerts';
 import { useRidePush } from '@/hooks/features/useRidePush';
 import { useRideStore } from '@/state/rideStore';
@@ -39,24 +39,20 @@ const RideBarItem = ({ ride, kind, status }: { ride: Ride; kind: RideKind; statu
     };
 
     if (!status || status.phase === 'loading') return null;
-    const { phase, exitStopName, stopsLeft, arrivalTime, routeName, routeColor, headsign, delay, minutesToArrival, progress } = status;
+    const { phase, exitStopName, stopsLeft, arrivalTime, routeName, routeColor, headsign, minutesToArrival, progress } = status;
+    const { isAccent, isLive, showStopsLeft, showArrival, delayTone } = rideBarState(status);
     const isFollowed = kind === 'followed';
     const isNext = phase === 'next';
     const isArrived = phase === 'arrived';
-    const isAccent = isNext || isArrived;
-    const delayMins = delay !== null ? Math.round(delay / 60) : 0;
 
     const kicker = phase === 'unavailable' ? t('ride.unavailable')
         : phase === 'waiting' ? t('ride.waiting')
         : isNext ? t('ride.kickerNext')
         : isArrived ? t(isFollowed ? 'share.kickerArrived' : 'ride.kickerArrived')
         : t(isFollowed ? 'share.kickerRiding' : 'ride.kickerRiding');
-    const showStopsLeft = (phase === 'riding' || isNext) && stopsLeft !== null;
-    const showArrival = !!arrivalTime && !isArrived;
-    const arrivalClass = delayMins > 0 ? (isAccent ? "rounded px-1 bg-background/90 text-destructive" : "text-destructive")
-        : delayMins < 0 ? (isAccent ? "rounded px-1 bg-background/90 text-sky-500" : "text-sky-500")
+    const arrivalClass = delayTone === 'late' ? (isAccent ? "rounded px-1 bg-background/90 text-destructive" : "text-destructive")
+        : delayTone === 'early' ? (isAccent ? "rounded px-1 bg-background/90 text-sky-500" : "text-sky-500")
         : "";
-    const isLive = !isArrived && phase !== 'unavailable';
     const tripPath = paths.trip(ride.city, ride.tripId, ride.vehicleId) + (isFollowed ? `?exit=${ride.exitSequence}` : '');
     const subtle = isAccent ? "text-primary-foreground/75" : "text-muted-foreground";
 
@@ -312,28 +308,11 @@ export const RideBar = () => {
     const alerts = [[first, firstStatus], [second, secondStatus], [third, thirdStatus]] as const;
     const tripAlerts = alerts.map(([trip, status]) => trip && <TripAlerts key={trip.tripId} trip={trip} status={status} />);
 
-    const shown: { key: string; urgency: number; node: React.ReactNode }[] = [];
-    for (const status of [firstStatus, secondStatus, thirdStatus]) {
-        if (!status || (status.phase === 'riding' && !isRideShown(status.ride))) continue;
-        shown.push({
-            key: status.trip.tripId,
-            urgency: tripUrgency(status),
-            node: status.phase === 'boarding'
-                ? <BoardingBarItem key={status.trip.tripId} status={status} kind="own" />
-                : <RideBarItem key={status.trip.tripId} ride={status.trip} kind="own" status={status.ride} />,
-        });
-    }
-    if (followed && followedStatus && (followedStatus.phase === 'boarding' || isRideShown(followedStatus.ride))) {
-        shown.push({
-            key: 'followed',
-            urgency: followedUrgency(followedStatus),
-            node: followedStatus.phase === 'boarding'
-                ? <BoardingBarItem key="followed" status={followedStatus} kind="followed" />
-                : <RideBarItem key="followed" ride={followed} kind="followed" status={followedStatus.ride} />,
-        });
-    }
+    const shown = tripBars([firstStatus, secondStatus, thirdStatus], followed ? followedStatus : null);
     if (shown.length === 0) return <>{tripAlerts}</>;
-    const [front, ...back] = byUrgency(shown).map(item => item.node);
+    const [front, ...back] = shown.map(({ key, kind, status }) => (status.phase === 'boarding'
+        ? <BoardingBarItem key={key} status={status} kind={kind} />
+        : <RideBarItem key={key} ride={status.trip} kind={kind} status={status.ride} />));
     const isStack = shown.length > 1;
 
     return (
