@@ -36,12 +36,13 @@ export class RideWatch extends DurableObject<RidePushEnv> {
         }, now);
     }
 
-    /** The trip's detail, or null when it can't be read (or the API knows no such trip). */
-    private async readDetail(trip: RideTrip): Promise<AppVehicleDetail | null> {
+    /** The trip's detail; `missing` when the API knows no such trip, null when the read failed. */
+    private async readDetail(trip: RideTrip): Promise<AppVehicleDetail | null | 'missing'> {
         const url = new URL(`/api/${trip.city}/vehicle-detail`, this.env.API_ORIGIN);
         url.searchParams.set('tripId', trip.tripId);
         try {
             const response = await fetch(url);
+            if (response.status === 404) return 'missing';
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return await response.json<AppVehicleDetail>();
         } catch (error) {

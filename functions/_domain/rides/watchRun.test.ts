@@ -49,11 +49,15 @@ const add = (storage: WatchStorage, device: string, at: number, rider: { board?:
     }, at);
 
 /** Fires the watch's alarms in time order, as the runtime does, until none is left or `untilMin` passes. */
-const run = async (storage: MemoryStorage, world: World, { untilMin = 300, status = () => 201, onPush }: {
+const run = async (storage: MemoryStorage, world: World, { untilMin = 300, status = () => 201, onPush, onRead, missing = false }: {
     untilMin?: number;
     /** The push service's answer to each push. */
     status?: (pushed: Omit<Pushed, 'status'>) => number;
     onPush?: (at: number) => Promise<void>;
+    /** Runs while the alarm waits on a read, as a request the Durable Object lets in meanwhile. */
+    onRead?: (at: number) => Promise<void>;
+    /** The API answers that the trip doesn't exist. */
+    missing?: boolean;
 } = {}) => {
     const pushed: Pushed[] = [];
     const reads: number[] = [];
@@ -61,7 +65,11 @@ const run = async (storage: MemoryStorage, world: World, { untilMin = 300, statu
         const now = storage.alarm;
         storage.alarm = null;
         const ports: WatchPorts = {
-            readDetail: async () => { reads.push(now); return read(world, now); },
+            readDetail: async () => {
+                reads.push(now);
+                await onRead?.(now);
+                return missing ? 'missing' : read(world, now);
+            },
             push: async (subscription, payload) => {
                 const { title, body } = (JSON.parse(payload) as { notification: { title: string; body: string } }).notification;
                 const sent = { device: deviceOf(subscription.endpoint), title, body, at: (now - NOW) / MIN };
@@ -72,6 +80,7 @@ const run = async (storage: MemoryStorage, world: World, { untilMin = 300, statu
             },
         };
         await runAlarm(storage, ports, now);
+        if (storage.alarm !== null && storage.alarm <= now) throw new Error(`alarm set for ${new Date(now).toISOString()} again: the watch would loop`);
     }
     return { pushed, reads, delivered: pushed.filter(p => p.status >= 200 && p.status < 300) };
 };
@@ -112,6 +121,30 @@ describe('trip watch alarms', () => {
         expect(titles(pushed, 'b')).toEqual(['soon', 'next', 'arrived']);
     });
 
+    // I4: a push service that refuses the subscription for good (bad keys, payload) gets nothing more.
+    it('drops a rider the push service refuses for good', async () => {
+        await add(storage, 'a', NOW);
+        const { pushed } = await run(storage, {}, { status: () => 403 });
+        expect(titles(pushed)).toEqual(['soon']);
+        expect(storage.data.size).toBe(0);
+    });
+
+    // I8: a push service that keeps refusing costs a few retries, then that alert is given up and the next ones still go.
+    it('gives up an alert the push service keeps refusing, and goes on with the next', async () => {
+        await add(storage, 'a', NOW);
+        const { pushed, delivered } = await run(storage, {}, { status: p => (p.title === 'soon' ? 503 : 201) });
+        expect(titles(pushed).filter(title => title === 'soon')).toHaveLength(1 + RIDE_PUSH.MAX_PUSH_RETRIES);
+        expect(titles(delivered)).toEqual(['next', 'arrived']);
+    });
+
+    // I4: the user ending the trip while the alarm waits on its read must stop the alert it was about to send.
+    it('sends nothing to a rider removed while the alarm read the trip', async () => {
+        await add(storage, 'a', NOW + 8 * MIN);
+        const { pushed } = await run(storage, {}, { onRead: async () => { await handleRequest(storage, { action: 'remove', endpoint: endpoint('a') }, NOW + 8 * MIN); } });
+        expect(pushed).toEqual([]);
+        expect(storage.data.size).toBe(0);
+    });
+
     // I3: a push the service didn't take is sent again, and the rider doesn't move past it meanwhile.
     it.each([429, 503, 0])('retries a push the service didn\'t take (%i) until it does', async refused => {
         await add(storage, 'a', NOW);
@@ -122,25 +155,43 @@ describe('trip watch alarms', () => {
         expect(pushed[1].at - pushed[0].at).toBeCloseTo(RIDE_PUSH.RETRY_INTERVAL_S / 60);
     });
 
-    // I8: a trip id that was never found costs two reads.
-    it('gives up a trip whose detail never answered after two failed reads', async () => {
+    // I8: a trip id the API says doesn't exist costs two reads.
+    it('gives up a trip the API never knew after two reads', async () => {
         await add(storage, 'a', NOW);
-        const { pushed, reads } = await run(storage, { failing: [[-MIN, 300 * MIN]] });
+        const { pushed, reads } = await run(storage, {}, { missing: true });
         expect(pushed).toEqual([]);
-        expect(reads).toHaveLength(RIDE_PUSH.MAX_FAILURES_UNSEEN);
+        expect(reads).toHaveLength(RIDE_PUSH.MAX_MISSING_UNSEEN);
         expect(storage.data.size).toBe(0);
     });
 
-    // I8: a trip that answered once and then keeps failing backs off, and is given up within about an hour.
-    it('backs off failed reads up to the limit and then gives the trip up', async () => {
+    // I3: two failed reads before the trip ever answered say nothing about it: the boarding alert still goes.
+    it('keeps a trip whose first reads fail', async () => {
+        await add(storage, 'a', NOW);
+        const { delivered } = await run(storage, { failing: [[-MIN, 6 * MIN]] });
+        expect(titles(delivered)).toEqual(['soon', 'next', 'arrived']);
+    });
+
+    // I3, I8: an outage gives up nobody before the hour is up, however often a rider waiting to board looks.
+    it('keeps every rider through an outage shorter than the give-up time', async () => {
+        // The trip runs 10 min late; the outage starts after its timetable time, so the boarding rider keeps looking every 30 s.
+        await add(storage, 'a', NOW, { board: { ...BOARD, leadMin: 2 }, exitSequence: null });
+        await add(storage, 'b', NOW + 13 * MIN, { board: null });
+        const { delivered, reads } = await run(storage, { delayMin: 10, failing: [[13 * MIN, 40 * MIN]] });
+        expect(reads.filter(at => at >= NOW + 13 * MIN && at < NOW + 40 * MIN).length).toBeGreaterThan(20);
+        expect(titles(delivered, 'b')).toEqual(['arrived']);
+    });
+
+    // I8: a trip that answered once and then keeps failing backs off, and is given up after an hour of failing.
+    it('backs off failed reads up to the limit and gives the trip up after the give-up time', async () => {
         await add(storage, 'a', NOW + 13 * MIN, { board: null });
         const { reads } = await run(storage, { failing: [[14 * MIN, 300 * MIN]] });
         const failed = reads.filter(at => at >= NOW + 14 * MIN);
         const gaps = failed.slice(1).map((at, i) => (at - failed[i]) / 1000);
-        expect(failed).toHaveLength(RIDE_PUSH.MAX_FAILURES);
         expect(gaps).toEqual([...gaps].sort((a, b) => a - b));
         expect(Math.max(...gaps)).toBe(RIDE_PUSH.MAX_RETRY_INTERVAL_S);
-        expect((failed.at(-1)! - NOW) / MIN).toBeLessThan(14 + 90);
+        const failingFor = failed.at(-1)! - failed[0];
+        expect(failingFor).toBeGreaterThanOrEqual(RIDE_PUSH.GIVE_UP_AFTER_MS);
+        expect(failingFor).toBeLessThan(RIDE_PUSH.GIVE_UP_AFTER_MS + RIDE_PUSH.MAX_RETRY_INTERVAL_S * 1000);
         expect(storage.data.size).toBe(0);
     });
 

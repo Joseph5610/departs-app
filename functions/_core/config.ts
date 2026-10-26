@@ -177,10 +177,12 @@ export const RIDE_PUSH = {
     /** Alarm interval after a failed detail read, doubling with each failure in a row up to `MAX_RETRY_INTERVAL_S`. */
     RETRY_INTERVAL_S: 30,
     MAX_RETRY_INTERVAL_S: 300,
-    /** Failed detail reads in a row after which the trip's riders are given up (with the backoff, about an hour). */
-    MAX_FAILURES: 20,
-    /** The same for a trip whose detail never answered at all, so a made-up trip id costs almost nothing. */
-    MAX_FAILURES_UNSEEN: 2,
+    /** A trip whose detail reads keep failing this long is given up for all its riders. */
+    GIVE_UP_AFTER_MS: 60 * 60_000,
+    /** Reads in a row answering that the trip doesn't exist, before ever answering, after which it is given up: a made-up trip id costs almost nothing. */
+    MAX_MISSING_UNSEEN: 2,
+    /** A push the service refused for a while (429, 5xx, no answer) is sent again this many times, then that alert is given up. */
+    MAX_PUSH_RETRIES: 5,
     /** Largest `/api/[city]/ride` body; a real one is under 1 KB. */
     MAX_BODY_BYTES: 8192,
     /**

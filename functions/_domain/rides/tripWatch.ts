@@ -70,7 +70,9 @@ const wakeAt = (rider: WatchRider, phase: RiderPhase, observation: TripObservati
         return now + (near ? RIDE_PUSH.NEAR_INTERVAL_S : RIDE_PUSH.FAR_INTERVAL_S) * 1000;
     }
     const boardWake = boardWakeAt(rider, observation, now);
-    return phase === 'remind' && rider.board ? Math.min(nextCheckAt(observation, timingOf(rider.board), now), boardWake) : boardWake;
+    const at = phase === 'remind' && rider.board ? Math.min(nextCheckAt(observation, timingOf(rider.board), now), boardWake) : boardWake;
+    // A moment already past (a departure behind while reads fail) must not set the alarm for now, over and over.
+    return Math.max(at, now + RIDE_PUSH.MIN_CHECK_INTERVAL_MS);
 };
 
 /**

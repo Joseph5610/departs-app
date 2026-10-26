@@ -26,6 +26,8 @@ export interface Rider {
     phase: RiderPhase;
     /** When this registration was stored, so an alarm can tell the rider was replaced while it ran. */
     registeredAt: number;
+    /** Times the alert now due was refused by the push service for a while. */
+    pushRetries?: number;
     expiresAt: number;
 }
 
@@ -45,9 +47,12 @@ export interface WatchStorage {
     setAlarm(scheduledTime: number): Promise<void>;
 }
 
-/** The watch's outside world: the trip's detail (null when it can't be read) and a push, answering the push service's status (0: it threw). */
+/**
+ * The watch's outside world: the trip's detail (null when the read failed, `missing` when the API knows no such trip)
+ * and a push, answering the push service's status (0: it threw).
+ */
 export interface WatchPorts {
-    readDetail: (trip: RideTrip) => Promise<AppVehicleDetail | null>;
+    readDetail: (trip: RideTrip) => Promise<AppVehicleDetail | null | 'missing'>;
     push: (subscription: PushTarget, payload: string) => Promise<number>;
 }
 
@@ -112,45 +117,58 @@ export const runAlarm = async (storage: WatchStorage, ports: WatchPorts, now: nu
     if (!trip || riders.size === 0) return finish(storage, now);
     await storage.put('ranAt', now);
 
-    const observation = observe(await ports.readDetail(trip));
+    const read = await ports.readDetail(trip);
+    const observation = observe(read === 'missing' ? null : read);
     const isFailed = observation.kind === 'failed';
     const failures = isFailed ? ((await storage.get<number>('failures')) ?? 0) + 1 : 0;
+    const missing = read === 'missing' ? ((await storage.get<number>('missing')) ?? 0) + 1 : 0;
+    const failingSince = isFailed ? (await storage.get<number>('failingSince')) ?? now : undefined;
     await storage.put('failures', failures);
+    await storage.put('missing', missing);
+    if (failingSince === undefined) await storage.delete('failingSince');
+    else await storage.put('failingSince', failingSince);
     if (!isFailed) await storage.put('seen', true);
     if (currentStop(observation) !== null) await storage.put('liveAt', now);
     const liveAt = await storage.get<number>('liveAt');
     // A vehicle that was live and vanished (it finished, or left the feed) ends the exit watches of those aboard; a failed read is no proof.
     const isLost = !isFailed && liveAt !== undefined && now - liveAt > RIDE_PUSH.LOST_MS && currentStop(observation) === null;
-    // "Unseen" is a trip whose detail never answered at all, not one still on its timetable before going live.
-    const isGivenUp = failures >= ((await storage.get<boolean>('seen')) ? RIDE_PUSH.MAX_FAILURES : RIDE_PUSH.MAX_FAILURES_UNSEEN);
+    // Given up after an hour of failing, or at once for a trip the API says doesn't exist and never answered for.
+    const isGivenUp = (failingSince !== undefined && now - failingSince >= RIDE_PUSH.GIVE_UP_AFTER_MS)
+        || (!(await storage.get<boolean>('seen')) && missing >= RIDE_PUSH.MAX_MISSING_UNSEEN);
     const backoffAt = now + Math.min(RIDE_PUSH.RETRY_INTERVAL_S * 2 ** Math.min(Math.max(failures - 1, 0), 4), RIDE_PUSH.MAX_RETRY_INTERVAL_S) * 1000;
 
     let next = Number.POSITIVE_INFINITY;
     for (const [key, rider] of riders) {
         const step = riderStep({ ...rider, phase: phaseOf(rider) }, observation, now);
-        let isGone = false;
-        let isUndelivered = false;
+        let outcome: 'sent' | 'gone' | 'refused' | 'replaced' = 'sent';
         for (const alert of step.send) {
-            const minutes = rider.board ? minutesUntilDeparture(observation, timingOf(rider.board), now) : 0;
-            const payload = ridePayload(rider, alert, trip.tripId, minutes);
+            const payload = ridePayload(rider, alert, trip.tripId, rider.board ? minutesUntilDeparture(observation, timingOf(rider.board), now) : 0);
             if (!payload) continue;
+            // Removed or replaced by the device while this alarm waited on a read or an earlier push: nothing more for this registration.
+            if ((await storage.get<Rider>(key))?.registeredAt !== rider.registeredAt) {
+                outcome = 'replaced';
+                break;
+            }
             const status = await ports.push(rider.subscription, payload);
             console.log(JSON.stringify({ push: alert, trip: trip.tripId, status }));
-            if (status === 404 || status === 410) isGone = true;
-            else if (status < 200 || status >= 300) isUndelivered = true;
+            if (status >= 200 && status < 300) continue;
+            outcome = status === 0 || status === 429 || status >= 500 ? 'refused' : 'gone';
+            break;
         }
         // A trip that keeps failing (or was never found) is given up for everyone; a vanished vehicle ends the exit watches.
         const isStranded = isGivenUp || (isWatchingExit(step.phase) && isLost);
         const stored = await storage.get<Rider>(key);
-        if (!stored) continue;
-        // Replaced by the device meanwhile: the new registration keeps its own phase and schedule.
-        if (stored.registeredAt !== rider.registeredAt) continue;
-        if (isGone || isStranded || (step.phase === 'done' && !isUndelivered)) await storage.delete(key);
-        else if (isUndelivered) {
-            // The push service didn't take it: the phase stays, so the next alarm sends the alert again.
+        // Removed, or replaced by the device meanwhile: the new registration keeps its own phase and schedule.
+        if (!stored || outcome === 'replaced' || stored.registeredAt !== rider.registeredAt) continue;
+        const retries = stored.pushRetries ?? 0;
+        // Refused for a while: the phase stays, so the next alarm sends the alert again, a few times at most.
+        const isRetried = outcome === 'refused' && retries < RIDE_PUSH.MAX_PUSH_RETRIES;
+        if (outcome === 'gone' || isStranded || (step.phase === 'done' && !isRetried)) await storage.delete(key);
+        else if (isRetried) {
+            await storage.put<Rider>(key, { ...stored, pushRetries: retries + 1 });
             next = Math.min(next, now + RIDE_PUSH.RETRY_INTERVAL_S * 1000);
         } else {
-            if (step.phase !== rider.phase) await storage.put<Rider>(key, { ...stored, phase: step.phase });
+            if (step.phase !== rider.phase || retries > 0) await storage.put<Rider>(key, { ...stored, phase: step.phase, pushRetries: 0 });
             // After a failed read the trip is retried later each time, but never past a boarding alert still to go.
             const at = isFailed && step.phase !== 'remind' && step.nextAt !== null ? Math.max(step.nextAt, backoffAt) : step.nextAt;
             if (at !== null) next = Math.min(next, at);
