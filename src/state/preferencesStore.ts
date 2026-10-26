@@ -73,6 +73,7 @@ interface PreferencesActions {
     clearHistory: () => void;
     toggleRequireAirConditioned: () => void;
     toggleRequireWheelchairAccessible: () => void;
+    clearVehicleFilters: () => void;
     setColorVehiclesByDelay: (enabled: boolean) => void;
     setDelayFilter: (filter: string[]) => void;
     setStatsTab: (tab: 'screen' | 'network') => void;
@@ -262,6 +263,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 clearHistory: () => set({ searchHistory: [] }),
                 toggleRequireAirConditioned: () => set((state) => ({ requireAirConditioned: !state.requireAirConditioned })),
                 toggleRequireWheelchairAccessible: () => set((state) => ({ requireWheelchairAccessible: !state.requireWheelchairAccessible })),
+                clearVehicleFilters: () => set({ requireAirConditioned: false, requireWheelchairAccessible: false }),
                 setColorVehiclesByDelay: (enabled) => set({ colorVehiclesByDelay: enabled }),
                 setDelayFilter: (filter) => set({ delayFilter: filter }),
                 setStatsTab: (tab) => set({ statsTab: tab }),

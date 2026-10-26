@@ -7,6 +7,7 @@ import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/
 import type { DepartureClickHandler, Platform, SelectedStop, AppError } from '@/types';
 import { useDepartures } from '@/hooks/data/useDepartures';
 import { InfoTexts } from './InfoTexts';
+import { VehicleFilterNotice } from './VehicleFilterNotice';
 import { MetroNightMessage } from './MetroNightMessage';
 import { DirectionRow } from './DirectionRow';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
@@ -41,7 +42,7 @@ interface DepartureBoardProps {
  */
 export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: DepartureBoardProps) => {
     const { t } = useTranslation();
-    const { isLoading, isError, error, refetch, groupedDepartures, favoriteKeys, isFiltered, selectedLine, data } = useDepartures();
+    const { isLoading, isError, error, refetch, groupedDepartures, favoriteKeys, isFiltered, selectedLine, data, hiddenByVehicleFilters } = useDepartures();
     const lineRules = useLineRules();
     const { timezone } = useCityConfig();
     const highlightedTripId = useSelectionStore(s => s.highlightedTripId);
@@ -133,6 +134,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                     {JSON.stringify(jsonLd)}
                 </script>
             )}
+            <VehicleFilterNotice hiddenCount={hiddenByVehicleFilters} />
             <InfoTexts selectedStop={selectedStop} />
             
             {groupedDepartures.length === 0 ? (
