@@ -67,10 +67,10 @@ Workers & Pages > `departs-ride-push` > Settings > Build > **Connect** your fork
 | Deploy command | `npx wrangler deploy -c workers/ride-push/wrangler.toml` |
 | Preview builds | off |
 | API token | *Create new token* |
-| Build watch paths, include | `functions/_workers/**`, `functions/_core/push/**`, `functions/_domain/rides/**`, `functions/_core/config.ts`, `functions/_core/types.ts`, `workers/**` |
+| Build watch paths, include | `functions/_workers/**`, `functions/_core/push/**`, `functions/_domain/rides/**`, `functions/_core/config.ts`, `functions/_core/types.ts`, `shared/**`, `workers/**`, `package.json`, `package-lock.json` |
 
 - `-c` points at this Worker's config; the root `wrangler.toml` belongs to the Pages project.
-- The watch paths build the Worker only when its code changes.
+- The watch paths build the Worker only when its code or its dependencies change; `shared/` holds trip rules it compiles in.
 - The secrets from step 3 persist across builds.
 
 ## 6. Check it end to end
