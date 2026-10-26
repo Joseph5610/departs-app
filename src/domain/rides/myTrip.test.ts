@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { MyTrip, VehicleDetail } from '@/types';
-import { boardingsBefore, byUrgency, deriveMyTrip, exitsAfter, followedUrgency, isTripExpired, isTripUnderway, tripPushKey, tripStartOf, tripUrgency, watchFrom, withPushState } from './myTrip';
+import { boardingsBefore, byUrgency, deriveMyTrip, exitsAfter, followedUrgency, isTripExpired, isTripUnderway, tripPushKey, tripStartOf, tripUrgency, watchFrom, withPushState, registrationChange } from './myTrip';
 
 const TZ = 'Europe/Prague';
 // 2026-10-20 12:00:00 in Prague.
@@ -122,6 +122,26 @@ describe('withPushState', () => {
         expect(withPushState(trip({ exitStopName: 'Renamed' }), saved).pushed).toBe(true);
         expect(withPushState(trip({ exitSequence: 4 }), saved).pushed).toBeUndefined();
         expect(withPushState(trip(), undefined).pushed).toBeUndefined();
+    });
+});
+
+describe('registrationChange', () => {
+    const pushed = trip({ pushed: true });
+    // I4: an ended trip, or one left with nothing to push, is withdrawn from the server.
+    it('withdraws a trip that ended or has nothing left to push', () => {
+        expect(registrationChange(pushed, undefined)).toBe('withdraw');
+        expect(registrationChange(pushed, trip({ board: null, toEnd: true }))).toBe('withdraw');
+        expect(registrationChange(trip({ board: null, toEnd: true }), undefined)).toBeNull();
+    });
+
+    it('registers a new trip, a changed one, and one whose registration failed', () => {
+        expect(registrationChange(undefined, trip())).toBe('register');
+        expect(registrationChange(pushed, trip({ exitSequence: 4 }))).toBe('register');
+        expect(registrationChange(trip(), trip())).toBe('register');
+    });
+
+    it('leaves a pushed trip alone when what it asks for is unchanged', () => {
+        expect(registrationChange(pushed, trip({ exitStopName: 'Renamed' }))).toBeNull();
     });
 });
 

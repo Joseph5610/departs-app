@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useRideStore } from '@/state/rideStore';
-import { tripPushKey } from '@/domain/rides';
+import { registrationChange } from '@/domain/rides';
 import { RIDE_PROTOCOL, tripNotificationTag } from '@shared/rides';
 import { closeRideNotifications, stopTripPush } from '@/lib/push';
 import type { MyTrip } from '@/types';
@@ -19,7 +19,7 @@ export const useRidePush = () => {
         for (const old of previous) {
             const current = trips.find(t => t.tripId === old.tripId);
             if (current === old) continue;
-            if (tripPushKey(old) !== null && (!current || tripPushKey(current) === null)) void stopTripPush(old);
+            if (registrationChange(old, current) === 'withdraw') void stopTripPush(old);
             if (current) continue;
             void closeRideNotifications(tripNotificationTag(RIDE_PROTOCOL.EXIT_TAG, old.tripId));
             void closeRideNotifications(tripNotificationTag(RIDE_PROTOCOL.BOARD_TAG, old.tripId));

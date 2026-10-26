@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { MY_TRIP_CONFIG } from '@/config/constants';
 import { RIDE_PROTOCOL } from '@shared/rides';
 import { SITE } from '@/config/site';
-import { tripPushKey, withPushState } from '@/domain/rides';
+import { registrationChange, tripPushKey, withPushState } from '@/domain/rides';
 import { requestNotificationPermission } from '@/lib/notifications';
 import { startTripPush, stopTripPush } from '@/lib/push';
 import { paths } from '@/lib/routes';
@@ -29,8 +29,7 @@ export const useMyTripActions = () => {
         }
         toast(previous ? t('myTrip.updated') : t('myTrip.saved'));
         const key = tripPushKey(trip);
-        // An unchanged trip the server already pushes needs nothing; one whose registration failed gets another try.
-        if (key === null || (previous?.pushed && key === tripPushKey(previous))) return true;
+        if (key === null || registrationChange(previous, trip) !== 'register') return true;
 
         const board = trip.board;
         const boardTitle = board ? t('myTrip.boardPushTitle', { line, stop: board.stopName }) : '';

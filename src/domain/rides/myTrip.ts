@@ -70,6 +70,17 @@ export const isTripExpired = (trip: Pick<MyTrip, 'startedAt' | 'board' | 'start'
 export const withPushState = <T extends Omit<MyTrip, 'startedAt'>>(next: T, previous: MyTrip | undefined): T =>
     ({ ...next, pushed: previous && tripPushKey(previous) === tripPushKey(next) ? previous.pushed : undefined });
 
+/**
+ * What a change of the user's trip asks of the server: `register` it afresh (it asks for something new, or its last
+ * registration didn't go through), `withdraw` it (ended, or left with nothing to push), or nothing.
+ */
+export const registrationChange = (previous: MyTrip | undefined, next: Omit<MyTrip, 'startedAt'> | undefined): 'register' | 'withdraw' | null => {
+    const before = previous ? tripPushKey(previous) : null;
+    const after = next ? tripPushKey(next) : null;
+    if (after === null) return before === null ? null : 'withdraw';
+    return after !== before || !previous?.pushed ? 'register' : null;
+};
+
 /** The stops the user can board at with their exit picked: those before it. */
 export const boardingsBefore = <T extends { sequence: number }>(choices: readonly T[], exitSequence: number | null): T[] =>
     exitSequence === null ? [...choices] : choices.filter(choice => choice.sequence < exitSequence);
