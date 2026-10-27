@@ -8,7 +8,7 @@ import { MCP_DEFAULTS } from "../_core/config";
 import { formatTime } from "../_core/utils/time";
 import { normalizeRouteType } from "../_core/utils/routeTypes";
 import { distanceMeters } from "../_core/utils/geo";
-import { requestParts } from "../_core/utils/stopIds";
+import { requestParts, stopIdParts } from "../_core/utils/stopIds";
 
 /**
  * Headers on every /mcp response: CORS for client compatibility (Claude Code, Cursor, browsers), plus
@@ -133,6 +133,28 @@ export async function resolveStationByName(citySlug: string, query: string): Pro
     return { stopIds: stop.id, stopName: stop.name };
 }
 
+/**
+ * The `stopId` values departures are asked for under a stop id a client sent: each platform of a comma-joined list
+ * named with its station (`station:platform`), which is where the Worker finds its rows. A value that already names
+ * its station, a station, or an id the search index does not know is kept as given.
+ */
+export async function departureValuesOf(citySlug: string, stopId: string): Promise<string[]> {
+    if (stopId.includes(':')) return [stopId];
+    const parts = stopIdParts(stopId);
+    const { city, search: pending } = stopSearchOf(citySlug);
+    const search = await pending;
+    const found = parts.map(id => search.byId(id));
+    const stops = await stopsAt(city, search, found.filter((i): i is number => i !== null));
+    const stationRows = [...new Set([...stops.values()].flatMap(s => s.station ?? []))];
+    const stations = await stopsAt(city, search, stationRows);
+    return parts.map((id, k) => {
+        const index = found[k];
+        const row = index === null ? undefined : stops.get(index)?.station;
+        const station = row === undefined ? undefined : stations.get(row);
+        return station ? `${station.id}:${id}` : id;
+    });
+}
+
 /** Up to `limit` stops within `radiusM` of the point (anywhere, when omitted), nearest first, with their distance in meters. */
 export async function nearestStops(
     citySlug: string,
@@ -223,21 +245,18 @@ export function toMcpDeparture(d: AppDeparture, timezone: string, nowMs: number)
 
 /**
  * A stop's departures, narrowed by the tool's optional `line` and `route_type` arguments and
- * capped at `limit`. `stopId` may be a comma-joined platform list, each platform answered on its own, or a
- * `station:platforms` value, answered as one stop.
+ * capped at `limit`. Each of `stopIds` is one `stopId` value (`departureValuesOf`), answered on its own.
  */
 export async function loadStopDepartures(
     ctx: McpContext,
     city: CityUseCases,
-    stopId: string,
+    stopIds: string[],
     args: Record<string, unknown>,
     limit: number
 ): Promise<AppDeparture[]> {
     const searchParams = new URLSearchParams();
     searchParams.set("limit", String(limit));
-    for (const id of stopId.includes(':') ? [stopId] : stopId.split(',')) {
-        if (id.trim()) searchParams.append("stopId", id.trim());
-    }
+    for (const id of stopIds) searchParams.append("stopId", id);
 
     const departuresCtx = buildRequestContext(ctx, searchParams);
     let departures = (await city.departures.getDepartures(departuresCtx))?.departures || [];

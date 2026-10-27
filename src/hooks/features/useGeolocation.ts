@@ -13,7 +13,6 @@ import { useVisibleCities } from '@/hooks/data/useCities';
 import { useNetworkCoverage } from '@/hooks/data/useNetworkCoverage';
 import { navigate } from '@/lib/history';
 import { matchRoutePath, paths } from '@/lib/routes';
-import { hasLaunchUrlCamera } from '@/lib/map/view';
 import { findCityAt, launchFocus } from '@/domain/cities';
 import type { City, NetworkCoverage } from '@/types';
 
@@ -166,9 +165,7 @@ export const useGeolocationWatcher = () => {
             if (!usePreferencesStore.getState().hasSeenWelcome) return;
             void mayLocateWithoutTap().then(allowed => {
                 if (!allowed || cancelled) return;
-                // A camera in the opening link is the view the sender meant; the position still shows as a dot.
-                if (hasLaunchUrlCamera()) startLocationWatch();
-                else requestFocus('launch');
+                requestFocus('launch');
             });
         };
         locateIfAllowed();

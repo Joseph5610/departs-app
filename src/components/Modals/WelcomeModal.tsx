@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, memo } from 'react';
+import { useState, useEffect, useMemo, useRef, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowRight } from 'lucide-react';
@@ -28,6 +28,7 @@ export const WelcomeModal = memo(() => {
     const { setSelectedCity, setHasSeenWelcome } = usePreferencesStore(s => s.actions);
     const mapRef = useMapMetadataStore(s => s.mapRef);
 
+    const ctaRef = useRef<HTMLButtonElement>(null);
     const [userChosenSlug, setUserChosenSlug] = useState<string | null>(null);
 
     const activeCitySlug = useMemo(() => {
@@ -84,51 +85,51 @@ export const WelcomeModal = memo(() => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-            <DialogContent aria-describedby={undefined} variant="default" showCloseButton={false} className="h-fit gap-8! p-6!">
-                <DialogHeader className="space-y-4 pt-2">
-                    <div className="flex justify-center">
-                        <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center p-0 border border-border/50 shadow-2xl overflow-hidden relative">
-                            <div className="absolute inset-0 bg-primary/20 blur-xl"></div>
-                            <img src="/pwa-192x192.png" alt="" className="w-full h-full object-cover rounded-2xl relative z-10" />
-                        </div>
+            <DialogContent
+                aria-describedby={undefined}
+                variant="default"
+                showCloseButton={false}
+                initialFocus={ctaRef}
+                className="h-fit max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] max-w-md gap-3 p-5 short:max-w-2xl short:flex-row short:gap-5"
+            >
+                <DialogHeader className="shrink-0 items-center gap-2 text-center short:w-5/12 short:justify-center short:border-r short:border-border/60 short:pr-5">
+                    <div className="size-11 mb-1 bg-black rounded-xl flex items-center justify-center p-0 border border-border/50 shadow-2xl overflow-hidden relative">
+                        <div className="absolute inset-0 bg-primary/20 blur-xl"></div>
+                        <img src="/pwa-192x192.png" alt="" className="w-full h-full object-cover rounded-xl relative z-10" />
                     </div>
-                    <DialogTitle className="text-center flex flex-col items-center justify-center gap-1.5 text-2xl">
-                        <div className="flex items-center gap-2">
-                            {t('welcome.title')}
-                            <Badge variant="soft" className="px-2 py-0.5 micro-label mt-0.5">
-                                {t('common.beta')}
-                            </Badge>
-                        </div>
+                    <DialogTitle className="flex flex-wrap items-center justify-center gap-2 text-xl font-semibold">
+                        {t('welcome.title')}
+                        <Badge variant="beta">{t('common.beta')}</Badge>
                     </DialogTitle>
-                    <p className="text-sm text-muted-foreground text-center leading-relaxed max-w-80 mx-auto">
+                    <p className="text-sm text-muted-foreground leading-snug max-w-80 text-balance">
                         {t('welcome.description')}
                     </p>
                 </DialogHeader>
-                <div className="flex flex-col gap-6 mt-2">
-
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-4 px-2">
-                            <div className="h-px flex-1 bg-linear-to-r from-transparent to-border"></div>
-                            <span className="micro-label-widest text-muted-foreground/60">
-                                {t('welcome.chooseCity')}
-                            </span>
-                            <div className="h-px flex-1 bg-linear-to-l from-transparent to-border"></div>
-                        </div>
-                        <CitySelectionList 
+                <div className="flex min-h-0 flex-1 flex-col gap-2">
+                    <div className="flex shrink-0 items-center gap-4 px-2">
+                        <div className="h-px flex-1 bg-linear-to-r from-transparent to-border"></div>
+                        <span className="micro-label-widest text-muted-foreground/60">
+                            {t('welcome.chooseCity')}
+                        </span>
+                        <div className="h-px flex-1 bg-linear-to-l from-transparent to-border"></div>
+                    </div>
+                    <div className="min-h-0 flex-1 -mx-2 px-2 py-0.5 overflow-y-auto overflow-x-hidden overscroll-contain">
+                        <CitySelectionList
                             cities={cities}
                             selectedCitySlug={activeCitySlug}
                             onSelect={(c) => setUserChosenSlug(c.slug)}
+                            size="compact"
                         />
                     </div>
-
                     <Button
+                        ref={ctaRef}
                         size="xl"
                         onClick={handleClose}
                         data-testid="welcome-cta"
-                        className="w-full transition-colors flex items-center justify-center gap-2 group font-bold"
+                        className="w-full shrink-0 mt-1 h-11 transition-colors flex items-center justify-center gap-2 group font-semibold"
                     >
                         {t('welcome.cta')}
-                        <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform"  strokeWidth={1.5} />
+                        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" strokeWidth={1.5} />
                     </Button>
                 </div>
             </DialogContent>

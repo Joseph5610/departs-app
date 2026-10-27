@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MIN, NOW, at, departure, stopModel } from '@/test/factories';
-import { computeDelayStats, departuresByStop, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, sectionPreview, withStopPlatforms, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
+import { computeDelayStats, departuresByStop, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, sectionPreview, sectionsHidingTrips, sectionGroupId, withStopPlatforms, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
 
 // AGENTS.md: metro departures group by line + direction, since each direction of A/B/C is its own platform.
 describe('groupDepartures', () => {
@@ -286,14 +286,16 @@ describe('sectionPreview', () => {
 
     // A large station lists a few lines per platform; the rest wait behind "more lines".
     it('shows the first lines and counts the rest', () => {
-        const { shown, hidden } = sectionPreview(groups, 3, new Set());
+        const { shown, hidden } = sectionPreview(groups, 3);
         expect(shown.map(g => g.line)).toEqual(['1', '2', '3']);
         expect(hidden).toBe(2);
     });
 
-    // A viewed or ridden trip must never be folded away.
-    it('shows every line when a hidden one holds a marked trip', () => {
-        expect(sectionPreview(groups, 3, new Set(['t5'])).hidden).toBe(0);
+    // A viewed or ridden trip must never be folded away: its section opens.
+    it('names the sections whose folded lines hold a marked trip', () => {
+        const section = { key: 'A', platform: 'A', direction: null, metroLine: null, metroColor: null, groups };
+        expect(sectionsHidingTrips([section], 3, new Set(['t5']))).toEqual([sectionGroupId('A')]);
+        expect(sectionsHidingTrips([section], 3, new Set(['t1']))).toEqual([]);
     });
 });
 

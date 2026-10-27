@@ -49,7 +49,7 @@ test.describe('Routing Tests', () => {
     test('shows a stop pinned under an alias as pinned', async ({ page }) => {
         await page.addInitScript(() => {
             window.localStorage.setItem('departs-preferences', JSON.stringify({
-                state: { hasSeenWelcome: true, selectedCity: 'prague', favoriteStops: ['U1040Z1P'] },
+                state: { hasSeenWelcome: true, selectedCity: 'prague', favoriteStops: [{ city: 'prague', stopId: 'U1040Z1P' }] },
                 version: 0,
             }));
         });

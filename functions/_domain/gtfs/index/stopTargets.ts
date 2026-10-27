@@ -1,4 +1,5 @@
-import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
+import type { CityConfig } from '../../../_core/cityConfig';
+import { getStopRelations, type StopRelation } from '../../../_feeds/gtfs/departureRows';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { ApiError } from '../../../_core/errors';
 import { requestParts } from '../../../_core/utils/stopIds';
@@ -23,7 +24,7 @@ export function checkRequestedStops(stopIds: readonly string[]): void {
 }
 
 /** `stopTargets`, rejected when the stations expand past the platform cap. */
-export function boundedStopTargets(stopIds: readonly string[], relations: ReadonlyMap<string, StopRelation>): StopTargets {
+function boundedStopTargets(stopIds: readonly string[], relations: ReadonlyMap<string, StopRelation>): StopTargets {
     const targets = stopTargets(stopIds, relations);
     if (targets.targetIds.length > GTFS_CONFIG.MAX_DEPARTURE_TARGET_STOPS) throw tooManyStops();
     return targets;
@@ -56,4 +57,13 @@ export function stopTargets(stopIds: readonly string[], relations: ReadonlyMap<s
         }
     }
     return { targetIds, childToRequestedMap, parentOf };
+}
+
+/**
+ * Expands each requested id into the platforms departures are actually attached to. The request schema bounds how
+ * many ids may be named; this bounds how many they expand into, which drives the subrequest count.
+ */
+export async function resolveStopTargets(city: CityConfig, stopIds: string[]): Promise<StopTargets> {
+    checkRequestedStops(stopIds);
+    return boundedStopTargets(stopIds, await getStopRelations(city, stopIds));
 }

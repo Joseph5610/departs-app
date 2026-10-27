@@ -9,7 +9,7 @@
 /** Where the departs-data static files live (per-city folders). */
 export const STATIC_DATA_CONFIG = {
     BASE_URL: 'https://data.departs.app',
-    /** Bump when departs-data renames or moves stops (`stop_index/`, `departure_buckets/`, the stop search index): drops every cached copy at once. */
+    /** Bump when departs-data renames or moves stops (`departure_buckets/`, the stop search index): drops every cached copy at once. */
     INDEX_CACHE_GENERATION: 4,
 };
 

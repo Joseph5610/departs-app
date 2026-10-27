@@ -225,7 +225,6 @@
       "trackCode": "koľaj {{code}}",
       "hours": "{{hours}} h",
       "hoursMinutes": "{{hours}} h {{minutes}} min",
-      "platform": "Nástupište / Koľaj",
       "sortByLine": "Zoradiť podľa linky",
       "sortByDeparture": "Zoradiť podľa času odchodu",
       "sort": "Zoradiť",
@@ -495,7 +494,7 @@
   "favorites": {
     "title": "Obľúbené",
     "empty": "Zatiaľ žiadne obľúbené",
-    "emptySub": "Ťuknite na hviezdičku pri zastávke alebo potiahnite doľava po smere linky na odchodovej tabuli (na počítači kliknite pravým tlačidlom) a pripnete ich sem.",
+    "emptySub": "Označte zastávku hviezdičkou alebo pripnite linku z odchodovej tabule a nájdete ich tu.",
     "pinLine": "Pridať linku {{line}} smer {{headsign}} do obľúbených",
     "unpinLine": "Odobrať linku {{line}} smer {{headsign}} z obľúbených",
     "linePinned": "Linka {{line}} smer {{headsign}} pridaná do obľúbených",
@@ -640,8 +639,7 @@
       "contactless": "Bezkontaktná platba"
     },
     "openingHours": "Otváracie hodiny",
-    "servicesTitle": "Poskytované služby",
-    "payMethodsTitle": "Spôsoby platby"
+    "servicesTitle": "Poskytované služby"
   },
   "legal": {
     "updated": "Naposledy aktualizované {{date}}",

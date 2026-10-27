@@ -6,6 +6,8 @@
 /* Base UI marks orientation with data-orientation, not bare data-horizontal/data-vertical attributes. */
 @custom-variant data-horizontal (&[data-orientation="horizontal"]);
 @custom-variant data-vertical (&[data-orientation="vertical"]);
+/* Landscape screens too low for a stacked modal (phones on their side). */
+@custom-variant short (@media (orientation: landscape) and (max-height: 30rem));
 
 :root {
   /* Space between the status bar and the top map controls (the live pill). */

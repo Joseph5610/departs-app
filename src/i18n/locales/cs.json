@@ -225,7 +225,6 @@
       "trackCode": "kolej {{code}}",
       "hours": "{{hours}} h",
       "hoursMinutes": "{{hours}} h {{minutes}} min",
-      "platform": "Nástupiště / Kolej",
       "sortByLine": "Seřadit podle linky",
       "sortByDeparture": "Seřadit podle času odjezdu",
       "sort": "Seřadit",
@@ -495,7 +494,7 @@
   "favorites": {
     "title": "Oblíbené",
     "empty": "Zatím žádné oblíbené",
-    "emptySub": "Klepněte na hvězdičku u zastávky nebo přejeďte doleva po směru linky na odjezdové tabuli (na počítači klikněte pravým tlačítkem) a připnete je sem.",
+    "emptySub": "Označte zastávku hvězdičkou nebo připněte linku z odjezdové tabule a najdete je tady.",
     "pinLine": "Přidat linku {{line}} směr {{headsign}} do oblíbených",
     "unpinLine": "Odebrat linku {{line}} směr {{headsign}} z oblíbených",
     "linePinned": "Linka {{line}} směr {{headsign}} přidána do oblíbených",
@@ -640,8 +639,7 @@
       "contactless": "Bezkontaktní platba"
     },
     "openingHours": "Otvírací doba",
-    "servicesTitle": "Poskytované služby",
-    "payMethodsTitle": "Způsoby platby"
+    "servicesTitle": "Poskytované služby"
   },
   "legal": {
     "updated": "Naposledy aktualizováno {{date}}",

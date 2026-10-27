@@ -8,7 +8,8 @@ import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { useDepartures } from '@/hooks/data/useDepartures';
 import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
-import { lineChips } from '@/domain/departures';
+import { departureLines, lineChips } from '@/domain/departures';
+import { useRouteMetadata } from '@/hooks/data/useRouteMetadata';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/cn';
@@ -41,15 +42,14 @@ export const DepartureBoardHeader = memo(() => {
     const twin = useStopTwin();
     const twinLabel = twin ? FRONTEND_CITIES_CONFIG[twin.city]?.networkLabel : undefined;
     const lineRules = useLineRules();
+    const { byShortName } = useRouteMetadata();
 
     const showHeader = !!selectedStop && !tripId && !isError;
 
     const uniqueLines = useMemo(() => {
-        const source = lineChipsFromDepartures
-            ? liveDepartures.map(dep => ({ name: dep.line, type: dep.type, route_color: dep.route_color ?? '' }))
-            : selectedStop?.board?.lines;
+        const source = lineChipsFromDepartures ? departureLines(liveDepartures, byShortName) : selectedStop?.board?.lines;
         return source ? lineChips(source, lineRules) : [];
-    }, [selectedStop, lineRules, lineChipsFromDepartures, liveDepartures]);
+    }, [selectedStop, lineRules, lineChipsFromDepartures, liveDepartures, byShortName]);
 
     const hasVehicleFilters = hasAirConditioningData || hasAccessibilityData;
 

@@ -10,13 +10,17 @@ interface CitySelectionListProps {
     cities: City[];
     selectedCitySlug: string;
     onSelect: (city: City) => void;
+    /** `compact` trims the cards for screens where the list shares space (the welcome modal). */
+    size?: 'default' | 'compact';
 }
 
 export const CitySelectionList = ({
     cities,
     selectedCitySlug,
     onSelect,
+    size = 'default',
 }: CitySelectionListProps) => {
+    const compact = size === 'compact';
     const { t, i18n } = useTranslation();
     const groups = useMemo(() => groupCitiesByCountry(cities), [cities]);
     const countryNames = useMemo(() => {
@@ -41,9 +45,10 @@ export const CitySelectionList = ({
                 onClick={() => onSelect(city)}
                 aria-pressed={isSelected}
                 className={cn(
-                    "group relative w-full h-20 flex items-center justify-start gap-4 p-4 rounded-2xl border transition-[border-color,box-shadow,background-color] duration-300 outline-none overflow-hidden focus-visible:ring-2 focus-visible:ring-primary/60",
+                    "group relative w-full flex items-center justify-start rounded-2xl border transition-[border-color,box-shadow,background-color] duration-300 outline-none overflow-hidden focus-visible:ring-2 focus-visible:ring-primary/60",
+                    compact ? "h-17 gap-3 px-4 py-3" : "h-20 gap-4 p-4",
                     isSelected
-                        ? "border-primary/60 bg-card ring-1 ring-inset ring-primary/25 shadow-md dark:bg-muted/30"
+                        ? "border-primary/50 bg-card dark:bg-muted/30"
                         : "border-border/60 bg-card hover:border-border hover:bg-muted/40 dark:bg-muted/30 dark:hover:bg-muted/50"
                 )}
             >
@@ -85,18 +90,19 @@ export const CitySelectionList = ({
                 <div className="relative flex flex-col items-start z-10">
                     <div className="flex items-center gap-2">
                         <span className={cn(
-                            "text-xl font-bold tracking-tight text-foreground"
+                            "font-semibold tracking-tight text-foreground",
+                            compact ? "text-lg leading-6" : "text-xl"
                         )}>
                             {city.name}
                         </span>
                         {city.isBeta && (
-                            <Badge variant="outline" className="text-label px-1.5 py-0.5 uppercase font-bold tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-500 border-amber-500/30">
+                            <Badge variant="beta">
                                 {t('common.beta')}
                             </Badge>
                         )}
                     </div>
                     {subtitle && (
-                        <span className="text-sm text-muted-foreground font-medium">
+                        <span className={cn("text-muted-foreground", compact ? "text-sm leading-5" : "text-sm font-medium")}>
                             {subtitle}
                         </span>
                     )}
@@ -106,10 +112,10 @@ export const CitySelectionList = ({
     };
 
     return (
-        <div className="flex flex-col gap-2.5 p-2 -mx-2">
+        <div className={cn("flex flex-col", compact ? "gap-2" : "gap-2.5 p-2 -mx-2")}>
             {groups.length > 1
                 ? groups.map((group) => (
-                    <section key={group.country} className="flex flex-col gap-2.5">
+                    <section key={group.country} className={cn("flex flex-col", compact ? "gap-2" : "gap-2.5")}>
                         <div className="text-label text-muted-foreground/50 font-bold uppercase tracking-widest px-1">
                             {countryNames?.of(group.country) ?? group.country}
                         </div>

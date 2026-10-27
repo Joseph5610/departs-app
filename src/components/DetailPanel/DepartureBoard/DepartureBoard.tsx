@@ -13,7 +13,7 @@ import { DirectionRow } from './DirectionRow';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
 import { ErrorState } from '@/components/DetailPanel/ErrorState';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
-import { groupsHidingTrips, isMetroClosed, sectionPreview, stationBoardSections, type DepartureLineGroup, type PlatformSection } from '@/domain/departures';
+import { groupsHidingTrips, isMetroClosed, sectionGroupId, sectionPreview, sectionsHidingTrips, stationBoardSections, type DepartureLineGroup, type PlatformSection } from '@/domain/departures';
 import { Button } from '@/components/ui/button';
 import { isStationBoard, sectionStopId, servesMode } from '@/domain/stops';
 import { useOpenStop } from '@/hooks/features/useOpenStop';
@@ -64,15 +64,16 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
         () => new Set([highlightedTripId, followedTripId, ...trips.map(trip => trip.tripId)].filter((id): id is string => !!id)),
         [highlightedTripId, followedTripId, trips]);
     const [expandedGroups, setExpandedGroups] = useState<ReadonlySet<string>>(() => new Set());
-    /** Groups whose viewed or ridden trip sits below the collapsed rows open once, then follow the user's toggle. */
+    /** Groups and sections whose viewed or ridden trip sits below the folded rows open once, then follow the user's toggle. */
     const autoExpanded = useRef(new Set<string>());
     useEffect(() => {
         if (marked.size === 0) return;
-        const toOpen = groupsHidingTrips(shownGroups, marked).filter(id => !autoExpanded.current.has(id));
+        const hiding = [...groupsHidingTrips(shownGroups, marked), ...sectionsHidingTrips(sections ?? [], DEPARTURES_CONFIG.SECTION_PREVIEW_LINES, marked)];
+        const toOpen = hiding.filter(id => !autoExpanded.current.has(id));
         if (toOpen.length === 0) return;
         for (const id of toOpen) autoExpanded.current.add(id);
         setExpandedGroups(prev => new Set([...prev, ...toOpen]));
-    }, [shownGroups, marked]);
+    }, [shownGroups, sections, marked]);
 
     // Re-runs on expansion: a highlighted trip in a collapsed group only has a row once its group opens.
     const scrolledTo = useRef<string | null>(null);
@@ -167,7 +168,6 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                             key={section.key}
                             section={section}
                             platformStopId={sectionStopIds.get(section.key) ?? null}
-                            markedTripIds={marked}
                             badgeColumn={badgeColumn}
                             rowProps={rowProps}
                         />
@@ -231,18 +231,16 @@ const DirectionRows = ({ groups, inPlatformSection, isFiltered, expandedGroups, 
 interface PlatformSectionViewProps {
     section: PlatformSection;
     platformStopId: string | null;
-    markedTripIds: ReadonlySet<string>;
     badgeColumn: React.CSSProperties;
     rowProps: Omit<DirectionRowsProps, 'groups' | 'inPlatformSection'>;
 }
 
 /** One platform's section of a station board: its first lines, the rest behind a button. */
-const PlatformSectionView = memo(({ section, platformStopId, markedTripIds, badgeColumn, rowProps }: PlatformSectionViewProps) => {
+const PlatformSectionView = memo(({ section, platformStopId, badgeColumn, rowProps }: PlatformSectionViewProps) => {
     const { t } = useTranslation();
-    const [showAll, setShowAll] = useState(false);
-    const { shown, hidden } = useMemo(
-        () => sectionPreview(section.groups, DEPARTURES_CONFIG.SECTION_PREVIEW_LINES, markedTripIds),
-        [section.groups, markedTripIds]);
+    const sectionId = sectionGroupId(section.key);
+    const showAll = rowProps.expandedGroups.has(sectionId);
+    const { shown, hidden } = useMemo(() => sectionPreview(section.groups, DEPARTURES_CONFIG.SECTION_PREVIEW_LINES), [section.groups]);
     const groups = showAll ? section.groups : shown;
     return (
         <section className="flex flex-col gap-1.5">
@@ -252,7 +250,7 @@ const PlatformSectionView = memo(({ section, platformStopId, markedTripIds, badg
                 <DirectionRows groups={groups} inPlatformSection={!section.metroLine} {...rowProps} />
                 {hidden > 0 && (
                     <div className="flex justify-center border-t border-border/50 py-2.5">
-                        <Button variant="more" size="chip" aria-expanded={showAll} onClick={() => setShowAll(open => !open)}>
+                        <Button variant="more" size="chip" aria-expanded={showAll} onClick={() => rowProps.onToggleGroup(sectionId)}>
                             {showAll ? t('map.departures.fewerLines') : t('map.departures.moreLines', { count: hidden })}
                             <ChevronDown size={14} strokeWidth={2} className={cn("transition-transform duration-200", showAll && "rotate-180")} />
                         </Button>

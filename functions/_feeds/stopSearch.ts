@@ -12,7 +12,7 @@ import { distanceMeters } from '../_core/utils/geo';
 /** Lowercase without diacritics, so `namesti svobody` finds `Náměstí Svobody`. Must match departs-data's `foldName`. */
 const foldName = (value: string): string => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
-/** Shape check only: `stopFeatures` type-checks the fields of the few stops it reads. */
+/** Shape check only: `stopsAt` type-checks the fields of the few stops it reads. */
 const stopDetailsBlockSchema = z.lazy(() => z.array(z.array(z.unknown())));
 type StopDetailsBlock = z.infer<typeof stopDetailsBlockSchema>;
 
@@ -44,7 +44,7 @@ const isStopLine = (value: unknown): value is StopLine => {
 
 export interface RankedStopIndex {
     index: number;
-    /** Approximate until the stop's detail is read; `stopFeatures` callers recompute it from full coordinates. */
+    /** Approximate until the stop's detail is read; `stopsAt` callers recompute it from full coordinates. */
     distance: number;
 }
 
@@ -124,6 +124,21 @@ export class StopSearch {
         const ranked: number[] = [];
         for (let k = 0; k < order.length && ranked.length < limit; k++) ranked.push(indexes[order[k] % indexes.length]);
         return ranked;
+    }
+
+    /** The platform that goes by `id` (its own or an alias), matched whole; null when none does. */
+    byId(id: string): number | null {
+        const q = foldName(id);
+        if (!q || /[\t\n,]/.test(q)) return null;
+        for (let pos = this.text.indexOf(q); pos !== -1; pos = this.text.indexOf(q, pos + 1)) {
+            const before = this.text[pos - 1];
+            const after = this.text[pos + q.length];
+            if ((before !== '\t' && before !== ',') || (after !== undefined && after !== ',' && after !== '\n')) continue;
+            const i = this.lineAt(pos);
+            const tab = this.text.indexOf('\t', this.offsets[i]);
+            if (tab !== -1 && tab < pos) return i;
+        }
+        return null;
     }
 
     /**

@@ -68,16 +68,7 @@ export const useGeolocationStore = create<GeolocationStore>()(
         {
             name: 'departs-last-location',
             storage: createJSONStorage(() => localStorage),
-            // Version 0 stored the full GPS precision; version 1 had no time, so its position counts as stale.
             version: 2,
-            migrate: (persisted) => {
-                const old = persisted as Partial<GeolocationState> | null;
-                return {
-                    lastLocation: coarsenLocation(old?.lastLocation ?? null),
-                    lastLocationAt: typeof old?.lastLocationAt === 'number' ? old.lastLocationAt : 0,
-                    locationOptIn: old?.lastLocation != null,
-                };
-            },
             partialize: (state) => ({
                 lastLocation: state.lastLocation,
                 lastLocationAt: state.lastLocationAt,

@@ -67,8 +67,6 @@ interface PreferencesActions {
     reorderFavoriteStops: (shown: FavoriteStop[]) => void;
     /** Unpins a stop pinned under any of these ids. */
     removeFavoriteStops: (pins: FavoriteStop[]) => void;
-    /** Gives `city` the city-less pins its stop list knows (pins saved before they carried a city). */
-    claimFavoriteStops: (city: string, pins: FavoriteStop[]) => void;
     addToHistory: (baseItem: SearchHistoryBase) => void;
     clearHistory: () => void;
     toggleRequireAirConditioned: () => void;
@@ -131,8 +129,7 @@ const searchHistoryItemSchema = z.discriminatedUnion('type', [
 
 const favoriteLineSchema = z.looseObject({ city: z.string(), stopId: z.string(), line: z.string(), headsign: z.string() });
 
-/** A pin as stored: `{ city, stopId }`, or a bare id saved before pins carried their city. */
-const favoriteStopSchema = z.union([z.string(), z.looseObject({ city: z.optional(z.string()), stopId: z.string() })]);
+const favoriteStopSchema = z.looseObject({ city: z.string(), stopId: z.string() });
 
 const stringArraySchema = z.array(z.string());
 
@@ -171,7 +168,7 @@ export const mergePersisted = (persisted: unknown, current: PreferencesStore): P
             if (history) merged[key] = firstUnique(history, searchHistoryKey, Infinity);
         } else if (key === 'favoriteStops') {
             const pins = validEntries(value, favoriteStopSchema);
-            if (pins) merged[key] = pins.map((pin): FavoriteStop => (typeof pin === 'string' ? { stopId: pin } : { city: pin.city, stopId: pin.stopId }));
+            if (pins) merged[key] = pins.map((pin): FavoriteStop => ({ city: pin.city, stopId: pin.stopId }));
         } else if (key === 'favoriteLines') {
             const favorites = validEntries(value, favoriteLineSchema);
             if (favorites) merged[key] = favorites;
@@ -245,9 +242,6 @@ export const usePreferencesStore = create<PreferencesStore>()(
                     return favoriteStops === state.favoriteStops ? state : { favoriteStops };
                 }),
                 removeFavoriteStops: (pins) => set((state) => ({ favoriteStops: state.favoriteStops.filter(f => !pins.some(pin => isSameFavoriteStop(f, pin))) })),
-                claimFavoriteStops: (city, pins) => set((state) => pins.length === 0 ? state : {
-                    favoriteStops: state.favoriteStops.map(f => (!f.city && pins.some(pin => isSameFavoriteStop(f, pin)) ? { city, stopId: f.stopId } : f)),
-                }),
                 toggleFavorite: (pin) =>
                     set((state) => {
                         const exists = state.favoriteStops.some(f => isSameFavoriteStop(f, pin));

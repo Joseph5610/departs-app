@@ -145,16 +145,18 @@ export const stationBoardSections = (groups: DepartureLineGroup[], departureSort
     return sections.some(section => section.key) ? sections : null;
 };
 
-/**
- * The rows a platform section shows before "more": its first `limit` lines, or all of them when one further
- * down holds a marked trip (viewed, ridden or followed), which must stay visible. `hidden` counts the rest.
- */
-export const sectionPreview = (groups: DepartureLineGroup[], limit: number, markedTripIds: ReadonlySet<string>): { shown: DepartureLineGroup[]; hidden: number } => {
-    if (groups.length <= limit) return { shown: groups, hidden: 0 };
-    const rest = groups.slice(limit);
-    if (markedTripIds.size > 0 && rest.some(g => g.subGroups.some(s => s.departures.some(d => holdsTrip(d, markedTripIds))))) return { shown: groups, hidden: 0 };
-    return { shown: groups.slice(0, limit), hidden: rest.length };
-};
+/** The rows a platform section shows before "more": its first `limit` lines. `hidden` counts the rest. */
+export const sectionPreview = (groups: DepartureLineGroup[], limit: number): { shown: DepartureLineGroup[]; hidden: number } =>
+    groups.length <= limit ? { shown: groups, hidden: 0 } : { shown: groups.slice(0, limit), hidden: groups.length - limit };
+
+/** The id a platform section's "more lines" is opened under, beside the line groups' ids. */
+export const sectionGroupId = (key: string) => `section:${key}`;
+
+/** Sections whose folded lines (past `limit`) hold one of `tripIds`, by `sectionGroupId`, so the board can open them. */
+export const sectionsHidingTrips = (sections: readonly PlatformSection[], limit: number, tripIds: ReadonlySet<string>): string[] =>
+    sections
+        .filter(section => section.groups.slice(limit).some(g => g.subGroups.some(s => s.departures.some(d => holdsTrip(d, tripIds)))))
+        .map(section => sectionGroupId(section.key));
 
 /** Whether `dep` is one of the marked trips (viewed, ridden or followed), which must never be folded away. */
 const holdsTrip = (dep: Departure, tripIds: ReadonlySet<string>) => !!dep.tripId && tripIds.has(dep.tripId);

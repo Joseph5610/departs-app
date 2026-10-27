@@ -23,7 +23,7 @@ export const useFavorites = () => {
     const { isLoading, model } = useStops();
 
     const allLines = linesIn(favoriteLines, selectedCity);
-    const cityPins = pinsIn(favoriteStops, selectedCity, model);
+    const cityPins = pinsIn(favoriteStops, selectedCity);
     const allStops = stopsPinned(model, cityPins);
 
     const lineStops = lineStopsOf(model, allLines);

@@ -12,6 +12,7 @@ const isStarred = (starredIds: readonly string[]): ExpressionSpecification => ['
 export const stopBadgeImage = (selectedCity: string, starredIds: readonly string[] = []): ExpressionSpecification =>
     ['concat', MAP_ICONS.STOP_BADGE_PREFIX, stopCity(selectedCity), ':',
         ['case', isStarred(starredIds), '*', ''], ':',
+        ['coalesce', ['get', 'platform_code'], ''], ':',
         ['coalesce', ['get', 'badges'], '']];
 
 /** Draw order of overlapping platform badges: by leading mode, a starred one on top so its star stays visible. */

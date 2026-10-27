@@ -16,6 +16,7 @@ const routesFileSchema = z.record(z.string(), z.object({
     name: z.string(),
     type: z.enum([...ROUTE_TYPE_ORDER, 'unknown']),
     route_color: z.string(),
+    night: z.optional(z.literal(true)),
 }));
 
 const routesPersister = createDevicePersister((data) => routesFileSchema.parse(data));

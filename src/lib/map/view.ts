@@ -3,33 +3,8 @@ import { useGeolocationStore } from '@/state/geolocationStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { LAUNCH_VIEW, MAP_CAMERA } from '@/config/constants';
 import { useViewportStore } from '@/state/viewportStore';
-import { launchCamera, type Camera } from '@/domain/cities';
+import { launchCamera } from '@/domain/cities';
 import { matchRoutePath } from '@/lib/routes';
-import { replaceUrl } from '@/lib/history';
-
-const CAMERA_PARAMS = ['lat', 'lng', 'z'] as const;
-
-/** A camera in the opening URL, from an old link or bookmark; read once, before the URL is cleaned. */
-const readUrlCamera = (): Camera | null => {
-    if (typeof window === 'undefined') return null;
-    const p = new URLSearchParams(window.location.search);
-    const [lat, lng, zoom] = CAMERA_PARAMS.map(key => Number(p.get(key) ?? NaN));
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-    return { lat, lng, zoom: Number.isFinite(zoom) ? zoom : MAP_CAMERA.USER_LOCATION_ZOOM };
-};
-
-const launchUrlCamera = readUrlCamera();
-
-/** Whether the app was opened with a camera in its URL, the view the link's sender meant. */
-export const hasLaunchUrlCamera = () => launchUrlCamera !== null;
-
-/** Drops camera parameters from the URL: the map no longer keeps its view there, and they could reveal a position. */
-export const stripUrlCamera = () => {
-    const url = new URL(window.location.href);
-    if (!CAMERA_PARAMS.some(key => url.searchParams.has(key))) return;
-    for (const key of CAMERA_PARAMS) url.searchParams.delete(key);
-    replaceUrl(url.toString());
-};
 
 /** The camera the map opens at: see `launchCamera`, for the city in the URL or else the selected one. */
 export const getInitialViewState = () => {
@@ -39,7 +14,6 @@ export const getInitialViewState = () => {
     const { savedCamera, savedCameraAt } = useViewportStore.getState();
 
     const { camera } = launchCamera({
-        urlCamera: launchUrlCamera,
         lastLocation: lastLocation ? { value: lastLocation, at: lastLocationAt } : null,
         savedCamera: savedCamera ? { value: savedCamera, at: savedCameraAt } : null,
         city,

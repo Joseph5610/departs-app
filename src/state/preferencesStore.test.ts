@@ -22,11 +22,10 @@ describe('mergePersisted', () => {
         expect(merged.favoriteLines).toEqual([{ city: 'prague', stopId: 'U1', line: '22', headsign: 'Bílá Hora' }]);
     });
 
-    // Pins saved as bare ids keep working; their city is claimed later from the stop list.
-    it('reads pins saved as bare ids as city-less pins and drops corrupt ones', () => {
-        const merged = mergePersisted({ favoriteStops: ['U1', { city: 'brno', stopId: 'U2' }, 3] }, defaults);
+    it('keeps pins with their city and drops corrupt ones', () => {
+        const merged = mergePersisted({ favoriteStops: ['U1', { city: 'brno', stopId: 'U2', extra: 1 }, { stopId: 'U3' }, 3] }, defaults);
 
-        expect(merged.favoriteStops).toEqual([{ stopId: 'U1' }, { city: 'brno', stopId: 'U2' }]);
+        expect(merged.favoriteStops).toEqual([{ city: 'brno', stopId: 'U2' }]);
     });
 
     it('falls back for values of the wrong type or outside the allowed options', () => {

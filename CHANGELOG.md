@@ -4,6 +4,23 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.89.0] - 2026-10-26
+
+### Fixed
+
+- The welcome screen is more compact and fits low screens such as foldables and phones on their side, with the start button always visible.
+
+### Changed
+
+- Night lines come from departs-data's route flag (PID's own `is_night`, `N` lines in Brno and Prešov) instead of name rules in the app.
+- MCP departure tools accept a bare platform id and ask for it with its station.
+
+### Removed
+
+- The Worker's `stop_index/` and `parent_child_map.json` fallback for platforms requested without their station (app versions before 0.87.2).
+- Favourite stops saved before pins carried their city, and the map camera in old `?lat=&lng=&z=` links.
+- The unscoped `/api/departures`, `/api/vehicles`, `/api/alerts` and similar redirects to Prague's API.
+
 ## [0.88.0] - 2026-10-25
 
 ### Added

@@ -67,16 +67,13 @@ export interface LineRules {
     trainLinePrefixes: string[];
     /** Local hours [from, to) with no metro service, to explain an empty metro board. */
     metroClosedHours: [number, number] | null;
-    /** Night lines are listed after the day lines of their mode, and left off stop badges outside `nightHours`; null where the city tells none. */
-    isNightLine: ((routeType: string, lineName: string) => boolean) | null;
-    /** Local hours [from, to), wrapping past midnight, in which stop badges show night lines. */
+    /** Local hours [from, to), wrapping past midnight, in which stop badges show night lines (`RouteInfo.night`). */
     nightHours: [number, number];
 }
 
 export const DEFAULT_LINE_RULES: LineRules = {
     trainLinePrefixes: ['S', 'R'],
     metroClosedHours: null,
-    isNightLine: null,
     nightHours: [22, 5],
 };
 
@@ -106,20 +103,11 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         debugFeedLabels: { vehicles: 'Golemio (/v2/public/vehiclepositions)', alerts: 'PID (GTFS-RT PB + RSS XML)' },
         lineRules: {
             metroClosedHours: [0, 5],
-            // PID numbers night trams 90-99 and night buses 900+; a replacement bus (X91) keeps the number it replaces.
-            isNightLine: (routeType, lineName) => {
-                const num = parseInt(lineName.replace(/\D/g, ''), 10);
-                const nightTram = num >= 90 && num < 100 && (routeType === 'tram' || lineName.startsWith('X'));
-                return nightTram || (routeType === 'bus' && num >= 900);
-            },
         },
     },
     brno: {
         slug: 'brno',
         networkLabel: 'IDS JMK',
-        lineRules: {
-            isNightLine: (_routeType, lineName) => /^N\d/.test(lineName),
-        },
         modeColors: { tram: '#D40000', trolleybus: '#008033', bus: '#2C82C8', ferry: '#00224B' },
         country: 'CZ',
         timezone: 'Europe/Prague',

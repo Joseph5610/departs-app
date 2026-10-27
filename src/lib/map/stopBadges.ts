@@ -3,7 +3,7 @@ import type { IconNode } from 'lucide-react';
 import type { RouteType } from '@/types';
 import { MAP_ICONS, STOP_BADGE } from '@/config/mapLayers';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
-import { PLATFORM_CODE_TILE, STOP_BADGE_SEPARATOR, TILE_PART_SEPARATOR } from '@/domain/stops';
+import { STOP_BADGE_SEPARATOR, TILE_PART_SEPARATOR } from '@/domain/stops';
 import { getContrastColor } from '@/lib/color';
 import { TROLLEYBUS_ICON_NODE } from '@/lib/trolleybusGlyph';
 
@@ -144,27 +144,24 @@ const badgeContext = () => (sharedContext === undefined
     : sharedContext);
 
 /**
- * The image for the id's `<city>:<star>:<badges>` part: one pill of joined mode tiles (one grey tile for a stop
+ * The image for the id's `<city>:<star>:<platform code>:<badges>` part: one pill of joined mode tiles (one grey tile for a stop
  * with no lines), a platform's code in a circle beside it. A starred one gets a margin on every side, so its
  * centre, and so its place on the map, stays put.
  */
 const drawStopBadge = (key: string): ImageData | null => {
-    const [city, star, badges] = key.split(':');
+    const [city, star, code, badges] = key.split(':');
     const colors = modeColorsOf(city);
-    const all = badges ? badges.split(STOP_BADGE_SEPARATOR) : [];
-    const codeTile = all.find(tile => tile.startsWith(PLATFORM_CODE_TILE + TILE_PART_SEPARATOR));
-    const modeTiles = all.filter(tile => tile !== codeTile);
-    const tiles = modeTiles.length ? modeTiles : ['unknown'];
+    const tiles = badges ? badges.split(STOP_BADGE_SEPARATOR) : ['unknown'];
     const size = STOP_BADGE.TILE_PX * STOP_BADGE.PIXEL_RATIO;
     const divider = STOP_BADGE.DIVIDER_PX * STOP_BADGE.PIXEL_RATIO;
     const margin = star ? Math.round(size * STOP_BADGE.STAR_MARGIN_SCALE) : 0;
     const width = tiles.length * size;
-    const codeGap = codeTile ? Math.round(size * STOP_BADGE.CODE_GAP_SCALE) : 0;
+    const codeGap = code ? Math.round(size * STOP_BADGE.CODE_GAP_SCALE) : 0;
     const ctx = badgeContext();
     if (!ctx) return null;
     const { canvas } = ctx;
     // Resizing clears the canvas and resets its state, so each badge starts blank.
-    canvas.width = width + (codeTile ? codeGap + size : 0) + 2 * margin;
+    canvas.width = width + (code ? codeGap + size : 0) + 2 * margin;
     canvas.height = size + 2 * margin;
     ctx.save();
     ctx.translate(margin, margin);
@@ -175,8 +172,8 @@ const drawStopBadge = (key: string): ImageData | null => {
     ctx.fillStyle = STOP_BADGE.DIVIDER_COLOR;
     for (let i = 1; i < tiles.length; i++) ctx.fillRect(i * size - divider / 2, 0, divider, size);
     ctx.restore();
-    if (codeTile) drawPlatformCircle(ctx, codeTile.slice(PLATFORM_CODE_TILE.length + 1), margin + width + codeGap, margin, size);
-    if (star) drawStar(ctx, margin + width + (codeTile ? codeGap + size : 0), margin, size * STOP_BADGE.STAR_RADIUS_SCALE);
+    if (code) drawPlatformCircle(ctx, code, margin + width + codeGap, margin, size);
+    if (star) drawStar(ctx, margin + width + (code ? codeGap + size : 0), margin, size * STOP_BADGE.STAR_RADIUS_SCALE);
     return ctx.getImageData(0, 0, canvas.width, canvas.height);
 };
 

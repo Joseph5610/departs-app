@@ -6,7 +6,8 @@ import type { GtfsDepartureTuple } from '../../../_feeds/gtfs/types';
 import { ApiError } from '../../../_core/errors';
 import { ERROR_MESSAGES } from '../../../_core/config';
 import { departuresQuerySchema, parseSearchParams } from '../../../_core/schemas';
-import { getStopIndex, type StopIndex } from '../index/StopIndex';
+import { getDepartureRows } from '../../../_feeds/gtfs/departureRows';
+import { resolveStopTargets } from '../index/stopTargets';
 import type { VehiclesService } from '../../vehicles/VehiclesService';
 import type { DepartureSource } from './departuresMapper';
 import type { DeparturesUseCase } from '../../useCases';
@@ -26,12 +27,12 @@ export function collectTripIds(deps: { tuple: GtfsDepartureTuple }[]): Set<strin
 
 /** The rows of every target platform, tagged with the stop the client asked for and the platform each leaves from. */
 export async function collectDepartureTuples(
-    stopIndex: StopIndex,
+    city: CityConfig,
     targetIds: string[],
     childToRequestedMap: Map<string, string>,
     parentOf: ReadonlyMap<string, string>
 ): Promise<DepartureSource[]> {
-    const rows = await stopIndex.rows(targetIds, parentOf);
+    const rows = await getDepartureRows(city, targetIds, parentOf);
     const allDeps: DepartureSource[] = [];
     for (const [id, tuples] of rows) {
         const requestedStopId = childToRequestedMap.get(id) || id;
@@ -71,11 +72,9 @@ export class DeparturesService implements DeparturesUseCase {
             throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
         }
 
-        const stopIndex = getStopIndex(this.city);
-
         try {
-            const { targetIds, childToRequestedMap, parentOf } = await stopIndex.resolve(stopIds);
-            const allDeps = await collectDepartureTuples(stopIndex, targetIds, childToRequestedMap, parentOf);
+            const { targetIds, childToRequestedMap, parentOf } = await resolveStopTargets(this.city, stopIds);
+            const allDeps = await collectDepartureTuples(this.city, targetIds, childToRequestedMap, parentOf);
 
             if (allDeps.length === 0) {
                 return { departures: [] };
