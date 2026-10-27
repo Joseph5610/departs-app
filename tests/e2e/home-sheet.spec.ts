@@ -11,7 +11,7 @@ const openPhone = async (context: BrowserContext, favoriteStops: string[] = []) 
     const page = await context.newPage();
     await page.addInitScript((favorites) => {
         window.localStorage.setItem('departs-preferences', JSON.stringify({
-            state: { hasSeenWelcome: true, selectedCity: 'prague', favoriteStops: favorites },
+            state: { hasSeenWelcome: true, selectedCity: 'prague', favoriteStops: favorites.map(stopId => ({ city: 'prague', stopId })) },
             version: 0
         }));
     }, favoriteStops);

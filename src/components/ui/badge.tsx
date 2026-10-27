@@ -23,6 +23,8 @@ const badgeVariants = cva(
         soft: "bg-primary/10 text-primary border-primary/20",
         /** Status chips on a detail hero card, such as the delay and live-data age. */
         hero: "h-6 px-2.5 rounded-md text-micro font-bold uppercase tracking-wider border-transparent bg-card shadow-sm",
+        /** Beta marker next to a product or city name. */
+        beta: "h-4 px-1.5 rounded-md border-transparent bg-amber-500/15 text-micro font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400",
         label: "border-border/40 bg-foreground/5 text-label font-semibold uppercase tracking-wider text-muted-foreground/70 [a]:hover:bg-muted [a]:hover:text-muted-foreground",
       },
     },

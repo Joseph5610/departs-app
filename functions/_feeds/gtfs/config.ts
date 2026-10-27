@@ -48,12 +48,6 @@ export const GTFS_CONFIG = {
     /** Stops' departure rows kept per isolate; a busy stop's rows run to tens of KB. */
     DEPARTURE_ROWS_CACHE_MAX_ENTRIES: 128,
 
-    /** Files each stop's station relation is hashed across (`stop_index/`). */
-    STOP_INDEX_SHARDS: 256,
-    /** Shards one request may read; naming stops across more reads `parent_child_map.json` once instead. */
-    STOP_INDEX_MAX_SHARDS: 4,
-    /** Parsed `stop_index/` shards kept per isolate, ~2KB each. */
-    STOP_INDEX_CACHE_MAX_ENTRIES: 16,
     /** Stations' platform lists kept per isolate, read from the departure buckets. */
     STATION_PLATFORMS_CACHE_MAX_ENTRIES: 2048,
 } as const;
@@ -78,11 +72,6 @@ export function bucketOf(id: string, count: number): string {
 /** departure_buckets/<bucket>.json, hashed by the stop's parent station so a station's platforms share one file. */
 export function departuresBucketId(stopId: string, parentOf: ReadonlyMap<string, string>): string {
     return bucketOf(parentOf.get(stopId) ?? stopId, GTFS_CONFIG.DEPARTURE_BUCKET_COUNT);
-}
-
-/** stop_index/<shard>.json */
-export function stopIndexShardId(stopId: string): string {
-    return bucketOf(stopId, GTFS_CONFIG.STOP_INDEX_SHARDS);
 }
 
 /** trip_buckets/<bucket>.json */

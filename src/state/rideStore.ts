@@ -74,13 +74,9 @@ export const useRideStore = create<RideStore>()(
             name: 'departs-ride',
             storage: createJSONStorage(() => localStorage),
             version: 4,
-            migrate: (persisted, version) => {
-                const old = persisted as { ride?: (Ride & { watching?: boolean }) | null; trips?: MyTrip[]; followed?: Ride | MyTrip | null; unfollowedKey?: string | null } | null;
+            migrate: (persisted) => {
+                const old = persisted as { ride?: Ride | null; trips?: MyTrip[]; followed?: Ride | MyTrip | null; unfollowedKey?: string | null } | null;
                 const asTrip = (ride: Ride): MyTrip => ({ board: null, toEnd: false, ...ride });
-                if (version < 2 && old?.ride?.watching) {
-                    const { watching: _watching, ...ride } = old.ride;
-                    return { trips: [], followed: asTrip(ride), unfollowedKey: null };
-                }
                 const ride = old?.ride ?? null;
                 return {
                     trips: old?.trips ?? (ride ? [asTrip(ride)] : []),

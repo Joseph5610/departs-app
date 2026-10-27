@@ -1,10 +1,9 @@
 import type { CityConfig } from '../../_core/cityConfig';
 import { appClient } from '../../_core/ApiClient';
-import { ERROR_MESSAGES, UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
-import { ApiError } from '../../_core/errors';
-import { MEMORY_CACHE_TTL, getOrFetch } from '../../_core/feed/cacheManager';
+import { UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
+import { MEMORY_CACHE_TTL } from '../../_core/feed/cacheManager';
 import { LruCache } from '../../_core/feed/LruCache';
-import { departuresBucketId, GTFS_CONFIG, stopIndexShardId } from './config';
+import { departuresBucketId, GTFS_CONFIG } from './config';
 import type { GtfsDepartureTuple } from './types';
 import { parseStopRequest } from '../../_core/utils/stopIds';
 
@@ -35,63 +34,6 @@ const stationPlatforms = new LruCache<string[]>({
     maxEntries: GTFS_CONFIG.STATION_PLATFORMS_CACHE_MAX_ENTRIES,
     ttlMs: MEMORY_CACHE_TTL.TWO_HOURS_MS
 });
-
-/** Parsed `stop_index/` shards by `${citySlug}:${shardId}`. */
-const stopShards = new LruCache<Record<string, StopRelation>>({
-    maxEntries: GTFS_CONFIG.STOP_INDEX_CACHE_MAX_ENTRIES,
-    ttlMs: MEMORY_CACHE_TTL.TWO_HOURS_MS
-});
-
-/** Which platforms each station has, network-wide; read only when a request names stops across many shards. */
-function getParentChildMap(city: CityConfig): Promise<Record<string, string[]>> {
-    return getOrFetch(
-        `parent_child_map_${city.slug}`,
-        MEMORY_CACHE_TTL.TWO_HOURS_MS,
-        async () => {
-            const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/parent_child_map.json?g=${STATIC_DATA_CONFIG.INDEX_CACHE_GENERATION}`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
-            if (!res.ok) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
-            return await res.json() as Record<string, string[]>;
-        }
-    );
-}
-
-async function getStopShard(city: CityConfig, shardId: string): Promise<Record<string, StopRelation>> {
-    const key = `${city.slug}:${shardId}`;
-    const held = stopShards.get(key);
-    if (held) return held;
-    const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/stop_index/${shardId}.json?g=${STATIC_DATA_CONFIG.INDEX_CACHE_GENERATION}`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
-    if (!res.ok) throw new ApiError(ERROR_MESSAGES.STOPS_DATA_UNAVAILABLE, 502);
-    const shard = await res.json() as Record<string, StopRelation>;
-    stopShards.set(key, shard);
-    return shard;
-}
-
-/** Relations of the stops of the whole network map that `stopIds` name. */
-function relationsInMap(parentChildMap: Record<string, string[]>, stopIds: string[]): Map<string, StopRelation> {
-    const wanted = new Set(stopIds);
-    const relations = new Map<string, StopRelation>();
-    for (const parent in parentChildMap) {
-        const children = parentChildMap[parent];
-        if (wanted.has(parent)) relations.set(parent, [null, ...children]);
-        for (const child of children) if (wanted.has(child)) relations.set(child, [parent]);
-    }
-    return relations;
-}
-
-/** Relations of `stopIds` from `stop_index/`, for platforms named without their station (older clients). */
-async function indexedRelations(city: CityConfig, stopIds: string[]): Promise<Map<string, StopRelation>> {
-    const shardIds = new Set(stopIds.map(stopIndexShardId));
-    if (shardIds.size > GTFS_CONFIG.STOP_INDEX_MAX_SHARDS) return relationsInMap(await getParentChildMap(city), stopIds);
-
-    const shards = new Map<string, Record<string, StopRelation>>();
-    await Promise.all(Array.from(shardIds, async (shardId) => shards.set(shardId, await getStopShard(city, shardId))));
-    const relations = new Map<string, StopRelation>();
-    for (const id of stopIds) {
-        const relation = shards.get(stopIndexShardId(id))?.[id];
-        if (relation) relations.set(id, relation);
-    }
-    return relations;
-}
 
 /** A departure bucket, its station lists kept for `getStationPlatforms`; null when it cannot be read. */
 async function fetchBucket(city: CityConfig, bucketId: string): Promise<DepartureBucket | null> {
@@ -135,9 +77,8 @@ export async function getStationPlatforms(city: CityConfig, ids: string[]): Prom
 }
 
 /**
- * The relations of the stops the requested values name, without any index for a `station:platforms` value or a
- * station: the value names a platform's station, and a station's platforms are listed in its departure bucket.
- * Only a platform named on its own (by older clients) is looked up in `stop_index/`.
+ * The relations of the stops the requested values name: a `station:platforms` value names its platforms' station,
+ * and a station's platforms are listed in its departure bucket. A platform named without its station has none.
  */
 export async function getStopRelations(city: CityConfig, values: string[]): Promise<Map<string, StopRelation>> {
     const relations = new Map<string, StopRelation>();
@@ -154,11 +95,6 @@ export async function getStopRelations(city: CityConfig, values: string[]): Prom
     }
     const platformsOf = await getStationPlatforms(city, [...stations, ...loose]);
     for (const [station, platforms] of platformsOf) relations.set(station, [null, ...platforms]);
-
-    const unresolved = loose.filter(id => !relations.has(id));
-    if (unresolved.length > 0) {
-        for (const [id, relation] of await indexedRelations(city, unresolved)) relations.set(id, relation);
-    }
     return relations;
 }
 

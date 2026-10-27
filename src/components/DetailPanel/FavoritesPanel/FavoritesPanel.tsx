@@ -76,7 +76,7 @@ export const FavoritesPanel = () => {
                     <EmptyTitle className="text-base font-bold text-foreground/90">
                         {t('favorites.empty')}
                     </EmptyTitle>
-                    <EmptyDescription className="text-body-sm max-w-55">
+                    <EmptyDescription className="text-body-sm max-w-64 text-balance">
                         {t('favorites.emptySub')}
                     </EmptyDescription>
                 </EmptyHeader>

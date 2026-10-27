@@ -1,7 +1,7 @@
 import type { CityUseCases } from "../../_domain/useCases";
 import type { McpContext } from "../types";
 import { MCP_DEFAULTS } from "../../_core/config";
-import { resolveStationByName, nearestStops, loadStopDepartures, loadInfotexts, toMcpStopInfotexts, getMcpTimeContext, toMcpDeparture } from "../utils";
+import { resolveStationByName, nearestStops, departureValuesOf, loadStopDepartures, loadInfotexts, toMcpStopInfotexts, getMcpTimeContext, toMcpDeparture } from "../utils";
 
 /**
  * Handles the 'get_next_departures' MCP tool invocation.
@@ -55,7 +55,7 @@ export async function handleGetNextDepartures(
     }
 
     const [departures, infotexts] = await Promise.all([
-        loadStopDepartures(ctx, city, departuresId ?? stopId, args, limit),
+        departureValuesOf(resolvedCity, departuresId ?? stopId).then(values => loadStopDepartures(ctx, city, values, args, limit)),
         loadInfotexts(ctx, city, resolvedCity)
     ]);
 

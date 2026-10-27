@@ -7,6 +7,8 @@ export interface RouteInfo {
     /** departs-data publishes the app's vehicle type, never a GTFS `route_type` code. */
     type: RouteType;
     route_color: string;
+    /** A night line: listed after the day lines and left off stop badges outside the city's night hours. */
+    night?: true;
 }
 
 interface VehicleDescriptor {

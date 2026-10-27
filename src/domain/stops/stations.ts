@@ -1,6 +1,5 @@
 import type { BoardStop, Entrance, MapStopCollection, MapStopFeature, Platform, RouteType, Stop, StopLine, StopModel } from '@/types';
 import { routeTypeRank } from '@/domain/routes';
-import type { LineRules } from '@/config/cities';
 import { isWithinLocalHours } from '@/domain/time';
 import { resolveStop } from './model';
 
@@ -8,10 +7,8 @@ type WithLines = { lines: readonly StopLine[] };
 
 /** Separator of the tiles in a stop's `badges` property, which the map's badge images are named after. */
 export const STOP_BADGE_SEPARATOR = '|';
-/** Separator inside a tile: a metro line and its colour without `#` (`metro/B/F8B322`), a platform's code (`code/A`). */
+/** Separator inside a tile: a metro line and its colour without `#` (`metro/B/F8B322`). */
 export const TILE_PART_SEPARATOR = '/';
-/** The badge part naming a platform's code (`code/A`), drawn as a circle beside its mode tiles. */
-export const PLATFORM_CODE_TILE = 'code';
 
 /** Whether any of a stop's lines is of `mode`. */
 export const servesMode = (props: WithLines, mode: RouteType): boolean =>
@@ -42,46 +39,40 @@ export const stopBadgeTiles = (props: WithLines, modes = stopModeList(props)): s
     return tiles.join(STOP_BADGE_SEPARATOR);
 };
 
-/** Tells a night line by its mode and name (the city's `isNightLine`). */
-export type NightLineTest = NonNullable<LineRules['isNightLine']>;
+/** Whether stop badges leave out night lines at `nowMs`: outside the city's night hours. */
+export const hidesNightLinesAt = (nowMs: number, timeZone: string, nightHours: [number, number]): boolean =>
+    !isWithinLocalHours(nowMs, timeZone, nightHours);
 
-/** Whether stop badges leave out the city's night lines at `nowMs`: it tells them apart and it is outside its night hours. */
-export const hidesNightLinesAt = (nowMs: number, timeZone: string, rules: Pick<LineRules, 'isNightLine' | 'nightHours'>): boolean =>
-    !!rules.isNightLine && !isWithinLocalHours(nowMs, timeZone, rules.nightHours);
-
-/** The lines a stop's badge shows: without night lines when `hiddenNightLines` is given, unless the stop has no other. */
-export const badgeLines = (props: WithLines, hiddenNightLines: NightLineTest | null): WithLines => {
-    if (!hiddenNightLines) return props;
-    const day = props.lines.filter(line => !hiddenNightLines(line.type, line.name));
+/** The lines a stop's badge shows: without night lines when `hideNight`, unless the stop has no other. */
+export const badgeLines = (props: WithLines, hideNight: boolean): WithLines => {
+    if (!hideNight) return props;
+    const day = props.lines.filter(line => !line.night);
     return day.length ? { lines: day } : props;
 };
 
-/** The night lines a stop's badge leaves out, by its network (a neighbouring one's `city`, else the selected); null for none. */
-export type HiddenNightLinesOf = (city: string | undefined) => NightLineTest | null;
+/** Whether a stop's badge leaves out night lines, by its network (a neighbouring one's `city`, else the selected). */
+export type HiddenNightLinesOf = (city: string | undefined) => boolean;
 
-/** A network's clock and line conventions, as `hidesNightLinesAt` reads them. */
+/** A network's clock and night hours, as `hidesNightLinesAt` reads them. */
 export interface NightLineNetwork {
     timeZone: string;
-    rules: Pick<LineRules, 'isNightLine' | 'nightHours'>;
+    nightHours: [number, number];
 }
 
 /** The networks whose stop badges leave night lines out at `nowMs`, as a key that changes only when that set does. */
 export const networksHidingNightLines = (nowMs: number, networks: Readonly<Record<string, NightLineNetwork>>): string =>
-    Object.entries(networks).filter(([, n]) => hidesNightLinesAt(nowMs, n.timeZone, n.rules)).map(([slug]) => slug).join(',');
+    Object.entries(networks).filter(([, n]) => hidesNightLinesAt(nowMs, n.timeZone, n.nightHours)).map(([slug]) => slug).join(',');
 
 /**
- * The night lines each stop's badge leaves out, given the networks hiding them (`networksHidingNightLines`): a
- * neighbouring network's stop (`city`) follows its own city's rules, any other stop `ownCity`'s.
+ * Whether each stop's badge leaves out night lines, given the networks hiding them (`networksHidingNightLines`): a
+ * neighbouring network's stop (`city`) follows its own city's night hours, any other stop `ownCity`'s.
  */
-export const nightLinesByNetwork = (hiding: string, ownCity: string, networks: Readonly<Record<string, NightLineNetwork>>): HiddenNightLinesOf => {
+export const nightLinesByNetwork = (hiding: string, ownCity: string): HiddenNightLinesOf => {
     const hidden = new Set(hiding.split(','));
-    return (city) => {
-        const slug = city ?? ownCity;
-        return hidden.has(slug) ? networks[slug]?.rules.isNightLine ?? null : null;
-    };
+    return (city) => hidden.has(city ?? ownCity);
 };
 
-/** A stop as the map draws it: its badge tiles (a platform's code beside them) and the rank of its leading mode. */
+/** A stop as the map draws it: its badge tiles, a platform's code (drawn beside them) and the rank of its leading mode. */
 const toMapFeature = (stop: Stop | Entrance, hiddenNightLinesOf: HiddenNightLinesOf): MapStopFeature => {
     const geometry = { type: 'Point' as const, coordinates: stop.pos };
     if (stop.kind === 'entrance') return { type: 'Feature', geometry, properties: { stop_id: stop.id, stop_name: stop.name, kind: 'entrance' } };
@@ -90,16 +81,15 @@ const toMapFeature = (stop: Stop | Entrance, hiddenNightLinesOf: HiddenNightLine
     const code = stop.kind === 'platform' ? stop.code : undefined;
     // A platform without lines (a train platform the live feed alone serves) still gets a tile, so it can be tapped.
     const tiles = stopBadgeTiles(shown, modes) || (stop.kind === 'platform' ? 'unknown' : '');
-    const badges = code ? [tiles, [PLATFORM_CODE_TILE, code].join(TILE_PART_SEPARATOR)].join(STOP_BADGE_SEPARATOR) : tiles;
     return {
         type: 'Feature',
         geometry,
-        properties: { stop_id: stop.id, stop_name: stop.name, kind: stop.kind, badges, mode_rank: routeTypeRank(modes[0]), city_slug: stop.city },
+        properties: { stop_id: stop.id, stop_name: stop.name, kind: stop.kind, badges: tiles, platform_code: code, mode_rank: routeTypeRank(modes[0]), city_slug: stop.city },
     };
 };
 
-/** Stops as one map source, each carrying its badge without the night lines `hiddenNightLinesOf` names for its network. */
-export const toMapStops = (stops: readonly (Stop | Entrance)[], hiddenNightLinesOf: HiddenNightLinesOf = () => null): MapStopCollection =>
+/** Stops as one map source, each carrying its badge, without night lines where `hiddenNightLinesOf` hides them for its network. */
+export const toMapStops = (stops: readonly (Stop | Entrance)[], hiddenNightLinesOf: HiddenNightLinesOf = () => false): MapStopCollection =>
     ({ type: 'FeatureCollection', features: stops.map(stop => toMapFeature(stop, hiddenNightLinesOf)) });
 
 /** A board section as `sectionStopId` reads it: its platform code or direction, and its departures' platforms. */

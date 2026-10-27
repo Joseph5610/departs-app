@@ -104,7 +104,7 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
 
     const chipClassName = chips ? 'size-7 rounded-full border border-border/50 bg-card shadow-sm' : undefined;
     // A stop pinned under an older id (an alias, a pre-stops.json PID id) counts as pinned, and unpinning drops every such id.
-    const cityPins = favoriteStopsIn(favoriteStops, boardCity, model);
+    const cityPins = favoriteStopsIn(favoriteStops, boardCity);
     const pins = stopId ? pinsOf(model, cityPins, stopId) : [];
     const isFavorite = pins.length > 0;
     const handleToggleFavorite = () => {

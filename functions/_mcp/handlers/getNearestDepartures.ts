@@ -43,7 +43,7 @@ export async function handleGetNearestDepartures(
         const sId = stop.id;
 
         try {
-            const departures = await loadStopDepartures(ctx, city, departuresId, args, limit);
+            const departures = await loadStopDepartures(ctx, city, [departuresId], args, limit);
             const stopInfotexts = toMcpStopInfotexts(infotexts, sId);
             if (departures.length === 0 && stopInfotexts.length === 0) return null;
 

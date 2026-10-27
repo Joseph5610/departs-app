@@ -59,7 +59,7 @@ describe('toMapStops', () => {
     it('draws each stop with its badge tiles and leading mode', () => {
         const [station, coded] = toMapStops([...model.stations, ...model.platforms]).features.map(f => f.properties);
         expect(station).toMatchObject({ stop_id: 'S', kind: 'station', badges: 'metro/B/F8B322|tram', mode_rank: 0 });
-        expect(coded).toMatchObject({ stop_id: 'P1', kind: 'platform', badges: 'metro/B/F8B322|tram|code/A' });
+        expect(coded).toMatchObject({ stop_id: 'P1', kind: 'platform', badges: 'metro/B/F8B322|tram', platform_code: 'A' });
     });
 
     // A train platform only the live feed serves still needs a badge to be tapped.
@@ -71,22 +71,21 @@ describe('toMapStops', () => {
 });
 
 describe('badgeLines', () => {
-    const isNight = (_type: string, name: string) => /^N/.test(name);
     const tram = { name: '4', type: 'tram' as const, route_color: '' };
-    const nightBus = { name: 'N89', type: 'bus' as const, route_color: '' };
+    const nightBus = { name: 'N89', type: 'bus' as const, route_color: '', night: true as const };
 
     // A night bus at a tram stop must not show a bus on its badge by day.
     it('leaves night lines out while they are hidden', () => {
-        expect(badgeLines({ lines: [tram, nightBus] }, isNight).lines).toEqual([tram]);
+        expect(badgeLines({ lines: [tram, nightBus] }, true).lines).toEqual([tram]);
     });
 
     // A stop served only at night stays on the map with its own badge.
     it('keeps the night lines of a stop that has no other', () => {
-        expect(badgeLines({ lines: [nightBus] }, isNight).lines).toEqual([nightBus]);
+        expect(badgeLines({ lines: [nightBus] }, true).lines).toEqual([nightBus]);
     });
 
     it('shows every line at night', () => {
-        expect(badgeLines({ lines: [tram, nightBus] }, null).lines).toEqual([tram, nightBus]);
+        expect(badgeLines({ lines: [tram, nightBus] }, false).lines).toEqual([tram, nightBus]);
     });
 });
 
@@ -117,44 +116,32 @@ describe('sectionStopId', () => {
 });
 
 describe('hidesNightLinesAt', () => {
-    const isNight = () => true;
-    const rules = { isNightLine: isNight, nightHours: [22, 5] as [number, number] };
-
     // By day a stop's badge leaves out night lines; at night it shows them all.
     it('hides night lines only outside the night hours', () => {
-        expect(hidesNightLinesAt(Date.parse('2026-10-16T10:00:00Z'), 'Europe/Prague', rules)).toBe(true);
-        expect(hidesNightLinesAt(Date.parse('2026-10-16T22:30:00Z'), 'Europe/Prague', rules)).toBe(false);
-    });
-
-    it('hides nothing in a city that tells no night lines', () => {
-        expect(hidesNightLinesAt(Date.parse('2026-10-16T10:00:00Z'), 'Europe/Prague', { ...rules, isNightLine: null })).toBe(false);
+        expect(hidesNightLinesAt(Date.parse('2026-10-16T10:00:00Z'), 'Europe/Prague', [22, 5])).toBe(true);
+        expect(hidesNightLinesAt(Date.parse('2026-10-16T22:30:00Z'), 'Europe/Prague', [22, 5])).toBe(false);
     });
 });
 
 describe('nightLinesByNetwork', () => {
-    const brnoNight = () => true;
     const networks = {
-        brno: { timeZone: 'Europe/Prague', rules: { isNightLine: brnoNight, nightHours: [22, 5] as [number, number] } },
-        prague: { timeZone: 'Europe/Prague', rules: { isNightLine: null, nightHours: [22, 5] as [number, number] } },
+        brno: { timeZone: 'Europe/Prague', nightHours: [22, 5] as [number, number] },
+        prague: { timeZone: 'Europe/Prague', nightHours: [0, 5] as [number, number] },
     };
 
-    // A neighbouring network's stop follows its own city's night lines, not the selected city's.
-    it('reads each stop\'s rules from its own network', () => {
-        const byDay = nightLinesByNetwork(networksHidingNightLines(Date.parse('2026-10-16T10:00:00Z'), networks), 'prague', networks);
-        expect(byDay(undefined)).toBeNull();
-        expect(byDay('brno')).toBe(brnoNight);
-        expect(byDay('presov')).toBeNull();
+    // A neighbouring network's stop follows its own city's night hours, not the selected city's.
+    it('reads each stop\'s night hours from its own network', () => {
+        const at2230 = nightLinesByNetwork(networksHidingNightLines(Date.parse('2026-10-16T20:30:00Z'), networks), 'prague');
+        expect(at2230(undefined)).toBe(true);
+        expect(at2230('brno')).toBe(false);
+        expect(at2230('presov')).toBe(false);
     });
 
     // The key stays the same while no network's night hours start or end, so the map keeps its badges.
     it('keys on which networks hide night lines, not on the time', () => {
-        expect(networksHidingNightLines(Date.parse('2026-10-16T10:00:00Z'), networks)).toBe('brno');
-        expect(networksHidingNightLines(Date.parse('2026-10-16T14:00:00Z'), networks)).toBe('brno');
-        expect(networksHidingNightLines(Date.parse('2026-10-16T22:30:00Z'), networks)).toBe('');
-    });
-
-    it('hides nothing at night', () => {
-        expect(nightLinesByNetwork(networksHidingNightLines(Date.parse('2026-10-16T22:30:00Z'), networks), 'brno', networks)(undefined)).toBeNull();
+        expect(networksHidingNightLines(Date.parse('2026-10-16T10:00:00Z'), networks)).toBe('brno,prague');
+        expect(networksHidingNightLines(Date.parse('2026-10-16T14:00:00Z'), networks)).toBe('brno,prague');
+        expect(networksHidingNightLines(Date.parse('2026-10-16T23:30:00Z'), networks)).toBe('');
     });
 });
 

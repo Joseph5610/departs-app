@@ -4,7 +4,6 @@ import { ApiError } from '../../../_core/errors';
 import { ERROR_MESSAGES } from '../../../_core/config';
 import { departuresQuerySchema, parseSearchParams } from '../../../_core/schemas';
 import { normalizeRouteType } from '../../../_core/utils/routeTypes';
-import { getStopIndex } from '../../gtfs/index/StopIndex';
 import { boardVehicles, collectDepartureTuples, collectTripIds } from '../../gtfs/departures/DeparturesService';
 import type { DeparturesUseCase } from '../../useCases';
 import { indexVehiclesByTrip, mapDepartures, type DepartureSource } from '../../gtfs/departures/departuresMapper';
@@ -13,7 +12,7 @@ import type { VehiclesService } from '../../vehicles/VehiclesService';
 import { getGtfsRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfsData';
 import { getDukStationBoard, getDukUnplacedLines, surveyDukUnplacedLines, type DukBoardDeparture } from '../../../_feeds/duk/dukStationBoard';
 import { DUK_CONFIG } from '../../../_feeds/duk/config';
-import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
+import { getStationPlatforms, getStopRelations, type StopRelation } from '../../../_feeds/gtfs/departureRows';
 import { stationOfRequest, toStopRequest, type StopRequest } from './stopRequests';
 import { checkRequestedStops } from '../../gtfs/index/stopTargets';
 
@@ -34,7 +33,7 @@ interface TimetableLink {
  * departure is linked to the CIS JŘ timetable trip of the same line and minute, for the trip's
  * timeline, vehicle and accessibility; the timetable alone is served only when Portabo fails.
  *
- * Platforms are `<node>-<post>`; a station's node comes from its platforms in the stop index.
+ * Platforms are `<node>-<post>`; a station's node comes from its platforms, listed in its departure bucket.
  */
 export class DukDeparturesService implements DeparturesUseCase {
     constructor(
@@ -47,19 +46,17 @@ export class DukDeparturesService implements DeparturesUseCase {
         if (!stopIds || stopIds.length === 0) {
             throw new ApiError(ERROR_MESSAGES.MISSING_PARAMS, 400);
         }
-        const stopIndex = getStopIndex(this.city);
-
         checkRequestedStops(stopIds);
-        const relations = await stopIndex.relationsOf(stopIds).catch(() => new Map<string, StopRelation>());
+        const relations = await getStopRelations(this.city, stopIds).catch(() => new Map<string, StopRelation>());
         const requests = stopIds.map(id => toStopRequest(id, relations));
         const nodes = [...new Set(requests.map(r => r.node))];
 
         const stationOf = new Map(stopIds.map(id => [id, stationOfRequest(id, relations)]));
         const stationIds = [...new Set([...stationOf.values()].filter((id): id is string => id !== null))];
-        const platformsByStation = await stopIndex.childrenOf(stationIds).catch(() => new Map<string, string[]>());
+        const platformsByStation = await getStationPlatforms(this.city, stationIds).catch(() => new Map<string, string[]>());
         const platformsOf = (request: StopRequest) => platformsByStation.get(stationOf.get(request.id) ?? '') ?? [];
         // Timetable rows are filed under the bare node, which has no station of its own.
-        const tuplesRead = collectDepartureTuples(stopIndex, nodes, new Map(nodes.map(n => [n, n])), new Map()).catch((e) => {
+        const tuplesRead = collectDepartureTuples(this.city, nodes, new Map(nodes.map(n => [n, n])), new Map()).catch((e) => {
             console.warn('[DUK] Timetable unavailable for board linking:', e);
             return [] as DepartureSource[];
         });

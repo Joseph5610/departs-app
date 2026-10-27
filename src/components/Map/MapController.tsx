@@ -3,12 +3,10 @@ import { useMapInterface } from '@/hooks/features/useMapInterface';
 import { useAutoCitySwitch } from '@/hooks/features/useAutoCitySwitch';
 import { useRouteCitySync } from '@/hooks/features/useRouteCitySync';
 import { useCanonicalStopUrl } from '@/hooks/features/useCanonicalStopUrl';
-import { useClaimFavoriteStops } from '@/hooks/features/useClaimFavoriteStops';
 
 const MapEngine = () => {
     useRouteCitySync();
     useCanonicalStopUrl();
-    useClaimFavoriteStops();
     useMapInterface();
     useGeolocationWatcher();
     useAutoCitySwitch();

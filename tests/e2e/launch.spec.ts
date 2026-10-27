@@ -43,7 +43,7 @@ test.describe('Launch', () => {
     });
 
     test('opens the selected city without a location, and keeps the camera out of the URL', async ({ browser }) => {
-        const page = await open(browser, '/prague?lat=50.1&lng=14.44&z=15', { located: false });
+        const page = await open(browser, '/prague', { located: false });
         await expect(page).toHaveURL(/\/$/, { timeout: 30000 });
         const box = (await page.locator('canvas').first().boundingBox())!;
         await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);

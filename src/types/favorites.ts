@@ -11,8 +11,8 @@ export interface FavoriteLine {
 
 /** A stop pinned in one city. */
 export interface FavoriteStop {
-    /** Absent on a pin saved before pins carried their city; the first city whose stops know the id claims it. */
-    city?: string;
+    /** Stop ids repeat across networks, so a pin belongs to the city it was made in. */
+    city: string;
     /** As pinned, which may be an alias or a pre-stops.json PID id. */
     stopId: string;
 }

@@ -28,7 +28,7 @@ export const MAP_SOURCES = {
 /** Canvas-drawn images registered by lib/map/icons.ts. */
 export const MAP_ICONS = {
     VEHICLE_ARROW: 'v-arrow-centered',
-    /** Prefix of the stop badge images (`stop-badge:<city>:<star>:<badges>`), drawn on demand by lib/map/stopBadges.ts. */
+    /** Prefix of the stop badge images (`stop-badge:<city>:<star>:<platform code>:<badges>`), drawn on demand by lib/map/stopBadges.ts. */
     STOP_BADGE_PREFIX: 'stop-badge:',
     POS_MACHINE: 'pos-machine-icon',
     POS_INFO: 'pos-info-icon',

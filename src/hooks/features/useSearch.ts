@@ -52,7 +52,7 @@ export const useSearch = (isOpen: boolean, onPicked: (pick: SearchPick) => void)
     const geocodingResults = useGeocoding(query, userLocation);
     const posResults = usePosSearch(query, isOpen);
 
-    const pinnedStopList = useMemo(() => pinnedStops(model, favoriteStopsIn(favoriteStops, selectedCity, model)).flatMap(pin => pin.stop.stop ?? []), [model, favoriteStops, selectedCity]);
+    const pinnedStopList = useMemo(() => pinnedStops(model, favoriteStopsIn(favoriteStops, selectedCity)).flatMap(pin => pin.stop.stop ?? []), [model, favoriteStops, selectedCity]);
     const searchHistory = shownHistory(storedHistory, model, selectedCity);
     const pinnedStopIds = useMemo(() => new Set(pinnedStopList.map(stop => stop.id)), [pinnedStopList]);
 

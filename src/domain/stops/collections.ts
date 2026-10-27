@@ -54,17 +54,13 @@ export const boardsOf = (model: StopModel | null | undefined, ids: readonly stri
 /** Whether two pins are the same pin. */
 export const isSameFavoriteStop = (a: FavoriteStop, b: FavoriteStop): boolean => a.stopId === b.stopId && a.city === b.city;
 
-/** The stops pinned in `city`, in pin order: its own pins and the city-less ones its stop list knows. */
-export const favoriteStopsIn = (favorites: readonly FavoriteStop[], city: string, model: StopModel | null | undefined): FavoriteStop[] =>
-    favorites.filter(f => f.city === city || (!f.city && !!model && !!resolveStop(model, f.stopId)));
+/** The stops pinned in `city`, in pin order. */
+export const favoriteStopsIn = (favorites: readonly FavoriteStop[], city: string): FavoriteStop[] =>
+    favorites.filter(f => f.city === city);
 
 /** Each network the map draws with the ids of its own pins, for `favoriteMarks`: the selected city's and each neighbour's (`StopModel.city`). */
 export const pinsByNetwork = (favorites: readonly FavoriteStop[], ownCity: string, own: StopModel | null, overlay: readonly StopModel[]) =>
-    [own, ...overlay].map(model => ({ model, pinIds: favoriteStopsIn(favorites, model?.city ?? ownCity, model).map(f => f.stopId) }));
-
-/** The city-less pins `model`'s stop list knows, for its city to claim. */
-export const unclaimedFavoriteStops = (favorites: readonly FavoriteStop[], model: StopModel | null | undefined): FavoriteStop[] =>
-    model ? favorites.filter(f => !f.city && !!resolveStop(model, f.stopId)) : [];
+    [own, ...overlay].map(model => ({ model, pinIds: favoriteStopsIn(favorites, model?.city ?? ownCity).map(f => f.stopId) }));
 
 /**
  * The pinned stops the stop model knows, in pin order, each kept with its pins so unpinning and reordering

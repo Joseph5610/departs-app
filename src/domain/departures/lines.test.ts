@@ -1,22 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_LINE_RULES, type LineRules } from '@/config/cities';
+import { DEFAULT_LINE_RULES } from '@/config/cities';
 import { departure, feeder } from '@/test/factories';
 import { DEPARTURES_CONFIG } from '@/config/constants';
-import { distinctLines, lineChips, summarizeFeeders } from './lines';
+import { departureLines, distinctLines, lineChips, summarizeFeeders } from './lines';
 import { visibleInGroup } from './grouping';
 
-const chip = (name: string, type: string) => ({ name, type, route_color: '' });
+const chip = (name: string, type: string, night?: boolean) => ({ name, type, route_color: '', night });
 
 describe('lineChips', () => {
-    // Prague night lines (9x trams, 9xx buses) go after their mode's day lines; S/R lines count as trains.
+    // Night lines go after their mode's day lines; S/R lines count as trains.
     it('orders metro, trains, then modes with night lines last, one chip per line', () => {
-        const rules: LineRules = { ...DEFAULT_LINE_RULES, isNightLine: (_type, name) => /^9\d{1,2}$/.test(name) };
         const chips = lineChips([
-            chip('907', 'bus'), chip('22', 'tram'), chip('S7', 'unknown'), chip('136', 'bus'),
-            chip('91', 'tram'), chip('B', 'metro'), chip('9', 'tram'), chip('22', 'tram'),
-        ], rules);
+            chip('907', 'bus', true), chip('22', 'tram'), chip('S7', 'unknown'), chip('136', 'bus'),
+            chip('91', 'tram', true), chip('B', 'metro'), chip('9', 'tram'), chip('22', 'tram'),
+        ], DEFAULT_LINE_RULES);
 
         expect(chips.map((c) => c.name)).toEqual(['B', 'S7', '9', '22', '136', '91', '907']);
+    });
+
+    // A board built from departures tells its night lines from the routes file, by mode and name.
+    it('flags a departure\'s line as night when its route is', () => {
+        const routes = new Map([['bus|N89', { name: 'N89', type: 'bus' as const, route_color: '', night: true as const }]]);
+        const lines = departureLines([departure({ line: 'N89', type: 'bus' }), departure({ line: 'N89', type: 'tram' })], routes);
+        expect(lines.map(l => l.night)).toEqual([true, undefined]);
     });
 });
 

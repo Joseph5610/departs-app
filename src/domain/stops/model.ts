@@ -18,7 +18,10 @@ const platformIds = (p: Pick<Platform, 'id' | 'aliases'>): string[] => p.aliases
 export const buildStopModel = (file: StopsFile, routes: Readonly<Record<string, RouteInfo>>): StopModel => {
     const linesOf = (ids: readonly string[]): StopLine[] => ids.flatMap(id => {
         const route = routes[id];
-        return route ? [{ name: route.name, type: route.type, route_color: route.route_color }] : [];
+        if (!route) return [];
+        const line: StopLine = { name: route.name, type: route.type, route_color: route.route_color };
+        if (route.night) line.night = true;
+        return [line];
     });
     const nameOf = new Map(file.stations.map(s => [s.id, s.name]));
 

@@ -7,7 +7,7 @@ import { memoizeLast } from '@/lib/memoize';
 import { nightLinesByNetwork, networksHidingNightLines, type HiddenNightLinesOf, type NightLineNetwork } from '@/domain/stops';
 
 const NETWORKS: Record<string, NightLineNetwork> = Object.fromEntries(Object.entries(FRONTEND_CITIES_CONFIG).map(([slug, city]) =>
-    [slug, { timeZone: city.timezone, rules: lineRulesOf(city.lineRules) }]));
+    [slug, { timeZone: city.timezone, nightHours: lineRulesOf(city.lineRules).nightHours }]));
 
 const hidingAt = memoizeLast(networksHidingNightLines);
 const byNetwork = memoizeLast(nightLinesByNetwork);
@@ -16,5 +16,5 @@ const byNetwork = memoizeLast(nightLinesByNetwork);
 export const useHiddenNightLines = (): HiddenNightLinesOf => {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const now = useNowEvery(MAP_DATA.NIGHT_LINES_CHECK_MS);
-    return byNetwork(hidingAt(now, NETWORKS), selectedCity, NETWORKS);
+    return byNetwork(hidingAt(now, NETWORKS), selectedCity);
 };

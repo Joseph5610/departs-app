@@ -5,6 +5,8 @@ export interface StopLine {
     name: string;
     type: RouteType;
     route_color: string;
+    /** A night line (`RouteInfo.night`). */
+    night?: true;
 }
 
 /** A station: the place riders know by name, made of its platforms. */
@@ -102,6 +104,8 @@ export interface MapStopFeature {
         kind: 'station' | 'platform' | 'entrance';
         /** Tiles of the stop's map badge (`metro/B/F8B322|tram|bus`), see `stopBadgeTiles`. */
         badges?: string;
+        /** A platform's code, drawn in a circle beside its badge. */
+        platform_code?: string;
         /** Rank of the stop's leading mode in ROUTE_TYPE_ORDER; the map places lower ranks first. */
         mode_rank?: number;
         /** The network of a neighbouring city's stop. */

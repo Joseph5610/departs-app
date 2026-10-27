@@ -181,7 +181,7 @@ test.describe('Favorites Tests', () => {
                 state: {
                     hasSeenWelcome: true,
                     selectedCity: 'prague',
-                    favoriteStops: ['U1111Z1P'],
+                    favoriteStops: [{ city: 'prague', stopId: 'U1111Z1P' }],
                     favoriteLines: [{ city: 'prague', stopId: 'U1111Z1P', line: 'C', headsign: 'Letňany' }]
                 },
                 version: 0
@@ -213,7 +213,7 @@ test.describe('Favorites Tests', () => {
         await page.addInitScript(() => {
             if (window.localStorage.getItem('departs-preferences')) return;
             window.localStorage.setItem('departs-preferences', JSON.stringify({
-                state: { hasSeenWelcome: true, selectedCity: 'prague', favoriteStops: ['S1', 'S2', 'S3'] },
+                state: { hasSeenWelcome: true, selectedCity: 'prague', favoriteStops: ['S1', 'S2', 'S3'].map(stopId => ({ city: 'prague', stopId })) },
                 version: 0
             }));
         });
@@ -259,7 +259,7 @@ test.describe('Favorites Tests', () => {
         const page = await context.newPage();
         await page.addInitScript(() => {
             window.localStorage.setItem('departs-preferences', JSON.stringify({
-                state: { hasSeenWelcome: true, selectedCity: 'prague', favoriteStops: ['S1', 'S2'] },
+                state: { hasSeenWelcome: true, selectedCity: 'prague', favoriteStops: ['S1', 'S2'].map(stopId => ({ city: 'prague', stopId })) },
                 version: 0
             }));
         });

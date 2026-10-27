@@ -221,7 +221,6 @@
       "trackCode": "track {{code}}",
       "hours": "{{hours}} h",
       "hoursMinutes": "{{hours}} h {{minutes}} min",
-      "platform": "Platform / Track",
       "sortByLine": "Sort by line",
       "sortByDeparture": "Sort by departure time",
       "sort": "Sort",
@@ -483,7 +482,7 @@
   "favorites": {
     "title": "Favorites",
     "empty": "No favorites yet",
-    "emptySub": "Tap the star on a stop, or swipe a line's direction left on a departure board (right-click on a computer), to pin it here.",
+    "emptySub": "Star a stop, or pin a line from its departure board, to keep it here.",
     "pinLine": "Add line {{line}} towards {{headsign}} to favorites",
     "unpinLine": "Remove line {{line}} towards {{headsign}} from favorites",
     "linePinned": "Line {{line}} towards {{headsign}} added to favorites",
@@ -626,8 +625,7 @@
       "contactless": "Contactless / Mobile"
     },
     "openingHours": "Opening Hours",
-    "servicesTitle": "Available Services",
-    "payMethodsTitle": "Payment Methods"
+    "servicesTitle": "Available Services"
   },
   "legal": {
     "updated": "Last updated {{date}}",

@@ -4,7 +4,7 @@ import { useSelectionStore } from '@/state/selectionStore';
 import { useViewportStore } from '@/state/viewportStore';
 import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { addAllIcons } from '@/lib/map/icons';
-import { snapBoundsToTiles, stripUrlCamera } from '@/lib/map/view';
+import { snapBoundsToTiles } from '@/lib/map/view';
 import { VEHICLE_BOUNDS_GRID, MAP_DATA } from '@/config/constants';
 
 /**
@@ -78,8 +78,6 @@ export const useMapEvents = () => {
 
     const onLoad = useCallback((evt: { target: Map }) => {
         const map = evt.target;
-        // The opening camera has been applied; a camera in the URL from an old link is no longer needed there.
-        stripUrlCamera();
         const style = map.getStyle();
         const layers = style?.layers;
         if (layers) {

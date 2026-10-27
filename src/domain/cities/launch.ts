@@ -12,8 +12,6 @@ interface Saved<T> {
 }
 
 export interface LaunchViewInput {
-    /** A camera in the opening URL (`?lat=&lng=&z=`), from an old link or bookmark. */
-    urlCamera: Camera | null;
     /** The user's last coarse position, kept from the previous fix. */
     lastLocation: Saved<{ lat: number; lng: number }> | null;
     /** Where the map was when the app was last used. */
@@ -26,18 +24,17 @@ export interface LaunchViewInput {
     zoom: { location: number; city: number };
 }
 
-export type LaunchSource = 'url' | 'location' | 'saved' | 'city';
+export type LaunchSource = 'location' | 'saved' | 'city';
 
 const isInside = ([west, south, east, north]: [number, number, number, number], lng: number, lat: number) =>
     lng >= west && lng <= east && lat >= south && lat <= north;
 
 /**
- * The camera the map opens at, before any fresh position: a camera in the URL, else the user's recent position,
+ * The camera the map opens at, before any fresh position: the user's recent position,
  * else where they last left the map, else the city overview. Saved ones count only while recent and inside
  * the opening city, so a stale or foreign one never pulls the map away from the city being opened.
  */
-export const launchCamera = ({ urlCamera, lastLocation, savedCamera, city, now, maxAgeMs, zoom }: LaunchViewInput): { camera: Camera; source: LaunchSource } => {
-    if (urlCamera) return { camera: urlCamera, source: 'url' };
+export const launchCamera = ({ lastLocation, savedCamera, city, now, maxAgeMs, zoom }: LaunchViewInput): { camera: Camera; source: LaunchSource } => {
     const usable = <T extends { lat: number; lng: number }>(saved: Saved<T> | null): saved is Saved<T> =>
         !!saved && now - saved.at <= maxAgeMs && isInside(city.bounds, saved.value.lng, saved.value.lat);
     if (usable(lastLocation)) return { camera: { ...lastLocation.value, zoom: zoom.location }, source: 'location' };

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { stopModel } from '@/test/factories';
-import { favoriteStopsIn, historyWithStops, lineColorAt, mapStopsOf, pinnedStops, pinsOf, unclaimedFavoriteStops } from './collections';
+import { favoriteStopsIn, historyWithStops, lineColorAt, mapStopsOf, pinnedStops, pinsOf } from './collections';
 
 const pin = (stopId: string, city = 'brno') => ({ city, stopId });
 
@@ -33,15 +33,7 @@ describe('pinnedStops', () => {
 describe('favoriteStopsIn', () => {
     // Stop ids repeat across networks (Prešov's are plain numbers), so a pin counts only in its own city.
     it('keeps a city\'s own pins, never another city\'s with the same id', () => {
-        expect(favoriteStopsIn([pin('S2'), pin('S2', 'presov')], 'brno', model)).toEqual([pin('S2')]);
-    });
-
-    // Pins saved before pins carried their city stay visible where their stop exists until a city claims them.
-    it('lists a city-less pin where the city\'s stops know it, and offers it to be claimed', () => {
-        const legacy = [{ stopId: 'U1Z1' }, { stopId: 'X9' }];
-        expect(favoriteStopsIn(legacy, 'brno', model)).toEqual([legacy[0]]);
-        expect(unclaimedFavoriteStops(legacy, model)).toEqual([legacy[0]]);
-        expect(unclaimedFavoriteStops([pin('U1Z1')], model)).toEqual([]);
+        expect(favoriteStopsIn([pin('S2'), pin('S2', 'presov')], 'brno')).toEqual([pin('S2')]);
     });
 });
 

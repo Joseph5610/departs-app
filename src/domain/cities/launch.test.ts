@@ -5,19 +5,14 @@ const HOUR = 3_600_000;
 const NOW = Date.parse('2026-10-11T08:00:00Z');
 const prague: LaunchViewInput['city'] = { center: [14.42, 50.09], bounds: [14.22, 49.94, 14.71, 50.18] };
 const base: LaunchViewInput = {
-    urlCamera: null, lastLocation: null, savedCamera: null, city: prague, now: NOW, maxAgeMs: 12 * HOUR,
+    lastLocation: null, savedCamera: null, city: prague, now: NOW, maxAgeMs: 12 * HOUR,
     zoom: { location: 16, city: 12 },
 };
 const inPrague = { lat: 50.1, lng: 14.44 };
 const inBrno = { lat: 49.19, lng: 16.61 };
 
-// The map opens near the rider: a link's camera, their recent position, where they left it, else the city.
+// The map opens near the rider: their recent position, where they left it, else the city.
 describe('launchCamera', () => {
-    it('prefers a camera in the URL', () => {
-        expect(launchCamera({ ...base, urlCamera: { lat: 1, lng: 2, zoom: 3 }, lastLocation: { value: inPrague, at: NOW } }))
-            .toEqual({ camera: { lat: 1, lng: 2, zoom: 3 }, source: 'url' });
-    });
-
     it('opens on a recent position in the city, then on the last view, then on the city overview', () => {
         const savedCamera = { value: { lat: 50.05, lng: 14.4, zoom: 14 }, at: NOW - HOUR };
         expect(launchCamera({ ...base, lastLocation: { value: inPrague, at: NOW - HOUR }, savedCamera }))
