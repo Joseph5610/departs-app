@@ -1,6 +1,6 @@
 import type { RSSItem, Infotext } from '@/types';
 import { routeTypeRank } from '@/domain/routes/routeType';
-import { normalizeString } from '@/lib/strings';
+import { foldDiacritics } from '@shared/text';
 
 /**
  * Whether an alert priority (RSS string or GTFS-RT numeric code) is high.
@@ -22,9 +22,9 @@ export interface AlertSection {
 
 /** The mode an alert is listed under: its first line's, trolleybuses with buses, `other` without lines. */
 const getTransportMode = (item: RSSItem): string => {
-    if (!item.line_metadata || item.line_metadata.length === 0) return 'other';
+    if (!item.resolvedLines || item.resolvedLines.length === 0) return 'other';
 
-    for (const meta of item.line_metadata) {
+    for (const meta of item.resolvedLines) {
         const type = meta.type;
         
         if (type === 'trolleybus') return 'bus';
@@ -41,15 +41,15 @@ const getTransportMode = (item: RSSItem): string => {
  * in mode order; within a mode incidents first, then active ones, then high priority.
  */
 export const alertSections = (alerts: RSSItem[], filterMode: AlertFilterMode, searchQuery: string): AlertSection[] => {
-    const q = normalizeString(searchQuery.trim());
+    const q = foldDiacritics(searchQuery.trim());
     const filtered = alerts.filter(item => {
         if (filterMode === 'incident' && item.type !== 'incident') return false;
         if (filterMode === 'exclusion' && item.type !== 'exclusion') return false;
 
         if (q) {
-            const matchesTitle = normalizeString(item.title).includes(q);
-            const matchesDesc = item.description ? normalizeString(item.description).includes(q) : false;
-            const matchesLine = item.line_metadata?.some((m) => m.name && normalizeString(m.name).includes(q));
+            const matchesTitle = foldDiacritics(item.title).includes(q);
+            const matchesDesc = item.description ? foldDiacritics(item.description).includes(q) : false;
+            const matchesLine = item.resolvedLines?.some((m) => foldDiacritics(m.name).includes(q));
             if (!matchesTitle && !matchesDesc && !matchesLine) return false;
         }
         return true;
@@ -83,7 +83,7 @@ export const alertSections = (alerts: RSSItem[], filterMode: AlertFilterMode, se
 export const alertsForLine = (alerts: RSSItem[], routeName: string): RSSItem[] => {
     const upperRouteName = routeName.toUpperCase();
     return alerts
-        .filter(item => item.isActive && item.line_metadata?.some((m) => String(m.name).toUpperCase() === upperRouteName))
+        .filter(item => item.isActive && item.resolvedLines?.some((m) => m.name.toUpperCase() === upperRouteName))
         .sort((a, b) => Number(isHighPriorityAlert(b.priority)) - Number(isHighPriorityAlert(a.priority)));
 };
 
@@ -95,7 +95,7 @@ export const incidentsOnLines = (alerts: readonly RSSItem[] | undefined, lineNam
     if (!alerts || lineNames.size === 0) return [];
     const names = new Set([...lineNames].map(n => n.toUpperCase()));
     return alerts
-        .filter(item => item.type === 'incident' && item.isActive && item.line_metadata?.some(m => names.has(String(m.name).toUpperCase())))
+        .filter(item => item.type === 'incident' && item.isActive && item.resolvedLines?.some(m => names.has(m.name.toUpperCase())))
         .sort((a, b) => Number(isHighPriorityAlert(b.priority)) - Number(isHighPriorityAlert(a.priority)));
 };
 

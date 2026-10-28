@@ -3,7 +3,6 @@
  * cannot drift from the query that writes it. Persisted queries keep their strings: changing one drops the device cache.
  */
 export const queryKeys = {
-    cities: () => ['cities', 'v2'] as const,
     coverage: (city: string) => ['coverage', city] as const,
     stops: (city: string, version: number | string) => ['stops', city, version] as const,
     routeMetadata: (city: string) => ['route-metadata', city] as const,

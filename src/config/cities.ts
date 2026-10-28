@@ -1,7 +1,8 @@
 import '@/lib/zodConfig';
 import { z } from 'zod/mini';
-import type { EnrichmentChannelAdapter, City, RouteType } from '@/types';
+import type { EnrichmentChannelAdapter, RouteType } from '@/types';
 import type { DataAttribution } from './attributions';
+import { CITY_FACTS, type CityFacts } from '@shared/cities';
 
 /** A Brno KORDIS StreamServer vehicle message; other messages (e.g. the filter acknowledgement) have no attributes. */
 const kordisMessageSchema = z.object({
@@ -17,27 +18,12 @@ const kordisMessageSchema = z.object({
     }),
 });
 
-export interface InitialCityConfig {
-    slug: string;
-    /** ISO 3166-1 alpha-2 code; must match the backend `CITY_REGISTRY`. */
-    country: string;
-    /** IANA zone the city's timetables are written in; must match the backend `CITY_REGISTRY`. */
-    timezone: string;
-    center: [number, number];
-    bounds: [number, number, number, number];
-    hasPointsOfSale?: boolean;
+/** A city as the app bundles it: the facts it shares with the server plus how the app shows it. */
+export interface CityConfig extends CityFacts {
     /** Route shapes are read by the app from the static data CDN; without them the route is drawn straight from stop to stop. */
     hasTripShapes?: boolean;
     /** The city publishes `network.json`, its backbone lines (e.g. metro) drawn on the map at all times. */
     hasNetworkLines?: boolean;
-    /** Kept out of the city lists until a device unlocks it with `?beta=<slug>`. */
-    isHidden?: boolean;
-    /** Mirrors the backend `hasAlerts`; used until /api/cities has loaded. */
-    hasAlerts?: boolean;
-    filters?: {
-        vehicles: string[];
-        stops: string[];
-    };
     enrichmentChannel?: EnrichmentChannelAdapter;
     /** The feed reports no delay, so the app estimates it from `stop_times/<HH>.json` and the vehicle positions. */
     estimatesDelay?: boolean;
@@ -77,23 +63,14 @@ export const DEFAULT_LINE_RULES: LineRules = {
     nightHours: [22, 5],
 };
 
-export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
+/** Keyed by URL slug; null-prototype so a slug like `toString` is not a city. */
+export const FRONTEND_CITIES_CONFIG: Record<string, CityConfig> = Object.assign(Object.create(null) as Record<string, CityConfig>, {
     prague: {
-        slug: 'prague',
+        ...CITY_FACTS.prague,
         networkLabel: 'PID',
         modeColors: { train: '#251E62', tram: '#7A0603', trolleybus: '#80166F', bus: '#007DA8', ferry: '#00B3CB', funicular: '#B2B943' },
-        country: 'CZ',
-        timezone: 'Europe/Prague',
-        center: [14.4212, 50.0875],
-        bounds: [14.22, 49.94, 14.71, 50.18],
-        hasPointsOfSale: true,
-        hasAlerts: true,
         hasTripShapes: true,
         hasNetworkLines: true,
-        filters: {
-            vehicles: ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'],
-            stops: ['metro', 'train']
-        },
         hasInfotexts: true,
         dataProvider: { nameKey: 'liveStatus.providerGolemio', url: 'https://golemio.cz' },
         attributions: [
@@ -106,20 +83,11 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         },
     },
     brno: {
-        slug: 'brno',
+        ...CITY_FACTS.brno,
         networkLabel: 'IDS JMK',
         modeColors: { tram: '#D40000', trolleybus: '#008033', bus: '#2C82C8', ferry: '#00224B' },
-        country: 'CZ',
-        timezone: 'Europe/Prague',
-        center: [16.6068, 49.1951],
-        bounds: [16.44, 49.11, 16.77, 49.28],
-        hasAlerts: true,
         hasTripShapes: true,
         hasNetworkLines: true,
-        filters: {
-            vehicles: ['tram', 'bus', 'trolleybus', 'train', 'ferry'],
-            stops: []
-        },
         hasInfotexts: false,
         estimatesDelay: true,
         vehicleMetadata: { file: 'vehicles.json' },
@@ -162,19 +130,11 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         }
     },
     presov: {
-        slug: 'presov',
+        ...CITY_FACTS.presov,
         networkLabel: 'DPMP',
-        country: 'SK',
-        timezone: 'Europe/Bratislava',
-        center: [21.2393, 48.9985],
-        bounds: [21.13, 48.93, 21.37, 49.08],
         hasTripShapes: true,
         hasNetworkLines: true,
         vehicleMetadata: { file: 'dpmp-vehicles.json' },
-        filters: {
-            vehicles: ['bus', 'trolleybus'],
-            stops: []
-        },
         hasInfotexts: false,
         dataProvider: { nameKey: 'liveStatus.providerDpmp', url: 'https://www.arcgis.com/home/item.html?id=f1033ca6c2f4461d9aba285e1c7cb079' },
         attributions: [
@@ -184,18 +144,9 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         debugFeedLabels: { vehicles: 'DPMP CSV -> JSON', alerts: 'No alerts source' },
     },
     duk: {
-        slug: 'duk',
+        ...CITY_FACTS.duk,
         networkLabel: 'DÚK',
         modeColors: { train: '#004B90', tram: '#CF003D', trolleybus: '#00829B', bus: '#5E9E1F', funicular: '#C9A100' },
-        country: 'CZ',
-        timezone: 'Europe/Prague',
-        center: [14.0322, 50.6607],
-        bounds: [12.93, 50.11, 14.61, 51.05],
-        isHidden: true,
-        filters: {
-            vehicles: ['train', 'bus', 'trolleybus', 'tram', 'ferry'],
-            stops: []
-        },
         hasInfotexts: false,
         dataProvider: { nameKey: 'liveStatus.providerDuk', url: 'https://tabule.portabo.cz' },
         attributions: [
@@ -207,7 +158,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, InitialCityConfig> = {
         routeTypeColors: { train: '#004B90' },
         debugFeedLabels: { vehicles: 'Portabo GetTraffic -> JSON', alerts: 'No alerts source' },
     },
-};
+} satisfies Record<string, CityConfig>);
 
 export const DEFAULT_CITY_SLUG = 'prague';
 
@@ -225,5 +176,6 @@ export const VIEWER_COUNTRY_BY_LANGUAGE: Record<string, string> = {
 
 export const FALLBACK_CITY_CONFIG = FRONTEND_CITIES_CONFIG[DEFAULT_CITY_SLUG];
 
-/** A bundled city config with its `/api/cities` entry laid over it. */
-export type CityConfig = InitialCityConfig & Partial<City>;
+/** Every city, hidden ones included, in the order the city lists show them. */
+export const CITY_LIST: CityConfig[] = Object.values(FRONTEND_CITIES_CONFIG);
+

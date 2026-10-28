@@ -5,7 +5,7 @@ import { MEMORY_CACHE_TTL } from '../../_core/feed/cacheManager';
 import { LruCache } from '../../_core/feed/LruCache';
 import { departuresBucketId, GTFS_CONFIG } from './config';
 import type { GtfsDepartureTuple } from './types';
-import { parseStopRequest } from '../../_core/utils/stopIds';
+import { parseStopRequest } from '../../../shared/stopIds';
 
 /**
  * Departure rows by `${citySlug}:${stopId}`.

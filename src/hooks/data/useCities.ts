@@ -1,55 +1,13 @@
-import '@/lib/zodConfig';
-import { z } from 'zod/mini';
 import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import type { CitiesResponse, City } from '@/types';
+import type { CityFacts } from '@shared/cities';
 import { isCityVisible, lineRulesOf } from '@/domain/cities';
-import { apiFetch } from '@/lib/apiClient';
-import { createDevicePersister, deviceCacheStaleTime } from '@/lib/deviceCache';
-import { QUERY_TIMING_MS } from '@/config/constants';
-import { FALLBACK_CITY_CONFIG, FRONTEND_CITIES_CONFIG, type CityConfig, type LineRules } from '@/config/cities';
+import { CITY_LIST, FALLBACK_CITY_CONFIG, FRONTEND_CITIES_CONFIG, type CityConfig, type LineRules } from '@/config/cities';
 import { usePreferencesStore } from '@/state/preferencesStore';
-import { queryKeys } from '@/lib/queryKeys';
 
-/** The fields the app joins on; the rest of each city is optional and read defensively. */
-const citiesResponseSchema = z.object({
-    cities: z.array(z.looseObject({
-        slug: z.string(),
-        name: z.string(),
-        country: z.string(),
-        center: z.tuple([z.number(), z.number()]),
-        bounds: z.tuple([z.number(), z.number(), z.number(), z.number()]),
-    })),
-});
-
-const citiesPersister = createDevicePersister((data): CitiesResponse => citiesResponseSchema.parse(data));
-
-export function useCities() {
-    return useQuery<CitiesResponse, Error>({
-        queryKey: queryKeys.cities(),
-        queryFn: () => apiFetch<CitiesResponse>('/cities'),
-        staleTime: deviceCacheStaleTime(QUERY_TIMING_MS.CITIES_STALE),
-        gcTime: QUERY_TIMING_MS.CITIES_GC,
-        persister: citiesPersister,
-        refetchOnWindowFocus: false,
-    });
-}
-
-/**
- * Config for one city (the selected city by default): its `/api/cities` entry over the bundled config.
- * The bundled values apply until the API responds, and to fields an older cached response lacks.
- */
+/** Config for one city (the selected city by default). */
 export function useCityConfig(slug?: string): CityConfig {
     const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const citySlug = slug ?? selectedCity;
-    const { data } = useCities();
-
-    return useMemo(() => {
-        const bundled = FRONTEND_CITIES_CONFIG[citySlug];
-        if (!bundled) return FALLBACK_CITY_CONFIG;
-        const fromApi = data?.cities.find(c => c.slug === citySlug);
-        return fromApi ? { ...bundled, ...fromApi } : bundled;
-    }, [citySlug, data]);
+    return FRONTEND_CITIES_CONFIG[slug ?? selectedCity] ?? FALLBACK_CITY_CONFIG;
 }
 
 /** The selected city's line conventions, with the generic defaults for anything it doesn't define. */
@@ -59,11 +17,7 @@ export function useLineRules(): LineRules {
 }
 
 /** The cities a user may pick: the hidden ones only on a device that unlocked them with `?beta=<slug>`. */
-export function useVisibleCities(): City[] {
-    const { data } = useCities();
+export function useVisibleCities(): CityFacts[] {
     const unlockedCities = usePreferencesStore(s => s.unlockedCities);
-    return useMemo(
-        () => (data?.cities ?? []).filter(city => isCityVisible(city, unlockedCities)),
-        [data, unlockedCities]
-    );
+    return useMemo(() => CITY_LIST.filter(city => isCityVisible(city, unlockedCities)), [unlockedCities]);
 }

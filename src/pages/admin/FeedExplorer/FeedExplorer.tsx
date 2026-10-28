@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePreferencesStore } from '@/state/preferencesStore';
-import { useCities, useCityConfig } from '@/hooks/data/useCities';
-import { DEFAULT_CITY_SLUG } from '@/config/cities';
+import { useCityConfig } from '@/hooks/data/useCities';
+import { CITY_LIST, DEFAULT_CITY_SLUG } from '@/config/cities';
 import { apiFetch } from '@/lib/apiClient';
 import { RefreshCw, AlertCircle, Bus, Info, Copy, Check, Maximize2, Minimize2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,7 +17,6 @@ import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 export const FeedExplorer = () => {
     // Local, so browsing feeds here doesn't switch the city the map opens with.
     const [selectedCity, setSelectedCity] = useState(() => usePreferencesStore.getState().selectedCity);
-    const { data: citiesData } = useCities();
     const { debugFeedLabels } = useCityConfig(selectedCity);
     const [feedType, setFeedType] = useState<'vehicles' | 'alerts'>('vehicles');
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -68,7 +67,7 @@ export const FeedExplorer = () => {
         <div className="flex items-center gap-2">
             <Tabs value={selectedCity} onValueChange={(v) => setSelectedCity(v)} className="hidden sm:block">
                 <TabsList variant="pill">
-                    {citiesData?.cities.map(city => (
+                    {CITY_LIST.map(city => (
                         <TabsTrigger key={city.slug} value={city.slug}>{city.name}</TabsTrigger>
                     ))}
                 </TabsList>
@@ -111,7 +110,7 @@ export const FeedExplorer = () => {
             <div className="flex items-center gap-2 sm:hidden shrink-0">
                 <Tabs value={selectedCity} onValueChange={(v) => setSelectedCity(v)} className="w-full">
                     <TabsList variant="default" className="flex w-full h-9 p-1 rounded-xl bg-muted/50 border border-border/50">
-                        {citiesData?.cities.map(city => (
+                        {CITY_LIST.map(city => (
                             <TabsTrigger key={city.slug} value={city.slug} className="flex-1 h-7 text-xs font-semibold rounded-lg">{city.name}</TabsTrigger>
                         ))}
                     </TabsList>

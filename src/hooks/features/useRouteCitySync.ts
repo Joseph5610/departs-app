@@ -1,23 +1,20 @@
 import { useEffect } from 'react';
 import { navigate } from '@/lib/history';
 import { useRouteParams } from '@/hooks/useRouteParams';
-import { useCities } from '@/hooks/data/useCities';
 import { getUrlUnlockedCity, usePreferencesStore } from '@/state/preferencesStore';
-import { FALLBACK_CITY_CONFIG, FRONTEND_CITIES_CONFIG } from '@/config/cities';
+import { DEFAULT_CITY_SLUG, FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { paths } from '@/lib/routes';
 
 /**
  * Keeps the selected city in step with the URL. Mount exactly once (MapController).
  *
- * 1. A city the bundle knows is written to the store immediately, so hooks that run on map load
- *    (e.g. `useAutoCitySwitch`) see it without waiting for `/api/cities`.
- * 2. Once `/api/cities` loads, invalid persisted or URL cities are corrected and the default city's
- *    base path is redirected to `/`.
+ * 1. A URL city the bundle knows is written to the store, so hooks that run on map load
+ *    (e.g. `useAutoCitySwitch`) see it.
+ * 2. Invalid persisted or URL cities are corrected and the default city's base path is redirected to `/`.
  * 3. `?beta=<slug>` unlocks a hidden region for this device.
  */
 export const useRouteCitySync = () => {
     const { city, isCityBase } = useRouteParams();
-    const { data: citiesData } = useCities();
     const setSelectedCity = usePreferencesStore(s => s.actions.setSelectedCity);
     const unlockCity = usePreferencesStore(s => s.actions.unlockCity);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
@@ -29,36 +26,21 @@ export const useRouteCitySync = () => {
     }, [unlockCity]);
 
     useEffect(() => {
-        if (city && FRONTEND_CITIES_CONFIG[city] && selectedCity !== city) {
-            setSelectedCity(city);
-        }
-    }, [city, selectedCity, setSelectedCity]);
+        const isValid = (slug: string) => Object.hasOwn(FRONTEND_CITIES_CONFIG, slug);
+        const safeCity = isValid(selectedCity) ? selectedCity : DEFAULT_CITY_SLUG;
 
-    useEffect(() => {
-        if (!citiesData?.cities.length) return;
-
-        const validCities = new Set(citiesData.cities.map(c => c.slug));
-        const defaultCity = citiesData.cities[0]?.slug || FALLBACK_CITY_CONFIG.slug;
-        const safeCity = validCities.has(selectedCity) ? selectedCity : defaultCity;
-
-        if (safeCity !== selectedCity) {
-            setSelectedCity(safeCity);
-        }
-
-        if (!city) return;
-
-        if (city === defaultCity && isCityBase) {
-            if (window.location.pathname !== '/') {
-                navigate('/', { replace: true });
-            }
+        if (city === DEFAULT_CITY_SLUG && isCityBase) {
+            if (selectedCity !== city) setSelectedCity(city);
+            if (window.location.pathname !== '/') navigate('/', { replace: true });
             return;
         }
 
-        if (validCities.has(city)) {
-            if (city !== safeCity) setSelectedCity(city);
-        } else {
-            const redirectPath = safeCity === defaultCity ? '/' : paths.city(safeCity);
-            navigate(redirectPath, { replace: true });
+        if (city && isValid(city)) {
+            if (city !== selectedCity) setSelectedCity(city);
+            return;
         }
-    }, [city, selectedCity, setSelectedCity, citiesData, isCityBase]);
+
+        if (safeCity !== selectedCity) setSelectedCity(safeCity);
+        if (city) navigate(safeCity === DEFAULT_CITY_SLUG ? '/' : paths.city(safeCity), { replace: true });
+    }, [city, selectedCity, setSelectedCity, isCityBase]);
 };

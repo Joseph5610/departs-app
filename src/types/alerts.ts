@@ -1,41 +1,20 @@
+import type { AppAlert, AppInfotext } from '@shared/api';
 import type { RouteType } from './vehicles';
 
-export interface RSSItem {
-    type: 'incident' | 'exclusion';
-    title: string;
-    description: string | null;
-    /** ISO 8601 instant. */
-    valid_from: string | null;
-    /** ISO 8601 instant. */
-    valid_to: string | null;
-    link: string;
-    guid?: string;
-    priority?: string;
-    /**
-     * One entry per affected route. GTFS-RT-sourced alerts (KORDIS/PID) arrive with only `route_id`
-     * set - raw and unresolved - and get `name`/`type`/`route_color` filled in by
-     * `enrichAlertLineMetadata` from the same routes.json join vehicles/departures use. RSS-sourced
-     * exclusions arrive with `name`/`type` already set (no route id exists for them) and only pick
-     * up `route_color` from that same enrichment step.
-     */
-    line_metadata?: Array<{ route_id?: string; name?: string; route_color?: string; type?: RouteType }>;
-    /** Derived in `useAlerts` from the validity window as of the fetch; not sent by the API. */
-    isActive?: boolean;
-    isFuture?: boolean;
-    cause?: string;
-    causeDetail?: { cs?: string; en?: string };
-    effect?: string;
+/** An alert's line, resolved for its badge; a line routes.json doesn't know keeps its raw id as name. */
+export interface AlertLine {
+    name: string;
+    type: RouteType;
+    route_color?: string;
 }
 
-export interface Infotext {
-    id: string;
-    text: string;
-    textEn: string | null;
-    priority: 'low' | 'normal' | 'high';
-    displayType: 'inline' | 'general';
-    relatedStopIds: string[];
-    /** ISO 8601 instant. */
-    valid_from: string;
-    /** ISO 8601 instant. */
-    valid_to: string | null;
+/** An alert as the API sends it, plus what `useAlerts` derives from it. */
+export interface RSSItem extends AppAlert {
+    /** Derived from `lines` and routes.json. */
+    resolvedLines?: AlertLine[];
+    /** Derived from the validity window as of the fetch. */
+    isActive?: boolean;
+    isFuture?: boolean;
 }
+
+export type Infotext = AppInfotext;

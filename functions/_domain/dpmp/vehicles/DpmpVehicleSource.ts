@@ -9,7 +9,7 @@ import { getSchedule, isWaitingToStart } from '../../../_feeds/gtfs/schedule';
 import { getTripStops } from '../../../_feeds/gtfs/tripStops';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { DAY_MS, getLocalClock, zonedLocalToEpochMs, type LocalClock } from '../../../_core/utils/time';
-import { bearingDeg } from '../../../_core/utils/geo';
+import { bearingDeg } from '../../../../shared/geo';
 import { MovementBearings } from '../../../_core/utils/MovementBearings';
 import { DPMP_CONFIG } from '../../../_feeds/dpmp/config';
 import { getDpmpCsvSnapshot, type DpmpVehicleRow } from '../../../_feeds/dpmp/dpmpCsvFeed';

@@ -1,11 +1,9 @@
-import type { RSSItem, RouteInfo } from '@/types';
+import type { AlertLine, RSSItem, RouteInfo } from '@/types';
+import { resolveLine } from '@shared/lines';
 import { mapStable } from '@/lib/memoize';
 
-/**
- * Resolves each alert's affected lines. GTFS-RT entries carry only `route_id`, looked up by id and
- * then in KORDIS's numeric-id table; RSS entries already carry name/type and only pick up a colour.
- */
-export function enrichAlertLineMetadata(
+/** Resolves each alert's `lines` into `resolvedLines`: by route id, then by name, then in KORDIS's numeric-id table. */
+export function resolveAlertLines(
     alerts: RSSItem[],
     byId: Map<string, RouteInfo>,
     byName: Map<string, RouteInfo>,
@@ -14,17 +12,12 @@ export function enrichAlertLineMetadata(
     if (!alerts.length || (byId.size === 0 && byName.size === 0)) return alerts;
 
     return mapStable(alerts, (alert) => {
-        if (!alert.line_metadata?.length) return alert;
-        const line_metadata = mapStable(alert.line_metadata, (entry) => {
-            const key = entry.route_id ?? entry.name;
-            if (!key) return entry;
-            const upper = key.toUpperCase();
-            const route = (entry.route_id && byId.get(entry.route_id)) || byName.get(upper) || byKordisNumeric.get(upper);
-            return route
-                ? { ...entry, name: route.name, type: route.type, route_color: route.route_color }
-                : { ...entry, name: entry.name ?? key, type: entry.type ?? 'unknown' as const };
+        if (!alert.lines?.length) return alert;
+        const resolvedLines = alert.lines.map((line): AlertLine => {
+            const route = resolveLine(line, byId, byName, byKordisNumeric);
+            return route ? { name: route.name, type: route.type, route_color: route.route_color } : { name: line, type: 'unknown' };
         });
-        return line_metadata === alert.line_metadata ? alert : { ...alert, line_metadata };
+        return { ...alert, resolvedLines };
     });
 }
 

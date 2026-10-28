@@ -1,5 +1,6 @@
 import type { AppVehicleCollection } from '../types';
 import { parseBoundsParam } from '../schemas';
+import { isInView, vehicleView } from '../../../shared/vehicleView';
 
 /** Whether a query asks for the whole fleet, which is answered from the serialized collection. */
 export function isUnfiltered({ bounds, routeType, routeShortName }: VehicleFilter): boolean {
@@ -17,27 +18,10 @@ export interface VehicleFilter {
  * (`south,west,north,east`). Vehicles without a position are dropped only when bounds are given.
  */
 export function filterVehicles(collection: AppVehicleCollection, { bounds, routeType, routeShortName }: VehicleFilter): AppVehicleCollection {
-    const types = routeType && routeType.length > 0 ? new Set(routeType.map(r => r.toLowerCase())) : null;
-    const names = routeShortName && routeShortName.length > 0 ? new Set(routeShortName.map(r => r.toUpperCase())) : null;
-    const box = bounds ? parseBoundsParam(bounds) : null;
-
-    const features = (types || names || box)
-        ? collection.features.filter(f => {
-            if (types && !types.has(f.properties.route_type)) return false;
-            if (names && !names.has(f.properties.route_short_name.toString().toUpperCase())) return false;
-            if (box) {
-                if (!f.geometry || !f.geometry.coordinates) return false;
-                const [lng, lat] = f.geometry.coordinates;
-                const [minLat, minLng, maxLat, maxLng] = box;
-                if (lng < minLng || lng > maxLng || lat < minLat || lat > maxLat) return false;
-            }
-            return true;
-        })
-        : collection.features;
-
+    const view = vehicleView(routeType, routeShortName, bounds ? parseBoundsParam(bounds) : null);
     return {
         type: 'FeatureCollection',
-        features,
+        features: view ? collection.features.filter(f => isInView(view, f)) : collection.features,
         status: collection.status,
         ...(collection.last_updated !== undefined ? { last_updated: collection.last_updated } : {}),
     };

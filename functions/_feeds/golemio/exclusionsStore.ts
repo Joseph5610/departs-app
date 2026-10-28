@@ -8,7 +8,7 @@ export interface StoredExclusions {
     alerts: AppAlert[];
 }
 
-const KEY = 'pid_exclusions';
+const KEY = 'pid_exclusions_v2';
 const BUILT_AT_HEADER = 'X-Built-At';
 
 /** This isolate's newest copy, so a warm isolate skips both the Cache API and the parse. */

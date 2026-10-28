@@ -3,14 +3,11 @@ import type { CityConfig } from '../_core/cityConfig';
 import type { AppRouteType } from '../_core/types';
 import { appClient } from '../_core/ApiClient';
 import { ApiError } from '../_core/errors';
-import { EARTH_RADIUS_M } from '../_core/utils/geo';
+import { EARTH_RADIUS_M, distanceMeters } from '../../shared/geo';
 import { ERROR_MESSAGES, STOP_SEARCH_CONFIG, STATIC_DATA_CONFIG } from '../_core/config';
 import { MEMORY_CACHE_TTL, getOrFetch } from '../_core/feed/cacheManager';
 import { LruCache } from '../_core/feed/LruCache';
-import { distanceMeters } from '../_core/utils/geo';
-
-/** Lowercase without diacritics, so `namesti svobody` finds `Náměstí Svobody`. Must match departs-data's `foldName`. */
-const foldName = (value: string): string => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+import { foldDiacritics } from '../../shared/text';
 
 /** Shape check only: `stopsAt` type-checks the fields of the few stops it reads. */
 const stopDetailsBlockSchema = z.lazy(() => z.array(z.array(z.unknown())));
@@ -96,7 +93,7 @@ export class StopSearch {
      * starting with it, then any containment, then id containment; shorter names win ties, then stop order.
      */
     byName(query: string, limit: number): number[] {
-        const q = foldName(query);
+        const q = foldDiacritics(query).trim();
         // Names and ids never hold a tab or newline, so such a query matches nothing, as a field-by-field search would.
         if (!q || q.includes('\t') || q.includes('\n')) return [];
 
@@ -128,7 +125,7 @@ export class StopSearch {
 
     /** The platform that goes by `id` (its own or an alias), matched whole; null when none does. */
     byId(id: string): number | null {
-        const q = foldName(id);
+        const q = foldDiacritics(id).trim();
         if (!q || /[\t\n,]/.test(q)) return null;
         for (let pos = this.text.indexOf(q); pos !== -1; pos = this.text.indexOf(q, pos + 1)) {
             const before = this.text[pos - 1];

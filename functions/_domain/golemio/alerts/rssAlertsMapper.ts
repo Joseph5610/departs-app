@@ -1,5 +1,6 @@
 import { AppAlert } from "../../../_core/types";
 import type { PidRssItem } from "../../../_feeds/golemio/rssExclusions";
+import type { GtfsRoute } from "../../../_feeds/gtfs/gtfsData";
 import { alertTextFromHtml } from "../../../_core/utils/alertTextFormatter";
 
 const LEADING_SEPARATOR = /[;\s.]/;
@@ -15,8 +16,18 @@ function trimSeparators(text: string): string {
 }
 
 
-/** Maps validated PID RSS items (planned exclusions) into alerts. */
-export function mapRssExclusions(parsedItems: PidRssItem[]): AppAlert[] {
+/** Uppercased line name -> routes.json id; the last route of a name wins, as in the frontend's name index. */
+export function routeIdsByName(routes: Record<string, GtfsRoute>): Map<string, string> {
+    const byName = new Map<string, string>();
+    for (const id in routes) byName.set(routes[id].name.toUpperCase(), id);
+    return byName;
+}
+
+/**
+ * Maps validated PID RSS items (planned exclusions) into alerts. Their lines come as names, sent as the
+ * route id `routeIdByName` knows them by, so they match the GTFS-RT incidents' ids; an unknown name stays a name.
+ */
+export function mapRssExclusions(parsedItems: PidRssItem[], routeIdByName: ReadonlyMap<string, string>): AppAlert[] {
     const itemType = 'exclusion';
 
     const items: AppAlert[] = [];
@@ -47,7 +58,7 @@ export function mapRssExclusions(parsedItems: PidRssItem[]): AppAlert[] {
             }
         }
         
-        lines = Array.from(new Set(lines));
+        lines = Array.from(new Set(lines.map(name => routeIdByName.get(name.toUpperCase()) ?? name)));
 
         const valid_from = item.dateFrom ? new Date(Number(item.dateFrom) * 1000).toISOString() : null;
         const valid_to = item.dateTo ? new Date(Number(item.dateTo) * 1000).toISOString() : null;
@@ -65,7 +76,7 @@ export function mapRssExclusions(parsedItems: PidRssItem[]): AppAlert[] {
             valid_to,
             guid: guid || undefined,
             priority: priority || undefined,
-            line_metadata: lines.map(name => ({ name })),
+            lines: lines.length > 0 ? lines : undefined,
         });
     }
 

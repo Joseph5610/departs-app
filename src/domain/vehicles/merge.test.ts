@@ -17,7 +17,7 @@ const merge = ({ tripId = 'trip-1', vehicleId = null, vehicles = [], detail, byT
     mergeSelectedVehicle(
         tripId,
         vehicleId,
-        indexBy(vehicles, (v) => v.properties.vehicle_id),
+        indexBy(vehicles, (v) => v.properties.vehicle_id ?? null),
         indexBy(vehicles, (v) => v.properties.gtfs_trip_id),
         detail,
         byTripId,
@@ -106,7 +106,7 @@ describe('mergeSelectedVehicle', () => {
         const connection = { trip_id: 'trip-9', line: '9', type: 'tram' as const, headsign: 'Sídliště Řepy', departure_time: '12:12:00', delay: null, max_wait_s: 120, at_risk: false };
         const result = merge({
             vehicles: [vehicle('trip-9', { delay: 120 })],
-            detail: vehicleDetail({ stop_times: { type: 'FeatureCollection', features: [stopTime([connection])] } }),
+            detail: vehicleDetail({ stop_times: { features: [stopTime([connection])] } }),
         });
 
         expect(result?.stop_times?.features[0].properties.connections?.[0]).toMatchObject({ vehicle_id: 'veh-trip-9', delay: 120 });

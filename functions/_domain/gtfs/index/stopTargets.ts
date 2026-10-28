@@ -2,7 +2,7 @@ import type { CityConfig } from '../../../_core/cityConfig';
 import { getStopRelations, type StopRelation } from '../../../_feeds/gtfs/departureRows';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { ApiError } from '../../../_core/errors';
-import { requestParts } from '../../../_core/utils/stopIds';
+import { requestParts } from '../../../../shared/stopIds';
 
 /** The stop ids a request named, resolved to the platforms whose rows must actually be read. */
 export interface StopTargets {

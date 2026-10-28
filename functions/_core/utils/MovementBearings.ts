@@ -1,5 +1,5 @@
 import { LruCache } from '../feed/LruCache';
-import { bearingDeg, distanceMeters } from './geo';
+import { bearingDeg, distanceMeters } from '../../../shared/geo';
 
 /**
  * Headings derived from a vehicle's own movement, for feeds that report positions without one. Each

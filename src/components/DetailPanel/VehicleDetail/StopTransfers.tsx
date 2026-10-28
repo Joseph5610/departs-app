@@ -6,6 +6,7 @@ import { paths } from '@/lib/routes';
 import { cn } from '@/lib/cn';
 import { addSecondsToTime } from '@/domain/time';
 import { distinctLines } from '@/domain/departures';
+import { lineLabel } from '@/domain/routes';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { LineBadge } from '@/components/LineBadge';
 import { usePreferencesStore } from '@/state/preferencesStore';
@@ -132,7 +133,7 @@ export const StopConnections = memo(({ connections, isPast, defaultOpen }: {
                         key={c.trip_id}
                         tripId={c.trip_id}
                         vehicleId={c.vehicle_id}
-                        line={c.line}
+                        line={lineLabel(c)}
                         routeColor={c.route_color}
                         headsign={c.headsign}
                         time={c.departure_time}

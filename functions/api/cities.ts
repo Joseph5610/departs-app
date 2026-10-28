@@ -1,23 +1,10 @@
 import type { AppCitiesResponse } from "../_core/types";
-import { CITY_REGISTRY } from "../_cities";
+import { CITY_FACTS } from "../../shared/cities";
 import { createSuccessResponse } from "../_core/apiUtils";
 import { CACHE_TTL } from "../_core/config";
 
+/** Every city's shared facts; the app bundles them since 0.90.0, this answers installs from before. */
 export async function onRequest() {
-    const response: AppCitiesResponse = { 
-        cities: Object.values(CITY_REGISTRY).map(city => ({
-            slug: city.slug,
-            name: city.name,
-            country: city.country,
-            timezone: city.timezone,
-            center: city.center,
-            bounds: city.bounds,
-            isBeta: city.isBeta,
-            isHidden: city.isHidden,
-            hasPointsOfSale: city.hasPointsOfSale,
-            hasAlerts: city.hasAlerts,
-            filters: city.filters,
-        }))
-    };
+    const response: AppCitiesResponse = { cities: Object.values(CITY_FACTS) };
     return createSuccessResponse(response, CACHE_TTL.CITIES);
 };

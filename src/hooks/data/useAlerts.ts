@@ -5,11 +5,11 @@ import { usePreferencesStore } from '@/state/preferencesStore';
 import { useCityConfig } from './useCities';
 import { useRouteMetadata } from './useRouteMetadata';
 import { QUERY_TIMING_MS } from '@/config/constants';
-import { enrichAlertLineMetadata, withAlertTiming } from '@/domain/alerts';
+import { resolveAlertLines, withAlertTiming } from '@/domain/alerts';
 import { memoizeLast } from '@/lib/memoize';
 import { queryKeys } from '@/lib/queryKeys';
 
-const brandAlerts = memoizeLast(enrichAlertLineMetadata);
+const brandAlerts = memoizeLast(resolveAlertLines);
 const timeAlerts = memoizeLast(withAlertTiming);
 const NO_ALERTS: RSSItem[] = [];
 

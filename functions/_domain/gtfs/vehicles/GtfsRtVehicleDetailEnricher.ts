@@ -2,10 +2,10 @@ import type { AppVehicleDetail, AppVehicleFeature, CityRequestContext } from "..
 import type { VehicleDetailEnricher } from "./VehicleDetailEnricher";
 import type { VehiclesService } from "../../vehicles/VehiclesService";
 
-import { addSecondsToTime, getLocalClock, toSecs, wrapDaySeconds } from '../../../_core/utils/time';
+import { addSecondsToTime, getLocalClock, timeToSeconds, wrapDaySeconds } from '../../../_core/utils/time';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { isWaitingToStart } from '../../../_feeds/gtfs/schedule';
-import { distanceToSegmentMeters } from '../../../_core/utils/geo';
+import { distanceToSegmentMeters } from '../../../../shared/geo';
 
 const isPoint = (c: number[] | number[][] | undefined): c is number[] => !!c && typeof c[0] === 'number' && typeof c[1] === 'number';
 
@@ -120,7 +120,7 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         const depTimeStr = firstStop.properties.departure_time;
         if (!depTimeStr) return;
 
-        const minsToStart = wrapDaySeconds(toSecs(depTimeStr) - getLocalClock(this.vehiclesService.city.timezone).secs) / 60;
+        const minsToStart = wrapDaySeconds(timeToSeconds(depTimeStr) - getLocalClock(this.vehiclesService.city.timezone).secs) / 60;
         if (isWaitingToStart(minsToStart, detail.last_stop_sequence)) {
             const delaySecs = detail.delay ?? 0;
             detail.state_position = delaySecs > GTFS_CONFIG.BEFORE_TRACK_DELAY_THRESHOLD_SECS ? 'before_track_delayed' : 'before_track';
@@ -189,20 +189,20 @@ export class GtfsRtVehicleDetailEnricher implements VehicleDetailEnricher {
         if (detail.state_position === 'at_stop') {
             const targetTimeStr = targetStop.properties.arrival_time;
             if (!targetTimeStr) return null;
-            const targetSecs = toSecs(targetTimeStr);
+            const targetSecs = timeToSeconds(targetTimeStr);
             return this.calculateDelaySeconds(realSecs, targetSecs, detail.state_position);
         }
 
         // Between stops, the delay is bounded by the departure from the stop just left (A) and the arrival at the next (B).
         const timeAStr = targetStop.properties.departure_time || targetStop.properties.arrival_time;
         if (!timeAStr) return null;
-        const delayA = this.calculateDelaySeconds(realSecs, toSecs(timeAStr)); // Delay relative to leaving Stop A
+        const delayA = this.calculateDelaySeconds(realSecs, timeToSeconds(timeAStr)); // Delay relative to leaving Stop A
 
         const nextTargetStop = detail.stop_times.features[currentTargetStopIndex + 1];
         if (nextTargetStop) {
             const timeBStr = nextTargetStop.properties.arrival_time || nextTargetStop.properties.departure_time;
             if (timeBStr) {
-                const delayB = this.calculateDelaySeconds(realSecs, toSecs(timeBStr)); // Delay relative to arriving at Stop B
+                const delayB = this.calculateDelaySeconds(realSecs, timeToSeconds(timeBStr)); // Delay relative to arriving at Stop B
                 if (delayA > 0 && delayB < 0) return 0; // Assume perfectly on time
                 if (delayB >= 0) return delayB;
                 if (delayA <= 0) return delayA;

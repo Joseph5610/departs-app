@@ -38,7 +38,7 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
     const isHigh = isHighPriorityAlert(item.priority);
     const isNormal = item.priority === 'normal' || item.priority === '2';
     const isFuture = item.isFuture;
-    const lines = compact ? undefined : item.line_metadata;
+    const lines = compact ? undefined : item.resolvedLines;
     // GTFS-RT UNKNOWN_CAUSE (1) and OTHER_CAUSE (2) carry no information worth a label.
     const cause = item.cause === '1' || item.cause === '2' ? undefined : item.cause;
 
@@ -71,7 +71,7 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
                             {lines.map((line, idx) => (
                                 <LineBadge
                                     key={`${line.name}-${idx}`}
-                                    name={line.name ?? ''}
+                                    name={line.name}
                                     routeColor={line.route_color || FALLBACK_ROUTE_COLOR}
                                     size="md"
                                 />

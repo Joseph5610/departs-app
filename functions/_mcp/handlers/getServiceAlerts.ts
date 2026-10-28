@@ -5,42 +5,47 @@ import type { McpContext } from "../types";
 import { MCP_DEFAULTS } from "../../_core/config";
 import { getCityConfig } from "../../_cities";
 import { getGtfsRoutes } from "../../_feeds/gtfs/gtfsData";
+import { kordisNumericId, resolveLine } from "../../../shared/lines";
 import { buildRequestContext, getMcpTimeContext, loadInfotexts } from "../utils";
 
+interface LineFallbacks {
+    byName: Map<string, GtfsRoute>;
+    byKordisNumeric: Map<string, GtfsRoute>;
+}
+
+/** Name and KORDIS numeric-id indexes per routes table, built on the first line `routes[id]` misses. */
+const fallbacksByRoutes = new WeakMap<Record<string, GtfsRoute>, LineFallbacks>();
+
+function lineFallbacks(routes: Record<string, GtfsRoute>): LineFallbacks {
+    let fallbacks = fallbacksByRoutes.get(routes);
+    if (fallbacks) return fallbacks;
+    fallbacks = { byName: new Map(), byKordisNumeric: new Map() };
+    for (const key in routes) {
+        const route = routes[key];
+        if (route.name) fallbacks.byName.set(route.name.toUpperCase(), route);
+        const numeric = kordisNumericId(key);
+        if (numeric) fallbacks.byKordisNumeric.set(numeric, route);
+    }
+    fallbacksByRoutes.set(routes, fallbacks);
+    return fallbacks;
+}
+
 /**
- * Alert line names by whatever id the feed used - the main `/api/[city]/alerts` response leaves
- * `line_metadata` unresolved (the app's own frontend joins it against the same routes.json), but
- * this tool has no frontend to hand that off to, so it resolves its own small id->name map here.
- * Also tries KORDIS's numeric alert ids ("120") against routes.json's real keys ("L120D99"), the
- * same fallback the backend used to do before that moved to the frontend.
+ * Alert line names as the app shows them: the alerts response leaves `lines` unresolved for the app's own
+ * routes.json join, and this tool has no app to hand that to, so it resolves them the same way here.
  */
-async function resolveLineNames(resolvedCity: string): Promise<(entry: NonNullable<AppAlert['line_metadata']>[number]) => string> {
+async function resolveLineNames(resolvedCity: string): Promise<(line: string) => string> {
     const cityConfig = getCityConfig(resolvedCity);
-    if (!cityConfig) return (entry) => entry.name ?? entry.route_id ?? '';
+    if (!cityConfig) return (line) => line;
 
     const { routes } = await getGtfsRoutes(cityConfig).catch(() => ({ routes: {} as Record<string, GtfsRoute> }));
+    const byId = { get: (id: string) => routes[id] };
+    const byName = { get: (name: string) => lineFallbacks(routes).byName.get(name) };
+    const byKordisNumeric = { get: (id: string) => lineFallbacks(routes).byKordisNumeric.get(id) };
 
-    // Built lazily, once, on first miss - most alerts resolve directly via `routes[id]`.
-    let byName: Map<string, GtfsRoute> | undefined;
-    let byKordisNumeric: Map<string, GtfsRoute> | undefined;
-    const buildFallbacks = (): void => {
-        byName = new Map();
-        byKordisNumeric = new Map();
-        for (const key in routes) {
-            const route = routes[key];
-            if (route.name) byName.set(route.name.toUpperCase(), route);
-            const match = /^L([A-Z0-9]+)D/i.exec(key);
-            if (match) byKordisNumeric.set(match[1].toUpperCase(), route);
-        }
-    };
-
-    return (entry) => {
-        if (entry.name) return entry.name;
-        if (!entry.route_id) return '';
-        if (!byName) buildFallbacks();
-        const upper = entry.route_id.toUpperCase();
-        const route = routes[entry.route_id] ?? byName!.get(upper) ?? byKordisNumeric!.get(upper);
-        return route?.short_name || route?.name || entry.route_id;
+    return (line) => {
+        const route = resolveLine(line, byId, byName, byKordisNumeric);
+        return route?.short_name || route?.name || line;
     };
 }
 
@@ -68,7 +73,7 @@ export async function handleGetServiceAlerts(
         resolveLineNames(resolvedCity)
     ]);
 
-    const linesOf = (a: AppAlert): string[] => (a.line_metadata ?? []).map(lineNameOf).filter(Boolean);
+    const linesOf = (a: AppAlert): string[] => (a.lines ?? []).map(lineNameOf).filter(Boolean);
 
     let alerts = (alertsData?.alerts || []);
     if (args.line) {

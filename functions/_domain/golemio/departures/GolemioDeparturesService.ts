@@ -5,7 +5,7 @@ import { ApiError } from "../../../_core/errors";
 import { getDepartureBoards } from "../../../_feeds/golemio/departures";
 import { mapGolemioDepartures } from "./golemioDeparturesMapper";
 import { departuresQuerySchema, parseSearchParams } from "../../../_core/schemas";
-import { requestParts } from '../../../_core/utils/stopIds';
+import { requestParts } from '../../../../shared/stopIds';
 import { getLiveConnections } from "../../../_feeds/golemio/connections";
 import { GOLEMIO_CONFIG } from "../../../_feeds/golemio/config";
 import { byRequest, stopGroups } from "./stopGroups";

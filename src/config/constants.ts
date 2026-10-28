@@ -251,8 +251,6 @@ export const QUERY_TIMING_MS = {
     NOTICES_STALE: MINUTE_MS,
     /** Stop notices change rarely and the API caches them for 15 min, so polling faster only returns the same copy. */
     INFOTEXTS_REFRESH: 5 * MINUTE_MS,
-    CITIES_STALE: HOUR_MS,
-    CITIES_GC: DAY_MS,
     /** How long stops are used before being downloaded again. */
     STOPS_STALE: DAY_MS,
     /** Points of sale change roughly monthly. */

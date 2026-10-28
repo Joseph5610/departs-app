@@ -161,8 +161,8 @@ export default defineConfig({
             }
           },
           {
-            // Cache CARTO Sprites & Fonts
-            urlPattern: /^https:\/\/([a-z0-9-]+\.)?basemaps\.cartocdn\.com\/(gl|fonts)\/.*\.(png|pbf|json)$/i,
+            // Cache CARTO Sprites & Fonts; CARTO serves them under a versioned `/v/<build>/` prefix.
+            urlPattern: /^https:\/\/([a-z0-9-]+\.)?basemaps\.cartocdn\.com\/(v\/[^/]+\/)?(gl|fonts)\/.*\.(png|pbf|json)$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'carto-map-resources',
@@ -177,7 +177,7 @@ export default defineConfig({
           },
           {
             // Cache CARTO Vector Tiles
-            urlPattern: /^https:\/\/([a-z0-9-]+\.)?basemaps\.cartocdn\.com\/(vector|vectortiles)\/.*\.(mvt|pbf)$/i,
+            urlPattern: /^https:\/\/([a-z0-9-]+\.)?basemaps\.cartocdn\.com\/(v\/[^/]+\/)?(vector|vectortiles)\/.*\.(mvt|pbf)$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'carto-vector-tiles',

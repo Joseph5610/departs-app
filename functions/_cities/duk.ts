@@ -1,4 +1,5 @@
 import type { CityConfig } from '../_core/cityConfig';
+import { CITY_FACTS } from '../../shared/cities';
 import type { City } from './types';
 import { gtfsUseCases } from '../_domain/gtfs/useCases';
 import { noAlerts } from '../_domain/useCases';
@@ -8,22 +9,11 @@ import { DukDeparturesService } from '../_domain/duk/departures/DukDeparturesSer
 import { getDukTrafficFeed } from '../_feeds/duk/dukTrafficFeed';
 
 const config: CityConfig = {
-    slug: 'duk',
-    name: 'Ústecký kraj',
-    country: 'CZ',
-    timezone: 'Europe/Prague',
-    center: [14.0322, 50.6607],
-    bounds: [12.93, 50.11, 14.61, 51.05],
+    ...CITY_FACTS.duk,
     feed: {
         baseUrl: 'https://tabule.portabo.cz/api/v1-tabule/cis',
     },
-    networkOperator: 'Doprava Ústeckého kraje',
-    isBeta: true,
-    isHidden: true,
-    filters: {
-        vehicles: ['train', 'bus', 'trolleybus', 'tram', 'ferry'],
-        stops: []
-    }
+    networkOperator: 'Doprava Ústeckého kraje'
 };
 
 /**

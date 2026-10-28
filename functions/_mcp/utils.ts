@@ -7,8 +7,8 @@ import type { CityUseCases } from "../_domain/useCases";
 import { MCP_DEFAULTS } from "../_core/config";
 import { formatTime } from "../_core/utils/time";
 import { normalizeRouteType } from "../_core/utils/routeTypes";
-import { distanceMeters } from "../_core/utils/geo";
-import { requestParts, stopIdParts } from "../_core/utils/stopIds";
+import { distanceMeters } from "../../shared/geo";
+import { requestParts, stopIdParts } from "../../shared/stopIds";
 
 /**
  * Headers on every /mcp response: CORS for client compatibility (Claude Code, Cursor, browsers), plus

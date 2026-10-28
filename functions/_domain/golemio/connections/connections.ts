@@ -1,6 +1,6 @@
 import type { AppContinuation, AppDepartureFeeder, AppStopConnection, AppVehicleDetail } from "../../../_core/types";
 import type { ContinuationRow, FeederRow, LiveConnections, TripConnections } from "../../../_feeds/golemio/connections";
-import { DAY_SECS, getPreviousDateString, toSecs, type LocalClock } from "../../../_core/utils/time";
+import { DAY_S, getPreviousDateString, timeToSeconds, type LocalClock } from "../../../_core/utils/time";
 import { isConnectionAtRisk } from "../../../_core/utils/connections";
 import { normalizeRouteType } from "../../../_core/utils/routeTypes";
 
@@ -21,7 +21,7 @@ function serviceDayBit(file: LiveConnections, trip: TripConnections, localDate: 
     return trip.d & yesterday ? yesterday : 0;
 }
 
-const isPastMidnight = (time: string | null | undefined): boolean => !!time && toSecs(time) >= DAY_SECS;
+const isPastMidnight = (time: string | null | undefined): boolean => !!time && timeToSeconds(time) >= DAY_S;
 
 function toContinuation([tripId, line, routeType, headsign, departureTime]: ContinuationRow): AppContinuation {
     return { trip_id: tripId, line, type: normalizeRouteType(routeType), headsign, departure_time: departureTime };
@@ -77,7 +77,7 @@ export function attachTripConnections(detail: AppVehicleDetail, file: LiveConnec
     if (!file || !trip || !features || features.length === 0) return;
 
     const lastTime = features[features.length - 1]!.properties.arrival_time;
-    const runsPastMidnight = isPastMidnight(lastTime) && clock.secs < toSecs(lastTime) - DAY_SECS;
+    const runsPastMidnight = isPastMidnight(lastTime) && clock.secs < timeToSeconds(lastTime) - DAY_S;
     const bit = serviceDayBit(file, trip, clock.date, runsPastMidnight);
     const delay = typeof detail.delay === 'number' ? detail.delay : null;
 

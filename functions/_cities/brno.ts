@@ -1,4 +1,5 @@
 import type { CityConfig } from '../_core/cityConfig';
+import { CITY_FACTS } from '../../shared/cities';
 import type { City } from './types';
 import { gtfsUseCases } from '../_domain/gtfs/useCases';
 import { GtfsRtVehicleSource } from '../_domain/gtfs/vehicles/GtfsRtVehicleSource';
@@ -8,22 +9,11 @@ import { KordisAlertsService } from '../_domain/kordis/alerts/KordisAlertsServic
 import { AlertsService } from '../_domain/gtfs/alerts/AlertsService';
 
 const config: CityConfig = {
-    slug: 'brno',
-    name: 'Brno',
-    country: 'CZ',
-    timezone: 'Europe/Prague',
+    ...CITY_FACTS.brno,
     networkOperator: 'IDS JMK',
-    center: [16.6068, 49.1951],
-    bounds: [16.44, 49.11, 16.77, 49.28],
     feed: {
         realtimeUrl: 'https://kordis-jmk.cz/gtfs/gtfsReal.dat',
         hasTripAliases: true
-    },
-    hasAlerts: true,
-    isBeta: true,
-    filters: {
-        vehicles: ['tram', 'bus', 'trolleybus', 'train', 'ferry'],
-        stops: []
     }
 };
 

@@ -8,10 +8,10 @@ import { mapVehicle } from '../../gtfs/vehicles/vehiclesMapper';
 import { getGtfsRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfsData';
 import { getSchedule } from '../../../_feeds/gtfs/schedule';
 import { getTripStops, isLocated } from '../../../_feeds/gtfs/tripStops';
-import { bearingDeg, distanceMeters, distanceToSegmentMeters } from '../../../_core/utils/geo';
+import { bearingDeg, distanceMeters, distanceToSegmentMeters } from '../../../../shared/geo';
 import { MovementBearings } from '../../../_core/utils/MovementBearings';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
-import { formatTime, getLocalClock, toSecs, wrapDaySeconds, type LocalClock } from '../../../_core/utils/time';
+import { formatTime, getLocalClock, timeToSeconds, wrapDaySeconds, type LocalClock } from '../../../_core/utils/time';
 import { getDukStationNames, getDukTrafficFeed, getDukTrafficSnapshot, type DukVehicleReport } from '../../../_feeds/duk/dukTrafficFeed';
 import { TripTrackLookup, type TripTrack } from '../../../_feeds/duk/dukTripTracks';
 import { DUK_STATE_MAPPING } from '../dukConstants';
@@ -147,8 +147,8 @@ export class DukVehicleSource implements NetworkVehicles {
         return {
             stopIds: stops.map(s => s.id),
             sequence: stops.map(s => s.sequence),
-            lastArrivalSecs: toSecs(last.arrival_time || last.departure_time),
-            departureSecs: stops.map(s => toSecs(s.departure_time || s.arrival_time)),
+            lastArrivalSecs: timeToSeconds(last.arrival_time || last.departure_time),
+            departureSecs: stops.map(s => timeToSeconds(s.departure_time || s.arrival_time)),
             lat: stops.map(s => s.coordinates[1]),
             lon: stops.map(s => s.coordinates[0]),
         };
@@ -304,7 +304,7 @@ export class DukVehicleSource implements NetworkVehicles {
 /** Service-day `HH:MM:SS` moved by `delaySecs`; past midnight it stays past 24:00:00, as the timetable's own times do. */
 function shiftServiceTime(time: string, delaySecs: number): string {
     if (!time || delaySecs === 0) return time;
-    const secs = toSecs(time) + delaySecs;
+    const secs = timeToSeconds(time) + delaySecs;
     const part = (n: number) => String(Math.floor(n)).padStart(2, '0');
     return `${part(secs / 3600)}:${part((secs % 3600) / 60)}:${part(secs % 60)}`;
 }

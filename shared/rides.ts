@@ -1,7 +1,8 @@
 /**
  * Trip rules the app and the server's ride watch both apply, so the countdown on screen and the pushed alerts agree.
- * Plain TypeScript without imports: both builds compile it.
+ * Plain TypeScript importing only its own files: both builds compile it.
  */
+import { timeToSeconds, wrapDaySeconds } from './time';
 
 export const TRIP_RULES = {
     /** Without a live position, the rider counts as boarded this long after the expected departure from their stop. */
@@ -39,16 +40,6 @@ export interface TripCall {
 }
 
 const NOT_STARTED = new Set(['before_track', 'before_track_delayed']);
-const DAY_S = 86_400;
-
-const secondsOf = (time: string): number => {
-    const [h, m, s] = time.split(':').map(Number);
-    return (h || 0) * 3600 + (m || 0) * 60 + (s || 0);
-};
-
-/** A difference of clock times, wrapped across midnight into ±12 h. */
-const wrapDay = (seconds: number): number => (seconds < -DAY_S / 2 ? seconds + DAY_S : seconds > DAY_S / 2 ? seconds - DAY_S : seconds);
-
 /** The stop the live vehicle last passed; null for a timetable-only trip or one that hasn't started. */
 export const liveStopSequence = (detail: TripPosition | null | undefined): number | null => {
     if (!detail || detail.is_static_fallback || NOT_STARTED.has(detail.state_position ?? '')) return null;
@@ -80,6 +71,6 @@ export const stopsLeft = (stops: readonly TripCall[], current: number, exitSeque
 /** Seconds the trip runs late at the stop at `sequence`: its own realtime departure, else the trip's delay; null when unknown. */
 export const delayAtStop = (stops: readonly TripCall[], sequence: number, tripDelaySecs: number | null | undefined): number | null => {
     const p = stops.find(s => Number(s.properties.stop_sequence) === sequence)?.properties;
-    if (p?.realtime_departure_time && p.departure_time) return wrapDay(secondsOf(p.realtime_departure_time) - secondsOf(p.departure_time));
+    if (p?.realtime_departure_time && p.departure_time) return wrapDaySeconds(timeToSeconds(p.realtime_departure_time) - timeToSeconds(p.departure_time));
     return typeof tripDelaySecs === 'number' ? tripDelaySecs : null;
 };

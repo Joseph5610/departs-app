@@ -1,6 +1,6 @@
 import type { LineRules } from '@/config/cities';
 import { ROUTE_TYPE_ORDER } from '@/config/transit';
-import { routeJoinKey, routeTypeRank, type RouteLookup } from '@/domain/routes';
+import { lineLabel, routeJoinKey, routeTypeRank, type RouteLookup } from '@/domain/routes';
 import type { Departure, DepartureFeeder } from '@/types';
 
 interface LineChip {
@@ -43,9 +43,12 @@ export const departureLines = (departures: readonly Departure[], routes: RouteLo
     departures.map(dep => ({ name: dep.line, type: dep.type, route_color: dep.route_color ?? '', night: routes.get(routeJoinKey(dep.type, dep.line))?.night }));
 
 /** `[line, colour]` per distinct line name, in first-seen order. */
-export const distinctLines = (items: ReadonlyArray<{ line: string; route_color?: string }>): Array<[string, string]> => {
+export const distinctLines = (items: ReadonlyArray<{ line?: string; route_id?: string; route_color?: string }>): Array<[string, string]> => {
     const byName = new Map<string, string>();
-    for (const item of items) if (!byName.has(item.line)) byName.set(item.line, item.route_color ?? '');
+    for (const item of items) {
+        const line = lineLabel(item);
+        if (!byName.has(line)) byName.set(line, item.route_color ?? '');
+    }
     return [...byName];
 };
 
@@ -62,7 +65,7 @@ export const summarizeFeeders = (feeders: DepartureFeeder[]): FeederSummary => {
     let held: DepartureFeeder | null = null;
     for (const f of feeders) {
         if (f.will_miss) missed.push(f.line);
-        else if (f.hold_s !== null && f.hold_s >= 60 && (!held || f.hold_s > (held.hold_s ?? 0))) held = f;
+        else if (typeof f.hold_s === 'number' && f.hold_s >= 60 && (!held || f.hold_s > (held.hold_s ?? 0))) held = f;
     }
     return { missed, held, heldMinutes: held ? Math.round((held.hold_s ?? 0) / 60) : 0 };
 };

@@ -1,4 +1,5 @@
 import type { AppAlertsResponse, AppAlert, Env, CityRequestContext } from "../../../_core/types";
+import type { CityConfig } from "../../../_core/cityConfig";
 import type * as GtfsRt from "../../../_core/gtfsRtTypes";
 import type { AlertsUseCase } from "../../useCases";
 import { CACHE_TTL, ERROR_MESSAGES } from "../../../_core/config";
@@ -6,7 +7,8 @@ import { ApiError } from "../../../_core/errors";
 import { derive } from "../../../_core/feed/source";
 import { fetchPidExclusions, getPidIncidents, getRawPidAlertFeeds } from "../../../_feeds/golemio/alerts";
 import { readStoredExclusions, writeStoredExclusions } from "../../../_feeds/golemio/exclusionsStore";
-import { mapRssExclusions } from "./rssAlertsMapper";
+import { getGtfsRoutes } from "../../../_feeds/gtfs/gtfsData";
+import { mapRssExclusions, routeIdsByName } from "./rssAlertsMapper";
 import { createPidAlertsMapper } from './pidAlertsMapper';
 
 /** Mapped incidents per feed snapshot; null when mapping failed. */
@@ -18,6 +20,8 @@ const mappedIncidents = new WeakMap<object, { alerts: AppAlert[] | null }>();
  */
 export class GolemioAlertsService implements AlertsUseCase {
     private gtfsMapper = createPidAlertsMapper();
+
+    constructor(private readonly config: CityConfig) {}
 
     /** Both feeds as received, for the debug feed. */
     async getRawFeed(env: Env) {
@@ -53,7 +57,8 @@ export class GolemioAlertsService implements AlertsUseCase {
         if (stored && Date.now() - stored.builtAt < CACHE_TTL.RSS_EXCLUSIONS * 1000) return stored.alerts;
 
         try {
-            const alerts = mapRssExclusions(await fetchPidExclusions());
+            const [items, { routes }] = await Promise.all([fetchPidExclusions(), getGtfsRoutes(this.config)]);
+            const alerts = mapRssExclusions(items, routeIdsByName(routes));
             await writeStoredExclusions(alerts);
             return alerts;
         } catch (e) {

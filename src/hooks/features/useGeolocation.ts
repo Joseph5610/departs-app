@@ -14,7 +14,8 @@ import { useNetworkCoverage } from '@/hooks/data/useNetworkCoverage';
 import { navigate } from '@/lib/history';
 import { matchRoutePath, paths } from '@/lib/routes';
 import { findCityAt, launchFocus } from '@/domain/cities';
-import type { City, NetworkCoverage } from '@/types';
+import type { NetworkCoverage } from '@/types';
+import type { CityFacts } from '@shared/cities';
 
 const hasGeolocation = () => typeof navigator !== 'undefined' && !!navigator.geolocation;
 
@@ -100,7 +101,7 @@ const requestFocus = (request: FocusRequest) => {
  * At launch or on return the map moves onto the user and their city unless they are busy (see `launchFocus`);
  * after the welcome screen it only moves within the city picked there.
  */
-const focusOnUser = (map: ReturnType<MapRef['getMap']>, location: [number, number], accuracyM: number, cities: City[], coverages: ReadonlyMap<string, NetworkCoverage>, request: FocusRequest, requestedAt: number) => {
+const focusOnUser = (map: ReturnType<MapRef['getMap']>, location: [number, number], accuracyM: number, cities: CityFacts[], coverages: ReadonlyMap<string, NetworkCoverage>, request: FocusRequest, requestedAt: number) => {
     const { selectedCity, actions } = usePreferencesStore.getState();
     const city = findCityAt(cities, coverages, location, selectedCity);
 

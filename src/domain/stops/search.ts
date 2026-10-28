@@ -1,4 +1,4 @@
-import { normalizeString } from '@/lib/strings';
+import { foldDiacritics } from '@shared/text';
 import { firstUnique, matchesAllTokens } from '@/lib/search';
 import type { Stop } from '@/types';
 import { STOP_SEARCH } from '@/config/constants';
@@ -13,7 +13,7 @@ export interface SearchIndexItem {
 /** Searchable stations and platforms. */
 export const createSearchIndex = (stops: readonly Stop[]): SearchIndexItem[] =>
     stops.map((stop) => {
-        const normalizedName = normalizeString(stop.name);
+        const normalizedName = foldDiacritics(stop.name);
         return {
             stop,
             normalizedName,
@@ -42,7 +42,7 @@ const isStation = (stop: Stop) => Number(stop.kind === 'station');
 export const searchStops = (searchIndex: SearchIndexItem[], query: string): Stop[] => {
     if (query.length < STOP_SEARCH.MIN_QUERY_LENGTH) return [];
 
-    const normalizedQuery = normalizeString(query).trim();
+    const normalizedQuery = foldDiacritics(query).trim();
     const upperQuery = query.trim().toUpperCase();
     const queryTokens = normalizedQuery.split(STOP_SEARCH.TOKEN_SEPARATORS).filter(Boolean);
 

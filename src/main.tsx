@@ -48,6 +48,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
+          scriptProps={{ type: 'application/json' }}
         >
           <TooltipProvider delay={300}>
             <App />

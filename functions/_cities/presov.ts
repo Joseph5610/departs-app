@@ -1,4 +1,5 @@
 import type { CityConfig } from '../_core/cityConfig';
+import { CITY_FACTS } from '../../shared/cities';
 import type { City } from './types';
 import { gtfsUseCases } from '../_domain/gtfs/useCases';
 import { noAlerts } from '../_domain/useCases';
@@ -6,20 +7,10 @@ import { DpmpVehicleSource } from '../_domain/dpmp/vehicles/DpmpVehicleSource';
 import { getDpmpCsvFeed } from '../_feeds/dpmp/dpmpCsvFeed';
 
 const config: CityConfig = {
-    slug: 'presov',
-    name: 'Prešov',
-    country: 'SK',
-    timezone: 'Europe/Bratislava',
+    ...CITY_FACTS.presov,
     networkOperator: 'DPMP',
-    center: [21.2393, 48.9985],
-    bounds: [21.13, 48.93, 21.37, 49.08],
     feed: {
         realtimeUrl: 'https://egov.presov.sk/geodatakatalog/dpmp.csv',
-    },
-    isBeta: true,
-    filters: {
-        vehicles: ['bus', 'trolleybus'],
-        stops: []
     }
 };
 

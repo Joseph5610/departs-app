@@ -33,10 +33,13 @@ const resolveLineType = (
 
 interface BrandableLine {
     route_id?: string;
-    line: string;
-    type: RouteType;
+    line?: string;
+    type?: RouteType;
     route_color?: string;
 }
+
+/** The line an onward trip shows: its resolved name, else the raw route id GTFS sent. */
+export const lineLabel = (entry: { line?: string; route_id?: string }): string => entry.line ?? entry.route_id ?? '';
 
 /** A connection or continuation branded from the routes join; the entry itself when nothing resolves. */
 export const withLineBranding = <T extends BrandableLine>(entry: T, byId: Map<string, RouteInfo>, byShortName: RouteLookup): T => {

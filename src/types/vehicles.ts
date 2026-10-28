@@ -1,5 +1,6 @@
+import type { AppContinuation, AppRouteType, AppStopConnection, AppStopTimeProperties, AppVehicleCollection, AppVehicleFeature, AppVehicleProperties } from '@shared/api';
 
-export type RouteType = 'tram' | 'metro' | 'train' | 'bus' | 'ferry' | 'funicular' | 'trolleybus' | 'unknown';
+export type RouteType = AppRouteType;
 
 /** One route's display branding, as published in `<city>/routes.json` (see `useRouteMetadata`). */
 export interface RouteInfo {
@@ -11,67 +12,29 @@ export interface RouteInfo {
     night?: true;
 }
 
-interface VehicleDescriptor {
-    operator?: string;
-    vehicle_type?: string;
-    is_wheelchair_accessible?: boolean | null;
-    is_air_conditioned?: boolean | null;
-    has_usb_chargers?: boolean | null;
-    vehicle_registration_number?: string | number;
-}
-
-type VehicleState =
-    | 'at_stop' 
-    | 'before_track' 
-    | 'before_track_delayed' 
-    | 'canceled' 
-    | 'off_track' 
-    | 'on_track'
-    | 'unknown';
-
-interface BaseVehicleProperties {
-    vehicle_id: string | null;
-    gtfs_trip_id: string;
-    route_short_name: string;
-    route_type: RouteType;
-    trip_headsign?: string;
-    bearing: number | null | undefined;
-    delay: number | null;
-    state_position?: VehicleState;
-    run_number?: number | string;
-    last_stop_sequence?: number | null;
-    /** The feed's stop id where it reports no stop sequence (Brno). */
-    last_stop_id?: string;
-    origin_timestamp?: string;
-    vehicle_descriptor?: VehicleDescriptor;
-    route_color: string;
+/** A vehicle as the API sends it, plus the branding and estimates the app adds. */
+interface BaseVehicleProperties extends AppVehicleProperties {
+    /** From routes.json; absent until it has loaded or for a line it does not list. */
+    route_color?: string;
     is_enriched?: boolean;
     /** `delay` is the app's own estimate from the timetable and position (see `estimateDelay`). */
     is_delay_estimated?: boolean;
-    shape_dist_traveled?: number;
     /** Set on a vehicle of a neighbouring network shown beside the selected city's. */
     city_slug?: string;
 }
 
 export interface VehicleProperties extends BaseVehicleProperties {
-    state_position: VehicleState; // Required in map features
     last_updated?: string;
 }
 
-export interface VehicleFeature {
-    type: "Feature";
-    geometry: {
-        type: "Point";
-        coordinates: [number, number]; // [lon, lat]
-    };
+/** A fleet vehicle with a position: the app drops the ones the feed sends without (`withPositions`). */
+export interface VehicleFeature extends AppVehicleFeature {
+    geometry: NonNullable<AppVehicleFeature['geometry']>;
     properties: VehicleProperties;
 }
 
-export interface VehicleCollection {
-    type: "FeatureCollection";
+export interface VehicleCollection extends AppVehicleCollection {
     features: VehicleFeature[];
-    status?: 'ok' | 'stale' | 'upstream_offline';
-    last_updated?: string;
 }
 
 export interface VehicleDetail extends BaseVehicleProperties {
@@ -80,7 +43,6 @@ export interface VehicleDetail extends BaseVehicleProperties {
         coordinates: [number, number];
     };
     stop_times?: {
-        type: "FeatureCollection";
         features: Array<{
             type: "Feature";
             /** Absent for a stop the network has no position for. */
@@ -88,54 +50,28 @@ export interface VehicleDetail extends BaseVehicleProperties {
                 type: "Point";
                 coordinates: [number, number];
             };
-            properties: {
-                stop_name: string;
-                stop_sequence: number;
-                zone_id?: string;
-                is_wheelchair_accessible?: boolean | null;
-                shape_dist_traveled?: number;
-                arrival_time: string;
-                departure_time: string;
-                realtime_arrival_time?: string;
-                realtime_departure_time?: string;
-                stop_id: string;
-                is_request_stop?: boolean;
-                connections?: StopConnection[];
-                continues_as?: Continuation;
-            };
+            properties: StopTimeProperties;
         }>;
     };
-    is_static_fallback?: boolean;
+}
+
+/** A stop of a trip as the API sends it, with the onward trips the app has resolved. */
+export interface StopTimeProperties extends AppStopTimeProperties {
+    connections?: StopConnection[];
+    continues_as?: Continuation;
 }
 
 /** One stop of a trip's `stop_times`. */
 export type StopTimeFeature = NonNullable<VehicleDetail['stop_times']>['features'][number];
 
 /** An onward trip scheduled to wait at a stop for the trip being viewed. */
-export interface StopConnection {
-    trip_id: string;
-    vehicle_id?: string;
-    route_id?: string;
-    line: string;
+export interface StopConnection extends AppStopConnection {
     route_color?: string;
-    type: RouteType;
-    headsign: string;
-    departure_time: string;
-    delay: number | null;
-    max_wait_s: number;
-    at_risk: boolean;
 }
 
 /** The trip the same vehicle continues as; ids are absent when only the line is known. */
-export interface Continuation {
-    trip_id?: string;
-    vehicle_id?: string;
-    route_id?: string;
-    line: string;
+export interface Continuation extends AppContinuation {
     route_color?: string;
-    type: RouteType;
-    headsign: string;
-    departure_time?: string;
 }
 
 /** A vehicle's entry in its city's fleet register (the static data CDN's `vehicleMetadata` file). */

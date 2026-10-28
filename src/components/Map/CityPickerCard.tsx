@@ -3,7 +3,7 @@ import { useSelectCity } from '@/hooks/features/useSelectCity';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useUiStore } from '@/state/uiStore';
 import { CitySelectionList } from './CitySelectionList';
-import type { City } from '@/types';
+import type { CityFacts } from '@shared/cities';
 
 /** The phone's city picker, shown as a card in the map sheet; picking a city switches to it and closes the card. */
 export const CityPickerCard = () => {
@@ -12,7 +12,7 @@ export const CityPickerCard = () => {
     const selectCity = useSelectCity();
     const { setIsCityPickerOpen } = useUiStore(s => s.actions);
 
-    const pick = (city: City) => {
+    const pick = (city: CityFacts) => {
         selectCity(city);
         setIsCityPickerOpen(false);
     };

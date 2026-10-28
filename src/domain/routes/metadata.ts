@@ -1,4 +1,5 @@
 import type { RouteInfo, RouteType } from '@/types';
+import { kordisNumericId } from '@shared/lines';
 import { ROUTE_JOIN_SEPARATOR, routeJoinKey } from './routeType';
 
 export interface RouteMetadata {
@@ -46,8 +47,6 @@ export const NO_TYPE_COLORS: RouteTypeColors = {};
 
 export const EMPTY_ROUTE_METADATA: RouteMetadata = { byId: new Map(), byShortName: new Map(), byName: new Map(), byKordisNumeric: new Map() };
 
-const KORDIS_NUMERIC_ID = /^L([A-Z0-9]+)D/i;
-
 /** A routes file indexed by id, by `type|name`, by plain name and by KORDIS numeric id. */
 export const indexRouteMetadata = (data: Record<string, RouteInfo>, typeColors: RouteTypeColors): RouteMetadata => {
     const byId = new Map(Object.entries(data));
@@ -57,8 +56,8 @@ export const indexRouteMetadata = (data: Record<string, RouteInfo>, typeColors: 
     for (const [id, route] of byId) {
         byShortName.set(routeJoinKey(route.type, route.name), route);
         byName.set(route.name.toUpperCase(), route);
-        const match = KORDIS_NUMERIC_ID.exec(id);
-        if (match) byKordisNumeric.set(match[1].toUpperCase(), route);
+        const numeric = kordisNumericId(id);
+        if (numeric) byKordisNumeric.set(numeric, route);
     }
     return { byId, byShortName: byShortNameWithTypeColors(byShortName, typeColors), byName, byKordisNumeric };
 };

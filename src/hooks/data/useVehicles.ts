@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import { useQuery, keepPreviousData, queryOptions, type QueryClient, type QueryKey } from '@tanstack/react-query';
 import { type VehicleCollection, AppErrorCode, type AppError } from '@/types';
+import type { AppVehicleCollection } from '@shared/api';
 import { useViewportStore } from '@/state/viewportStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useEnrichmentStore } from '@/state/enrichmentStore';
 import { enrichVehicleCollection } from '@/domain/realtime';
-import { enrichVehicleRouteMetadata, indexVehicles, filterVehiclesToView, estimateFleetDelays, withEstimatedPatches, indexStopTimeSlice } from '@/domain/vehicles';
+import { enrichVehicleRouteMetadata, withPositions, indexVehicles, filterVehiclesToView, estimateFleetDelays, withEstimatedPatches, indexStopTimeSlice } from '@/domain/vehicles';
 import { memoizeLast } from '@/lib/memoize';
 import { useRouteMetadata } from './useRouteMetadata';
 import { useCityConfig } from './useCities';
@@ -19,7 +20,7 @@ import { queryKeys } from '@/lib/queryKeys';
  * is retried and one failed backend refresh does not blank the map; past MAX_KEPT_AGE_MS it is shown.
  */
 const fetchNetworkVehicles = async (selectedCity: string, client: QueryClient, queryKey: QueryKey): Promise<VehicleCollection | null> => {
-    const collection = await apiFetch<VehicleCollection>(`/${selectedCity}/vehicles`, LIVE_FETCH_OPTIONS);
+    const collection = withPositions(await apiFetch<AppVehicleCollection>(`/${selectedCity}/vehicles`, LIVE_FETCH_OPTIONS));
     if (collection?.status !== 'upstream_offline') return collection;
 
     const previous = client.getQueryData<VehicleCollection | null>(queryKey);

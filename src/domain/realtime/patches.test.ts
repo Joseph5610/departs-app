@@ -20,7 +20,7 @@ describe('applyEnrichment', () => {
         const detail = vehicleDetail({
             delay: 0,
             last_stop_sequence: 2,
-            stop_times: { type: 'FeatureCollection', features: [stopTime(1, '12:00:00'), stopTime(2, '12:05:00'), stopTime(3, '12:10:00')] },
+            stop_times: { features: [stopTime(1, '12:00:00'), stopTime(2, '12:05:00'), stopTime(3, '12:10:00')] },
         });
         const byTripId = new Map([[detail.gtfs_trip_id, patch({ tripId: detail.gtfs_trip_id, delay: 120 })]]);
 
@@ -31,7 +31,7 @@ describe('applyEnrichment', () => {
 
     // Which stops were served is unknown without the vehicle's live stop, so their times must stay as fetched.
     it('leaves the stop times alone without a live stop sequence', () => {
-        const stop_times = { type: 'FeatureCollection' as const, features: [stopTime(1, '12:00:00'), stopTime(2, '12:05:00')] };
+        const stop_times = { features: [stopTime(1, '12:00:00'), stopTime(2, '12:05:00')] };
         const byTripId = (tripId: string) => new Map([[tripId, patch({ tripId, delay: 120 })]]);
         const unplaced = vehicleDetail({ delay: 0, last_stop_sequence: null, stop_times });
         const fallback = vehicleDetail({ delay: 0, last_stop_sequence: 1, is_static_fallback: true, stop_times });

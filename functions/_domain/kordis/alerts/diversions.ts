@@ -2,7 +2,7 @@ import type { AppAlert } from '../../../_core/types';
 import { zonedLocalToEpochMs } from '../../../_core/utils/time';
 import type { KordisDiversion } from '../../../_feeds/kordis/diversions';
 import { KORDIS_CONFIG } from '../../../_feeds/kordis/config';
-import { lineMetadataOf } from './lineNames';
+import { cleanLineNames } from './lineNames';
 
 /** One diversion, read once per snapshot: how it is matched, its validity window and the alert it becomes while upcoming. */
 export interface IndexedDiversion {
@@ -68,7 +68,7 @@ export function indexDiversions(diversions: readonly KordisDiversion[], timezone
                 valid_to: toIso(to),
                 guid: `diversion_${d.diversionid}`,
                 priority: 'normal',
-                line_metadata: lineMetadataOf((asText(d.affectedlines) ?? '').split(',')),
+                lines: cleanLineNames((asText(d.affectedlines) ?? '').split(',')),
                 effect: type ? KORDIS_CONFIG.DIVERSION_EFFECTS[type] : undefined,
             },
         });

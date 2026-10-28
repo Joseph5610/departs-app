@@ -15,6 +15,7 @@ import { DUK_CONFIG } from '../../../_feeds/duk/config';
 import { getStationPlatforms, getStopRelations, type StopRelation } from '../../../_feeds/gtfs/departureRows';
 import { stationOfRequest, toStopRequest, type StopRequest } from './stopRequests';
 import { checkRequestedStops } from '../../gtfs/index/stopTargets';
+import { nameKey } from '../../../../shared/text';
 
 const minuteOf = (epochMs: number) => Math.round(epochMs / 60_000);
 const linkKey = (node: string, line: string, epochMs: number) => `${node}|${line.toUpperCase()}|${minuteOf(epochMs)}`;
@@ -221,7 +222,7 @@ export class DukDeparturesService implements DeparturesUseCase {
 /** A stop name reduced to its last part for comparison: "Ústí n.L.,Dobětice točna" -> "dobeticetocna". */
 function directionKey(name: string): string {
     const last = name.split(',').pop() ?? name;
-    return last.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    return nameKey(last);
 }
 
 /**

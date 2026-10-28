@@ -2,7 +2,7 @@ import type * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { MappingSchedule, VehicleMapping } from '../../gtfs/index/VehicleIndex';
 import { dayBit, isWaitingToStart, isWithinMatchWindow, operatesOnDay, type ScheduleTrip } from '../../../_feeds/gtfs/schedule';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
-import { DAY_MINS, DAY_SECS, wrapDaySeconds } from '../../../_core/utils/time';
+import { DAY_MINS, DAY_S, wrapDaySeconds } from '../../../_core/utils/time';
 
 interface TripClaim {
     label: string;
@@ -208,7 +208,7 @@ function sortedByLabel(byVehicle: Map<string, number[]>): Array<[string, number[
 }
 
 /** Longest gap a claim's sort key tells apart, past any GTFS service day; longer ones (and Infinity) tie. */
-const MAX_KEYED_GAP_SECS = 3 * DAY_SECS;
+const MAX_KEYED_GAP_SECS = 3 * DAY_S;
 
 /**
  * Claim indexes strongest first: running now, then the reading the feed is on, then nearest window,

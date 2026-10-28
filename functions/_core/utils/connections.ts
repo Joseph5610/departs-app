@@ -1,4 +1,4 @@
-import { toSecs, wrapDaySeconds } from './time';
+import { timeToSeconds, wrapDaySeconds } from './time';
 
 /**
  * Whether a held connection may leave before the arriving trip makes it: its expected arrival plus
@@ -13,5 +13,5 @@ export function isConnectionAtRisk(
     maxWaitS: number
 ): boolean {
     if (delaySecs === null) return false;
-    return wrapDaySeconds(toSecs(arrivalTime) + delaySecs + minTransferS - toSecs(departureTime)) > maxWaitS;
+    return wrapDaySeconds(timeToSeconds(arrivalTime) + delaySecs + minTransferS - timeToSeconds(departureTime)) > maxWaitS;
 }

@@ -4,7 +4,7 @@ import { paths } from '@/lib/routes';
 import { cityOverviewCamera } from '@/lib/map/view';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useMapMetadataStore } from '@/state/mapMetadataStore';
-import type { City } from '@/types';
+import type { CityFacts } from '@shared/cities';
 
 /** Switches to another city: selects it, opens its map route and flies the camera to its overview. */
 export const useSelectCity = () => {
@@ -12,7 +12,7 @@ export const useSelectCity = () => {
     const { setSelectedCity } = usePreferencesStore(s => s.actions);
     const mapRef = useMapMetadataStore(s => s.mapRef);
 
-    return useCallback((city: City) => {
+    return useCallback((city: CityFacts) => {
         if (city.slug === selectedCity) return;
         setSelectedCity(city.slug);
         navigate(paths.city(city.slug));

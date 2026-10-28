@@ -4,6 +4,20 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.90.0] - 2026-10-27
+
+### Fixed
+
+- Map tiles, fonts and sprites are cached offline again after CARTO moved them under a versioned path.
+- A Prague vehicle sent without a position is left off the map instead of reaching code that assumes one.
+- Prague exclusions no longer risk showing a line under another line's badge when a name matches a route id (train L4 vs tram 4).
+
+### Changed
+
+- Alerts send affected lines as a plain `lines` array of route ids instead of `line_metadata` objects.
+- City location, time zone and features are declared once in `shared/cities.ts` for both the app and the server.
+- Zoomed out, vehicles shrink to small coloured dots without line numbers instead of disappearing.
+
 ## [0.89.0] - 2026-10-26
 
 ### Fixed

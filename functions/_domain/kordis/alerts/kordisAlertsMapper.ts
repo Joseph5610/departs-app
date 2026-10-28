@@ -1,7 +1,7 @@
 import * as GtfsRt from '../../../_core/gtfsRtTypes';
 import { createGtfsAlertsMapper, defaultParseIsDetour, type AlertsMapper } from '../../gtfs/alerts/alertsMapper';
 import { alertTextFromHtml } from '../../../_core/utils/alertTextFormatter';
-import { lineMetadataOf } from './lineNames';
+import { cleanLineNames } from './lineNames';
 
 function extractNumericId(guid?: string): number {
     if (!guid) return 0;
@@ -78,9 +78,7 @@ export function createKordisAlertsMapper(): AlertsMapper {
     return {
         mapAlerts(rawAlerts, forceIncident) {
             return base.mapAlerts(rawAlerts, forceIncident)
-                .map(alert => alert.line_metadata
-                    ? { ...alert, line_metadata: lineMetadataOf(alert.line_metadata.map(m => m.route_id ?? '')) }
-                    : alert)
+                .map(alert => alert.lines ? { ...alert, lines: cleanLineNames(alert.lines) } : alert)
                 // Newest first (descending numeric ID).
                 .sort((a, b) => extractNumericId(b.guid) - extractNumericId(a.guid));
         }

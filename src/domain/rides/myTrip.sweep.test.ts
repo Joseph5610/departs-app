@@ -44,7 +44,7 @@ const detailAt = (scenario: Scenario, now: number): VehicleDetail => {
         delay: 0,
         state_position: passed === 0 ? 'before_track' : atStop ? 'at_stop' : 'on_track',
         last_stop_sequence: passed === 0 ? null : passed,
-        stop_times: { type: 'FeatureCollection', features: scenario.stops.map((stop, i) => stopTime(i + 1, stop.local)) },
+        stop_times: { features: scenario.stops.map((stop, i) => stopTime(i + 1, stop.local)) },
     });
 };
 

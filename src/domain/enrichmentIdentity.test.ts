@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NOW, vehicle } from '@/test/factories';
-import { enrichAlertLineMetadata } from './alerts';
+import { resolveAlertLines } from './alerts';
 import { enrichVehicleCollection } from './realtime';
 import { routeJoinKey } from './routes';
 import { enrichConnections, enrichVehicleRouteMetadata } from './vehicles';
@@ -20,6 +20,6 @@ describe('enrichment keeps identity when nothing applies', () => {
         const alerts = [{ type: 'exclusion' as const, title: 'x', description: null, valid_from: null, valid_to: null, link: '' }];
 
         expect(enrichConnections(stops, new Map(), routes, new Map())).toBe(stops);
-        expect(enrichAlertLineMetadata(alerts, new Map(), routes, new Map())).toBe(alerts);
+        expect(resolveAlertLines(alerts, new Map(), routes, new Map())).toBe(alerts);
     });
 });

@@ -2,7 +2,7 @@ import type { CityConfig } from '../../_core/cityConfig';
 import { appClient } from '../../_core/ApiClient';
 import { UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
 import { MEMORY_CACHE_TTL, getOrFetch } from '../../_core/feed/cacheManager';
-import { DAY_SECS, toSecs, type LocalClock } from '../../_core/utils/time';
+import { DAY_S, timeToSeconds, type LocalClock } from '../../_core/utils/time';
 import { DUK_CONFIG } from './config';
 
 const { RAIL } = DUK_CONFIG;
@@ -58,14 +58,14 @@ interface Candidate { run: RailRun; startSecs: number; endSecs: number }
  */
 function currentRun(file: RailTripsFile, runs: RailRun[], clock: LocalClock): RailRun | null {
     const candidates: Candidate[] = [];
-    for (const [date, offsetSecs] of [[clock.date, 0], [clock.previousDate, -DAY_SECS]] as const) {
+    for (const [date, offsetSecs] of [[clock.date, 0], [clock.previousDate, -DAY_S]] as const) {
         const day = file.$days.indexOf(date);
         if (day < 0) continue;
         for (const run of runs) {
             const calls = run[1];
             if (!(run[0] & (1 << day)) || calls.length < 2) continue;
             const first = calls[0][2], last = calls[calls.length - 1][1];
-            candidates.push({ run, startSecs: toSecs(first) + offsetSecs, endSecs: toSecs(last) + offsetSecs });
+            candidates.push({ run, startSecs: timeToSeconds(first) + offsetSecs, endSecs: timeToSeconds(last) + offsetSecs });
         }
     }
 

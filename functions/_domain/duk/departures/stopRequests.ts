@@ -1,5 +1,5 @@
 import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
-import { parseStopRequest, requestParts } from '../../../_core/utils/stopIds';
+import { parseStopRequest, requestParts } from '../../../../shared/stopIds';
 
 /** A requested stop resolved to its Portabo node and the posts to read; null posts read the whole station. */
 export interface StopRequest {

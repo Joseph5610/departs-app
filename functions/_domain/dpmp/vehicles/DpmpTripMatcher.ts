@@ -4,7 +4,7 @@ import { dayBit, isWithinMatchWindow, operatesOnDay, routeIdOf, type Schedule, t
 import { getTripStops } from '../../../_feeds/gtfs/tripStops';
 import { DPMP_CONFIG } from '../../../_feeds/dpmp/config';
 import type { DpmpVehicleRow } from '../../../_feeds/dpmp/dpmpCsvFeed';
-import { DAY_MINS, toSecs, type LocalClock } from '../../../_core/utils/time';
+import { DAY_MINS, timeToSeconds, type LocalClock } from '../../../_core/utils/time';
 
 interface Candidate {
     tripId: string;
@@ -68,7 +68,7 @@ export class DpmpTripMatcher {
         const directionId = DPMP_CONFIG.DIRECTION_IDS[row.direction];
         if (directionId === undefined) return null;
 
-        const start = toSecs(row.plannedStart) / 60;
+        const start = timeToSeconds(row.plannedStart) / 60;
         const index = this.getIndex();
         const todayBit = dayBit(this.schedule, ctx.date);
         const yesterdayBit = dayBit(this.schedule, ctx.previousDate);

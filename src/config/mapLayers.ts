@@ -120,6 +120,8 @@ const IS_ENTRANCE: ExpressionSpecification = ['==', ['get', 'kind'], 'entrance']
 const MAP_TOKENS = {
     zoom: {
         vehicles: { min: 10, max: 15 },
+        /** Zoomed out, the fleet shrinks to plain dots from `dots`; line numbers and arrows fade in over `labels`. */
+        vehicleDots: { dots: 7, labels: { from: 10.5, to: 11 } },
         /** Stations cluster up to this zoom and are drawn as mode badges from it. */
         badges: 13,
         /** Station names show from here; a whole zoom, since layout steps are read at the tile's zoom. */
@@ -344,16 +346,31 @@ export const getDelayFilterExpression = (delayFilter: string[]) => {
     return ['any', ...conditions];
 };
 
-const createVehicleLayers = (sourceId: string, ids: { point: string; direction: string; label: string }, minzoom?: number) => {
+const createVehicleLayers = (sourceId: string, ids: { point: string; direction: string; label: string }, shrinkToDots = false) => {
+    const { dots, labels } = MAP_TOKENS.zoom.vehicleDots;
+    const minzoom = shrinkToDots ? labels.from : undefined;
+    const labelOpacity: number | ExpressionSpecification = shrinkToDots ? ['interpolate', ['linear'], ['zoom'], labels.from, 0, labels.to, 1] : 1;
+    const arrowOpacity: ExpressionSpecification = [
+        'case',
+        ['any',
+            ['!', ['has', 'bearing']],
+            ['==', ['get', 'bearing'], null],
+            ['==', ['to-string', ['get', 'bearing']], ''],
+            ['==', ['to-number', ['coalesce', ['get', 'bearing'], 0]], 0]
+        ],
+        0,
+        1
+    ];
     const point: CircleLayerSpecification = {
         id: ids.point,
         type: 'circle',
         source: sourceId,
-        ...(minzoom !== undefined && { minzoom }),
         paint: {
-            'circle-radius': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.vehicles.min, 8, MAP_TOKENS.zoom.vehicles.max, 14],
+            'circle-radius': shrinkToDots
+                ? ['interpolate', ['linear'], ['zoom'], dots, 2, labels.from, 4.5, labels.to, 9, MAP_TOKENS.zoom.vehicles.max, 14]
+                : ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.vehicles.min, 8, MAP_TOKENS.zoom.vehicles.max, 14],
             'circle-color': ROUTE_COLOR,
-            'circle-stroke-width': 1.5,
+            'circle-stroke-width': shrinkToDots ? ['interpolate', ['linear'], ['zoom'], dots, 0.75, labels.to, 1.5] : 1.5,
             'circle-stroke-color': MAP_TOKENS.colors.stroke,
             'circle-opacity': 1
         }
@@ -376,17 +393,7 @@ const createVehicleLayers = (sourceId: string, ids: { point: string; direction: 
         },
         paint: {
             'icon-color': ROUTE_COLOR,
-            'icon-opacity': [
-                'case',
-                ['any',
-                    ['!', ['has', 'bearing']],
-                    ['==', ['get', 'bearing'], null],
-                    ['==', ['to-string', ['get', 'bearing']], ''],
-                    ['==', ['to-number', ['coalesce', ['get', 'bearing'], 0]], 0]
-                ],
-                0,
-                1
-            ]
+            'icon-opacity': shrinkToDots ? ['interpolate', ['linear'], ['zoom'], labels.from, 0, labels.to, arrowOpacity] : arrowOpacity
         }
     };
 
@@ -408,7 +415,7 @@ const createVehicleLayers = (sourceId: string, ids: { point: string; direction: 
             'text-halo-color': MAP_TOKENS.colors.stroke,
             'text-halo-width': 1.2,
             'text-halo-blur': 0.4,
-            'text-opacity': 1
+            'text-opacity': labelOpacity
         }
     };
 
@@ -416,7 +423,7 @@ const createVehicleLayers = (sourceId: string, ids: { point: string; direction: 
 };
 
 export const { point: vehicleSelectedPoint, direction: vehicleSelectedDirection, label: vehicleSelectedLabel } = createVehicleLayers(MAP_SOURCES.SELECTED_VEHICLE, { point: MAP_LAYERS.SELECTED_VEHICLE_POINT, direction: MAP_LAYERS.SELECTED_VEHICLE_DIRECTION, label: MAP_LAYERS.SELECTED_VEHICLE_LABEL });
-export const { point: vehiclePoints, direction: vehicleDirections, label: vehicleLabels } = createVehicleLayers(MAP_SOURCES.VEHICLES, { point: MAP_LAYERS.VEHICLE_POINTS, direction: MAP_LAYERS.VEHICLE_DIRECTIONS, label: MAP_LAYERS.VEHICLE_LABELS }, 10);
+export const { point: vehiclePoints, direction: vehicleDirections, label: vehicleLabels } = createVehicleLayers(MAP_SOURCES.VEHICLES, { point: MAP_LAYERS.VEHICLE_POINTS, direction: MAP_LAYERS.VEHICLE_DIRECTIONS, label: MAP_LAYERS.VEHICLE_LABELS }, true);
 
 // Specific to selected vehicle
 export const vehicleSelectedPulse: CircleLayerSpecification = {

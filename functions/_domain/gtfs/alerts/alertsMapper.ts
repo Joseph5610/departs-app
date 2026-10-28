@@ -68,7 +68,6 @@ function mapGtfsAlerts(
                 if (ie.routeId) routeIds.add(ie.routeId);
             }
         }
-        const line_metadata = [...routeIds].map(route_id => ({ route_id }));
 
         let valid_from: string | null = null;
         let valid_to: string | null = null;
@@ -94,7 +93,7 @@ function mapGtfsAlerts(
             valid_to: valid_to,
             guid: entity.id,
             priority: 'normal',
-            line_metadata: line_metadata.length > 0 ? line_metadata : undefined,
+            lines: routeIds.size > 0 ? [...routeIds] : undefined,
             cause: alert.cause ? String(alert.cause) : undefined,
             effect: alert.effect ? String(alert.effect) : undefined
         };

@@ -1,3 +1,5 @@
+/** The departures request's `stopId` format, which the app builds and the server reads. Plain TypeScript without imports. */
+
 /** The ids one requested `stopId` value names: a single stop, or a comma-joined list read as one stop. */
 export const stopIdParts = (stopId: string): string[] => stopId.split(',').map(id => id.trim()).filter(Boolean);
 
@@ -16,6 +18,9 @@ export function parseStopRequest(value: string): { station: string | null; parts
     const parts = stopIdParts(value.slice(at + 1));
     return { station, parts: parts.length ? parts : [station] };
 }
+
+/** The value naming `station`'s board as the given platforms: `U1146:U1146Z22,U1146Z23`. */
+export const stopRequestId = (station: string, platforms: readonly string[]): string => `${station}${STATION_SEPARATOR}${platforms.join(',')}`;
 
 /** The stops a requested value names, with or without its station. */
 export const requestParts = (value: string): string[] => parseStopRequest(value).parts;

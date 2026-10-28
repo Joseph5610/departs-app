@@ -1,14 +1,8 @@
-/** Seconds in a day. */
-export const DAY_S = 86_400;
-const HALF_DAY_S = DAY_S / 2;
+import { DAY_S, addSecondsToTime, timeToSeconds, wrapDaySeconds } from '@shared/time';
+
+export { DAY_S, addSecondsToTime, timeToSeconds, wrapDaySeconds } from '@shared/time';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
-
-/** Seconds since midnight of an `HH:MM[:SS]` time; GTFS times past midnight run beyond 24 hours. */
-export const timeToSeconds = (time: string): number => {
-    const [h, m, s] = time.split(':').map(Number);
-    return (h || 0) * 3600 + (m || 0) * 60 + (s || 0);
-};
 
 /** An `HH:MM[:SS]` time for display, with GTFS's 24+ hours wrapped to the clock. */
 export const formatClock = (time: string | null | undefined, withSeconds = false): string => {
@@ -69,27 +63,9 @@ export const weekdayShortNames = (locale: string | undefined): string[] => {
     });
 };
 
-/**
- * A difference between two times of day wrapped into ±12 h, so times either side of midnight compare as close:
- * `00:20` is 50 minutes after `23:30`, and a service-day `24:30` is 20 minutes after `00:10`.
- */
-export const wrapDaySeconds = (diff: number): number => {
-    if (diff < -HALF_DAY_S) return diff + DAY_S;
-    if (diff > HALF_DAY_S) return diff - DAY_S;
-    return diff;
-};
-
 /** How late `realtimeTime` is against `scheduledTime`, in seconds. */
 export const calculateTimeDifferenceSecs = (realtimeTime: string, scheduledTime: string): number =>
     wrapDaySeconds(timeToSeconds(realtimeTime) - timeToSeconds(scheduledTime));
-
-/** An `HH:MM:SS` time moved by `seconds`, wrapped onto the clock across midnight. */
-export const addSecondsToTime = (timeStr: string, seconds: number): string => {
-    let total = timeToSeconds(timeStr) + seconds;
-    if (total < 0) total += DAY_S;
-    if (total >= DAY_S) total -= DAY_S;
-    return `${pad2(Math.floor(total / 3600))}:${pad2(Math.floor((total % 3600) / 60))}:${pad2(Math.floor(total % 60))}`;
-};
 
 const clockFormats = new Map<string, Intl.DateTimeFormat>();
 

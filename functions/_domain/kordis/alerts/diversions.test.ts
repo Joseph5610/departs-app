@@ -44,7 +44,7 @@ describe('enrichWithDiversions', () => {
         expect(result[1]).toEqual({
             type: 'exclusion', title: 'Soon', description: 'Line one\nLine two\n\nEnd', link: LINK,
             valid_from: '2026-10-18T22:00:00.000Z', valid_to: '2026-11-30T22:59:00.000Z', guid: 'diversion_3', priority: 'normal',
-            line_metadata: [{ route_id: '4' }, { route_id: 'x75' }, { route_id: 'N94' }, { route_id: 'xS71' }], effect: '4',
+            lines: ['4', 'x75', 'N94', 'xS71'], effect: '4',
         });
     });
 

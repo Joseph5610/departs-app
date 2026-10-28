@@ -1,12 +1,10 @@
 import type { BoardStop, Entrance, Platform, RouteInfo, SelectedStop, Station, Stop, StopLine, StopModel, StopsFile, StopsFilePlatform } from '@/types';
 import { getOrCreate } from '@/lib/memoize';
+import { requestParts, stopIdParts, stopRequestId } from '@shared/stopIds';
 
 /** Lines without repeats of the same mode and name, as a station lists its platforms' lines. */
 const uniqueLines = <L extends { type: string; name: string }>(lines: readonly L[]): L[] =>
     [...new Map(lines.map(line => [`${line.type}|${line.name}`, line])).values()];
-
-/** The ids a stop id names: a single stop, or a comma-joined list (a board section, a pre-stops.json PID link). */
-const stopIdParts = (id: string): string[] => id.split(',').map(part => part.trim()).filter(Boolean);
 
 /** A platform's ids: its own first, then its aliases. */
 const platformIds = (p: Pick<Platform, 'id' | 'aliases'>): string[] => p.aliases ? [p.id, ...p.aliases] : [p.id];
@@ -113,7 +111,7 @@ export const resolveStop = (model: StopModel, id: string): BoardStop | null => {
  */
 export const departuresRequestId = (board: BoardStop): string => {
     const station = board.kind === 'station' ? board.id : board.platforms[0]?.station ?? board.id;
-    return `${station}:${board.platforms.flatMap(platformIds).join(',')}`;
+    return stopRequestId(station, board.platforms.flatMap(platformIds));
 };
 
 /**
@@ -121,10 +119,7 @@ export const departuresRequestId = (board: BoardStop): string => {
  * (`station:platforms`), whose platforms are what it names. An id the model doesn't know is kept as given.
  */
 export const departureStopIds = (model: StopModel | null, id: string): Set<string> => {
-    const colon = id.indexOf(':');
-    // A station without platforms names none after the colon: the station itself is the stop.
-    const named = stopIdParts(colon < 0 ? id : id.slice(colon + 1) || id.slice(0, colon));
-    return new Set(named.flatMap(part => {
+    return new Set(requestParts(id).flatMap(part => {
         const board = model ? resolveStop(model, part) : null;
         return board ? boardStopIds(board) : [part];
     }));

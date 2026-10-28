@@ -15,7 +15,7 @@ const atStop = (sequence: number | null, overrides: Partial<VehicleDetail> = {})
         state_position: sequence === null ? 'before_track' : 'on_track',
         last_stop_sequence: sequence,
         delay: 0,
-        stop_times: { type: 'FeatureCollection', features: stops },
+        stop_times: { features: stops },
         ...overrides,
     });
 
@@ -77,7 +77,7 @@ describe('minutes to arrival past midnight', () => {
     it('counts minutes to a 24:30 exit from 00:10, not a day', () => {
         const late = [stopTime(1, '23:50:00'), stopTime(2, '24:00:00'), stopTime(3, '24:30:00')];
         const lateRide: Ride = { ...ride, exitSequence: 3, startedAt: Date.parse('2026-10-08T00:00:00+02:00') };
-        const detail = vehicleDetail({ state_position: 'on_track', last_stop_sequence: 1, delay: null, stop_times: { type: 'FeatureCollection', features: late } });
+        const detail = vehicleDetail({ state_position: 'on_track', last_stop_sequence: 1, delay: null, stop_times: { features: late } });
 
         expect(deriveRide(lateRide, detail, false, Date.parse('2026-10-08T00:10:00+02:00'), TZ)?.minutesToArrival).toBe(20);
     });

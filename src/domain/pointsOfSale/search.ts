@@ -1,4 +1,4 @@
-import { normalizeString } from '@/lib/strings';
+import { foldDiacritics } from '@shared/text';
 import { firstUnique, matchesAllTokens } from '@/lib/search';
 import { calculateDistance } from '@/lib/geo';
 import { POS_SEARCH } from '@/config/constants';
@@ -19,7 +19,7 @@ export interface PosSearchResult {
 }
 
 const tokenize = (value: string): string[] =>
-    normalizeString(value).split(POS_SEARCH.TOKEN_SEPARATORS).filter(Boolean);
+    foldDiacritics(value).split(POS_SEARCH.TOKEN_SEPARATORS).filter(Boolean);
 
 /** `typeLabels` carries the translated `pos.types.*` strings, so the active locale is searchable too. */
 export const createPosSearchIndex = (
@@ -27,7 +27,7 @@ export const createPosSearchIndex = (
     typeLabels: Record<PointOfSaleType, string>
 ): PosSearchIndexItem[] =>
     posList.map((pos) => {
-        const normalizedName = normalizeString(pos.name);
+        const normalizedName = foldDiacritics(pos.name);
         const intentWords = [
             typeLabels[pos.type] ?? '',
             ...POS_SEARCH.INTENT_KEYWORDS,
@@ -47,7 +47,7 @@ export const searchPointsOfSale = (
     query: string,
     origin: [number, number] | null
 ): PosSearchResult[] => {
-    const normalizedQuery = normalizeString(query).trim();
+    const normalizedQuery = foldDiacritics(query).trim();
     if (normalizedQuery.length < POS_SEARCH.MIN_QUERY_LENGTH) return [];
 
     const queryTokens = normalizedQuery.split(POS_SEARCH.TOKEN_SEPARATORS).filter(Boolean);
@@ -83,6 +83,6 @@ export const searchPointsOfSale = (
     });
 
     // A city has many identically named machines; one row per name and type keeps the short group varied.
-    return firstUnique(matches, ({ pos }) => `${normalizeString(pos.name)}|${pos.type}`, POS_SEARCH.RESULT_LIMIT)
+    return firstUnique(matches, ({ pos }) => `${foldDiacritics(pos.name)}|${pos.type}`, POS_SEARCH.RESULT_LIMIT)
         .map(({ pos, distance }) => ({ pos, distance }));
 };

@@ -35,13 +35,13 @@ Non-negotiable. Any violation is a system-level bug.
 ### Source Layout
 
 - **`src/domain/<area>/`**: pure transit logic, one folder per area (`departures`, `vehicles`, `rides`, `realtime`, `routes`, `stops`, `alerts`, `cities`, `pointsOfSale`) plus `domain/time.ts` and `domain/delay.ts`. Functions over immutable data, no classes, no React, no stores. Code outside a folder imports only its `index.ts` (`@/domain/vehicles`); files inside an area import each other directly.
-- **`shared/`**: transit rules both the app and `functions/` apply (e.g. `shared/rides.ts`: when a vehicle left a stop, the delay at a stop, boarding grace), so the screen and pushed alerts agree. Plain TypeScript importing only its own files; the app imports it as `@shared/…`, `functions/` by relative path.
+- **`shared/`**: facts and transit rules both the app and `functions/` apply (e.g. `shared/cities.ts`: each city's location, zone and features; `shared/rides.ts`: when a vehicle left a stop, the delay at a stop, boarding grace), so the screen and the server agree. Plain TypeScript importing only its own files; the app imports it (values and types) as `@shared/…`, `functions/` by relative path.
 - **`src/lib/`**: app infrastructure only (API client, memoization, history and URLs, device cache, geometry, search helpers, `map/` icons and initial view). Transit rules NEVER go here.
 - **No `utils/` folder.** A new helper goes into the `domain/` area it belongs to, or `lib/` if it is infrastructure.
 - `domain/` MUST NOT import hooks, stores or components; hooks and components import `domain/`.
 - **Components**: plain functions with typed props (`({ stop }: StopCardProps) => …`), never `React.FC`; React runtime APIs as named imports (`useMemo`, `memo`), types through the `React` namespace. No IIFEs in JSX: a branchy fragment becomes a small component.
 - **File names**: React components PascalCase (`DepartureBoard.tsx`); a file built around one class PascalCase after it (`VehiclesService.ts`); everything else camelCase (`apiClient.ts`, `vehicleCache.ts`). Never kebab-case, except the generated shadcn files in `components/ui/` and route files under `functions/api/`.
-- **Imports (frontend)**: `@/` alias across folders, `./` only within the same folder; never `../`. Outside `domain/`, import an area through its index (`@/domain/vehicles`), never its files. Types always come from `@/types`. ESLint enforces these, the domain purity and the hook layer order (`eslint.config.js`).
+- **Imports (frontend)**: `@/` alias across folders, `./` only within the same folder; never `../`. Outside `domain/`, import an area through its index (`@/domain/vehicles`), never its files. ESLint enforces these, the domain purity and the hook layer order (`eslint.config.js`). App types come from `@/types`, types defined in `shared/` from `@shared/…`; `@/types` does not re-export them.
 - **Components and hooks hold no transit rules.** Anything that filters, sorts, groups, counts or classifies transit data (phases, notices, line order, visibility rules) is a `domain/` function the component calls; components keep only rendering, `t()` texts and styling.
 - **`src/config/`** holds tunables and tables (`ROUTE_TYPE_ORDER`, `DELAY_TIERS`, thresholds), never the functions that apply them.
 
@@ -70,7 +70,7 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 - **GTFS Types**: `0` Tram, `1` Metro, `2` Rail, `3` Bus, `4` Ferry, `7` Funicular, `11` or `800` Trolleybus.
 - **Metro Logic**: Metro departures MUST be grouped by `(line + direction)` — lines A/B/C have distinct directional identities.
 - **Branding Authority**: Line colours come from each city's `routes.json` on the static data CDN, falling back to `routeTypeColors` in `src/config/cities.ts`; map icons from `src/lib/map/icons.ts`.
-- **Time Zones**: Times are shown and compared in the city's own `timezone` (city config, mirrored from the backend `CITY_REGISTRY`), never the device's or a hard-coded zone: a board must agree with its trips' timetable times.
+- **Time Zones**: Times are shown and compared in the city's own `timezone` (`shared/cities.ts`, which both the app and `functions/` read), never the device's or a hard-coded zone: a board must agree with its trips' timetable times.
 - **Safe Areas**: Use `env(safe-area-inset-*)` for all layouts.
 - **i18n**: Czech (`cs`), Slovak (`sk`) and English (`en`) locales via `react-i18next`; every key goes into all three. Translation files in `src/i18n/locales/`.
 - **Backend Layout**: `functions/api/` endpoints -> `_cities/<city>.ts` (city config + use-case wiring) -> `_domain/<network>/` services -> `_feeds/<network>/` upstream clients and config -> `_core/` shared infra (cache, time, decoding).

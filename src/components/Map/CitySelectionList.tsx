@@ -3,13 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
-import type { City } from '@/types';
+import type { CityFacts } from '@shared/cities';
 import { groupCitiesByCountry } from '@/domain/cities';
 
 interface CitySelectionListProps {
-    cities: City[];
+    cities: CityFacts[];
     selectedCitySlug: string;
-    onSelect: (city: City) => void;
+    onSelect: (city: CityFacts) => void;
     /** `compact` trims the cards for screens where the list shares space (the welcome modal). */
     size?: 'default' | 'compact';
 }
@@ -35,7 +35,7 @@ export const CitySelectionList = ({
         return null;
     }
 
-    const renderCity = (city: City) => {
+    const renderCity = (city: CityFacts) => {
         const isSelected = selectedCitySlug === city.slug;
         const subtitle = t(`map.regions.${city.slug}`, { defaultValue: '' });
 

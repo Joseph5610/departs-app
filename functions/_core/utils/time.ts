@@ -1,9 +1,9 @@
+export { DAY_S, addSecondsToTime, timeToSeconds, wrapDaySeconds } from '../../../shared/time';
+
 export const DAY_MS = 86_400_000;
-export const DAY_SECS = 86_400;
 export const DAY_MINS = 1440;
 
 const HOUR_MS = 3_600_000;
-const HALF_DAY_SECS = 43_200;
 
 /** Formats an instant as `HH:mm` in the given IANA timezone. */
 export function formatTime(date: Date, timezone: string): string {
@@ -86,22 +86,6 @@ export function getLocalClock(timezone: string, atMs: number = Date.now()): Loca
     return { date, previousDate: getPreviousDateString(date), secs, mins: secs / 60 };
 }
 
-/**
- * Wraps a difference between two times of day into [-12h, +12h], so times either side of
- * midnight compare as close together rather than a day apart.
- */
-export const wrapDaySeconds = (diffSecs: number): number => {
-    if (diffSecs < -HALF_DAY_SECS) return diffSecs + DAY_SECS;
-    if (diffSecs > HALF_DAY_SECS) return diffSecs - DAY_SECS;
-    return diffSecs;
-};
-
-/** `HH:MM:SS` or `HH:MM` to seconds; GTFS hours past 24 are kept. */
-export const toSecs = (t: string): number => {
-    const [h, m, s] = t.split(':').map(Number);
-    return (h || 0) * 3600 + (m || 0) * 60 + (s || 0);
-};
-
 /** Wraps a GTFS time past midnight (`25:10:00`) onto the clock (`01:10:00`). */
 export function toClockTime(timeStr: string | undefined | null): string {
     if (!timeStr) return '';
@@ -110,19 +94,6 @@ export function toClockTime(timeStr: string | undefined | null): string {
     parts[0] = String(parseInt(parts[0], 10) % 24).padStart(2, '0');
     return parts.join(':');
 }
-
-/**
- * Adds a delay in seconds to an `HH:MM:SS` string, wrapping around midnight.
- */
-export const addSecondsToTime = (timeStr: string | undefined | null, delaySecs: number): string | undefined => {
-    if (!timeStr) return undefined;
-    let secs = toSecs(String(timeStr)) + delaySecs;
-    if (secs < 0) secs += DAY_SECS;
-    const h = Math.floor(secs / 3600) % 24;
-    const m = Math.floor((secs % 3600) / 60);
-    const sec = Math.floor(secs % 60);
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-};
 
 /** YYYYMMDD of the day before `dayStr` (YYYYMMDD). */
 export const getPreviousDateString = (dayStr: string): string =>

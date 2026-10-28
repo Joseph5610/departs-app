@@ -1,3 +1,5 @@
+/** Distances and bearings on the globe, as both the app and the server measure them. Plain TypeScript without imports. */
+
 export const EARTH_RADIUS_M = 6_371_000;
 
 const toRad = (deg: number) => deg * Math.PI / 180;
