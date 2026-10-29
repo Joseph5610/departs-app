@@ -183,6 +183,7 @@
       "lineLabel": "Linka {{line}}",
       "lineTitle": "Linka <badge/>",
       "runNumber": "Oběh",
+      "fleetRegisterLink": "Vozidlo na seznam-autobusu.cz",
       "delaySource": {
         "live": "Zpoždění posílá přímo vozidlo v reálném čase.",
         "estimated": "Zpoždění odhadujeme z jízdního řádu a aktuální polohy vozidla.",

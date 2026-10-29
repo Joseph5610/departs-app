@@ -183,6 +183,7 @@
       "lineLabel": "Linka {{line}}",
       "lineTitle": "Linka <badge/>",
       "runNumber": "Obeh",
+      "fleetRegisterLink": "Vozidlo na seznam-autobusu.cz",
       "delaySource": {
         "live": "Meškanie posiela priamo vozidlo v reálnom čase.",
         "estimated": "Meškanie odhadujeme z cestovného poriadku a aktuálnej polohy vozidla.",

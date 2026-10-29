@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.94.0] - 2026-10-29
+
+### Added
+
+- A vehicle's number in its detail links to the vehicle on seznam-autobusu.cz by plate, or by fleet number within its carrier (in Prague, among Czech carriers).
+
 ## [0.93.0] - 2026-10-29
 
 ### Changed

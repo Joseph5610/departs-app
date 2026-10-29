@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { IconTooltip } from '@/components/IconTooltip';
+import { ButtonTooltip } from '@/components/ButtonTooltip';
 import { SignalMark } from '@/components/SignalMark';
 import type { VehicleHeroProps } from './types';
 import { TripEndedNotice } from './TripEndedNotice';
@@ -14,8 +15,9 @@ import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { getDelayStatus } from '@/domain/delay';
 import { safeHexColor } from '@/lib/color';
 import { getRouteTypeI18nKey } from '@/domain/routes';
-import { delaySourceOf, vehicleNotice, type DelaySource } from '@/domain/vehicles';
+import { delaySourceOf, fleetRegisterUrl, vehicleNotice, type DelaySource } from '@/domain/vehicles';
 import { useNow } from '@/hooks/useNow';
+import { usePreferencesStore } from '@/state/preferencesStore';
 
 export const VehicleHero = ({
     displayVehicle,
@@ -137,10 +139,11 @@ export const VehicleHero = ({
                                     return typeKey ? t(typeKey) : '---';
                                 })()}
                             </span>
-                            {displayVehicle.vehicle_descriptor?.vehicle_registration_number && (
-                                <span className="text-muted-foreground text-xs font-medium shrink-0">
-                                    #{displayVehicle.vehicle_descriptor.vehicle_registration_number}
-                                </span>
+                            {displayVehicle.vehicle_descriptor.vehicle_registration_number && (
+                                <VehicleNumber
+                                    number={displayVehicle.vehicle_descriptor.vehicle_registration_number}
+                                    operator={displayVehicle.vehicle_descriptor.operator}
+                                />
                             )}
                         </div>
                         {(displayVehicle.run_number || (displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor?.vehicle_registration_number))) && (
@@ -183,6 +186,27 @@ export const VehicleHero = ({
                 </div>
             )}
         </Card>
+    );
+};
+
+/** The vehicle's number, linked to its seznam-autobusu.cz page when the number pins down one vehicle. */
+const VehicleNumber = ({ number, operator }: { number: string | number; operator?: string }) => {
+    const { t } = useTranslation();
+    const selectedCity = usePreferencesStore(s => s.selectedCity);
+    const url = fleetRegisterUrl(selectedCity, operator, number);
+    const className = 'text-muted-foreground text-xs font-medium shrink-0';
+    if (!url) return <span className={className}>#{number}</span>;
+    return (
+        <ButtonTooltip label={t('map.vehicleDetails.fleetRegisterLink')}>
+            <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(className, 'underline decoration-dotted underline-offset-2 hover:text-foreground transition-colors')}
+            >
+                #{number}
+            </a>
+        </ButtonTooltip>
     );
 };
 

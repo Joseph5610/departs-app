@@ -2,6 +2,7 @@ export * from './delayEstimate';
 export * from './enrich';
 export * from './fleet';
 export * from './fleetIndex';
+export * from './fleetRegister';
 export * from './merge';
 export * from './monitor';
 export * from './search';

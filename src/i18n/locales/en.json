@@ -180,6 +180,7 @@
       "lineLabel": "Line {{line}}",
       "lineTitle": "Line <badge/>",
       "runNumber": "Run",
+      "fleetRegisterLink": "This vehicle on seznam-autobusu.cz",
       "delaySource": {
         "live": "The delay comes straight from the vehicle in real time.",
         "estimated": "The delay is estimated from the timetable and the vehicle’s current position.",
