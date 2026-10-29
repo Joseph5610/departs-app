@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Zoomed out, stops are soft glows sized by how many stops they hold, morphing into their badges as the map zooms in.
 
+### Fixed
+
+- Station boards with long direction names no longer overflow the desktop panel.
+
 ## [0.92.0] - 2026-10-29
 
 ### Added

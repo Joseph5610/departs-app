@@ -164,7 +164,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
             ) : (
                 sections ? (
                     <div className="@container">
-                        <div className="grid items-start gap-3 @2xl:grid-cols-2">
+                        <div className="grid grid-cols-1 items-start gap-3 @2xl:grid-cols-2">
                             {sections.map(section => (
                                 <PlatformSectionView
                                     key={section.key}
