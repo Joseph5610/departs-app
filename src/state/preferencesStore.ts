@@ -11,6 +11,7 @@ import { searchHistoryKey } from '@/lib/searchHistory';
 import { firstUnique } from '@/lib/search';
 import { isSameFavoriteLine, reorderShown } from '@/domain/departures';
 import { isSameFavoriteStop } from '@/domain/stops';
+import { storedSidebarWidth } from '@/lib/sidebar';
 
 
 interface PreferencesState {
@@ -42,6 +43,8 @@ interface PreferencesState {
     refreshIntervalS: RefreshIntervalS;
     /** Hidden regions this device may pick from the city list, unlocked by opening `?beta=<slug>`. */
     unlockedCities: string[];
+    /** The desktop detail panel's width the user dragged it to; 0 keeps the default. */
+    sidebarWidthPx: number;
 }
 
 interface PreferencesActions {
@@ -78,6 +81,7 @@ interface PreferencesActions {
     setStatsViewMode: (mode: 'overview' | 'vehicles') => void;
     setFavoritesTab: (tab: 'lines' | 'stops') => void;
     setRefreshIntervalS: (seconds: RefreshIntervalS) => void;
+    setSidebarWidthPx: (width: number) => void;
 }
 
 export interface PreferencesStore extends PreferencesState {
@@ -107,6 +111,7 @@ const PERSISTED_KEYS = [
     'unlockedCities',
     'refreshIntervalS',
     'favoritesTab',
+    'sidebarWidthPx',
 ] as const satisfies ReadonlyArray<keyof PreferencesState>;
 
 type PersistedPreferences = Pick<PreferencesState, typeof PERSISTED_KEYS[number]>;
@@ -161,7 +166,9 @@ export const mergePersisted = (persisted: unknown, current: PreferencesStore): P
         const value = stored[key];
         const fallback = current[key];
         if (value === undefined) continue;
-        if (key === 'refreshIntervalS') {
+        if (key === 'sidebarWidthPx') {
+            if (typeof value === 'number') merged[key] = storedSidebarWidth(value);
+        } else if (key === 'refreshIntervalS') {
             if ((REFRESH_INTERVAL_OPTIONS_S as readonly unknown[]).includes(value)) merged[key] = value;
         } else if (key === 'searchHistory') {
             const history = validEntries(value, searchHistoryItemSchema);
@@ -209,6 +216,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             hasSeenWelcome: false,
             hasSeenInstallPrompt: false,
             refreshIntervalS: TRANSIT_REFRESH_S,
+            sidebarWidthPx: 0,
 
             actions: {
                 setShowVehicles: (show) => set({ showVehicles: show }),
@@ -264,6 +272,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setStatsViewMode: (mode) => set({ statsViewMode: mode }),
                 setFavoritesTab: (tab) => set({ favoritesTab: tab }),
                 setRefreshIntervalS: (refreshIntervalS) => set({ refreshIntervalS }),
+                setSidebarWidthPx: (sidebarWidthPx) => set({ sidebarWidthPx }),
             },
         }),
         {

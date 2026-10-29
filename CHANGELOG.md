@@ -4,6 +4,17 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.91.0] - 2026-10-28
+
+### Added
+
+- The desktop detail panel can be dragged wider or narrower (double-click restores the default), and a wide panel lays a station's platforms out in two columns.
+
+### Fixed
+
+- The desktop detail panel's default width now grows with the screen instead of staying capped at 384 px.
+- The desktop search box, live pill and ride bars slide together as one when the panel opens or closes.
+
 ## [0.90.0] - 2026-10-27
 
 ### Fixed

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, X } from 'lucide-react';
 import { useSearch } from '@/hooks/features/useSearch';
-import { useRouteParams } from '@/hooks/useRouteParams';
 import { cn } from '@/lib/cn';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,9 +16,6 @@ import { CitySwitcher } from '@/components/Map/CitySwitcher';
  */
 export const Search = memo(() => {
     const { t } = useTranslation();
-    const { stopId: selectedStopId, vehicleId: selectedVehicleId, isStatsRoute, isFavoritesRoute } = useRouteParams();
-
-    const isSidebarOpen = !!selectedStopId || !!selectedVehicleId || isStatsRoute || isFavoritesRoute;
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -63,8 +59,8 @@ export const Search = memo(() => {
     return (
         <div
             className={cn(
-                "fixed top-0 left-0 w-[calc(100%-56px)] md:w-105 md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-1000 transition-[left,width] duration-300 ease-in-out",
-                isSidebarOpen && "md:left-(--visible-center-x) md:w-90"
+                // Narrows only when the visible map cannot fit it between the side controls.
+                "pointer-events-auto absolute top-0 left-0 w-[calc(100%-56px)] md:w-[min(26.25rem,calc(100%-9rem))] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-1000"
             )}
         >
             <Autocomplete.Root

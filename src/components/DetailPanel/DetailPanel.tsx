@@ -14,6 +14,7 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MobileSheet } from './MobileSheet';
+import { SidebarResizeHandle } from './SidebarResizeHandle';
 
 interface DetailPanelProps {
     isOpen: boolean;
@@ -141,25 +142,29 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
                 variant="glassy"
                 showCloseButton={false}
                 hideOverlay={true}
-                className="w-(--sidebar-width) sm:max-w-(--sidebar-width) top-(--sidebar-inset)! left-(--sidebar-inset)! bottom-(--sidebar-inset)! h-[calc(100dvh-2*var(--sidebar-inset))]! p-0 gap-2 overflow-hidden flex flex-col outline-none rounded-3xl text-foreground"
+                className="data-[side=left]:w-(--sidebar-width) data-[side=left]:sm:max-w-(--sidebar-width) top-(--sidebar-inset)! left-(--sidebar-inset)! bottom-(--sidebar-inset)! h-[calc(100dvh-2*var(--sidebar-inset))]! p-0 gap-2 flex flex-col outline-none rounded-3xl text-foreground"
                 aria-describedby={undefined}
                 // The panel sits beside the map, not over it: focusing its first button would also pop that button's tooltip.
                 initialFocus={false}
                 data-testid="detail-panel"
             >
-                <div className="shrink-0 flex flex-col">
-                    <div className="px-6 pt-6 pb-2">
-                        {headerContent}
-                    </div>
-                    {subHeader && (
-                        <div className="w-full">
-                            {subHeader}
+                {/* Clips the content to the rounded panel; the resize handle outside it reaches past the edge. */}
+                <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden rounded-[inherit]">
+                    <div className="shrink-0 flex flex-col">
+                        <div className="px-6 pt-6 pb-2">
+                            {headerContent}
                         </div>
-                    )}
+                        {subHeader && (
+                            <div className="w-full">
+                                {subHeader}
+                            </div>
+                        )}
+                    </div>
+                    <ScrollArea className="flex-1 min-h-0 px-6 pb-6">
+                        {children}
+                    </ScrollArea>
                 </div>
-                <ScrollArea className="flex-1 min-h-0 px-6 pb-6">
-                    {children}
-                </ScrollArea>
+                <SidebarResizeHandle />
             </SheetContent>
         </Sheet>
     );

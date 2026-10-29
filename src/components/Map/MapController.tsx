@@ -3,10 +3,12 @@ import { useMapInterface } from '@/hooks/features/useMapInterface';
 import { useAutoCitySwitch } from '@/hooks/features/useAutoCitySwitch';
 import { useRouteCitySync } from '@/hooks/features/useRouteCitySync';
 import { useCanonicalStopUrl } from '@/hooks/features/useCanonicalStopUrl';
+import { useSidebarWidth } from '@/hooks/features/useSidebarWidth';
 
 const MapEngine = () => {
     useRouteCitySync();
     useCanonicalStopUrl();
+    useSidebarWidth();
     useMapInterface();
     useGeolocationWatcher();
     useAutoCitySwitch();

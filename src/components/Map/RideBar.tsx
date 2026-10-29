@@ -16,7 +16,6 @@ import { useRidePush } from '@/hooks/features/useRidePush';
 import { useRideStore } from '@/state/rideStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useShareTrip } from '@/hooks/features/useShare';
-import { useRouteParams } from '@/hooks/useRouteParams';
 import { useLiveStatusYieldsToRides } from '@/hooks/derived/useSystemStatus';
 import { LineBadge } from '@/components/LineBadge';
 import { toast } from 'sonner';
@@ -302,8 +301,6 @@ export const RideBar = () => {
         foldTimer.current = window.setTimeout(() => setIsExpanded(false), RIDE_CONFIG.STACK_FOLD_DELAY_MS);
     };
     const liveStatusHidden = useLiveStatusYieldsToRides();
-    const { stopId, vehicleId, isStatsRoute, isFavoritesRoute } = useRouteParams();
-    const isSidebarOpen = !!stopId || !!vehicleId || isStatsRoute || isFavoritesRoute;
 
     const alerts = [[first, firstStatus], [second, secondStatus], [third, thirdStatus]] as const;
     const tripAlerts = alerts.map(([trip, status]) => trip && <TripAlerts key={trip.tripId} trip={trip} status={status} />);
@@ -325,8 +322,7 @@ export const RideBar = () => {
                 "transition-all duration-300 ease-in-out md:pt-0",
                 liveStatusHidden
                     ? "pt-[calc(var(--top-controls-gap)+env(safe-area-inset-top,0))] md:top-[calc(5.25rem+env(safe-area-inset-top,0))]"
-                    : "pt-[calc(var(--top-controls-gap)+2.25rem+env(safe-area-inset-top,0))] md:top-[calc(7.5rem+env(safe-area-inset-top,0))]",
-                isSidebarOpen && "md:left-(--visible-center-x)"
+                    : "pt-[calc(var(--top-controls-gap)+2.25rem+env(safe-area-inset-top,0))] md:top-[calc(7.5rem+env(safe-area-inset-top,0))]"
             )}
         >
             {/* One structure open or folded, so the front bar never remounts (and replays its entrance); the rest slide open under it. */}

@@ -12,6 +12,19 @@ export const LAYOUT = {
     BOTTOM_SHEET_RATIO: 2.2,
 };
 
+/** The desktop detail panel's width: its default, and the limits the user drags it within. */
+export const SIDEBAR = {
+    MIN_WIDTH_PX: 360,
+    /** The default width grows with the viewport up to this share of it, capped at `DEFAULT_MAX_WIDTH_PX`. */
+    DEFAULT_VIEWPORT_RATIO: 0.26,
+    DEFAULT_MAX_WIDTH_PX: 560,
+    MAX_WIDTH_PX: 880,
+    /** The panel never covers more than this share of the viewport. */
+    MAX_VIEWPORT_RATIO: 0.6,
+    /** Arrow keys on the resize handle widen or narrow the panel by this much. */
+    KEY_STEP_PX: 40,
+};
+
 /** Line alerts listed in the vehicle panel. */
 export const VEHICLE_ALERTS = {
     PREVIEW_COUNT: 2,

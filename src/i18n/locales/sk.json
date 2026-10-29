@@ -1,5 +1,6 @@
 {
   "common": {
+    "resizePanel": "Zmeniť šírku panela",
     "all": "Všetko",
     "linkCopied": "Odkaz bol skopírovaný do schránky",
     "copyError": "Odkaz sa nepodarilo skopírovať",

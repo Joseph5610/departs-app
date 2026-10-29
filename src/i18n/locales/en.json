@@ -1,5 +1,6 @@
 {
   "common": {
+    "resizePanel": "Resize panel",
     "all": "All",
     "linkCopied": "Link copied to clipboard",
     "copyError": "Could not copy link",

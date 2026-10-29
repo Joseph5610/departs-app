@@ -163,15 +163,19 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                 </MetroClosedOr>
             ) : (
                 sections ? (
-                    sections.map(section => (
-                        <PlatformSectionView
-                            key={section.key}
-                            section={section}
-                            platformStopId={sectionStopIds.get(section.key) ?? null}
-                            badgeColumn={badgeColumn}
-                            rowProps={rowProps}
-                        />
-                    ))
+                    <div className="@container">
+                        <div className="grid items-start gap-3 @2xl:grid-cols-2">
+                            {sections.map(section => (
+                                <PlatformSectionView
+                                    key={section.key}
+                                    section={section}
+                                    platformStopId={sectionStopIds.get(section.key) ?? null}
+                                    badgeColumn={badgeColumn}
+                                    rowProps={rowProps}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 ) : (
                     <Card size="none" variant="inset" className="px-2" style={badgeColumn}>
                         <DirectionRows groups={groupedDepartures} inPlatformSection={false} {...rowProps} />

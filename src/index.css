@@ -9,16 +9,14 @@
 /* Landscape screens too low for a stacked modal (phones on their side). */
 @custom-variant short (@media (orientation: landscape) and (max-height: 30rem));
 
+
 :root {
   /* Space between the status bar and the top map controls (the live pill). */
   --top-controls-gap: 0.75rem;
   /* The app's full height; an installed PWA uses 100vh, as its 100dvh stops short of the bottom of the screen. */
   --app-height: 100dvh;
-  --sidebar-width: 420px;
   /* Gap between the desktop sidebar and the viewport edges; the map camera reads both values. */
   --sidebar-inset: 20px;
-  --sidebar-offset: calc((var(--sidebar-width) + var(--sidebar-inset)) / 2);
-  --visible-center-x: calc(50% + var(--sidebar-offset));
   --background: oklch(0.96 0 0);
   --foreground: oklch(0.22 0.01 260);
   --card: oklch(1.0000 0 0);
@@ -208,6 +206,13 @@
     &::-webkit-scrollbar {
       display: none;
     }
+  }
+
+  /* While the panel edge is dragged, the whole page shows the resize cursor and selects no text. */
+  html[data-sidebar-resizing],
+  html[data-sidebar-resizing] * {
+    cursor: col-resize !important;
+    user-select: none;
   }
 
   /* Focus rings standardization - using ring-2 with 50% opacity ring color and NO offset for better compatibility with glassy elements and dark mode */

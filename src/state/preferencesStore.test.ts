@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { mergePersisted, usePreferencesStore } from './preferencesStore';
+import { SIDEBAR } from '@/config/constants';
 
 const defaults = usePreferencesStore.getState();
 const stop = (stop_id: string, timestamp: number) => ({ type: 'stop', timestamp, stop_id, stop_name: stop_id, coordinates: [14.4, 50.1] });
@@ -32,6 +33,14 @@ describe('mergePersisted', () => {
         const merged = mergePersisted({ refreshIntervalS: 7, showStops: 'yes', favoriteStops: [1, 2], departureSort: 'line' }, defaults);
 
         expect(merged).toMatchObject({ refreshIntervalS: defaults.refreshIntervalS, showStops: defaults.showStops, favoriteStops: defaults.favoriteStops, departureSort: 'line' });
+    });
+
+    it('holds a stored panel width within its limits and resets an unusable one to the default', () => {
+        expect(mergePersisted({ sidebarWidthPx: 40 }, defaults).sidebarWidthPx).toBe(SIDEBAR.MIN_WIDTH_PX);
+        expect(mergePersisted({ sidebarWidthPx: 5000 }, defaults).sidebarWidthPx).toBe(SIDEBAR.MAX_WIDTH_PX);
+        expect(mergePersisted({ sidebarWidthPx: 612.4 }, defaults).sidebarWidthPx).toBe(612);
+        expect(mergePersisted({ sidebarWidthPx: -3 }, defaults).sidebarWidthPx).toBe(0);
+        expect(mergePersisted({ sidebarWidthPx: '700' }, defaults).sidebarWidthPx).toBe(0);
     });
 
     it('ignores a stored value that is not an object at all', () => {

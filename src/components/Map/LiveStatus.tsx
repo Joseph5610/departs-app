@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useRouteParams } from '@/hooks/useRouteParams';
 import { useViewportStore } from '@/state/viewportStore';
 import { secondsUntilRefresh, useLiveStatusYieldsToRides, useSystemStatus } from '@/hooks/derived/useSystemStatus';
 import { useNow } from '@/hooks/useNow';
@@ -15,12 +14,10 @@ import { SignalMark } from '@/components/SignalMark';
  */
 export const LiveStatus = () => {
     const { t } = useTranslation();
-    const { stopId: selectedStopId, vehicleId: selectedVehicleId, isStatsRoute, isFavoritesRoute } = useRouteParams();
     const bounds = useViewportStore(s => s.bounds);
     const status = useSystemStatus();
     const yieldsToRides = useLiveStatusYieldsToRides();
 
-    const isSidebarOpen = !!selectedStopId || !!selectedVehicleId || isStatsRoute || isFavoritesRoute;
     const isFiltered = usePreferencesStore(
         s => s.routeTypeFilter.length > 0 || s.delayFilter.length > 0 || s.stopTypeFilter.length > 0
     );
@@ -59,8 +56,7 @@ export const LiveStatus = () => {
             data-testid="live-status"
             className={cn(
                 "absolute z-50 pointer-events-none -translate-x-1/2 left-1/2 top-0",
-                "pt-[calc(var(--top-controls-gap)+env(safe-area-inset-top,0))] transition-all duration-300 ease-in-out md:p-0 md:top-[calc(5.25rem+env(safe-area-inset-top,0))]",
-                isSidebarOpen && "md:left-(--visible-center-x)"
+                "pt-[calc(var(--top-controls-gap)+env(safe-area-inset-top,0))] transition-all duration-300 ease-in-out md:p-0 md:top-[calc(5.25rem+env(safe-area-inset-top,0))]"
             )}
         >
             <div className="pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-300">

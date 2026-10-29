@@ -16,6 +16,8 @@ import { StopTitle } from '@/components/DetailPanel/DepartureBoard/StopTitle';
 import { PointOfSaleHeader } from '@/components/DetailPanel/PointOfSaleHeader';
 import { FavoritesPanel } from '@/components/DetailPanel/FavoritesPanel/FavoritesPanel';
 import { LiveStatus } from './LiveStatus';
+import { MapTopCenter } from './MapTopCenter';
+import { useIsPanelRoute } from '@/hooks/useIsPanelRoute';
 import { RideBar } from './RideBar';
 import { getInitialViewState } from '@/lib/map/view';
 import { selfHostedGlyphs } from '@/lib/map/glyphs';
@@ -76,7 +78,7 @@ const MapInner = () => {
 
     const { stopId: selectedStopId, tripId, vehicleId, isStatsRoute, isFavoritesRoute, posId } = useRouteParams();
     const selectedId = tripId || vehicleId;
-    const isPanelRoute = Boolean(selectedStopId || selectedId || posId || isStatsRoute || isFavoritesRoute);
+    const isPanelRoute = useIsPanelRoute();
 
     const selectedPlaceId = useViewportStore(s => s.selectedPlaceId);
     const selectedPlace = useRememberedPlace(selectedPlaceId);
@@ -302,14 +304,12 @@ const MapInner = () => {
                 )}
             </MapGL>
 
-            <LiveStatus />
-            <RideBar />
-            {!isMobile && (
-                <>
-                    <Search />
-                    <MapControls />
-                </>
-            )}
+            <MapTopCenter isPanelOpen={isPanelRoute}>
+                <LiveStatus />
+                <RideBar />
+                {!isMobile && <Search />}
+            </MapTopCenter>
+            {!isMobile && <MapControls />}
 
             <MountWhenOpened when={!hasSeenWelcome}>
                 <WelcomeModal />

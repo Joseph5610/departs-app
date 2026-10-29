@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { useSelectionStore } from '@/state/selectionStore';
 import { useMapMetadataStore } from '@/state/mapMetadataStore';
+import { useIsPanelRoute } from '@/hooks/useIsPanelRoute';
+import { useSidebarWidthPx } from '@/hooks/derived/useSidebarWidthPx';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { MAP_LAYERS } from '@/config/mapLayers';
 import { hasPosition } from '@/lib/geo';
@@ -9,9 +11,14 @@ import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
 import { MAP_CAMERA, LAYOUT, SELECTED_VEHICLE_PULSE } from '@/config/constants';
 
-/** Sidebar geometry lives in index.css; the camera padding must match it. */
-const readRootCssPx = (name: string): number =>
-    parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
+/** The panel's inset from the viewport lives in index.css; the camera padding must match it. */
+const readSidebarInsetPx = (): number =>
+    parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sidebar-inset')) || 0;
+
+/** The map area the mobile sheet or the desktop panel `sidebarWidth` wide covers, kept clear by the camera. */
+const cameraPadding = (isMobile: boolean, sidebarWidth: number) => isMobile
+    ? { bottom: window.innerHeight / LAYOUT.BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
+    : { bottom: 0, top: 0, left: sidebarWidth + readSidebarInsetPx(), right: 0 };
 
 /**
  * The "User Experience Layer" hook.
@@ -29,6 +36,12 @@ export const useMapInterface = () => {
     const selectedVehicle = useSelectedVehicle();
     const isMobile = useIsMobile();
 
+    const sidebarWidth = useSidebarWidthPx();
+    const sidebarWidthRef = useRef(sidebarWidth);
+    useEffect(() => {
+        sidebarWidthRef.current = sidebarWidth;
+    }, [sidebarWidth]);
+
     const lastFlownId = useRef<string | null>(null);
     const lastFlownStopId = useRef<string | null>(null);
 
@@ -38,9 +51,7 @@ export const useMapInterface = () => {
             return;
         }
 
-        const padding = isMobile
-            ? { bottom: window.innerHeight / LAYOUT.BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
-            : { bottom: 0, top: 0, left: readRootCssPx('--sidebar-width') + readRootCssPx('--sidebar-inset'), right: 0 };
+        const padding = cameraPadding(isMobile, sidebarWidthRef.current);
 
         const currentMap = mapRef.current;
         const currentId = selectedVehicleId || selectedTripId;
@@ -84,6 +95,35 @@ export const useMapInterface = () => {
             });
         }
     }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, flyTo, easeTo, selectedStopPos, selectedTripId, selectedVehicleId, selectedStopId, isMobile, mapLoaded]);
+
+    // A resized panel or window keeps the map's centre in the middle of the part the open panel leaves visible.
+    const isPanelRoute = useIsPanelRoute();
+    const paddedFor = useRef<string | null>(null);
+    useEffect(() => {
+        const map = mapRef.current?.getMap();
+        if (!mapLoaded || !map || !isPanelRoute) return;
+        // Phones resize with their keyboard, which must not move the map; growing into desktop pads for the panel.
+        if (isMobile) {
+            paddedFor.current = 'mobile';
+            return;
+        }
+        const key = String(sidebarWidth);
+        if (paddedFor.current === null || paddedFor.current === key) {
+            paddedFor.current = key;
+            return;
+        }
+        paddedFor.current = key;
+        const repad = () => easeTo({ padding: cameraPadding(false, sidebarWidthRef.current), duration: MAP_CAMERA.EASE_MS, essential: true });
+        // A fly or ease already under way finishes first instead of being cut short.
+        if (!map.isMoving()) {
+            repad();
+            return;
+        }
+        map.once('moveend', repad);
+        return () => {
+            map.off('moveend', repad);
+        };
+    }, [sidebarWidth, isPanelRoute, isMobile, mapLoaded, mapRef, easeTo]);
 
     // Selected vehicle pulse, animated on the map layer directly to stay off React renders.
     const selectedCoordsRef = useRef(selectedVehicle?.geometry?.coordinates);
