@@ -1,4 +1,4 @@
-import { timeToSeconds, wrapDaySeconds } from './time';
+import { timeToSeconds, wrapDaySeconds } from '../../../shared/time';
 
 /**
  * Whether a held connection may leave before the arriving trip makes it: its expected arrival plus

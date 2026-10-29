@@ -1,6 +1,7 @@
 import type { AppContinuation, AppDepartureFeeder, AppStopConnection, AppVehicleDetail } from "../../../_core/types";
 import type { ContinuationRow, FeederRow, LiveConnections, TripConnections } from "../../../_feeds/golemio/connections";
-import { DAY_S, getPreviousDateString, timeToSeconds, type LocalClock } from "../../../_core/utils/time";
+import { getPreviousDateString, type LocalClock } from "../../../_core/utils/time";
+import { DAY_S, timeToSeconds } from "../../../../shared/time";
 import { isConnectionAtRisk } from "../../../_core/utils/connections";
 import { normalizeRouteType } from "../../../_core/utils/routeTypes";
 

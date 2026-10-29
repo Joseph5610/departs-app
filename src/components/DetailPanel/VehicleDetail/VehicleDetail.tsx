@@ -24,8 +24,9 @@ import { StopTimeline } from './StopTimeline';
 import type { DisplayVehicle } from './types';
 
 import { ErrorState } from '@/components/DetailPanel/ErrorState';
-import { isTripEnded, liveStopSequence } from '@/domain/vehicles';
+import { isTripEnded } from '@/domain/vehicles';
 import { useNowEvery } from '@/hooks/useNow';
+import { liveStopSequence } from '@shared/rides';
 
 interface VehicleDetailProps {
     selectedVehicle: VehicleDetailType | null;

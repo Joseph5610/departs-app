@@ -1,5 +1,6 @@
 import { ROUTE_PROGRESS_CONFIG } from '@/config/constants';
-import { DEG, EARTH_RADIUS_M } from '@/lib/geo';
+import { DEG } from '@/lib/geo';
+import { EARTH_RADIUS_M } from '@shared/geo';
 
 type LngLat = [number, number];
 

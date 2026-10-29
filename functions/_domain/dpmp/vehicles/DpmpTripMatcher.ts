@@ -4,7 +4,8 @@ import { dayBit, isWithinMatchWindow, operatesOnDay, routeIdOf, type Schedule, t
 import { getTripStops } from '../../../_feeds/gtfs/tripStops';
 import { DPMP_CONFIG } from '../../../_feeds/dpmp/config';
 import type { DpmpVehicleRow } from '../../../_feeds/dpmp/dpmpCsvFeed';
-import { DAY_MINS, timeToSeconds, type LocalClock } from '../../../_core/utils/time';
+import { DAY_MINS, type LocalClock } from '../../../_core/utils/time';
+import { timeToSeconds } from '../../../../shared/time';
 
 interface Candidate {
     tripId: string;

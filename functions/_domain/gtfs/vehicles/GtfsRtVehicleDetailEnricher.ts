@@ -2,7 +2,8 @@ import type { AppVehicleDetail, AppVehicleFeature, CityRequestContext } from "..
 import type { VehicleDetailEnricher } from "./VehicleDetailEnricher";
 import type { VehiclesService } from "../../vehicles/VehiclesService";
 
-import { addSecondsToTime, getLocalClock, timeToSeconds, wrapDaySeconds } from '../../../_core/utils/time';
+import { getLocalClock } from '../../../_core/utils/time';
+import { addSecondsToTime, timeToSeconds, wrapDaySeconds } from '../../../../shared/time';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
 import { isWaitingToStart } from '../../../_feeds/gtfs/schedule';
 import { distanceToSegmentMeters } from '../../../../shared/geo';

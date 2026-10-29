@@ -4,7 +4,6 @@ import { ArrowRightLeft, ChevronDown, ChevronUp, CornerDownRight, type LucideIco
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
 import { cn } from '@/lib/cn';
-import { addSecondsToTime } from '@/domain/time';
 import { distinctLines } from '@/domain/departures';
 import { lineLabel } from '@/domain/routes';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
@@ -12,6 +11,7 @@ import { LineBadge } from '@/components/LineBadge';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { TimelineTime } from './TimelineTime';
 import type { Continuation, StopConnection } from '@/types';
+import { addSecondsToTime } from '@shared/time';
 
 /** A collapsible, labelled block under a stop listing trips a passenger can change to there. */
 const StopTransferBlock = ({ icon: Icon, title, isPast, defaultOpen, preview, children }: {

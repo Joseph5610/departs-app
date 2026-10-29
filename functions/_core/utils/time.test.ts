@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { addSecondsToTime, formatTime, getLocalClock, toClockTime, wrapDaySeconds, zonedLocalToEpochMs } from './time';
+import { formatTime, getLocalClock, toClockTime, zonedLocalToEpochMs } from './time';
+import { addSecondsToTime, wrapDaySeconds } from '../../../shared/time';
 
 const HOUR_MS = 3_600_000;
 

@@ -1,7 +1,7 @@
 import type { StoredEnrichmentPatch, VehicleCollection, VehicleDetail, VehicleFeature, VehicleProperties } from '@/types';
-import { addSecondsToTime } from '@/domain/time';
 import { ENRICHMENT_CONFIG } from '@/config/constants';
 import { mapStable } from '@/lib/memoize';
+import { addSecondsToTime } from '@shared/time';
 
 export type PatchIndex = Map<string, StoredEnrichmentPatch>;
 

@@ -1,6 +1,5 @@
 import { distanceMeters } from '@shared/geo';
 
-export { EARTH_RADIUS_M } from '@shared/geo';
 export const DEG = Math.PI / 180;
 
 /** A real position: present and not the feeds' `[0, 0]` placeholder. */

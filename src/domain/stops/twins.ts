@@ -1,6 +1,7 @@
 import type { StopModel, StopTimeFeature } from '@/types';
-import { DEG, EARTH_RADIUS_M } from '@/lib/geo';
+import { DEG } from '@/lib/geo';
 import { nameKey } from '@shared/text';
+import { EARTH_RADIUS_M } from '@shared/geo';
 
 /** Grid cell for the twin lookup: a latitude degree is about this many metres. */
 const METRES_PER_DEG_LAT = DEG * EARTH_RADIUS_M;

@@ -2,8 +2,9 @@ import { TRIP_RULES } from '@shared/rides';
 import { RIDE_PROTOCOL } from '@shared/rides';
 import { MY_TRIP_CONFIG, WALKING } from '@/config/constants';
 import type { StopDistanceInfo } from '@/domain/stops';
-import { addSecondsToTime, calculateTimeDifferenceSecs, DAY_S, formatClock, secondsOfDayIn, timeToSeconds, utcOffsetSeconds } from '@/domain/time';
+import { calculateTimeDifferenceSecs, formatClock, secondsOfDayIn, utcOffsetSeconds } from '@/domain/time';
 import type { StopTimeFeature, TripBoarding } from '@/types';
+import { addSecondsToTime, DAY_S, timeToSeconds } from '@shared/time';
 
 /** The epoch ms of a timetable time, read in the city's zone: from `TIMETABLE_BEHIND_MS` behind now to a day less that ahead. */
 export const timetableInstantMs = (time: string, now: number, timeZone: string): number => {
@@ -109,4 +110,3 @@ export const stopDepartureClock = (stops: StopTimeFeature[], sequence: number, d
     return p ? expectedDepartureClock(p, delaySecs) : null;
 };
 
-export { delayAtStop, hasLeftStop } from '@shared/rides';

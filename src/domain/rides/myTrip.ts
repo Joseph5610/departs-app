@@ -1,8 +1,8 @@
 import { MY_TRIP_CONFIG, RIDE_CONFIG } from '@/config/constants';
 import { formatTimetableClock } from '@/domain/time';
 import type { MyTrip, MyTripStatus, RideStatus, VehicleDetail } from '@/types';
-import { isBoardingOver } from '@shared/rides';
-import { delayAtStop, reminderCountdown } from './boarding';
+import { isBoardingOver, delayAtStop } from '@shared/rides';
+import { reminderCountdown } from './boarding';
 import { deriveRide, exitArrival } from './status';
 
 /**

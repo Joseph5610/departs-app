@@ -2,7 +2,8 @@ import type * as GtfsRt from '../../../_core/gtfsRtTypes';
 import type { MappingSchedule, VehicleMapping } from '../../gtfs/index/VehicleIndex';
 import { dayBit, isWaitingToStart, isWithinMatchWindow, operatesOnDay, type ScheduleTrip } from '../../../_feeds/gtfs/schedule';
 import { GTFS_CONFIG } from '../../../_feeds/gtfs/config';
-import { DAY_MINS, DAY_S, wrapDaySeconds } from '../../../_core/utils/time';
+import { DAY_MINS } from '../../../_core/utils/time';
+import { DAY_S, wrapDaySeconds } from '../../../../shared/time';
 
 interface TripClaim {
     label: string;

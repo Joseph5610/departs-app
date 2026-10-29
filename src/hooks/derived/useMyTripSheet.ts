@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { MY_TRIP_CONFIG } from '@/config/constants';
 import { boardingChoices, boardingSequence, exitChoices, isLeadPossible, walkLeadMinutes } from '@/domain/rides';
 import { departureStopIds, getStopDistanceInfo } from '@/domain/stops';
-import { lastStopOf, liveStopSequence } from '@/domain/vehicles';
+import { lastStopOf } from '@/domain/vehicles';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { useStops } from '@/hooks/data/useStops';
 import { useTripDetail } from '@/hooks/data/useVehicleDetail';
@@ -10,6 +10,7 @@ import { useNowEvery } from '@/hooks/useNow';
 import { useGeolocationStore } from '@/state/geolocationStore';
 import { useRideStore } from '@/state/rideStore';
 import type { MyTripTarget } from '@/types';
+import { liveStopSequence } from '@shared/rides';
 
 /**
  * What the My trip sheet offers for a trip: the stops ahead to board at (each with the alert leads left and a lead

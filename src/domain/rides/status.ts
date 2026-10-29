@@ -1,8 +1,9 @@
-import { stopsLeft } from '@shared/rides';
+import { stopsLeft, liveStopSequence } from '@shared/rides';
 import { RIDE_CONFIG } from '@/config/constants';
-import { addSecondsToTime, formatClock, secondsOfDayIn, timeToSeconds, wrapDaySeconds } from '@/domain/time';
-import { isTripEnded, liveStopSequence, secondsSinceTripEnd } from '@/domain/vehicles';
+import { formatClock, secondsOfDayIn } from '@/domain/time';
+import { isTripEnded, secondsSinceTripEnd } from '@/domain/vehicles';
 import type { Ride, RidePhase, RideStatus, StopTimeFeature, VehicleDetail } from '@/types';
+import { addSecondsToTime, timeToSeconds, wrapDaySeconds } from '@shared/time';
 
 /** Identity of a ride: one exit on one trip. */
 export const followKey = (ride: Pick<Ride, 'tripId' | 'exitSequence'>): string => `${ride.tripId}:${ride.exitSequence}`;

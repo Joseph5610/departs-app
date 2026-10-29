@@ -1,5 +1,5 @@
 import type { StopTimeFeature } from '@/types';
-import { addSecondsToTime } from '@/domain/time';
+import { addSecondsToTime } from '@shared/time';
 
 /** The first stop after `current`; null before the trip starts or after its last stop. */
 export const nextStopSequence = (stops: StopTimeFeature[], current: number | null): number | null => {

@@ -1,6 +1,7 @@
 import { TRIP_CONFIG } from '@/config/constants';
-import { secondsOfDayIn, timeToSeconds, wrapDaySeconds } from '@/domain/time';
+import { secondsOfDayIn } from '@/domain/time';
 import type { StopTimeFeature } from '@/types';
+import { timeToSeconds, wrapDaySeconds } from '@shared/time';
 
 /** The trip's last stop by sequence. */
 export const lastStopOf = (stops: StopTimeFeature[]): StopTimeFeature | null => {
@@ -35,4 +36,3 @@ export const isTripEnded = (stops: StopTimeFeature[], delay: number | null | und
     return sinceEnd !== null && sinceEnd > TRIP_CONFIG.ENDED_GRACE_S;
 };
 
-export { liveStopSequence } from '@shared/rides';

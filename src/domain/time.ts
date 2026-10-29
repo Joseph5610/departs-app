@@ -1,6 +1,5 @@
 import { DAY_S, addSecondsToTime, timeToSeconds, wrapDaySeconds } from '@shared/time';
 
-export { DAY_S, addSecondsToTime, timeToSeconds, wrapDaySeconds } from '@shared/time';
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 

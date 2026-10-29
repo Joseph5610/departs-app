@@ -3,10 +3,10 @@ import { useTripDetail } from '@/hooks/data/useVehicleDetail';
 import { useEnrichmentPatches } from '@/hooks/data/useVehicles';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import type { MyTrip, MyTripStatus, Ride, VehicleDetail } from '@/types';
-import { liveStopSequence } from '@/domain/vehicles';
 import { deriveMyTrip } from '@/domain/rides';
 import { applyEnrichment } from '@/domain/realtime';
 import { useCityConfig } from '@/hooks/data/useCities';
+import { liveStopSequence } from '@shared/rides';
 
 /** A ride's trip detail, live enrichment applied, bridging a dropped vehicle or failed refresh with the last live one. */
 const useRideDetail = (ride: Ride | null) => {

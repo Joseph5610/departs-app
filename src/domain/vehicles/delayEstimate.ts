@@ -1,8 +1,9 @@
 import type { StopTimeSlice, StoredEnrichmentPatch, VehicleCollection, VehicleFeature } from '@/types';
 import { DELAY_ESTIMATE_CONFIG, ENRICHMENT_CONFIG } from '@/config/constants';
-import { secondsOfDayIn, wrapDaySeconds } from '@/domain/time';
+import { secondsOfDayIn } from '@/domain/time';
 import type { PatchIndex } from '@/domain/realtime';
 import { calculateDistance as distance, hasPosition } from '@/lib/geo';
+import { wrapDaySeconds } from '@shared/time';
 
 /** A timetable slice with its stops indexed by id, and its trips decoded on first use. */
 export interface StopTimeIndex {

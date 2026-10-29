@@ -2,7 +2,8 @@ import type { CityConfig } from '../../_core/cityConfig';
 import { appClient } from '../../_core/ApiClient';
 import { UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
 import { MEMORY_CACHE_TTL, getOrFetch } from '../../_core/feed/cacheManager';
-import { DAY_S, timeToSeconds, type LocalClock } from '../../_core/utils/time';
+import { type LocalClock } from '../../_core/utils/time';
+import { DAY_S, timeToSeconds } from '../../../shared/time';
 import { DUK_CONFIG } from './config';
 
 const { RAIL } = DUK_CONFIG;

@@ -1,6 +1,6 @@
-import { timeToSeconds } from '@/domain/time';
 import { POS_OPENING } from '@/config/constants';
 import type { PointOfSale } from '@/types';
+import { timeToSeconds } from '@shared/time';
 
 type OpeningHours = PointOfSale['openingHours'];
 
