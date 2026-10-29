@@ -1,6 +1,7 @@
 import type { Map } from 'maplibre-gl';
 import { MAP_ICONS } from '@/config/mapLayers';
 import { provideStopBadges } from './stopBadges';
+import { addAlertMarkers } from './alertMarkers';
 
 const ICON_SIZE_PX = 64;
 
@@ -89,5 +90,6 @@ export const addAllIcons = (map: Map) => {
     registerIcon(map, MAP_ICONS.POS_MACHINE, false, drawPosMachine);
     registerIcon(map, MAP_ICONS.POS_INFO, false, drawPosInfo);
     registerIcon(map, MAP_ICONS.POS_OFFICE, false, drawPosOffice);
+    addAlertMarkers(map);
     provideStopBadges(map);
 };

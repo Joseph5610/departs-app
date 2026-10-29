@@ -2,7 +2,7 @@
 export const KORDIS_CONFIG = {
     /** Brno open data's daily copy of the iRIS diversions (výluky a odklony) - the RT lockouts plus their dates and the upcoming ones. */
     DIVERSIONS_URL: 'https://gis.brno.cz/ags1/rest/services/Hosted/IDS_JMK_v%C3%BDluky_a_odklony_zdroj_GeoJSON/FeatureServer/0/query'
-        + '?where=1%3D1&outFields=diversionid,number_,title,publictext,affectedlines,type_,validfrom,validto&returnGeometry=false&f=json',
+        + '?where=1%3D1&outFields=diversionid,number_,title,publictext,affectedlines,type_,validfrom,validto,latitude,longitude&returnGeometry=false&f=json',
     /** Upstream publishes once a day; re-read every few hours, served stale while it is down. */
     DIVERSIONS_CACHE_S: 3 * 3600,
     DIVERSIONS_TIMEOUT_MS: 8000,

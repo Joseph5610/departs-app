@@ -30,6 +30,13 @@ function parseLocal(value: unknown, timezone: string): number | null {
     return m ? zonedLocalToEpochMs(`${m[3]}-${m[2]}-${m[1]} ${m[4]}:${m[5]}`, timezone) : null;
 }
 
+/** The diversion's point, when it carries a real one (iRIS leaves some at 0, 0). */
+function locationOf(d: KordisDiversion): AppAlert['location'] {
+    const lat = Number(d.latitude);
+    const lon = Number(d.longitude);
+    return lat && lon && Number.isFinite(lat) && Number.isFinite(lon) ? { lat, lon } : undefined;
+}
+
 const toIso = (ms: number | null): string | null => (ms === null ? null : new Date(ms).toISOString());
 
 const cleanText = (text: string | null): string | null => {
@@ -52,6 +59,7 @@ export function indexDiversions(diversions: readonly KordisDiversion[], timezone
         const type = asText(d.type_);
         const number = asText(d.number_)?.trim() ?? '';
         const publicText = cleanText(asText(d.publictext));
+        const location = locationOf(d);
         indexed.push({
             id: Number(d.diversionid) || 0,
             key: titleKey(title),
@@ -70,6 +78,7 @@ export function indexDiversions(diversions: readonly KordisDiversion[], timezone
                 priority: 'normal',
                 lines: cleanLineNames((asText(d.affectedlines) ?? '').split(',')),
                 effect: type ? KORDIS_CONFIG.DIVERSION_EFFECTS[type] : undefined,
+                ...(location && { location }),
             },
         });
     }
@@ -85,9 +94,9 @@ function matchOf(alert: AppAlert, candidates: IndexedDiversion[] | undefined): I
 
 /**
  * Enriches the RT alerts with the diversions published by Brno open data, which lag the RT feed by up to a day.
- * The RT list stays authoritative for what runs now: a matched lockout only gains the validity window it lacks,
- * and only while that window still holds `nowMs`; of several lockouts posted for one closure (same closure
- * number) only the newest is kept; diversions starting after `nowMs` that the RT feed does not already list are
+ * The RT list stays authoritative for what runs now: a matched lockout only gains the validity window it lacks
+ * and the diversion's location, and only while that window still holds `nowMs`; of several lockouts posted for
+ * one closure (same closure number) only the newest is kept; diversions starting after `nowMs` that the RT feed does not already list are
  * appended as upcoming exclusions, again only the newest of each closure; everything else is ignored. Returns `alerts` itself when nothing changes.
  */
 export function enrichWithDiversions(alerts: AppAlert[], diversions: readonly IndexedDiversion[], nowMs: number): AppAlert[] {
@@ -124,12 +133,18 @@ export function enrichWithDiversions(alerts: AppAlert[], diversions: readonly In
             changed = true;
             return;
         }
-        if (!match || alert.valid_from || alert.valid_to) {
+        const gainsDates = !alert.valid_from && !alert.valid_to;
+        const location = alert.location ?? match?.alert.location;
+        if (!match || (!gainsDates && location === alert.location)) {
             enriched.push(alert);
             return;
         }
         changed = true;
-        enriched.push({ ...alert, valid_from: match.alert.valid_from, valid_to: match.alert.valid_to });
+        enriched.push({
+            ...alert,
+            ...(gainsDates && { valid_from: match.alert.valid_from, valid_to: match.alert.valid_to }),
+            ...(location && { location }),
+        });
     });
 
     const newestUpcoming = new Map<string, number>();

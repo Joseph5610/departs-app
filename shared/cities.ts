@@ -22,6 +22,8 @@ export interface CityFacts {
     hasPointsOfSale?: boolean;
     /** Whether the city has a service-alerts source; the app hides the alerts UI otherwise. */
     hasAlerts?: boolean;
+    /** Whether its alerts carry a location, so they can be drawn on the map. */
+    hasAlertLocations?: boolean;
     /** The vehicle and stop modes offered as map filters, in display order. */
     filters: {
         vehicles: string[];
@@ -52,6 +54,7 @@ export const CITY_FACTS = {
         center: [16.6068, 49.1951],
         bounds: [16.44, 49.11, 16.77, 49.28],
         hasAlerts: true,
+        hasAlertLocations: true,
         isBeta: true,
         filters: {
             vehicles: ['tram', 'bus', 'trolleybus', 'train', 'ferry'],

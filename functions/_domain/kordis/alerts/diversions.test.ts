@@ -12,7 +12,7 @@ const rtAlert = (title: string, overrides: Partial<AppAlert> = {}): AppAlert => 
 });
 
 const diversion = (title: string, validfrom: string | null, validto: string | null, overrides: Partial<KordisDiversion> = {}): KordisDiversion => ({
-    diversionid: 1, number_: null, title, publictext: null, affectedlines: null, type_: 'V', validfrom, validto, ...overrides,
+    diversionid: 1, number_: null, title, publictext: null, affectedlines: null, type_: 'V', validfrom, validto, latitude: null, longitude: null, ...overrides,
 });
 
 const enrich = (alerts: AppAlert[], diversions: KordisDiversion[]) => enrichWithDiversions(alerts, indexDiversions(diversions, TZ, LINK), NOW);
@@ -32,6 +32,23 @@ describe('enrichWithDiversions', () => {
     it('keeps incidents and alerts with their own dates untouched', () => {
         const alerts = [rtAlert('A', { type: 'incident' }), rtAlert('B', { valid_from: '2026-01-01T00:00:00.000Z' })];
         expect(enrich(alerts, [diversion('A', '01.01.2026 00:00', '01.01.2027 00:00'), diversion('B', '01.02.2026 00:00', '01.01.2027 00:00')])).toBe(alerts);
+    });
+
+    it('places a matched lockout, even one with its own dates, at its diversion', () => {
+        const [alert] = enrich(
+            [rtAlert('Uzavírka Branka', { valid_from: '2026-01-01T00:00:00.000Z' })],
+            [diversion('Uzavírka Branka', '01.01.2026 00:00', null, { latitude: 49.2025, longitude: 16.6419 })],
+        );
+        expect(alert).toMatchObject({ valid_from: '2026-01-01T00:00:00.000Z', location: { lat: 49.2025, lon: 16.6419 } });
+    });
+
+    it('places upcoming diversions, but not at a missing or zero point', () => {
+        const result = enrich([], [
+            diversion('Placed', '24.10.2026 07:00', null, { diversionid: 1, latitude: 49.2, longitude: 16.6 }),
+            diversion('Zero', '24.10.2026 07:00', null, { diversionid: 2, latitude: 0, longitude: 0 }),
+            diversion('Missing', '24.10.2026 07:00', null, { diversionid: 3 }),
+        ]);
+        expect(result.map(a => [a.title, a.location])).toEqual([['Placed', { lat: 49.2, lon: 16.6 }], ['Zero', undefined], ['Missing', undefined]]);
     });
 
     it('appends diversions not started yet as upcoming exclusions, soonest first', () => {

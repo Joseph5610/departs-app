@@ -15,6 +15,9 @@ export interface KordisDiversion {
     type_: string | null;
     validfrom: string | null;
     validto: string | null;
+    /** WGS84 point of the closure, as iRIS places it. */
+    latitude: number | null;
+    longitude: number | null;
 }
 
 interface ArcGisQueryResponse {

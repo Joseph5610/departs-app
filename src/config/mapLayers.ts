@@ -23,6 +23,7 @@ export const MAP_SOURCES = {
     NETWORK_LINES: 'network-lines',
     USER_LOCATION: 'user-location',
     POINTS_OF_SALE: 'points-of-sale-source',
+    ALERTS: 'alerts-source',
 } as const;
 
 /** Canvas-drawn images registered by lib/map/icons.ts. */
@@ -33,6 +34,8 @@ export const MAP_ICONS = {
     POS_MACHINE: 'pos-machine-icon',
     POS_INFO: 'pos-info-icon',
     POS_OFFICE: 'pos-office-icon',
+    /** Prefix of the alert marker images (`alert-marker:<icon kind>:<tone>`), drawn by lib/map/alertMarkers.ts. */
+    ALERT_MARKER_PREFIX: 'alert-marker:',
 } as const;
 
 export const MAP_LAYERS = {
@@ -57,13 +60,14 @@ export const MAP_LAYERS = {
     USER_LOCATION_PULSE: 'user-location-pulse',
     USER_LOCATION_POINT: 'user-location-point',
     POINTS_OF_SALE: 'pos-point',
+    ALERTS: 'alerts-point',
 } as const;
 
 /** Layers whose click opens a stop's departures. */
 export const STOP_CLICK_LAYERS: string[] = [MAP_LAYERS.STATION_BADGES, MAP_LAYERS.STATION_NAMES, MAP_LAYERS.PLATFORM_BADGES];
 /** Layers whose click opens a vehicle's detail. */
 export const VEHICLE_CLICK_LAYERS: string[] = [MAP_LAYERS.VEHICLE_POINTS, MAP_LAYERS.VEHICLE_DIRECTIONS, MAP_LAYERS.VEHICLE_LABELS];
-export const INTERACTIVE_LAYER_IDS: string[] = [...STOP_CLICK_LAYERS, MAP_LAYERS.STOP_CLUSTERS, ...VEHICLE_CLICK_LAYERS, MAP_LAYERS.POINTS_OF_SALE];
+export const INTERACTIVE_LAYER_IDS: string[] = [...STOP_CLICK_LAYERS, MAP_LAYERS.STOP_CLUSTERS, ...VEHICLE_CLICK_LAYERS, MAP_LAYERS.POINTS_OF_SALE, MAP_LAYERS.ALERTS];
 
 /** Stop badges: one rounded tile per mode serving the stop, in each mode's colour. */
 export const STOP_BADGE = {
@@ -105,6 +109,32 @@ export const STOP_BADGE = {
         funicular: '#8A5A2B',
         unknown: '#64748B',
     } satisfies Record<RouteType, string>,
+} as const;
+
+/** Alert markers: a diamond road sign with the alert's icon, as the alerts list draws it; no vehicle or stop is drawn as one. */
+export const ALERT_MARKER = {
+    /** Diamond width and height in CSS pixels at icon-size 1. */
+    SIZE_PX: 34,
+    PIXEL_RATIO: 2,
+    /** White border and its thin dark rim, as fractions of the size, so the sign reads on both basemaps. */
+    RING_SCALE: 0.07,
+    RIM_SCALE: 0.025,
+    RIM_COLOR: 'rgba(0, 0, 0, 0.5)',
+    /** The leg the sign stands on, so the sign clears the stop badge drawn over its foot. */
+    LEG_PX: 15,
+    LEG_WIDTH_PX: 2.5,
+    /** Corner rounding as a fraction of the diamond's side. */
+    RADIUS_SCALE: 0.16,
+    GLYPH_SCALE: 0.4,
+    GLYPH_STROKE: 2.4,
+    TONES: {
+        normal: { fill: '#f59e0b', ink: '#1c1917' },
+        high: { fill: '#dc2626', ink: '#ffffff' },
+    },
+    LABEL: {
+        dark: { text: '#fbbf24', halo: '#0f172a' },
+        light: { text: '#b45309', halo: '#ffffff' },
+    },
 } as const;
 
 const MAP_FONT_STACK = ['Montserrat SemiBold', 'Arial Unicode MS Regular'];
@@ -643,5 +673,36 @@ export const pointsOfSaleIcons: SymbolLayerSpecification = {
         'text-color': '#94a3b8',
         'text-halo-color': '#0f172a',
         'text-halo-width': 1.5
+    }
+};
+
+// -----------------------------------------------------------------------------
+// ALERTS
+// -----------------------------------------------------------------------------
+
+/** Placed alerts (Brno's diversions): a sign standing on its point, its title beside the sign from close in. */
+export const alertMarkers: SymbolLayerSpecification = {
+    id: MAP_LAYERS.ALERTS,
+    type: 'symbol',
+    source: MAP_SOURCES.ALERTS,
+    minzoom: 12,
+    layout: {
+        'icon-image': ['concat', MAP_ICONS.ALERT_MARKER_PREFIX, ['get', 'kind'], ':', ['get', 'tone']],
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.7, 14, 0.85, 17, 1],
+        'icon-anchor': 'bottom',
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        'text-field': ['step', ['zoom'], '', 15, ['get', 'title']],
+        'text-font': MAP_FONT_STACK,
+        'text-size': ['interpolate', ['linear'], ['zoom'], 15, 10, 18, 12],
+        // Beside the sign or above it, wherever the station's name leaves room; never on the stop under its leg.
+        'text-variable-anchor-offset': ['left', [1.8, -2.6], 'right', [-1.8, -2.6], 'bottom', [0, -4.6]],
+        'text-max-width': 9,
+        'text-optional': true,
+    },
+    paint: {
+        'text-color': ALERT_MARKER.LABEL.dark.text,
+        'text-halo-color': ALERT_MARKER.LABEL.dark.halo,
+        'text-halo-width': 1.5,
     }
 };

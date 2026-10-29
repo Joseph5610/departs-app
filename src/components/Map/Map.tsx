@@ -95,7 +95,7 @@ const MapInner = () => {
     const isMcpModalOpen = useUiStore(s => s.isMcpModalOpen);
     const isMyTripOpen = useUiStore(s => !!s.myTripTarget);
     const isCityPickerOpen = useUiStore(s => s.isCityPickerOpen);
-    const { setIsSettingsOpen, setIsAlertsOpen, setIsCityPickerOpen } = useUiStore(s => s.actions);
+    const { setIsSettingsOpen, setIsAlertsOpen, setIsCityPickerOpen, openAlert } = useUiStore(s => s.actions);
     const { resolvedTheme } = useTheme();
 
     const selectedStop = useSelectedStop();
@@ -270,6 +270,12 @@ const MapInner = () => {
                         if (stopId) {
                             navigate(paths.stop(f.properties?.city_slug ?? selectedCity, stopId));
                         }
+                        return;
+                    }
+
+                    if (f.layer.id === MAP_LAYERS.ALERTS) {
+                        const guid = f.properties?.guid;
+                        if (guid) openAlert(guid);
                         return;
                     }
 

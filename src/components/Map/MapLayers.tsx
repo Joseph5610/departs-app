@@ -49,6 +49,7 @@ import { STATION_CLUSTER_PROPERTIES, clusterModeColor, platformSortKey, stopBadg
 import { modeColorsOf } from '@/lib/map/stopBadges';
 import { EMPTY_FEATURE_COLLECTION } from '@/lib/geojson';
 import { safeHexColor } from '@/lib/color';
+import { AlertsLayer } from './AlertsLayer';
 
 interface MapLayersProps {
     /** Whether the map instance has finished loading its style and assets */
@@ -191,6 +192,9 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
                 <Layer {...vehicleDirections} filter={vehiclesFilter} paint={{ ...vehicleDirections.paint, 'icon-color': vehicleColorExpr }} />
                 <Layer {...vehicleLabels} filter={vehiclesFilter} paint={{ ...(vehicleLabels.paint as SymbolLayerSpecification['paint']), 'text-color': textColor, 'text-halo-color': haloColor }} />
             </Source>
+
+            {/* Over the vehicles, under the stops: the stop at an alert's point stays readable over the sign's leg. */}
+            <AlertsLayer mapLoaded={mapLoaded} />
 
             <Source
                 id={MAP_SOURCES.STATIONS}

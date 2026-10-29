@@ -1,16 +1,11 @@
 import type { Map } from 'maplibre-gl';
-import type { IconNode } from 'lucide-react';
 import type { RouteType } from '@/types';
 import { MAP_ICONS, STOP_BADGE } from '@/config/mapLayers';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { STOP_BADGE_SEPARATOR, TILE_PART_SEPARATOR } from '@/domain/stops';
 import { getContrastColor } from '@/lib/color';
 import { TROLLEYBUS_ICON_NODE } from '@/lib/trolleybusGlyph';
-
-type GlyphNode =
-    | ['path', string]
-    | ['circle', number, number, number]
-    | ['rect', number, number, number, number, number];
+import { glyphOf, strokeGlyph, type GlyphNode } from './canvasGlyph';
 
 /** Lucide glyphs (24-unit viewBox, 2-unit stroke), drawn on the canvas since map images cannot be SVG. */
 const BUS: GlyphNode[] = [
@@ -36,11 +31,6 @@ const CABLE_CAR: GlyphNode[] = [
     ['rect', 4, 12, 16, 10, 3], ['path', 'M9 12v5'], ['path', 'M15 12v5'], ['path', 'M4 17h16'],
 ];
 
-/** A Lucide icon node as canvas glyph nodes. */
-const glyphOf = (node: IconNode): GlyphNode[] => node.map(([tag, a]): GlyphNode =>
-    tag === 'circle' ? ['circle', Number(a.cx), Number(a.cy), Number(a.r)]
-        : tag === 'rect' ? ['rect', Number(a.x), Number(a.y), Number(a.width), Number(a.height), Number(a.rx ?? 0)]
-            : ['path', a.d ?? '']);
 const TROLLEYBUS = glyphOf(TROLLEYBUS_ICON_NODE);
 
 /** Metro is lettered with its line rather than drawn, as on the network's own signs. */
@@ -55,25 +45,7 @@ const GLYPHS: Record<Exclude<RouteType, 'metro' | 'unknown'>, GlyphNode[]> = {
 
 const drawGlyph = (ctx: CanvasRenderingContext2D, nodes: GlyphNode[], x: number, size: number, color: string) => {
     const glyphPx = size * STOP_BADGE.GLYPH_SCALE;
-    const scale = glyphPx / 24;
-    ctx.save();
-    ctx.translate(x + (size - glyphPx) / 2, (size - glyphPx) / 2);
-    ctx.scale(scale, scale);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = STOP_BADGE.GLYPH_STROKE;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    for (const node of nodes) {
-        if (node[0] === 'path') {
-            ctx.stroke(new Path2D(node[1]));
-            continue;
-        }
-        ctx.beginPath();
-        if (node[0] === 'circle') ctx.arc(node[1], node[2], node[3], 0, Math.PI * 2);
-        else ctx.roundRect(node[1], node[2], node[3], node[4], node[5]);
-        ctx.stroke();
-    }
-    ctx.restore();
+    strokeGlyph(ctx, nodes, x + (size - glyphPx) / 2, (size - glyphPx) / 2, glyphPx, color, STOP_BADGE.GLYPH_STROKE);
 };
 
 /** Each mode's tile colour in `city`: the city's own where it sets one, else the app's. */

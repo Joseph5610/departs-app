@@ -12,6 +12,7 @@ import {
     Monitor,
     Palette,
     Ticket,
+    Construction,
     Timer,
     Waypoints,
 } from 'lucide-react';
@@ -52,6 +53,7 @@ export const DisplaySection = () => {
     const stopTypeFilter = usePreferencesStore(s => s.stopTypeFilter);
     const showStopLabels = usePreferencesStore(s => s.showStopLabels);
     const showPointsOfSale = usePreferencesStore(s => s.showPointsOfSale);
+    const showAlertsOnMap = usePreferencesStore(s => s.showAlertsOnMap);
     const showNetworkLines = usePreferencesStore(s => s.showNetworkLines);
     const mapBaseStyle = usePreferencesStore(s => s.mapBaseStyle);
     const colorVehiclesByDelay = usePreferencesStore(s => s.colorVehiclesByDelay);
@@ -60,6 +62,7 @@ export const DisplaySection = () => {
         setShowVehicles,
         setShowStops,
         setShowPointsOfSale,
+        setShowAlertsOnMap,
         setShowNetworkLines,
         setRouteTypeFilter,
         setStopTypeFilter,
@@ -226,6 +229,17 @@ export const DisplaySection = () => {
                         </div>
                     )}
                 </ToggleSection>
+
+                {cityConfig.hasAlertLocations && (
+                    <ToggleSection
+                        title={t('settings.showAlertsOnMap.title')}
+                        description={t('settings.showAlertsOnMap.description')}
+                        icon={Construction}
+                        isChecked={showAlertsOnMap}
+                        onToggle={setShowAlertsOnMap}
+                        className="mt-3"
+                    />
+                )}
 
                 {cityConfig.hasPointsOfSale && (
                     <ToggleSection

@@ -183,6 +183,8 @@ export interface AppAlert {
     cause?: string;
     causeDetail?: { cs?: string; en?: string };
     effect?: string;
+    /** Where the disruption is, when its source places it (KORDIS diversions). */
+    location?: { lat: number; lon: number };
 }
 
 export interface AppInfotext {

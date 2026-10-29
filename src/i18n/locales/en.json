@@ -76,6 +76,10 @@
       "title": "Transit lines",
       "description": "Show the main lines on the map"
     },
+    "showAlertsOnMap": {
+      "title": "Disruptions on Map",
+      "description": "Show closures and moved stops on map"
+    },
     "showPointsOfSale": {
       "title": "Points of Sale",
       "description": "Show ticket machines, info centers, and offices on map"

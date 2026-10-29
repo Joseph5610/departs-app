@@ -19,6 +19,8 @@ interface PreferencesState {
     showStops: boolean;
     showStopLabels: boolean;
     showPointsOfSale: boolean;
+    /** Disruptions placed on the map, in cities whose alerts carry a location. */
+    showAlertsOnMap: boolean;
     /** The city's backbone network (metro, tram or trolleybus lines) drawn on the map at all times. */
     showNetworkLines: boolean;
     stopTypeFilter: string[];
@@ -52,6 +54,7 @@ interface PreferencesActions {
     setShowStops: (show: boolean) => void;
     setShowStopLabels: (show: boolean) => void;
     setShowPointsOfSale: (show: boolean) => void;
+    setShowAlertsOnMap: (show: boolean) => void;
     setShowNetworkLines: (show: boolean) => void;
     setStopTypeFilter: (filter: string[]) => void;
     setHasSeenWelcome: (seen: boolean) => void;
@@ -93,6 +96,7 @@ const PERSISTED_KEYS = [
     'showStops',
     'showStopLabels',
     'showPointsOfSale',
+    'showAlertsOnMap',
     'showNetworkLines',
     'stopTypeFilter',
     'departureSort',
@@ -196,6 +200,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
             showStops: true,
             showStopLabels: true,
             showPointsOfSale: false,
+            showAlertsOnMap: true,
             showNetworkLines: true,
             stopTypeFilter: [],
             departureSort: 'departure',
@@ -223,6 +228,7 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setShowStops: (show) => set({ showStops: show }),
                 setShowStopLabels: (show) => set({ showStopLabels: show }),
                 setShowPointsOfSale: (show) => set({ showPointsOfSale: show }),
+                setShowAlertsOnMap: (show) => set({ showAlertsOnMap: show }),
                 setShowNetworkLines: (show) => set({ showNetworkLines: show }),
                 setStopTypeFilter: (filter) => set({ stopTypeFilter: filter }),
                 setHasSeenWelcome: (seen) => set({ hasSeenWelcome: seen }),

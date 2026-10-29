@@ -79,6 +79,10 @@
       "title": "Linky MHD",
       "description": "Zobrazit hlavní linky na mapě"
     },
+    "showAlertsOnMap": {
+      "title": "Výluky na mapě",
+      "description": "Zobrazit výluky a přesunuté zastávky na mapě"
+    },
     "showPointsOfSale": {
       "title": "Prodejní místa",
       "description": "Zobrazit automaty, infocentrá a pokladny na mapě"
