@@ -22,7 +22,9 @@ import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
 import { useHiddenNightLines } from '@/hooks/derived/useHiddenNightLines';
 import { useVehicleAnimation } from '@/hooks/features/useVehicleAnimation';
 import {
-    stopClusters,
+    stopGlows,
+    stopGlowCores,
+    STOP_GLOW,
     stationBadges,
     stationNames,
     platformBadges,
@@ -45,7 +47,7 @@ import {
     MAP_SOURCES,
     STATION_CLUSTER_MAX_ZOOM,
 } from '@/config/mapLayers';
-import { STATION_CLUSTER_PROPERTIES, clusterModeColor, platformSortKey, stopBadgeImage } from '@/lib/map/stopExpressions';
+import { STATION_CLUSTER_PROPERTIES, stopGlowColor, platformSortKey, stopBadgeImage } from '@/lib/map/stopExpressions';
 import { modeColorsOf } from '@/lib/map/stopBadges';
 import { EMPTY_FEATURE_COLLECTION } from '@/lib/geojson';
 import { safeHexColor } from '@/lib/color';
@@ -86,7 +88,6 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const delayFilter = usePreferencesStore(s => s.delayFilter);
     const userLocation = useGeolocationStore(s => s.userLocation);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const clusterColor = useMemo(() => clusterModeColor(modeColorsOf(selectedCity)), [selectedCity]);
 
     const { tripId, vehicleId } = useRouteParams();
     const { vehicles: ownVehicles } = useVehicles();
@@ -113,6 +114,7 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const { resolvedTheme } = useTheme();
     const haloColor = resolvedTheme === 'dark' ? '#111111' : '#ffffff';
     const textColor = resolvedTheme === 'dark' ? '#bdbdbd' : '#111111';
+    const glowColor = useMemo(() => stopGlowColor(modeColorsOf(selectedCity), resolvedTheme === 'light' ? 'light' : 'dark'), [selectedCity, resolvedTheme]);
 
     const routeColor = safeHexColor(routeShapeData?.features[0]?.properties?.route_color as string | undefined);
     const routeLine = useMemo(() => createRouteLine(routeColor, resolvedTheme === 'light' ? 'light' : 'dark'), [routeColor, resolvedTheme]);
@@ -202,10 +204,11 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
                 data={filteredStationsData}
                 cluster={true}
                 clusterMaxZoom={STATION_CLUSTER_MAX_ZOOM}
-                clusterRadius={25}
+                clusterRadius={STOP_GLOW.clusterRadius}
                 clusterProperties={STATION_CLUSTER_PROPERTIES}
             >
-                <Layer {...stopClusters} paint={{ ...stopClusters.paint, 'circle-color': clusterColor }} />
+                <Layer {...stopGlows} paint={{ ...stopGlows.paint, 'circle-color': glowColor }} />
+                <Layer {...stopGlowCores} paint={{ ...stopGlowCores.paint, 'circle-color': glowColor }} />
                 <Layer
                     {...stationBadges}
                     layout={{ ...stationBadges.layout, 'icon-image': stationBadgeImage, 'text-field': stationText }}

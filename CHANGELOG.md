@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.93.0] - 2026-10-29
+
+### Changed
+
+- Zoomed out, stops are soft glows sized by how many stops they hold, morphing into their badges as the map zooms in.
+
 ## [0.92.0] - 2026-10-29
 
 ### Added

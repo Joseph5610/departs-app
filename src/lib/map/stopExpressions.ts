@@ -1,6 +1,7 @@
 import type { ExpressionSpecification } from 'maplibre-gl';
 import type { RouteType } from '@/types';
-import { MAP_ICONS } from '@/config/mapLayers';
+import { MAP_ICONS, STOP_GLOW } from '@/config/mapLayers';
+import { mixHex } from '@/lib/color';
 import { ROUTE_TYPE_ORDER } from '@/config/transit';
 
 /** A stop's city: its own `city_slug` for a neighbouring network's stop, else the selected city. */
@@ -33,4 +34,12 @@ export const clusterModeColor = (colors: Record<RouteType, string>): ExpressionS
         colors[mode],
     ]);
     return ['case', ...wins, colors.unknown] as ExpressionSpecification;
+};
+
+/** A stop glow's colour, muted for `theme`: a cluster's by its leading mode, a lone station's by its own. */
+export const stopGlowColor = (modeColors: Record<RouteType, string>, theme: 'dark' | 'light'): ExpressionSpecification => {
+    const { mix, target } = STOP_GLOW.muted;
+    const colors = Object.fromEntries(Object.entries(modeColors).map(([mode, color]) => [mode, mixHex(color, target[theme], mix[theme])])) as Record<RouteType, string>;
+    const ownMode = ROUTE_TYPE_ORDER.flatMap((mode, rank) => [['==', ['coalesce', ['get', 'mode_rank'], -1], rank], colors[mode]]);
+    return ['case', ['has', 'point_count'], clusterModeColor(colors), ...ownMode, colors.unknown] as ExpressionSpecification;
 };

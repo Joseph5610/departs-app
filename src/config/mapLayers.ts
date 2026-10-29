@@ -39,7 +39,8 @@ export const MAP_ICONS = {
 } as const;
 
 export const MAP_LAYERS = {
-    STOP_CLUSTERS: 'clusters',
+    STOP_GLOWS: 'stop-glows',
+    STOP_GLOW_CORES: 'stop-glow-cores',
     STATION_BADGES: 'station-badges',
     STATION_NAMES: 'station-names',
     PLATFORM_BADGES: 'platform-badges',
@@ -67,7 +68,7 @@ export const MAP_LAYERS = {
 export const STOP_CLICK_LAYERS: string[] = [MAP_LAYERS.STATION_BADGES, MAP_LAYERS.STATION_NAMES, MAP_LAYERS.PLATFORM_BADGES];
 /** Layers whose click opens a vehicle's detail. */
 export const VEHICLE_CLICK_LAYERS: string[] = [MAP_LAYERS.VEHICLE_POINTS, MAP_LAYERS.VEHICLE_DIRECTIONS, MAP_LAYERS.VEHICLE_LABELS];
-export const INTERACTIVE_LAYER_IDS: string[] = [...STOP_CLICK_LAYERS, MAP_LAYERS.STOP_CLUSTERS, ...VEHICLE_CLICK_LAYERS, MAP_LAYERS.POINTS_OF_SALE, MAP_LAYERS.ALERTS];
+export const INTERACTIVE_LAYER_IDS: string[] = [...STOP_CLICK_LAYERS, MAP_LAYERS.STOP_GLOWS, ...VEHICLE_CLICK_LAYERS, MAP_LAYERS.POINTS_OF_SALE, MAP_LAYERS.ALERTS];
 
 /** Stop badges: one rounded tile per mode serving the stop, in each mode's colour. */
 export const STOP_BADGE = {
@@ -152,7 +153,9 @@ const MAP_TOKENS = {
         vehicles: { min: 10, max: 15 },
         /** Zoomed out, the fleet shrinks to plain dots from `dots`; line numbers and arrows fade in over `labels`. */
         vehicleDots: { dots: 7, labels: { from: 10.5, to: 11 } },
-        /** Stations cluster up to this zoom and are drawn as mode badges from it. */
+        /** Over these zooms each station's glow shrinks and fades into its growing badge; whole zooms, as data-driven paint is sampled at them. */
+        glowToBadge: { from: 12, to: 13 },
+        /** Stations are drawn as mode badges from here. */
         badges: 13,
         /** Station names show from here; a whole zoom, since layout steps are read at the tile's zoom. */
         labels: 14,
@@ -190,8 +193,27 @@ const MAP_TOKENS = {
     },
 };
 
-/** Zoom up to which stations are clustered. */
-export const STATION_CLUSTER_MAX_ZOOM = MAP_TOKENS.zoom.badges;
+/** Zoom up to which stations are clustered; below the glows' morph, so each station morphs alone. */
+export const STATION_CLUSTER_MAX_ZOOM = MAP_TOKENS.zoom.glowToBadge.from - 1;
+
+/** Station glows below the badges' zoom: a soft halo over a brighter core, both growing with the stations they hold. */
+export const STOP_GLOW = {
+    /** Pixel radius within which stations merge; small, so glows sit near their stations instead of on an even grid. */
+    clusterRadius: 14,
+    /** Halo radius by station count at the lowest zoom and where the morph into badges starts. */
+    radius: { counts: [1, 5, 25, 100], low: [3, 5.5, 9, 15], high: [10, 15, 22, 30] },
+    lowZoom: 8,
+    /** Share of its radius a glow keeps as it fades out into its badge. */
+    morphRadius: 0.35,
+    /** Badge scale when it starts to grow out of the glow, and the zoom past the morph's start by which it is opaque. */
+    badgeMorph: { scale: 0.35, opaqueAfter: 0.8 },
+    /** Halo opacity by station count: a lone stop is a faint hint, a dense centre a bright patch. */
+    opacity: { counts: [1, 10, 60], values: [0.55, 0.7, 0.85] },
+    /** Core radius and opacity as a share of the halo's. */
+    core: { radius: 0.4, opacity: 0.9 },
+    /** Mode colours blend this far toward the map's ground, so stops recede behind the vehicles drawn in the same colours. */
+    muted: { mix: { dark: 0.5, light: 0.45 }, target: { dark: '#0e0e0e', light: '#fafaf8' } },
+} as const;
 
 
 // -----------------------------------------------------------------------------
@@ -217,26 +239,41 @@ const STATION_NAME_PAINT = {
 } as const;
 /** Badge scale across the zoom range in which stations are drawn whole. */
 const badgeSize = (atLow: number, atHigh: number): ExpressionSpecification =>
-    ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.badges, atLow, MAP_TOKENS.zoom.platforms, atHigh, 18, atHigh * MAP_TOKENS.platformGrowth];
+    ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.glowToBadge.from, atLow * STOP_GLOW.badgeMorph.scale, MAP_TOKENS.zoom.badges, atLow, MAP_TOKENS.zoom.platforms, atHigh, 18, atHigh * MAP_TOKENS.platformGrowth];
 
-export const stopClusters: CircleLayerSpecification = {
-    id: MAP_LAYERS.STOP_CLUSTERS,
+const glowByCount = (counts: readonly number[], values: readonly number[], scale = 1): ExpressionSpecification =>
+    ['interpolate', ['linear'], ['coalesce', ['get', 'point_count'], 1], ...counts.flatMap((count, i) => [count, values[i] * scale])] as ExpressionSpecification;
+const glowRadius = (scale: number): ExpressionSpecification =>
+    ['interpolate', ['linear'], ['zoom'],
+        STOP_GLOW.lowZoom, glowByCount(STOP_GLOW.radius.counts, STOP_GLOW.radius.low, scale),
+        MAP_TOKENS.zoom.glowToBadge.from, glowByCount(STOP_GLOW.radius.counts, STOP_GLOW.radius.high, scale),
+        MAP_TOKENS.zoom.glowToBadge.to, glowByCount(STOP_GLOW.radius.counts, STOP_GLOW.radius.high, scale * STOP_GLOW.morphRadius)];
+const glowOpacity = (scale: number): ExpressionSpecification =>
+    ['interpolate', ['linear'], ['zoom'],
+        MAP_TOKENS.zoom.glowToBadge.from, glowByCount(STOP_GLOW.opacity.counts, STOP_GLOW.opacity.values, scale),
+        MAP_TOKENS.zoom.glowToBadge.to, 0];
+
+export const stopGlows: CircleLayerSpecification = {
+    id: MAP_LAYERS.STOP_GLOWS,
     type: 'circle',
     source: MAP_SOURCES.STATIONS,
-    filter: ['has', 'point_count'],
+    maxzoom: MAP_TOKENS.zoom.glowToBadge.to,
     paint: {
-        'circle-radius': [
-            'interpolate', ['linear'], ['get', 'point_count'],
-            1, 6,
-            50, 15,
-            100, 25
-        ],
-        'circle-opacity': [
-            'interpolate', ['linear'], ['zoom'],
-            8, 0.4,
-            13, 0.7
-        ],
-        'circle-blur': 1.0
+        'circle-radius': glowRadius(1),
+        'circle-opacity': glowOpacity(1),
+        'circle-blur': 1,
+    }
+};
+
+export const stopGlowCores: CircleLayerSpecification = {
+    id: MAP_LAYERS.STOP_GLOW_CORES,
+    type: 'circle',
+    source: MAP_SOURCES.STATIONS,
+    maxzoom: MAP_TOKENS.zoom.glowToBadge.to,
+    paint: {
+        'circle-radius': glowRadius(STOP_GLOW.core.radius),
+        'circle-opacity': glowOpacity(STOP_GLOW.core.opacity),
+        'circle-blur': 0.6,
     }
 };
 
@@ -248,7 +285,7 @@ export const stationBadges: SymbolLayerSpecification = {
     id: MAP_LAYERS.STATION_BADGES,
     type: 'symbol',
     source: MAP_SOURCES.STATIONS,
-    // No minzoom: below the badges' zoom a station the clusters leave alone is still drawn, at the smallest size.
+    minzoom: MAP_TOKENS.zoom.glowToBadge.from,
     // Hands over to its platforms at one zoom, with no crossfade in which both are too faint to read.
     maxzoom: MAP_TOKENS.zoom.platforms,
     filter: UNCLUSTERED,
@@ -268,6 +305,8 @@ export const stationBadges: SymbolLayerSpecification = {
     },
     paint: {
         ...STATION_NAME_PAINT,
+        'icon-opacity': ['interpolate', ['linear'], ['zoom'],
+            MAP_TOKENS.zoom.glowToBadge.from, 0, MAP_TOKENS.zoom.glowToBadge.from + STOP_GLOW.badgeMorph.opaqueAfter, 1],
     }
 };
 

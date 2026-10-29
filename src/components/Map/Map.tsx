@@ -236,14 +236,14 @@ const MapInner = () => {
                         return;
                     }
 
-                    if (f.layer.id === MAP_LAYERS.STOP_CLUSTERS) {
-                        const clusterId = f.properties?.cluster_id;
+                    if (f.layer.id === MAP_LAYERS.STOP_GLOWS && f.properties?.cluster_id !== undefined) {
+                        const clusterId = f.properties.cluster_id;
                         const map = mapRef.current?.getMap();
                         if (!map) {
                             return;
                         }
                         const source = map.getSource(MAP_SOURCES.STATIONS) as GeoJSONSource;
-                        if (source && clusterId !== undefined) {
+                        if (source) {
                             source.getClusterExpansionZoom(clusterId).then((zoom) => {
                                 mapRef.current?.easeTo({
                                     center: (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates,
@@ -265,7 +265,8 @@ const MapInner = () => {
                         return;
                     }
 
-                    if (STOP_CLICK_LAYERS.includes(f.layer.id)) {
+                    // A glow without a cluster id is a lone station.
+                    if (STOP_CLICK_LAYERS.includes(f.layer.id) || f.layer.id === MAP_LAYERS.STOP_GLOWS) {
                         const stopId = f.properties?.stop_id;
                         if (stopId) {
                             navigate(paths.stop(f.properties?.city_slug ?? selectedCity, stopId));
