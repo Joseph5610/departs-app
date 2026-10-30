@@ -7,6 +7,7 @@ export class SettingsPage extends BasePage {
     // Row buttons (which toggle the switches)
     readonly showVehiclesRow: Locator = this.container.locator('button').filter({ hasText: /Live vehicle locations|Poloha vozidel/i });
     readonly showStopsRow: Locator = this.container.locator('button').filter({ hasText: /Show stops|Zobrazit zastávky/i });
+    readonly disruptionPushRow: Locator = this.container.locator('button').filter({ hasText: /Disruptions on my lines|Mimořádnosti na mých linkách/i });
     
     // Switches (for state verification)
     readonly showVehiclesSwitch: Locator = this.container.locator('button[role="switch"]').first();

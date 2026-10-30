@@ -1,6 +1,6 @@
 import { RIDE_PROTOCOL, tripNotificationTag } from '../../../shared/rides';
 import { RIDE_PUSH } from '../../_core/config';
-import type { PushTarget } from '../../_core/push/webPush';
+import { declarativePush, type PushTarget } from '../../_core/push/webPush';
 import type { AppVehicleDetail } from '../../_core/types';
 import { minutesUntilDeparture } from './departureAlert';
 import { currentStop, observe } from './observation';
@@ -56,19 +56,13 @@ export interface WatchPorts {
     push: (subscription: PushTarget, payload: string) => Promise<number>;
 }
 
-/**
- * A Declarative Web Push message (WebKit, iOS/macOS 18.4+): Safari shows it without running the service worker;
- * other browsers hand the same JSON to `push-sw.js`. Tagged per trip, so one trip's alerts replace each other only.
- */
+/** An alert's push, tagged per trip, so one trip's alerts replace each other only. */
 const ridePayload = (rider: Rider, alert: TripAlert, tripId: string, minutes: number): string | null => {
     const text = rider.texts[alert];
     if (!text) return null;
     const fill = (value: string) => value.replaceAll(RIDE_PROTOCOL.MINUTES_TOKEN, String(minutes));
     const tag = alert === 'soon' || alert === 'cancelled' ? RIDE_PROTOCOL.BOARD_TAG : RIDE_PROTOCOL.EXIT_TAG;
-    return JSON.stringify({
-        web_push: 8030,
-        notification: { title: fill(text.title), body: fill(text.body), ...RIDE_PUSH.ALERT_OPTIONS[alert], navigate: rider.navigate, tag: tripNotificationTag(tag, tripId) },
-    });
+    return declarativePush({ title: fill(text.title), body: fill(text.body), ...RIDE_PUSH.ALERT_OPTIONS[alert], navigate: rider.navigate, tag: tripNotificationTag(tag, tripId) });
 };
 
 /** A rider's phase; one registered before 0.88 is aboard, with `next` sent or not (gone `MAX_AGE_MS` after that deploy). */

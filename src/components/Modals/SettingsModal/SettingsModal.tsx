@@ -14,6 +14,7 @@ import { useUiStore } from '@/state/uiStore';
 import { Sparkles } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { DisplaySection } from './DisplaySection';
+import { NotificationsSection } from './NotificationsSection';
 import { SettingsFooter } from './SettingsFooter';
 import { SUPPORTED_LANGUAGES } from '@/i18n/config';
 import { UI_TIMING_MS } from '@/config/constants';
@@ -53,6 +54,8 @@ export const SettingsContent = () => {
                     </div>
                 </Button>
             </div>
+
+            <NotificationsSection />
 
             <DisplaySection />
 

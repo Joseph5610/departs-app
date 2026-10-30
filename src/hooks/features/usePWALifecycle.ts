@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { usePWAStore } from '@/state/pwaStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
+import { preparePush } from '@/lib/push';
 
 /**
  * Headless hook to manage the PWA lifecycle.
@@ -23,6 +24,8 @@ export const usePWALifecycle = () => {
             console.error('SW registration error', error);
         },
     });
+
+    useEffect(preparePush, []);
 
     // Settings reads the update state from the store; the service worker hook lives here only.
     useEffect(() => {

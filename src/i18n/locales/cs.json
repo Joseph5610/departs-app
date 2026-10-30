@@ -47,7 +47,8 @@
       "display": "Zobrazení",
       "language": "Jazyk",
       "filters": "Filtry",
-      "ai": "AI integrace"
+      "ai": "AI integrace",
+      "notifications": "Upozornění"
     },
     "theme": {
       "title": "Vzhled",
@@ -702,7 +703,8 @@
           "paragraphs": [
             "Když spustíte jízdu a povolíte upozornění, váš prohlížeč vytvoří pro aplikaci push adresu: odkaz u push služby vašeho prohlížeče (Apple, Google, Mozilla nebo Microsoft) a klíče, kterými zprávy dokáže rozšifrovat jen vaše zařízení. Aplikace ji pošle na náš server spolu se spojem, zastávkou, kde vystupujete, a texty upozornění.",
             "Během jízdy náš server sleduje, kde je vozidlo, a přes tuto push službu pošle upozornění před vaší zastávkou a při příjezdu. Zprávy jsou šifrované, push služba je jen doručí a přečíst je neumí. Když je aplikace otevřená, upozornění může zobrazit i sama.",
-            "Tyto údaje uchováváme jen během jízdy: smažou se, když jízdu ukončíte nebo dorazíte, nejpozději po 4 hodinách. Neobsahují jméno ani účet a nespojujeme je s žádnými jinými údaji."
+            "Tyto údaje uchováváme jen během jízdy: smažou se, když jízdu ukončíte nebo dorazíte, nejpozději po 4 hodinách. Neobsahují jméno ani účet a nespojujeme je s žádnými jinými údaji.",
+            "Když v Nastavení zapnete upozornění na mimořádnosti, aplikace pošle stejnou push adresu na náš server spolu s názvy linek, které máte ve městě připnuté, a textem upozornění. Náš server každých pár minut zkontroluje mimořádnosti města a upozorní vás na novou mimořádnost na těchto linkách, včetně jejich počtu pro ikonu aplikace. Uchováváme to, dokud upozornění nevypnete, nebo to smažeme, když aplikaci 60 dní neotevřete. Při prvním zapnutí na ochranu před zneužitím počítáme přihlášení z jedné IP adresy: adresu neukládáme, jen její jednosměrný otisk s denně novou náhodnou hodnotou, a ten nejpozději po 2 dnech smažeme."
           ]
         },
         {
@@ -794,5 +796,14 @@
       "librariesTitle": "Open-source knihovny",
       "librariesDescription": "Všechny přibalené balíčky s plným zněním licencí"
     }
+  },
+  "disruptionPush": {
+    "title": "Mimořádnost · {{lines}}",
+    "settingTitle": "Mimořádnosti na mých linkách",
+    "settingDescription": "Upozorní na novou mimořádnost na připnutých linkách a ukáže jejich počet na ikoně aplikace",
+    "failed": "Upozornění se nepodařilo zapnout",
+    "denied": "Oznámení jsou v prohlížeči zablokovaná. Povolte je v nastavení webu a zkuste to znovu.",
+    "unsupported": "Tento prohlížeč upozornění nepodporuje. Na iPhonu přidejte aplikaci na plochu.",
+    "tooMany": "Z této sítě dnes přibylo příliš mnoho přihlášení. Zkuste to zítra."
   }
 }

@@ -17,6 +17,8 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GroupedVirtuoso } from 'react-virtuoso';
 import { CondensedAlertItem } from '@/components/Alerts/CondensedAlertItem';
+import { DisruptionPushToggle } from '@/components/Alerts/DisruptionPushToggle';
+import { usePreferencesStore } from '@/state/preferencesStore';
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/badge';
 import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
@@ -56,6 +58,8 @@ export const AlertsContent = () => {
     }
 
     const { alerts, isLoading: loadingRSS } = useAlerts();
+    // Offered only while off, but kept for the visit so switching it on doesn't yank it away.
+    const [isPushOffered] = useState(() => !usePreferencesStore.getState().disruptionPush);
 
     const sections = useMemo(() => alertSections(alerts ?? [], filterMode, searchQuery), [alerts, filterMode, searchQuery]);
 
@@ -112,6 +116,8 @@ export const AlertsContent = () => {
                             </Button>
                         )}
                     </div>
+
+                    {isPushOffered && <DisruptionPushToggle />}
                 </div>
             </div>
 

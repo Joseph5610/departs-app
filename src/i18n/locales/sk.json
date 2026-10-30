@@ -47,7 +47,8 @@
       "display": "Zobrazenie",
       "language": "Jazyk",
       "filters": "Filtre",
-      "ai": "AI integrácie"
+      "ai": "AI integrácie",
+      "notifications": "Upozornenia"
     },
     "theme": {
       "title": "Vzhľad",
@@ -702,7 +703,8 @@
           "paragraphs": [
             "Keď spustíte jazdu a povolíte upozornenia, váš prehliadač vytvorí pre aplikáciu push adresu: odkaz u push služby vášho prehliadača (Apple, Google, Mozilla alebo Microsoft) a kľúče, ktorými správy dokáže rozšifrovať len vaše zariadenie. Aplikácia ju pošle na náš server spolu so spojom, zastávkou, kde vystupujete, a textami upozornení.",
             "Počas jazdy náš server sleduje, kde je vozidlo, a cez túto push službu pošle upozornenie pred vašou zastávkou a pri príchode. Správy sú šifrované, push služba ich len doručí a prečítať ich nevie. Keď je aplikácia otvorená, upozornenie môže zobraziť aj sama.",
-            "Tieto údaje uchovávame len počas jazdy: zmažú sa, keď jazdu ukončíte alebo dorazíte, najneskôr po 4 hodinách. Neobsahujú meno ani účet a nespájame ich so žiadnymi inými údajmi."
+            "Tieto údaje uchovávame len počas jazdy: zmažú sa, keď jazdu ukončíte alebo dorazíte, najneskôr po 4 hodinách. Neobsahujú meno ani účet a nespájame ich so žiadnymi inými údajmi.",
+            "Keď v Nastaveniach zapnete upozornenia na mimoriadnosti, aplikácia pošle rovnakú push adresu na náš server spolu s názvami liniek, ktoré máte v meste pripnuté, a textom upozornenia. Náš server každých pár minút skontroluje mimoriadnosti mesta a upozorní vás na novú mimoriadnosť na týchto linkách, vrátane ich počtu pre ikonu aplikácie. Uchovávame to, kým upozornenia nevypnete, alebo to zmažeme, keď aplikáciu 60 dní neotvoríte. Pri prvom zapnutí na ochranu pred zneužitím počítame prihlásenia z jednej IP adresy: adresu neukladáme, len jej jednosmerný odtlačok s denne novou náhodnou hodnotou, a ten najneskôr po 2 dňoch zmažeme."
           ]
         },
         {
@@ -794,5 +796,14 @@
       "librariesTitle": "Open-source knižnice",
       "librariesDescription": "Všetky pribalené balíčky s plným znením licencií"
     }
+  },
+  "disruptionPush": {
+    "title": "Mimoriadnosť · {{lines}}",
+    "settingTitle": "Mimoriadnosti na mojich linkách",
+    "settingDescription": "Upozorní na novú mimoriadnosť na pripnutých linkách a ukáže ich počet na ikone appky",
+    "failed": "Upozornenia sa nepodarilo zapnúť",
+    "denied": "Upozornenia sú v prehliadači zablokované. Povoľte ich v nastaveniach webu a skúste to znova.",
+    "unsupported": "Tento prehliadač upozornenia nepodporuje. Na iPhone pridajte appku na plochu.",
+    "tooMany": "Z tejto siete dnes pribudlo priveľa prihlásení. Skúste to zajtra."
   }
 }
