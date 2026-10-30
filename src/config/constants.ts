@@ -406,6 +406,14 @@ export const RIDE_PUSH_CONFIG = {
     VAPID_PUBLIC_KEY: 'BOg0cjMBsc0ZcGSg1MglKtCPV2ZCuGl1yQulhaknouJAs0T2kJVPrTn4f7odTc173XYIVP-f4oLTdN_JR0qJL2Q',
 };
 
+/** Pushes of new disruptions on pinned lines, through the same Worker. */
+export const DISRUPTION_PUSH_CONFIG = {
+    /** Pinned lines are sent to the server this long after the last change, so pinning several sends once. */
+    SYNC_DEBOUNCE_MS: 3000,
+    /** Unchanged lines are sent again this often, renewing the server's copy well within its 60-day expiry. */
+    RENEW_AFTER_MS: 7 * 24 * 3600_000,
+};
+
 export const DEPARTURES_CONFIG = {
     /** How often an empty metro board re-checks the metro's closed hours. */
     METRO_CLOSED_CHECK_MS: 60_000,

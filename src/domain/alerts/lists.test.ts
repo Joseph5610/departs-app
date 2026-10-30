@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AlertLine, Infotext, RSSItem } from '@/types';
 import { MIN, NOW, at } from '@/test/factories';
-import { activeNotices, alertSections, alertsForLine, incidentsOnLines, boardNotices } from './lists';
+import { activeNotices, alertSections, alertsForLine, countIncidents, incidentsOnLines, boardNotices } from './lists';
 
 const alert = (title: string, overrides: Partial<RSSItem> = {}): RSSItem => ({
     type: 'exclusion',
@@ -67,6 +67,17 @@ describe('alertSections', () => {
         expect(section.items.map((i) => i.title)).toEqual(['incident', 'urgent', 'normal', 'future']);
     });
 
+    it('lists stale incidents after current and upcoming ones', () => {
+        const tram = [line('22', 'tram')];
+        const [section] = alertSections([
+            alert('stale', { resolvedLines: tram, type: 'incident', isStale: true, priority: 'high' }),
+            alert('upcoming', { resolvedLines: tram, type: 'incident', isActive: false, isFuture: true }),
+            alert('current', { resolvedLines: tram, type: 'incident' }),
+        ], 'all', '');
+
+        expect(section.items.map((i) => i.title)).toEqual(['current', 'upcoming', 'stale']);
+    });
+
     it('filters by type and searches title, description and lines without diacritics', () => {
         const alerts = [
             alert('Výluka Anděl', { resolvedLines: [line('9', 'tram')] }),
@@ -118,8 +129,22 @@ describe('incidentsOnLines', () => {
             alert('high', { type: 'incident', priority: 'high', resolvedLines: [line('c', 'metro')] }),
             alert('planned', { type: 'exclusion', resolvedLines: [line('17', 'tram')] }),
             alert('ended', { type: 'incident', isActive: false, resolvedLines: [line('17', 'tram')] }),
+            alert('stale', { type: 'incident', isStale: true, resolvedLines: [line('17', 'tram')] }),
         ];
         expect(incidentsOnLines(alerts, new Set(['17', 'C'])).map(a => a.title)).toEqual(['high', 'low']);
         expect(incidentsOnLines(alerts, new Set())).toEqual([]);
+    });
+});
+
+describe('countIncidents', () => {
+    // The alerts badge counts disruptions now: not upcoming, ended or stale incidents, nor exclusions.
+    it('counts only current incidents', () => {
+        expect(countIncidents([
+            alert('current', { type: 'incident' }),
+            alert('upcoming', { type: 'incident', isActive: false, isFuture: true }),
+            alert('stale', { type: 'incident', isStale: true }),
+            alert('exclusion'),
+        ])).toBe(1);
+        expect(countIncidents(undefined)).toBe(0);
     });
 });

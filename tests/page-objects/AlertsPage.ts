@@ -8,6 +8,7 @@ export class AlertsPage extends BasePage {
     readonly plannedTab: Locator = this.container.getByRole('tab', { name: /Incidents|Incidenty/i });
 
     readonly emptyStateMessage: Locator = this.container.getByText(new RegExp("Nejsou aktivn\u00ed \u017e\u00e1dn\u00e9 ud\u00e1losti|No active alerts|No alerts", "i"));
+    readonly disruptionPushRow: Locator = this.container.locator('button').filter({ hasText: /Disruptions on my lines|Mimořádnosti na mých linkách/i });
     readonly closeButton: Locator = this.container.getByRole('button', { name: 'Close' });
 
     async searchAlert(query: string) {

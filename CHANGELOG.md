@@ -4,6 +4,16 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.95.0] - 2026-10-30
+
+### Added
+
+- Push notifications of a new disruption on the lines you pinned (Prague, Brno), with their count on the installed app's icon; turned on in Settings or the alerts view, and a tap opens that disruption.
+
+### Fixed
+
+- The alerts badge and the home sheet no longer count upcoming incidents or incidents left open-ended for over a week.
+
 ## [0.94.0] - 2026-10-29
 
 ### Added

@@ -15,6 +15,8 @@ export interface RSSItem extends AppAlert {
     /** Derived from the validity window as of the fetch. */
     isActive?: boolean;
     isFuture?: boolean;
+    /** An incident without an end, started so long ago it no longer counts as a disruption now. */
+    isStale?: boolean;
 }
 
 export type Infotext = AppInfotext;

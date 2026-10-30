@@ -11,6 +11,7 @@ import { searchHistoryKey } from '@/lib/searchHistory';
 import { firstUnique } from '@/lib/search';
 import { isSameFavoriteLine, reorderShown } from '@/domain/departures';
 import { isSameFavoriteStop } from '@/domain/stops';
+import type { DisruptionPushSync } from '@/domain/alerts';
 import { storedSidebarWidth } from '@/lib/sidebar';
 
 
@@ -23,6 +24,10 @@ interface PreferencesState {
     showAlertsOnMap: boolean;
     /** The city's backbone network (metro, tram or trolleybus lines) drawn on the map at all times. */
     showNetworkLines: boolean;
+    /** Pushes of new disruptions on pinned lines, and their count on the app icon. */
+    disruptionPush: boolean;
+    /** By city, what the server last got (push endpoint and lines) and when, so unchanged lines aren't sent at every launch. */
+    disruptionPushSync: Record<string, DisruptionPushSync>;
     stopTypeFilter: string[];
     departureSort: 'line' | 'departure';
     routeTypeFilter: string[];
@@ -56,6 +61,8 @@ interface PreferencesActions {
     setShowPointsOfSale: (show: boolean) => void;
     setShowAlertsOnMap: (show: boolean) => void;
     setShowNetworkLines: (show: boolean) => void;
+    setDisruptionPush: (on: boolean) => void;
+    markDisruptionPushSynced: (city: string, sync: DisruptionPushSync | null) => void;
     setStopTypeFilter: (filter: string[]) => void;
     setHasSeenWelcome: (seen: boolean) => void;
     setHasSeenInstallPrompt: (seen: boolean) => void;
@@ -98,6 +105,8 @@ const PERSISTED_KEYS = [
     'showPointsOfSale',
     'showAlertsOnMap',
     'showNetworkLines',
+    'disruptionPush',
+    'disruptionPushSync',
     'stopTypeFilter',
     'departureSort',
     'mapBaseStyle',
@@ -142,6 +151,8 @@ const favoriteStopSchema = z.looseObject({ city: z.string(), stopId: z.string() 
 
 const stringArraySchema = z.array(z.string());
 
+const disruptionPushSyncSchema = z.record(z.string(), z.object({ key: z.string(), at: z.number() }));
+
 /** The entries of a stored list that pass `schema`; null when the stored value is not a list at all. */
 const validEntries = <T,>(value: unknown, schema: z.ZodMiniType<unknown, T>): T[] | null =>
     Array.isArray(value) ? value.filter((entry): entry is T => z.validate(schema, entry)) : null;
@@ -183,6 +194,8 @@ export const mergePersisted = (persisted: unknown, current: PreferencesStore): P
         } else if (key === 'favoriteLines') {
             const favorites = validEntries(value, favoriteLineSchema);
             if (favorites) merged[key] = favorites;
+        } else if (key === 'disruptionPushSync') {
+            if (z.validate(disruptionPushSyncSchema, value)) merged[key] = value;
         } else if (Array.isArray(fallback)) {
             if (z.validate(stringArraySchema, value)) merged[key] = value;
         } else if (typeof value === typeof fallback && (!ALLOWED_VALUES[key] || ALLOWED_VALUES[key].includes(value as string))) {
@@ -202,6 +215,8 @@ export const usePreferencesStore = create<PreferencesStore>()(
             showPointsOfSale: false,
             showAlertsOnMap: true,
             showNetworkLines: true,
+            disruptionPush: false,
+            disruptionPushSync: {},
             stopTypeFilter: [],
             departureSort: 'departure',
             routeTypeFilter: [],
@@ -230,6 +245,11 @@ export const usePreferencesStore = create<PreferencesStore>()(
                 setShowPointsOfSale: (show) => set({ showPointsOfSale: show }),
                 setShowAlertsOnMap: (show) => set({ showAlertsOnMap: show }),
                 setShowNetworkLines: (show) => set({ showNetworkLines: show }),
+                setDisruptionPush: (on) => set({ disruptionPush: on }),
+                markDisruptionPushSynced: (city, sync) => set((state) => {
+                    const { [city]: _previous, ...others } = state.disruptionPushSync;
+                    return { disruptionPushSync: sync ? { ...others, [city]: sync } : others };
+                }),
                 setStopTypeFilter: (filter) => set({ stopTypeFilter: filter }),
                 setHasSeenWelcome: (seen) => set({ hasSeenWelcome: seen }),
                 setHasSeenInstallPrompt: (seen) => set({ hasSeenInstallPrompt: seen }),

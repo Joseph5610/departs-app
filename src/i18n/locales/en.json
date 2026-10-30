@@ -44,7 +44,8 @@
       "display": "Display",
       "language": "Language",
       "filters": "Filters",
-      "ai": "AI Integrations"
+      "ai": "AI Integrations",
+      "notifications": "Notifications"
     },
     "theme": {
       "title": "Appearance",
@@ -688,7 +689,8 @@
           "paragraphs": [
             "If you start a ride and allow notifications, your browser creates a push address for the app: a link at your browser's push service (Apple, Google, Mozilla or Microsoft) and keys that only your device can decrypt with. The app sends it to our server together with the trip, the stop where you get off and the texts of the alerts.",
             "While you ride, our server checks where the vehicle is and sends the alert before your stop and on arrival through that push service. The messages are encrypted, so the push service only delivers them and cannot read them. While the app is open, it can also show the alert itself.",
-            "We keep this only for the ride: it is deleted when you end the ride or arrive, and at the latest after 4 hours. It carries no name or account and is not linked to any other data."
+            "We keep this only for the ride: it is deleted when you end the ride or arrive, and at the latest after 4 hours. It carries no name or account and is not linked to any other data.",
+            "If you turn on disruption notifications in Settings, the app sends the same push address to our server with the names of the lines you pinned in the city and the notification text. Our server checks the city's alerts every few minutes and notifies you of a new disruption on those lines, with their count for the app icon. This is kept until you turn the notifications off, or deleted when the app hasn't been opened for 60 days. When you first turn this on, we count sign-ups from one IP address to prevent abuse: we don't store the address, only a one-way fingerprint with a random value that changes daily, and delete it within 2 days."
           ]
         },
         {
@@ -780,5 +782,14 @@
       "librariesTitle": "Open-source libraries",
       "librariesDescription": "Every bundled package with its full licence text"
     }
+  },
+  "disruptionPush": {
+    "title": "Disruption · {{lines}}",
+    "settingTitle": "Disruptions on my lines",
+    "settingDescription": "Get notified of a new disruption on your pinned lines, with their count on the app icon",
+    "failed": "Couldn't turn on notifications",
+    "denied": "Notifications are blocked in your browser. Allow them in the site settings and try again.",
+    "unsupported": "This browser doesn't support notifications. On iPhone, add the app to your Home Screen.",
+    "tooMany": "Too many sign-ups from this network today. Try again tomorrow."
   }
 }
