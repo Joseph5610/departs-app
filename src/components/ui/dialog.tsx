@@ -47,7 +47,7 @@ function DialogContent({
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean
-  variant?: 'default' | 'glassy' | 'tinted'
+  variant?: 'default' | 'glassy'
   /** `page` fills a phone's screen, sliding up like a pushed page; `sheet` sits on the phone's bottom edge; `card` floats over the map sheet. */
   phoneLayout?: 'card' | 'page' | 'sheet'
 }) {
@@ -57,12 +57,11 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-3000 flex flex-col w-full max-w-lg h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] -translate-x-1/2 -translate-y-1/2 gap-0 rounded-3xl p-0 shadow-2xl duration-100 outline-none overflow-hidden pointer-events-auto data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          variant === 'default' && "bg-popover border border-border text-popover-foreground",
-          variant === 'glassy' && "glassy",
-          variant === 'tinted' && "glassy",
-          phoneLayout === 'page' && "max-md:inset-0 max-md:translate-x-0 max-md:translate-y-0 max-md:h-(--app-height) max-md:max-w-none max-md:rounded-none max-md:border-0 max-md:pt-[env(safe-area-inset-top,0px)] max-md:pb-[env(safe-area-inset-bottom,0px)] max-md:data-open:zoom-in-100 max-md:data-open:slide-in-from-bottom-8 max-md:data-closed:zoom-out-100 max-md:data-closed:slide-out-to-bottom-8",
-          phoneLayout === 'sheet' && "max-md:top-auto max-md:bottom-0 max-md:max-w-none max-md:translate-y-0 max-md:rounded-b-none max-md:border-x-0 max-md:border-b-0 max-md:pb-[env(safe-area-inset-bottom,0px)] max-md:data-open:zoom-in-100 max-md:data-open:slide-in-from-bottom-8 max-md:data-closed:zoom-out-100 max-md:data-closed:slide-out-to-bottom-8",
+          "fixed top-1/2 left-1/2 z-3000 flex flex-col w-full max-w-lg h-[calc(100dvh-5rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] -translate-x-1/2 -translate-y-1/2 gap-0 rounded-sheet p-0 duration-100 outline-none overflow-hidden pointer-events-auto data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          variant === 'default' && "bg-popover border border-border text-popover-foreground shadow-2xl",
+          variant === 'glassy' && "glassy-thick",
+          phoneLayout === 'page' && "max-md:glassy-edge-top max-md:inset-0 max-md:translate-x-0 max-md:translate-y-0 max-md:h-(--app-height) max-md:max-w-none max-md:rounded-none max-md:border-0 max-md:pt-[env(safe-area-inset-top,0px)] max-md:pb-[env(safe-area-inset-bottom,0px)] max-md:data-open:zoom-in-100 max-md:data-open:slide-in-from-bottom-8 max-md:data-closed:zoom-out-100 max-md:data-closed:slide-out-to-bottom-8",
+          phoneLayout === 'sheet' && "max-md:glassy-edge-top max-md:top-auto max-md:bottom-0 max-md:max-w-none max-md:translate-y-0 max-md:rounded-b-none max-md:border-x-0 max-md:border-b-0 max-md:pb-[env(safe-area-inset-bottom,0px)] max-md:data-open:zoom-in-100 max-md:data-open:slide-in-from-bottom-8 max-md:data-closed:zoom-out-100 max-md:data-closed:slide-out-to-bottom-8",
           className
         )}
         {...props}
@@ -117,7 +116,7 @@ function DialogFooter({
     >
       {children}
       {showCloseButton && (
-        <DialogPrimitive.Close render={<Button variant="outline" />}>
+        <DialogPrimitive.Close render={<Button variant="secondary" />}>
           Close
         </DialogPrimitive.Close>
       )}

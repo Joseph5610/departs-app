@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { boardingPlace, departureKey, visibleInGroup } from '@/domain/departures';
 import { useTripMark } from '@/hooks/derived/useTripMark';
-import { MyTripBell } from './MyTripBell';
+import { MyTripChip } from './MyTripChip';
 import { useDepartureTap } from '@/hooks/features/useTapClick';
 import { usePinLine } from '@/hooks/features/usePinLine';
 import type { Departure, DepartureClickHandler } from '@/types';
@@ -75,7 +75,7 @@ export const DirectionRow = memo(({
                 isHighlighted={!!next.tripId && next.tripId === highlightedTripId}
                 onDepartureClick={onDepartureClick}
                 hidesBadge={!startsLine}
-                action={{ onTrigger: pin.toggle, isActive: pin.isPinned, label: pin.label }}
+                action={{ onTrigger: pin.toggle, isActive: pin.isPinned, label: pin.label, swipeLabel: pin.swipeLabel }}
             >
                 {(showsChips || showsRows || hasMore || note) && (
                     <>
@@ -152,7 +152,7 @@ const TripRow = memo(({ departure: dep, timeZone, isHighlighted, onDepartureClic
         >
             <span className="flex min-w-0 items-center gap-3 text-body-sm text-muted-foreground">
                 <ExpectedTime departure={dep} timeZone={timeZone} />
-                <MyTripBell departure={dep} onlyWhenSet />
+                <MyTripChip departure={dep} markOnly />
                 <Amenities departure={dep} />
             </span>
             <LiveCountdown departure={dep} size="md" />

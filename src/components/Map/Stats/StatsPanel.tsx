@@ -73,13 +73,13 @@ export const StatsPanel = memo(() => {
             ) : activeStats && activeStats.total_vehicles > 0 ? (
                 <div className="flex flex-col gap-3 pt-2 pb-2">
                     <div className="grid grid-cols-2 gap-3">
-                        <Card variant="subtle" size="none">
+                        <Card size="none">
                             <CardContent className="p-3.5 flex flex-col justify-center h-full">
                                 <span className="micro-label text-foreground/60 mb-0.5">{t('stats.vehicles')}</span>
                                 <span className="text-2xl font-black tabular-nums tracking-tighter leading-none">{activeStats.total_vehicles}</span>
                             </CardContent>
                         </Card>
-                        <Card variant="subtle" size="none">
+                        <Card size="none">
                             <CardContent className="p-3.5 flex flex-col justify-center h-full">
                                 <span className="micro-label text-foreground/60 mb-0.5">{t('stats.lines')}</span>
                                 <span className="text-2xl font-black tabular-nums tracking-tighter leading-none">{activeStats.total_lines}</span>

@@ -46,7 +46,7 @@ export const DepartureChip = memo(({ departure: dep, timeZone, isHighlighted, on
             data-testid={`departure-item-${dep.tripId}`}
             aria-label={`${label}, ${tooltip}`}
             className={cn(
-                "h-7 gap-1.5 rounded-full bg-foreground/[0.06] px-2.5 text-body-sm font-semibold tabular-nums text-muted-foreground hover:bg-foreground/12 hover:text-foreground",
+                "h-7 gap-1.25 rounded-full bg-fill px-2.75 text-body-sm font-semibold tabular-nums text-muted-foreground hover:bg-fill-2 hover:text-foreground",
                 dep.isCanceled && "line-through opacity-60",
                 mark && "bg-primary/15 text-foreground ring-1 ring-primary/60"
             )}

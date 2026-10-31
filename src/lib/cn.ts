@@ -6,8 +6,11 @@ import { createCn } from 'cn/config';
  */
 export const cn = createCn({
     extend: {
+        theme: {
+            radius: ['sheet', 'surface', 'badge'],
+        },
         classGroups: {
-            'font-size': [{ text: ['nano', 'micro', 'label', 'badge', 'caption', 'body-sm', 'title', 'heading'] }],
+            'font-size': [{ text: ['nano', 'micro', 'label', 'badge', 'caption', 'body-sm', 'title', 'heading', 'sheet-title'] }],
         },
     },
 });

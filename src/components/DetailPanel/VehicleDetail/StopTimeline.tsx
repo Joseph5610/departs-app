@@ -135,9 +135,9 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
                     {currentSequence !== null && pastStopsCount > 0 && (
                         <CollapsibleTrigger render={
                             <Button
-                                variant="outline"
+                                variant="secondary"
                                 size="sm"
-                                className="h-7 rounded-xl micro-label bg-foreground/5 border border-border/50 hover:bg-foreground/10 text-muted-foreground hover:text-foreground px-3 gap-1.5"
+                                className="h-7 micro-label text-muted-foreground hover:text-foreground px-3 gap-1.5"
                             />
                         }>
                             {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}

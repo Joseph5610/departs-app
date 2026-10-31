@@ -127,10 +127,10 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
                                 <div className="flex flex-col gap-2 w-full">
                                     <Button
                                         size="lg"
-                                        variant="outline"
+                                        variant="secondary"
                                         onClick={handleReportCrash}
                                         disabled={!turnstileToken || isSubmitting}
-                                        className="w-full font-bold flex items-center justify-center gap-2 rounded-xl border-border bg-muted/30 hover:bg-muted/50 transition-colors"
+                                        className="w-full font-bold flex items-center justify-center gap-2 transition-colors"
                                     >
                                         {isSubmitting ? (
                                             <>

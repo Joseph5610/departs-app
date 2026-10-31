@@ -3,6 +3,26 @@ import { MapPage } from '../page-objects/MapPage';
 import { SettingsPage } from '../page-objects/SettingsPage';
 
 test.describe('Settings tests', () => {
+    test('uses the redesign tokens for cards and switches', async ({ page }) => {
+        const mapPage = new MapPage(page);
+        const settingsPage = new SettingsPage(page);
+
+        await mapPage.goto();
+        await expect(mapPage.mapControls).toBeVisible({ timeout: 15000 });
+        await mapPage.openSettings();
+        await expect(settingsPage.container).toBeVisible();
+
+        const card = settingsPage.container.locator('[data-slot=card]').first();
+        await expect(card).toHaveCSS('border-top-left-radius', '22px');
+        await expect(card).toHaveCSS('border-top-width', '0px');
+        await expect(card).toHaveCSS('box-shadow', 'none');
+
+        const toggle = settingsPage.showVehiclesRow.getByRole('switch');
+        await expect(toggle).toHaveCSS('width', '54px');
+        await expect(toggle).toHaveCSS('height', '30px');
+        await expect(toggle.locator('[data-slot=switch-thumb]')).toHaveCSS('width', '26px');
+    });
+
     test('should open settings and toggle options', async ({ page }) => {
         const mapPage = new MapPage(page);
         const settingsPage = new SettingsPage(page);

@@ -2,7 +2,6 @@ import { memo, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, ChevronDown, ChevronRight, Train } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { Card } from '@/components/ui/card';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import type { DepartureClickHandler, Platform, SelectedStop, AppError } from '@/types';
 import { useDepartures } from '@/hooks/data/useDepartures';
@@ -131,12 +130,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     }
 
     return (
-        <div className="flex flex-col gap-3">
-            {jsonLd && (
-                <script type="application/ld+json">
-                    {JSON.stringify(jsonLd)}
-                </script>
-            )}
+        <div className="flex flex-col gap-5 pt-1.5">
             <VehicleFilterNotice hiddenCount={hiddenByVehicleFilters} />
             <InfoTexts selectedStop={selectedStop} />
             
@@ -164,7 +158,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
             ) : (
                 sections ? (
                     <div className="@container">
-                        <div className="grid grid-cols-1 items-start gap-3 @2xl:grid-cols-2">
+                        <div className="grid grid-cols-1 items-start gap-5 @2xl:grid-cols-2">
                             {sections.map(section => (
                                 <PlatformSectionView
                                     key={section.key}
@@ -177,10 +171,15 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                         </div>
                     </div>
                 ) : (
-                    <Card size="none" variant="inset" className="px-2" style={badgeColumn}>
+                    <div className="not-first:-mt-3" style={badgeColumn}>
                         <DirectionRows groups={groupedDepartures} inPlatformSection={false} {...rowProps} />
-                    </Card>
+                    </div>
                 )
+            )}
+            {jsonLd && (
+                <script type="application/ld+json">
+                    {JSON.stringify(jsonLd)}
+                </script>
             )}
         </div>
     );
@@ -247,20 +246,20 @@ const PlatformSectionView = memo(({ section, platformStopId, badgeColumn, rowPro
     const { shown, hidden } = useMemo(() => sectionPreview(section.groups, DEPARTURES_CONFIG.SECTION_PREVIEW_LINES), [section.groups]);
     const groups = showAll ? section.groups : shown;
     return (
-        <section className="flex flex-col gap-1.5">
+        <section className="flex flex-col">
             {section.key && <PlatformHeader section={section} platformStopId={platformStopId} />}
-            <Card size="none" variant="inset" className="px-2" style={badgeColumn}>
+            <div style={badgeColumn}>
                 {/* A metro line's rows name their track, which is the line's own. */}
                 <DirectionRows groups={groups} inPlatformSection={!section.metroLine} {...rowProps} />
                 {hidden > 0 && (
-                    <div className="flex justify-center border-t border-border/50 py-2.5">
+                    <div className="flex justify-center py-2.5">
                         <Button variant="more" size="chip" aria-expanded={showAll} onClick={() => rowProps.onToggleGroup(sectionId)}>
                             {showAll ? t('map.departures.fewerLines') : t('map.departures.moreLines', { count: hidden })}
                             <ChevronDown size={14} strokeWidth={2} className={cn("transition-transform duration-200", showAll && "rotate-180")} />
                         </Button>
                     </div>
                 )}
-            </Card>
+            </div>
         </section>
     );
 });
@@ -279,30 +278,30 @@ const PlatformHeader = ({ section, platformStopId }: PlatformHeaderProps) => {
     const title = section.metroLine ? (
         <>
             <LineBadge name={section.metroLine} routeColor={section.metroColor ?? FALLBACK_ROUTE_COLOR} />
-            <span className="flex-1 text-body-sm font-semibold text-foreground">{t('map.departures.metroSection', { line: section.metroLine })}</span>
+            <span className="text-heading font-semibold text-foreground">{t('map.departures.metroSection', { line: section.metroLine })}</span>
         </>
     ) : section.platform ? (
         <>
-            <PlatformCircle code={section.platform} size="md" />
-            <span className="flex-1 text-body-sm font-semibold text-foreground">
+            <PlatformCircle code={section.platform} size="section" />
+            <span className="text-heading font-semibold text-foreground">
                 {t('map.departures.platformSection', { code: section.platform })}
             </span>
         </>
     ) : (
-        <span className="flex min-w-0 flex-1 items-center gap-2 text-body-sm font-semibold text-foreground">
+        <span className="flex min-w-0 items-center gap-2 text-heading font-semibold text-foreground">
             <ArrowRight size={16} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-hidden="true" />
             <span className="truncate">{t('map.departures.towardsSection', { stop: section.direction })}</span>
         </span>
     );
-    if (!platformStopId) return <div className="flex items-center gap-2 px-2 py-1">{title}</div>;
+    if (!platformStopId) return <div className="flex items-center gap-2 py-1">{title}</div>;
     return (
         <button
             type="button"
             onClick={() => openStop(platformStopId)}
-            className="flex items-center gap-2 rounded-lg px-2 py-1 text-left outline-none transition-colors hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="flex items-center gap-2 py-1 text-left outline-none focus-visible:underline"
         >
             {title}
-            <ChevronRight size={16} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+            <ChevronRight size={17} strokeWidth={2.5} className="-ml-1 shrink-0 text-label-3" aria-hidden="true" />
         </button>
     );
 };

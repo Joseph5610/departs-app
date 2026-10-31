@@ -106,9 +106,9 @@ export const MobileSearchResults = ({
                         {favoriteStops.map(stop => (
                             <Button
                                 key={stop.id}
-                                variant="outline"
+                                variant="secondary"
                                 size="sm"
-                                className="shrink-0 rounded-full bg-card"
+                                className="shrink-0 rounded-full"
                                 onClick={() => onStopSelect(stop)}
                                 data-testid={`search-item-fav-stop-${stop.id}`}
                             >
@@ -129,7 +129,7 @@ export const MobileSearchResults = ({
                         </Button>
                     }
                 >
-                    <Card variant="inset" size="none" className="overflow-hidden">
+                    <Card size="none" className="overflow-hidden">
                         {searchHistory.map(item => (
                             <ResultRow
                                 key={searchHistoryKey(item)}
@@ -147,8 +147,8 @@ export const MobileSearchResults = ({
             {queryLines && (
                 <Section title={t('search.lines')}>
                     <Button
-                        variant="outline"
-                        className="h-12 justify-start gap-2 rounded-2xl bg-card px-4"
+                        variant="secondary"
+                        className="h-12 justify-start gap-2 rounded-2xl px-4"
                         onClick={() => onLineSelect(queryLines)}
                         data-testid={`search-item-line-${queryLines.join('-')}`}
                     >
@@ -160,7 +160,7 @@ export const MobileSearchResults = ({
 
             {!isEmptyQuery && stopResults.length > 0 && (
                 <Section title={t('search.stops')}>
-                    <Card variant="inset" size="none" className="overflow-hidden">
+                    <Card size="none" className="overflow-hidden">
                         {stopResults.map(stopRow)}
                     </Card>
                 </Section>
@@ -168,7 +168,7 @@ export const MobileSearchResults = ({
 
             {vehicleResults.length > 0 && (
                 <Section title={t('search.vehicles')}>
-                    <Card variant="inset" size="none" className="overflow-hidden">
+                    <Card size="none" className="overflow-hidden">
                         {vehicleResults.map(vehicle => {
                             const p = vehicle.properties;
                             const vehicleId = p.vehicle_id ?? '';
@@ -191,7 +191,7 @@ export const MobileSearchResults = ({
 
             {geocodingResults.length > 0 && (
                 <Section title={t('search.places')}>
-                    <Card variant="inset" size="none" className="overflow-hidden">
+                    <Card size="none" className="overflow-hidden">
                         {geocodingResults.map(place => (
                             <ResultRow
                                 key={place.id}
@@ -208,7 +208,7 @@ export const MobileSearchResults = ({
 
             {posResults.length > 0 && (
                 <Section title={t('search.pointsOfSale')}>
-                    <Card variant="inset" size="none" className="overflow-hidden">
+                    <Card size="none" className="overflow-hidden">
                         {posResults.map(result => (
                             <ResultRow
                                 key={result.pos.id}

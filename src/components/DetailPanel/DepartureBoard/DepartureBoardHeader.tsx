@@ -16,6 +16,7 @@ import { cn } from '@/lib/cn';
 import { LineBadge } from '@/components/LineBadge';
 import { ButtonTooltip } from '@/components/ButtonTooltip';
 import { PanelActions } from '@/components/DetailPanel/PanelActions';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { NavigatePill } from '@/components/DetailPanel/NavigatePill';
 import { useStopTwin } from '@/hooks/derived/useStopTwin';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
@@ -25,6 +26,7 @@ import { paths } from '@/lib/routes';
 /** Sticky subheader of a stop's board: distance and delay, stop actions and filters, then the line chips. */
 export const DepartureBoardHeader = memo(() => {
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
 
     const requireAirConditioned = usePreferencesStore(s => s.requireAirConditioned);
     const requireWheelchairAccessible = usePreferencesStore(s => s.requireWheelchairAccessible);
@@ -58,19 +60,19 @@ export const DepartureBoardHeader = memo(() => {
     }
 
     return (
-        <div className="px-6 pb-0 shrink-0 flex flex-col gap-2.5">
-            <div className="flex w-full min-h-8 items-center gap-2">
-                <div className="flex min-w-0 flex-1 items-center gap-4 overflow-x-auto no-scrollbar text-body-sm text-muted-foreground">
+        <div className="px-(--panel-gutter) pb-0 shrink-0 flex flex-col gap-2.5">
+            <div className="flex w-full min-h-8 items-center gap-3">
+                <div className="flex min-w-0 flex-1 items-center gap-3 overflow-x-auto no-scrollbar text-body-sm text-muted-foreground">
                     <NavigatePill />
 
                     {delayStats && delayStats.sampleSize >= 2 && (
                         <Popover>
                             <PopoverTrigger render={<Button variant="ghost" className="h-auto shrink-0 gap-1.5 whitespace-nowrap rounded-md p-0 text-body-sm font-normal text-muted-foreground hover:bg-transparent hover:text-foreground" />}>
-                                <Activity size={14} className={cn(
+                                <Activity size={14} strokeWidth={1.75} className={cn(
                                     delayStats.trend === 'worsening' ? "text-destructive" :
-                                    delayStats.trend === 'improving' ? "text-emerald-400" :
-                                    "text-amber-400"
-                                )} strokeWidth={1.5} />
+                                    delayStats.trend === 'improving' || delayStats.averageDelayMin === 0 ? "text-tint-mint" :
+                                    "text-muted-foreground"
+                                )} />
                                 {delayStats.averageDelayMin === 0
                                     ? t('map.departures.onTime')
                                     : `~${delayStats.averageDelayMin > 0 ? '+' : ''}${t('map.departures.minutes', { count: delayStats.averageDelayMin })}`}
@@ -97,7 +99,7 @@ export const DepartureBoardHeader = memo(() => {
                         </ButtonTooltip>
                     )}
                 </div>
-                <PanelActions chips />
+                {!isMobile && <PanelActions layout="chips" />}
             </div>
 
             {(uniqueLines.length > 0 || hasVehicleFilters) && (
@@ -113,7 +115,7 @@ export const DepartureBoardHeader = memo(() => {
                                         label={t('amenities.airConditioned')}
                                         testId="filter-ac"
                                     >
-                                        <Snowflake size={14} strokeWidth={2} />
+                                        <Snowflake size={14} strokeWidth={1.75} />
                                     </PropertyToggle>
                                 )}
                                 {hasAccessibilityData && (
@@ -124,12 +126,11 @@ export const DepartureBoardHeader = memo(() => {
                                         label={t('amenities.wheelchairAccessible')}
                                         testId="filter-accessible"
                                     >
-                                        <Accessibility size={14} strokeWidth={2} />
+                                        <Accessibility size={14} strokeWidth={1.75} />
                                     </PropertyToggle>
                                 )}
                             </div>
                         )}
-                        {uniqueLines.length > 0 && hasVehicleFilters && <ChipDivider />}
                         {uniqueLines.length > 0 && (
                             <div role="group" aria-label={t('map.departures.lineFilters')} className="flex items-center gap-1.5">
                                 {uniqueLines.map((line) => {
@@ -142,7 +143,7 @@ export const DepartureBoardHeader = memo(() => {
                                             key={name}
                                             onClick={() => toggleLineFilter(name)}
                                             className={cn(
-                                                "flex transition-[transform,opacity] active:scale-95 select-none cursor-pointer hover:brightness-110 rounded-md",
+                                                "flex transition-[transform,opacity] active:scale-95 select-none cursor-pointer hover:brightness-110 rounded-badge",
                                                 isDimmed ? "opacity-30" : "opacity-100",
                                                 isActive && "z-10 ring-2 ring-primary/40"
                                             )}
@@ -164,7 +165,7 @@ DepartureBoardHeader.displayName = 'DepartureBoardHeader';
 /** A row of filter chips scrolling sideways under the board header, fading out at its right edge. */
 const ChipStrip = ({ children }: { children: React.ReactNode }) => (
     <div
-        className="-mx-6 overflow-x-auto px-6 pb-2.5 pt-0.5 no-scrollbar"
+        className="-mx-(--panel-gutter) overflow-x-auto px-(--panel-gutter) pb-1.5 pt-0.5 no-scrollbar"
         style={{
             maskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)',
             WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)'
@@ -176,8 +177,6 @@ const ChipStrip = ({ children }: { children: React.ReactNode }) => (
         </div>
     </div>
 );
-
-const ChipDivider = () => <div className="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />;
 
 /** One vehicle-property filter, shaped like the line chips it leads; the line chips filter by line instead. */
 const PropertyToggle = ({ isActive, onToggle, activeClassName, label, testId, children }: {
@@ -196,8 +195,8 @@ const PropertyToggle = ({ isActive, onToggle, activeClassName, label, testId, ch
         aria-label={label}
         data-testid={testId}
         className={cn(
-            "flex size-6 shrink-0 items-center justify-center rounded-md border transition-[transform,colors] active:scale-95 select-none cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
-            isActive ? cn(activeClassName, "border-transparent shadow-sm") : "bg-secondary border-border/50 text-secondary-foreground/60 hover:text-secondary-foreground"
+            "flex size-6 shrink-0 items-center justify-center rounded-full transition-[transform,colors] active:scale-95 select-none cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+            isActive ? activeClassName : "bg-field text-muted-foreground hover:text-foreground"
         )}
     >
         {children}

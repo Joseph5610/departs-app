@@ -14,7 +14,7 @@ import { UI_TIMING_MS } from '@/config/constants';
 
 interface CitySwitcherProps {
     className?: string;
-    variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | "tinted";
+    variant?: "default" | "destructive" | "secondary" | "ghost" | "link" | "tinted";
 }
 
 export const CitySwitcher = ({ className, variant = "tinted" }: CitySwitcherProps) => {
@@ -70,7 +70,7 @@ export const CitySwitcher = ({ className, variant = "tinted" }: CitySwitcherProp
                     <p className="font-medium text-xs">{t('map.controls.switchCity')}</p>
                 </TooltipContent>
             </Tooltip>
-            <DialogContent className="sm:max-w-100 p-6 h-auto border-border/40 shadow-2xl">
+            <DialogContent className="sm:max-w-100 p-6 h-auto">
                 <DialogHeader className="pb-4 space-y-1.5">
                     <DialogTitle className="text-xl font-bold">{t('map.controls.switchCity')}</DialogTitle>
                     <p className="text-sm text-muted-foreground/80 font-medium">{t('map.regions.title')}</p>

@@ -81,7 +81,7 @@ export const DisplaySection = () => {
         <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3">
                 <SectionHeading>{t('settings.theme.title')}</SectionHeading>
-                <Card variant="subtle" size="none">
+                <Card size="none">
                     <div className="p-3">
                         <div className="grid grid-cols-3 gap-2">
                             {THEMES.map(({ id, icon }) => (
@@ -101,7 +101,7 @@ export const DisplaySection = () => {
 
             <div className="flex flex-col gap-3">
                 <SectionHeading>{t('settings.sections.data')}</SectionHeading>
-                <Card variant="subtle" size="none">
+                <Card size="none">
                     <Item variant="settings" size="none" className="flex-nowrap hover:bg-transparent active:bg-transparent">
                         <ItemMedia variant="icon" className="text-muted-foreground">
                             <Timer size={20} strokeWidth={1.5} />

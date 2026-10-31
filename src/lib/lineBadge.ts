@@ -5,6 +5,12 @@ export const LINE_BADGE_SIZES = {
     sm: { baseWidth: 16, charWidth: 5, classes: 'h-3.5 rounded-sm px-1 text-micro font-bold' },
     md: { baseWidth: 20, charWidth: 6, classes: 'h-4.5 rounded-sm px-1.5 text-label font-bold' },
     lg: { baseWidth: 26, charWidth: 7, classes: 'h-6 rounded-md px-2 text-caption font-bold' },
+    /** On the home sheet's rows, the same height as `md` with the sheet's type and corner. */
+    row: { baseWidth: 20, charWidth: 6, classes: 'h-4.5 rounded-badge px-1.5 text-caption font-bold' },
+    /** On a home card, the same height as `lg` with larger type. */
+    chip: { baseWidth: 26, charWidth: 7, classes: 'h-6 rounded-badge px-2 text-body-sm font-bold' },
+    /** A departure row's badge, in a column at least this wide. */
+    board: { baseWidth: 26, charWidth: 7, minWidth: 32, classes: 'h-6 rounded-badge px-1.5 text-body-sm font-bold' },
     xl: { baseWidth: 30, charWidth: 8, classes: 'h-7 rounded-lg px-2.5 text-body-sm font-extrabold' },
 } as const;
 
@@ -12,11 +18,11 @@ export type LineBadgeSize = keyof typeof LINE_BADGE_SIZES;
 
 /** The minimum width in px of a badge for `name`, so columns of badges can be sized to their widest. */
 export const lineBadgeWidth = (name: string, size: LineBadgeSize): number => {
-    const config = LINE_BADGE_SIZES[size];
-    return config.baseWidth + Math.max(0, name.length - 1) * config.charWidth;
+    const config: { baseWidth: number; charWidth: number; minWidth?: number } = LINE_BADGE_SIZES[size];
+    return Math.max(config.minWidth ?? 0, config.baseWidth + Math.max(0, name.length - 1) * config.charWidth);
 };
 
 /** A `--badge-col` style as wide as the widest of `lines`' badges, so rows sharing it align; a single badge's width at least. */
-export const badgeColumnStyle = (lines: readonly string[], size: LineBadgeSize = 'lg'): React.CSSProperties => ({
+export const badgeColumnStyle = (lines: readonly string[], size: LineBadgeSize = 'board'): React.CSSProperties => ({
     '--badge-col': `${lines.reduce((max, line) => Math.max(max, lineBadgeWidth(line, size)), lineBadgeWidth('', size))}px`,
 }) as React.CSSProperties;

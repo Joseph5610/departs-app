@@ -8,8 +8,6 @@ export const FALLBACK_ROUTE_COLOR = '#5A5A5A';
 export const LAYOUT = {
     /** Must equal Tailwind's `md` breakpoint (48rem), which switches the CSS layout at the same width. */
     MOBILE_BREAKPOINT_PX: 768,
-    /** The map camera pads the bottom by the viewport height divided by this, clearing the mobile sheet. */
-    BOTTOM_SHEET_RATIO: 2.2,
 };
 
 /** The desktop detail panel's width: its default, and the limits the user drags it within. */
@@ -53,13 +51,31 @@ export const UI_TIMING_MS = {
 
 /** The mobile sheet's three heights: the peek shows only the search row or a card's header, half, and full, which stops just below the status bar. */
 export const SHEET = {
-    /** The peek's grabber and search row, above the bottom inset. */
-    PEEK_CONTENT_PX: 72,
-    /** The bottom inset assumed where the device has no home indicator. */
-    PEEK_MIN_BOTTOM_INSET_PX: 12,
-    /** How far the peek's search row reaches into the home indicator's inset, like the Maps app. */
-    PEEK_HOME_INDICATOR_OVERLAP_PX: 11,
-    HALF: 0.5,
+    /** The peek capsule's height: its grabber and search row. */
+    PEEK_CONTENT_PX: 68,
+    /** The peek capsule floats at least this far above the screen's bottom edge. */
+    PEEK_BOTTOM_PX: 12,
+    /** How far the capsule reaches into the home indicator's inset. */
+    PEEK_HOME_INDICATOR_OVERLAP_PX: 4,
+    HALF: 0.56,
+    /** Dragged below the peek, the sheet follows the finger at this rate... */
+    OVERDRAG_RATE: 0.2,
+    /** ...and no further than this. */
+    OVERDRAG_MAX_PX: 14,
+    /** The sheet turns to its densest material from this share of the way between half and full. */
+    SOLID_FROM_RISE: 0.6,
+    /** The morph loop stops after this many frames without movement. */
+    MORPH_IDLE_FRAMES: 30,
+    /** The content starts fading in at this share of the morph from peek to half... */
+    CONTENT_FADE_FROM_MORPH: 0.2,
+    /** ...and takes this share of it. */
+    CONTENT_FADE_SPAN_MORPH: 0.6,
+    /** The controls above the sheet are gone at this share of the way from half to full. */
+    CONTROLS_GONE_AT_RISE: 1 / 3,
+    /** The toolbar stays open over this first stretch of the list. */
+    TOOLBAR_SCROLL_START_PX: 24,
+    /** A scroll run in one direction at least this long folds or restores the toolbar. */
+    TOOLBAR_SCROLL_RUN_PX: 24,
     /** Gap between the status bar and a fully open sheet, through which the dimmed map shows. */
     FULL_TOP_GAP_PX: 28,
     /** The status bar height assumed where the browser reports no safe area (desktop previews, older phones). */
@@ -449,6 +465,12 @@ export const DEPARTURES_CONFIG = {
     SWIPE_ACTION_PX: 72,
     /** The furthest a swiped row follows the finger. */
     SWIPE_MAX_PX: 96,
+    /** The revealed action block stops this short of the row, leaving a gap. */
+    SWIPE_BLOCK_GAP_PX: 8,
+    /** The action block is wide enough to show its label from here. */
+    SWIPE_LABEL_PX: 56,
+    /** How the row and its action block spring back. */
+    SWIPE_SETTLE: '320ms cubic-bezier(.32,.72,0,1)',
     /** Departures described in the page's structured data. */
     STRUCTURED_DATA_LIMIT: 15,
 };

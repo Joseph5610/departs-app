@@ -8,15 +8,15 @@ interface SegmentedControlProps<T extends string> {
 }
 
 const SIZE_CLASSES = {
-    sm: { group: 'shrink-0', item: 'text-caption px-2 py-0.5 transition-all shrink-0' },
-    md: { group: 'border border-border/40', item: 'text-xs px-2.5 py-1 transition-colors' },
+    sm: { group: 'h-8 shrink-0', item: 'px-2.75 shrink-0' },
+    md: { group: 'h-11', item: 'px-4' },
 };
 
-/** Small inline switch between a few mutually exclusive options. */
+/** A switch between a few mutually exclusive options; `sm` fits inside a row. */
 export function SegmentedControl<T extends string>({ value, onChange, options, size = 'md' }: SegmentedControlProps<T>) {
     const classes = SIZE_CLASSES[size];
     return (
-        <div className={cn('flex items-center gap-0.5 bg-muted/30 p-0.5 rounded-lg', classes.group)}>
+        <div className={cn('flex items-stretch bg-fill-2 p-0.5 rounded-full', classes.group)}>
             {options.map(option => (
                 <button
                     key={option.value}
@@ -24,10 +24,10 @@ export function SegmentedControl<T extends string>({ value, onChange, options, s
                     aria-pressed={value === option.value}
                     onClick={() => onChange(option.value)}
                     className={cn(
-                        'rounded-md font-semibold cursor-pointer',
+                        'flex items-center justify-center rounded-full text-body-sm font-semibold cursor-pointer transition-colors',
                         classes.item,
                         value === option.value
-                            ? 'bg-background text-foreground shadow-2xs'
+                            ? 'bg-segment-selected text-foreground'
                             : 'text-muted-foreground hover:text-foreground'
                     )}
                 >

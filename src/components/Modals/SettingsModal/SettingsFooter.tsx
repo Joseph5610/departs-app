@@ -74,7 +74,7 @@ export const SettingsFooter = () => {
 
     return (
         <div className="flex flex-col gap-6">
-            <Card variant="subtle" size="none" className="overflow-hidden gap-0">
+            <Card size="none" className="overflow-hidden gap-0">
                 <ItemGroup className="gap-0">
                     {searchHistory.length > 0 && (
                         <Item
@@ -141,7 +141,7 @@ export const SettingsFooter = () => {
                 </ItemGroup>
             </Card>
 
-            <Card variant="subtle" size="none" className="overflow-hidden gap-0">
+            <Card size="none" className="overflow-hidden gap-0">
                 <ItemGroup className="gap-0">
                     <Item variant="settings" size="none" render={<a href={paths.privacy} target="_blank" rel="noopener" />}>
                         <ItemMedia variant="icon" className="text-muted-foreground">

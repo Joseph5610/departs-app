@@ -101,7 +101,7 @@ const MyTripSheetBody = ({ target, onClose }: { target: MyTripTarget; onClose: (
                 </div>
             </DialogHeader>
 
-            <Card variant="inset" size="none" className="min-h-0 overflow-hidden">
+            <Card size="none" className="min-h-0 overflow-hidden">
                 <JourneyRow leg="board" kind="toggle" title={t('myTrip.boardTitle')} summary={boardSummary} isOpen={open === 'board'} onClick={() => toggle('board')} />
                 {open === 'board' && (
                     <div className="border-t border-border/50">

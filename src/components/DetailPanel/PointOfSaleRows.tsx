@@ -7,7 +7,7 @@ import { SectionHeading } from '@/components/SectionHeading';
 export const PosSection = ({ title, children }: { title?: string; children: React.ReactNode }) => (
     <section className="flex flex-col gap-2">
         {title && <SectionHeading>{title}</SectionHeading>}
-        <Card variant="inset" size="none" className="overflow-hidden gap-0">
+        <Card size="none" className="overflow-hidden gap-0">
             {children}
         </Card>
     </section>

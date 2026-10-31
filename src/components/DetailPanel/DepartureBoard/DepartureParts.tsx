@@ -54,7 +54,7 @@ export const LiveCountdown = ({ departure: dep, size }: { departure: Departure; 
     }
     return (
         // A fixed minimum width keeps the headsign column steady as the countdown ticks or rolls to a change.
-        <span className={cn("flex items-center justify-end gap-1.5 justify-self-end", size === 'lg' ? "min-w-16" : "min-w-15")}>
+        <span className={cn("flex items-center justify-end gap-1.25 justify-self-end", size === 'lg' ? "min-w-16" : "min-w-15")}>
             {statusLabel ? (
                 <IconTooltip label={statusLabel}><LiveIndicator status={liveStatus(dep)} trend={trend} /></IconTooltip>
             ) : <LiveIndicator status={liveStatus(dep)} trend={trend} />}

@@ -16,7 +16,7 @@ export const VehicleMixCard = ({ stats }: VehicleMixCardProps) => {
     }
 
     return (
-        <Card variant="subtle" size="none">
+        <Card size="none">
             <CardHeader className="p-3.5 pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
                     <Activity size={16} className="text-primary" />

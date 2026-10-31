@@ -1,7 +1,7 @@
 import { useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { Share2, MoreHorizontal, MessageSquareHeart, Star, Clock, ArrowDownAz, Monitor } from 'lucide-react';
+import { Share, MoreHorizontal, MessageSquareHeart, Star, Clock, ArrowDownAz, Monitor } from 'lucide-react';
 import { paths } from '@/lib/routes';
 import { useShare, useShareTrip } from '@/hooks/features/useShare';
 import { useQueryClient } from '@tanstack/react-query';
@@ -38,15 +38,19 @@ import { queryKeys } from '@/lib/queryKeys';
 /**
  * PanelActions
  *
- * Header actions for the selected stop or vehicle. A vehicle shows share next to the menu; a stop
- * shows its favorite toggle there and moves share, departure sort and the official board into the menu.
+ * Actions for the selected stop or vehicle. A vehicle shows share next to the menu. A stop shows its
+ * favorite toggle there, with departure sort and the official board in the menu, and share there too unless the toolbar shows it.
  */
 interface PanelActionsProps {
-    /** Bordered chip buttons for the stop action row instead of ghost header buttons. */
-    chips?: boolean;
+    /** `chips` are small buttons for the stop action row; `toolbar` is the phone's floating capsule, with share beside the menu. */
+    layout?: 'header' | 'chips' | 'toolbar';
+    /** The toolbar folded to its menu button while the list scrolls. */
+    collapsed?: boolean;
 }
 
-export const PanelActions = memo(({ chips }: PanelActionsProps) => {
+const TOOLBAR_FOLD = 'duration-400 ease-[cubic-bezier(.32,.72,0,1)]';
+
+export const PanelActions = memo(({ layout = 'header', collapsed = false }: PanelActionsProps) => {
     const { t } = useTranslation();
     const { share } = useShare();
     const shareTrip = useShareTrip();
@@ -102,7 +106,12 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
 
     if (!tripId && !stopId) return null;
 
-    const chipClassName = chips ? 'size-7 rounded-full border border-border/50 bg-card shadow-sm' : undefined;
+    const chips = layout === 'chips';
+    const toolbar = layout === 'toolbar';
+    const chipClassName = chips ? 'size-7 rounded-full bg-field' : undefined;
+    const toolbarButton = toolbar ? 'relative mx-0.5 size-10 rounded-full text-foreground after:absolute after:inset-x-0 after:-inset-y-0.5 transition-[width,margin,opacity,background-color] duration-200 hover:bg-fill-2 aria-expanded:bg-fill-2 active:bg-fill-2' : undefined;
+    const toolbarFold = toolbar ? cn(TOOLBAR_FOLD, collapsed && 'mx-0 w-0 overflow-hidden opacity-0') : undefined;
+    const foldHidden = toolbar && collapsed ? { tabIndex: -1, 'aria-hidden': true } : undefined;
     // A stop pinned under an older id (an alias, a pre-stops.json PID id) counts as pinned, and unpinning drops every such id.
     const cityPins = favoriteStopsIn(favoriteStops, boardCity);
     const pins = stopId ? pinsOf(model, cityPins, stopId) : [];
@@ -120,7 +129,7 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
         toggleFavorite({ city: boardCity, stopId });
     };
 
-    return (
+    const content = (
         <>
             {stopId ? (
                 <ButtonTooltip label={isFavorite ? t('map.departures.removeFromFavorites') : t('map.departures.addToFavorites')}>
@@ -131,9 +140,10 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
                     aria-label={isFavorite ? t('map.departures.removeFromFavorites') : t('map.departures.addToFavorites')}
                     aria-pressed={isFavorite}
                     data-testid="favorite-btn"
-                    className={cn("shrink-0 text-muted-foreground", chipClassName, isFavorite && "text-favorite hover:text-favorite-hover")}
+                    {...foldHidden}
+                    className={cn("shrink-0 text-muted-foreground", chipClassName, toolbarButton, toolbarFold, isFavorite && "text-favorite hover:text-favorite-hover")}
                 >
-                    <Star size={chips ? 14 : 18} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={1.5} />
+                    <Star size={chips ? 14 : 18} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={toolbar ? 1.75 : 1.5} className={toolbar ? 'size-4.75' : undefined} />
                 </Button>
                 </ButtonTooltip>
             ) : (
@@ -146,9 +156,14 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
                     data-testid="share-btn"
                     className="shrink-0 text-muted-foreground"
                 >
-                    <Share2 size={18} strokeWidth={1.5} />
+                    <Share size={18} strokeWidth={1.5} />
                 </Button>
                 </ButtonTooltip>
+            )}
+            {toolbar && stopId && (
+                <Button variant="ghost" size="icon" onClick={handleShare} aria-label={t('common.share')} data-testid="share-btn" className={cn("shrink-0", toolbarButton, toolbarFold)} {...foldHidden}>
+                    <Share strokeWidth={1.75} className="size-4.75" />
+                </Button>
             )}
             <DropdownMenu>
                 <ButtonTooltip label={t('common.moreOptions')}>
@@ -158,36 +173,38 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
                         size="icon-sm"
                         aria-label={t('common.moreOptions')}
                         data-testid="more-options-btn"
-                        className={cn("shrink-0 text-muted-foreground", chipClassName)}
+                        className={cn("shrink-0 text-muted-foreground", chipClassName, toolbarButton)}
                     >
-                        <MoreHorizontal size={chips ? 16 : 20} strokeWidth={1.5} />
+                        <MoreHorizontal size={chips ? 16 : 20} strokeWidth={toolbar ? 1.75 : 1.5} className={toolbar ? 'size-4.75' : undefined} />
                     </Button>
                 } />
                 </ButtonTooltip>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-68">
                     {stopId && (
                         <>
                             <DropdownMenuGroup>
                                 <DropdownMenuLabel>{t('map.departures.sort')}</DropdownMenuLabel>
                                 <DropdownMenuRadioGroup value={departureSort} onValueChange={(value) => setDepartureSort(value as 'line' | 'departure')}>
                                     <DropdownMenuRadioItem value="departure">
-                                        <Clock size={14} className="mr-2" strokeWidth={1.5} />
+                                        <Clock size={14} strokeWidth={1.75} />
                                         {t('map.departures.sortByDeparture')}
                                     </DropdownMenuRadioItem>
                                     <DropdownMenuRadioItem value="line">
-                                        <ArrowDownAz size={14} className="mr-2" strokeWidth={1.5} />
+                                        <ArrowDownAz size={14} strokeWidth={1.75} />
                                         {t('map.departures.sortByLine')}
                                     </DropdownMenuRadioItem>
                                 </DropdownMenuRadioGroup>
                             </DropdownMenuGroup>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem render={<div data-testid="share-btn" onClick={handleShare} />} closeOnClick={false}>
-                                <Share2 size={14} className="mr-2" strokeWidth={1.5} />
-                                {t('common.share')}
-                            </DropdownMenuItem>
+                            {!toolbar && (
+                                <DropdownMenuItem render={<div data-testid="share-btn" onClick={handleShare} />} closeOnClick={false}>
+                                    <Share size={14} strokeWidth={1.75} />
+                                    {t('common.share')}
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuSub>
                                 <DropdownMenuSubTrigger data-testid="board-btn">
-                                    <Monitor size={14} className="mr-2" strokeWidth={1.5} />
+                                    <Monitor size={14} strokeWidth={1.75} />
                                     {t('board.open')}
                                 </DropdownMenuSubTrigger>
                                 <DropdownMenuSubContent>
@@ -205,12 +222,25 @@ export const PanelActions = memo(({ chips }: PanelActionsProps) => {
                         </>
                     )}
                     <DropdownMenuItem render={<div onClick={() => setIsFeedbackOpen(true)} />}>
-                        <MessageSquareHeart size={14} className="mr-2" strokeWidth={1.5} />
+                        <MessageSquareHeart size={14} strokeWidth={1.75} />
                         {t('feedback.title')}
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </>
+    );
+
+    if (!toolbar) return content;
+    return (
+        <div
+            data-testid="sheet-toolbar"
+            className={cn(
+                "glassy fixed! bottom-[max(1rem,calc(env(safe-area-inset-bottom,0px)-0.375rem))] flex h-12 items-center justify-end rounded-full px-0.5 transition-[width,right] duration-450 ease-[cubic-bezier(.32,.72,0,1)]",
+                collapsed ? "right-4 w-12" : "right-[calc(50%-4.25rem)] w-34"
+            )}
+        >
+            {content}
+        </div>
     );
 });
 

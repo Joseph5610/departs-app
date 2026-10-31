@@ -27,10 +27,10 @@ const CardShell = ({ onOpen, testId, children }: CardShellProps) => (
     <button
         type="button"
         onClick={onOpen}
-        className="w-[14.5rem] shrink-0 snap-start rounded-2xl text-left outline-none transition-transform active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring/50"
+        className="min-w-0 flex-[1_0_10.25rem] snap-start rounded-surface text-left outline-none transition-transform active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring/50"
         data-testid={testId}
     >
-        <Card variant="inset" size="none" className="h-full gap-3 p-3.5">{children}</Card>
+        <Card size="none" className="h-full gap-2.25 p-3.5">{children}</Card>
     </button>
 );
 
@@ -48,7 +48,7 @@ const RowsPlaceholder = () => (
 
 const NoDepartures = () => {
     const { t } = useTranslation();
-    return <div className="mt-auto text-xs text-muted-foreground">{t('map.departures.noUpcoming')}</div>;
+    return <div className="mt-auto text-body-sm text-muted-foreground">{t('map.departures.noUpcoming')}</div>;
 };
 
 interface CompactStopCardProps {
@@ -72,13 +72,13 @@ export const CompactStopCard = ({ stop, departures, isLoading }: CompactStopCard
         <CardShell onOpen={open} testId={`favorite-mini-stop-${stop.id}`}>
             <div className="flex min-w-0 items-center gap-1.5">
                 <Star size={14} strokeWidth={1.5} className="shrink-0 fill-favorite text-favorite" />
-                <span className="truncate text-title font-semibold text-foreground">{stop.name}</span>
+                <span className="truncate text-title font-medium text-foreground">{stop.name}</span>
             </div>
             {next.length === 0 ? (isLoading ? <RowsPlaceholder /> : <NoDepartures />) : (
                 <div className="mt-auto flex flex-col gap-2">
                     {next.map(dep => (
                         <div key={`${dep.tripId}-${dep.timestamp}`} className="flex min-w-0 items-center gap-2">
-                            <LineBadge name={String(dep.line)} routeColor={dep.route_color || FALLBACK_ROUTE_COLOR} size="sm" />
+                            <LineBadge name={String(dep.line)} routeColor={dep.route_color || FALLBACK_ROUTE_COLOR} size="row" />
                             <span className="min-w-0 flex-1 truncate text-body-sm text-muted-foreground">{dep.headsign}</span>
                             <span className="shrink-0 text-body-sm font-semibold tabular-nums text-foreground"><MinutesUntil timestamp={dep.timestamp} /></span>
                         </div>
@@ -116,23 +116,22 @@ export const CompactLineCard = ({ favorite, stop, departures, isLoading }: Compa
 
     return (
         <CardShell onOpen={open} testId={`favorite-mini-line-${favorite.stopId}-${favorite.line}`}>
-            <div className="min-w-0">
-                <div className="flex min-w-0 items-center gap-2">
-                    <LineBadge name={favorite.line} routeColor={routeColor} size="md" />
-                    <span className="truncate text-title font-semibold text-foreground">{favorite.headsign}</span>
-                </div>
-                {stopName && <div className="mt-1 truncate text-xs text-muted-foreground">{t('favorites.fromStop', { stop: stopName })}</div>}
+            <div className="flex min-w-0 items-center justify-between gap-2">
+                <LineBadge name={favorite.line} routeColor={routeColor} size="chip" />
+                {next[0] ? (
+                    <span className="truncate text-title font-semibold tabular-nums text-foreground"><MinutesUntil timestamp={next[0].timestamp} /></span>
+                ) : isLoading && <Skeleton className="h-5 w-12" />}
             </div>
-            {next.length === 0 ? (isLoading ? <Skeleton className="mt-auto h-6 w-24" /> : <NoDepartures />) : (
-                <div className="mt-auto flex items-baseline gap-2">
-                    <span className="text-xl font-bold leading-none tabular-nums text-foreground"><MinutesUntil timestamp={next[0].timestamp} /></span>
-                    {next[1] && (
-                        <span className="truncate text-xs text-muted-foreground">
-                            {t('home.then')} <MinutesUntil timestamp={next[1].timestamp} />
-                        </span>
-                    )}
-                </div>
-            )}
+            <div className="min-w-0">
+                <div className="truncate text-title leading-5 font-medium text-foreground">{favorite.headsign}</div>
+                {stopName && <div className="truncate text-body-sm leading-4.5 text-muted-foreground">{t('favorites.fromStop', { stop: stopName })}</div>}
+                {next[1] && (
+                    <div className="truncate text-body-sm leading-4.5 text-muted-foreground">
+                        {t('home.then')} <MinutesUntil timestamp={next[1].timestamp} />
+                    </div>
+                )}
+            </div>
+            {next.length === 0 && !isLoading && <NoDepartures />}
         </CardShell>
     );
 };

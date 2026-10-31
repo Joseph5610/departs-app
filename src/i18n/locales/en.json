@@ -299,6 +299,8 @@
     "collapseRides": "Fold the trips"
   },
   "myTrip": {
+    "swipeTake": "Going",
+    "swipeEdit": "Edit",
     "aboard": "No boarding stop",
     "boardAt": "{{stop}} · departs {{time}}",
     "boardTitle": "Boarding",
@@ -490,6 +492,8 @@
     "title": "Favorites",
     "empty": "No favorites yet",
     "emptySub": "Star a stop, or pin a line from its departure board, to keep it here.",
+    "swipePin": "Pin",
+    "swipeUnpin": "Unpin",
     "pinLine": "Add line {{line}} towards {{headsign}} to favorites",
     "unpinLine": "Remove line {{line}} towards {{headsign}} from favorites",
     "linePinned": "Line {{line}} towards {{headsign}} added to favorites",
@@ -510,7 +514,6 @@
     "disruptionsOnYourLines_other": "{{count}} disruptions on your lines",
     "useLocationShort": "Use location",
     "nearby": "Nearby",
-    "seeAll": "See all",
     "network": "Network",
     "locationNeeded": "Share your location to see the stops around you.",
     "noNearby": "No stops within walking distance.",

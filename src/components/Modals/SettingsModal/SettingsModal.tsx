@@ -63,7 +63,7 @@ export const SettingsContent = () => {
                 <h3 className="text-muted-foreground micro-label-widest px-1">
                     {t('settings.sections.language')}
                 </h3>
-                <Card variant="subtle" size="none">
+                <Card size="none">
                     <div className="p-3">
                         <ToggleGroup
                             value={i18n.resolvedLanguage ? [i18n.resolvedLanguage] : []}

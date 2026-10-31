@@ -346,7 +346,11 @@ export const RideBar = () => {
                         {/* Folded, the bars behind peek out as a tab under the front one: tap (or hover) to fan them out. */}
                         <button
                             type="button"
-                            onClick={() => { openedByHover.current = false; setIsExpanded(!isExpanded); }}
+                            onClick={() => {
+                                window.clearTimeout(foldTimer.current);
+                                setIsExpanded(openedByHover.current || !isExpanded);
+                                openedByHover.current = false;
+                            }}
                             aria-label={t(isExpanded ? 'ride.collapseRides' : 'ride.expandRides')}
                             aria-expanded={isExpanded}
                             className={cn(

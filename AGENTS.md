@@ -86,7 +86,7 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 - **NEVER** construct ad-hoc `border-dashed` or custom empty containers; use established shadcn `Empty` primitives.
 - **NEVER** modify visual design during architectural refactors unless explicitly requested.
 - **NEVER** import `cn` from the `cn` package; use `@/lib/cn`, which knows the app's type scale. Font sizes come from Tailwind's steps or that scale in `index.css` (`text-body-sm`, `text-title`, `text-heading`…), never pixel values like `text-[15px]`.
-- **NEVER** copy a class string between components or hard-code colours; use design tokens (`bg-card`, `text-muted-foreground`) and component variants. A style shared by several components becomes a variant (e.g. `Card variant="panel"`).
+- **NEVER** copy a class string between components or hard-code colours; use design tokens (`bg-card`, `text-muted-foreground`) and component variants. A style shared by several components becomes a variant (e.g. `Button variant="tinted"`).
 - **NEVER** put transient UI state (drawer height, an open dropdown) in a global store; it stays local `useState`.
 - **NEVER** write a class of static members only; the module is the namespace, so export functions (ESLint `no-extraneous-class`). Classes are for state or an interface implementation.
 - **NEVER** use `eslint-disable`. All TypeScript and ESLint errors MUST be solved architecturally or typing-wise. Disabling the linter is strictly forbidden.

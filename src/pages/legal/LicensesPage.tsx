@@ -88,7 +88,7 @@ const LicensesPage = () => {
 
             {attributionGroups(unlockedCities).map(group => (
                 <LegalSection key={group.labelKey} heading={t(group.labelKey)}>
-                    <Card variant="subtle" size="none" className="overflow-hidden gap-0">
+                    <Card size="none" className="overflow-hidden gap-0">
                         <ItemGroup className="gap-0">
                             {group.sources.map(source => <AttributionItem key={`${source.url}|${source.title}`} source={source} />)}
                         </ItemGroup>
@@ -97,7 +97,7 @@ const LicensesPage = () => {
             ))}
 
             <LegalSection heading={t('legal.licenses.softwareHeading')}>
-                <Card variant="subtle" size="none" className="overflow-hidden gap-0">
+                <Card size="none" className="overflow-hidden gap-0">
                     <ItemGroup className="gap-0">
                         <LinkedItem
                             href={EXTERNAL_URLS.SOURCE_REPO}

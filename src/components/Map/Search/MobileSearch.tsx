@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Earth, Search as SearchIcon, X } from 'lucide-react';
+import { Globe, Search as SearchIcon, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useSearch } from '@/hooks/features/useSearch';
 import { useGeolocationStore } from '@/state/geolocationStore';
@@ -55,19 +55,19 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
 
     return (
         <>
-            <div className="flex shrink-0 gap-2 px-6 pb-3">
-                <div className="flex h-11 flex-1 min-w-0 items-center overflow-hidden rounded-2xl bg-foreground/5">
+            <div className="flex shrink-0 gap-2 sheet-row-gutter pb-3">
+                <div className="flex h-11 flex-1 min-w-0 items-center overflow-hidden rounded-full bg-field">
                     <button
                         type="button"
                         onClick={open}
-                        className="flex h-full flex-1 min-w-0 items-center gap-2.5 pl-4 pr-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                        className="flex h-full flex-1 min-w-0 items-center gap-2.25 pl-3.5 pr-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                         data-testid="search-trigger"
                     >
-                        <SearchIcon size={18} strokeWidth={2} className={activeLabel ? "shrink-0 text-primary" : "shrink-0 text-muted-foreground"} />
+                        <SearchIcon size={18} strokeWidth={1.75} className={activeLabel ? "shrink-0 text-primary" : "shrink-0 text-muted-foreground"} />
                         {s.activeFilterBadges ? (
                             <LineFilterLabel lines={s.activeFilterBadges} />
                         ) : (
-                            <span className={cn("truncate text-title", activeLabel ? "font-medium text-foreground" : "text-muted-foreground/60")}>
+                            <span className={cn("truncate text-title", activeLabel ? "font-medium text-foreground" : "text-muted-foreground")}>
                                 {activeLabel ?? t('search.placeholder')}
                             </span>
                         )}
@@ -89,10 +89,10 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                         type="button"
                         onClick={() => setIsCityPickerOpen(true)}
                         aria-label={t('map.controls.switchCity')}
-                        className="grid size-11 shrink-0 place-items-center rounded-2xl bg-foreground/5 text-muted-foreground outline-none active:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring/50"
+                        className="grid size-11 shrink-0 place-items-center rounded-full bg-field text-foreground outline-none active:bg-fill-2 focus-visible:ring-2 focus-visible:ring-ring/50"
                         data-testid="city-picker-btn"
                     >
-                        <Earth size={20} strokeWidth={1.5} />
+                        <Globe size={21} strokeWidth={1.75} />
                     </button>
                 )}
             </div>
@@ -106,7 +106,7 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                     <div aria-hidden="true" className="absolute inset-0 bg-black/40" onClick={close} />
                     <div
                         className={cn(
-                            "absolute inset-x-0 bottom-0 flex flex-col rounded-t-[32px] border-t border-border/40 bg-background pt-7 shadow-2xl transition-transform duration-200 ease-out",
+                            "absolute inset-x-0 bottom-0 flex flex-col rounded-t-sheet border-t border-border/40 bg-background pt-7 shadow-2xl transition-transform duration-200 ease-out",
                             isOpen ? "translate-y-0" : "translate-y-6"
                         )}
                         style={SEARCH_SHEET_STYLE}

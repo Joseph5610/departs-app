@@ -42,6 +42,8 @@ const itemVariants = cva(
         default: "border-transparent",
         outline: "border-border",
         muted: "border-transparent bg-muted/50",
+        /** A row in a grouped list; its separator starts at the text, `--row-sep` from the left. */
+        row: "relative min-h-12 border-0 rounded-none first:rounded-t-surface last:rounded-b-surface bg-transparent px-3.5 py-2.5 [button&]:active:bg-fill [a&]:active:bg-fill [--row-sep:2.875rem] not-last:after:absolute not-last:after:right-0 not-last:after:bottom-0 not-last:after:left-(--row-sep) not-last:after:h-[0.5px] not-last:after:bg-sep",
         settings: "border-0 border-b border-border/50 last:border-0 rounded-none bg-transparent hover:bg-foreground/5 active:bg-foreground/10 px-4 py-3",
       },
       size: {
@@ -89,6 +91,7 @@ const itemMediaVariants = cva(
       variant: {
         default: "bg-transparent",
         icon: "[&_svg:not([class*='size-'])]:size-4",
+        rowIcon: "[&_svg:not([class*='size-'])]:size-5",
         image:
           "size-10 overflow-hidden rounded-sm group-data-[size=sm]/item:size-8 group-data-[size=xs]/item:size-6 [&_img]:size-full [&_img]:object-cover",
       },

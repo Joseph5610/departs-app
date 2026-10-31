@@ -4,6 +4,20 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.96.0] - 2026-10-31
+
+### Changed
+
+- New iOS-style foundations: three glass materials, one corner system, softer separators and borderless cards, capsule buttons, larger switches and segmented controls.
+- Swiping a departure reveals a labelled action block that turns solid once letting go runs it.
+- Departure boards are a flat list with a larger title and a `My trip` mark on taken trips, and on phones favourite, share and more moved to a glass toolbar that folds while scrolling.
+- The phone's home sheet has grouped favourites, nearby stops and network links, and its favourites title opens the full list.
+- On phones the sheet floats as a glass capsule at its lowest height and morphs into the full-width sheet as it rises; its middle height is now 62% of the screen.
+
+### Fixed
+
+- Text on mint surfaces is dark, as white on mint was unreadable.
+
 ## [0.95.0] - 2026-10-30
 
 ### Added

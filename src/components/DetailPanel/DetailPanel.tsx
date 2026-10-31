@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/lib/cn';
 import { DrawerTitle } from '@/components/ui/drawer';
 import {
     Sheet,
@@ -32,6 +33,8 @@ interface DetailPanelProps {
     floating?: (hidden: boolean) => React.ReactNode;
     /** Mobile only: the home's top row, in the sheet header while no panel is open. */
     homeHeader?: React.ReactNode;
+    /** The phone's bottom toolbar of a card, told whether scrolling folded it. */
+    toolbar?: (collapsed: boolean) => React.ReactNode;
     /** Mobile only: shown in the sheet while no panel is open; told whether the sheet is at full height and whether at its peek. */
     home?: (isFull: boolean, isPeek: boolean) => React.ReactNode;
     /** Mobile only: the height the panel opens at least at. */
@@ -47,7 +50,7 @@ interface DetailPanelProps {
  * Responsive panel for displaying stop and vehicle details.
  * Uses a sidebar (Sheet) on desktop; on mobile, the one bottom sheet that also holds the home content.
  */
-export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, actions, collapseRequest, floating, homeHeader, home, minSnap = 'half', selfScrolling, children }: DetailPanelProps) => {
+export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, actions, collapseRequest, floating, homeHeader, toolbar, home, minSnap = 'half', selfScrolling, children }: DetailPanelProps) => {
     const isMobile = useIsMobile();
     const { t } = useTranslation();
 
@@ -64,38 +67,37 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
     );
 
     const platformBadge = platformCode && (
-        <PlatformCircle code={platformCode} size="lg" className="mr-1.5" />
+        <PlatformCircle code={platformCode} size="title" />
     );
 
-    // A clamp on the title element itself clips a badge taller than one text line in Safari.
-    const clampedTitle = typeof title === 'string' ? <span className="min-w-0 line-clamp-2">{title}</span> : title;
+    const titleText = typeof title === 'string' ? <span className="block min-w-0 truncate">{title}</span> : title;
 
     const titleElement = isMobile ? (
-        <DrawerTitle className="min-w-0 flex-1 text-xl font-semibold text-foreground tracking-tight leading-tight">
-            {clampedTitle}
+        <DrawerTitle className="min-w-0 flex-1 text-sheet-title leading-7 font-bold tracking-[-0.02em] text-foreground">
+            {titleText}
         </DrawerTitle>
     ) : (
-        <SheetTitle className="min-w-0 flex-1 text-xl font-semibold text-foreground tracking-tight text-left leading-tight">
-            {clampedTitle}
+        <SheetTitle className="min-w-0 flex-1 text-sheet-title leading-7 font-bold tracking-[-0.02em] text-foreground text-left">
+            {titleText}
         </SheetTitle>
     );
 
     const closeButton = (
         <Button
-            variant="ghost"
-            size="icon-sm"
+            variant="secondary"
+            size="icon-xs"
             onClick={onClose}
             aria-label={t('common.close')}
             data-testid="detail-panel-close"
-            className="shrink-0 -mr-2 text-muted-foreground"
+            className="shrink-0 text-muted-foreground"
         >
-            <X size={20} strokeWidth={1.5}  />
+            <X strokeWidth={2.5} className="size-3.5" />
         </Button>
     );
 
     const headerContent = (
-        <div className="flex w-full items-center justify-between pt-2">
-            <div className="flex gap-1 min-w-0 flex-1 items-center">
+        <div className={cn("flex w-full items-center justify-between gap-2.5", isMobile ? "pt-1.5 pb-3.5" : "pt-2")}>
+            <div className="flex gap-2.5 min-w-0 flex-1 items-center">
                 {backButton}
                 {platformBadge}
                 {titleElement}
@@ -116,6 +118,7 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
                 subHeader={subHeader}
                 selfScrolling={selfScrolling}
                 homeHeader={homeHeader}
+                toolbar={toolbar}
                 home={home}
                 floating={floating}
                 onDismiss={onClose}
@@ -142,7 +145,7 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
                 variant="glassy"
                 showCloseButton={false}
                 hideOverlay={true}
-                className="data-[side=left]:w-(--sidebar-width) data-[side=left]:sm:max-w-(--sidebar-width) top-(--chrome-top)! left-(--sidebar-inset)! bottom-(--sidebar-inset)! h-[calc(100dvh-var(--chrome-top)-var(--sidebar-inset))]! p-0 gap-2 flex flex-col outline-none rounded-3xl text-foreground"
+                className="data-[side=left]:w-(--sidebar-width) data-[side=left]:sm:max-w-(--sidebar-width) top-(--chrome-top)! left-(--sidebar-inset)! bottom-(--sidebar-inset)! h-[calc(100dvh-var(--chrome-top)-var(--sidebar-inset))]! p-0 gap-2 flex flex-col outline-none rounded-sheet text-foreground"
                 aria-describedby={undefined}
                 // The panel sits beside the map, not over it: focusing its first button would also pop that button's tooltip.
                 initialFocus={false}
@@ -160,8 +163,8 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
                             </div>
                         )}
                     </div>
-                    <ScrollArea className="flex-1 min-h-0 px-6 pb-6">
-                        {children}
+                    <ScrollArea className="flex-1 min-h-0 pb-6">
+                        <div className="px-(--panel-gutter)">{children}</div>
                     </ScrollArea>
                 </div>
                 <SidebarResizeHandle />

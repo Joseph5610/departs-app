@@ -105,13 +105,13 @@ export const FavoritesPanel = () => {
             ) : (
                 <>
                 {lines.length > 0 && (
-                    <Card size="none" variant="inset" className="px-2" style={lineBadgeColumn}>
+                    <Card size="none" className="px-3.5" style={lineBadgeColumn}>
                         <Reorder.Group as="div" axis="y" values={lines} onReorder={reorderFavoriteLines} className="flex flex-col">
                             {lines.map((fav, idx) => (
                                 <SortableFavorite key={`${fav.stopId}|${fav.line}|${fav.headsign}`} value={fav} sortable={isReordering && lines.length > 1} onMove={moveLine}>
                                     {(handle) => isReordering ? (
                                         <FavoriteReorderRow
-                                            lead={<LineBadge name={fav.line} routeColor={safeHexColor(lineColorAt(lineStops.get(fav.stopId), fav.line)) || FALLBACK_ROUTE_COLOR} size="lg" />}
+                                            lead={<LineBadge name={fav.line} routeColor={safeHexColor(lineColorAt(lineStops.get(fav.stopId), fav.line)) || FALLBACK_ROUTE_COLOR} size="board" />}
                                             title={fav.headsign}
                                             subtitle={stopName(lineStops.get(fav.stopId), t)}
                                             isFirst={idx === 0}
@@ -131,7 +131,7 @@ export const FavoritesPanel = () => {
                     </Card>
                 )}
                 {stops.length > 0 && (isReordering ? (
-                    <Card size="none" variant="inset" className={cn("px-2", lines.length > 0 && "mt-3")} style={stopBadgeColumn}>
+                    <Card size="none" className={cn("px-3.5", lines.length > 0 && "mt-3")} style={stopBadgeColumn}>
                         <Reorder.Group as="div" axis="y" values={stops} onReorder={reorderStops} className="flex flex-col">
                             {stops.map((pin, idx) => (
                                 <SortableFavorite key={pin.stop.id} value={pin} sortable={stops.length > 1} onMove={moveStop}>
@@ -151,7 +151,7 @@ export const FavoritesPanel = () => {
                     // One card per stop: each is its own small board.
                     <div className={cn("flex flex-col gap-3", lines.length > 0 && "mt-3")} style={stopBadgeColumn}>
                         {stops.map(pin => (
-                            <Card key={pin.stop.id} size="none" variant="inset" className="px-2 animate-in fade-in duration-200">
+                            <Card key={pin.stop.id} size="none" className="px-3.5 animate-in fade-in duration-200">
                                 <FavoriteStopSection
                                     pins={pin.pins}
                                     stop={pin.stop}

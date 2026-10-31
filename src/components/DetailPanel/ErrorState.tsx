@@ -69,7 +69,7 @@ export const ErrorState = memo(({ error, onRetry, title }: ErrorStateProps) => {
                         variant="secondary"
                         size="sm"
                         onClick={onRetry}
-                        className="gap-2 font-semibold text-xs uppercase tracking-[0.12em] rounded-full px-5 py-4 bg-foreground/5 hover:bg-foreground/10"
+                        className="gap-2 font-semibold text-xs uppercase tracking-[0.12em] rounded-full px-5 py-4"
                     >
                         <RefreshCw size={14} strokeWidth={1.5} />
                         {t('common.retry')}
