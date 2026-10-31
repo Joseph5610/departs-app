@@ -35,7 +35,7 @@ export const OtherDataCard = ({ activeStats, networkStats }: OtherDataCardProps)
     }
 
     return (
-        <Card variant="subtle" size="none" className="mb-4">
+        <Card size="none" className="mb-4">
             <CardHeader className="p-3.5 pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
                     <TrendingUp size={16} className="text-primary" />

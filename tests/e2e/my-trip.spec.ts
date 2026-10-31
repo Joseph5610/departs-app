@@ -57,7 +57,8 @@ test.describe('My trip', () => {
         await mockTrip(page);
         await page.goto('/prague/stop/U1111Z1P');
 
-        await page.getByTestId('my-trip-bell').first().click();
+        await page.locator('[data-testid^="departure-item-"]').first().click({ button: 'right' });
+        await page.getByRole('menuitem', { name: /taking this trip|Jedu tímto|Idem týmto/ }).click();
         const sheet = page.getByRole('dialog').filter({ has: page.getByTestId('my-trip-save') });
         await expect(sheet).toBeVisible();
         // The board's stop is the boarding stop, with a lead preselected.
@@ -88,7 +89,8 @@ test.describe('My trip', () => {
     test('saves a boarding stop without an alert', async ({ page }) => {
         await mockTrip(page);
         await page.goto('/prague/stop/U1111Z1P');
-        await page.getByTestId('my-trip-bell').first().click();
+        await page.locator('[data-testid^="departure-item-"]').first().click({ button: 'right' });
+        await page.getByRole('menuitem', { name: /taking this trip|Jedu tímto|Idem týmto/ }).click();
         const sheet = page.getByRole('dialog').filter({ has: page.getByTestId('my-trip-save') });
         await sheet.getByRole('button', { name: /Boarding|Nástup/ }).click();
         await sheet.getByRole('button', { name: /No alert|Bez upozornění/ }).click();
@@ -157,7 +159,7 @@ test.describe('My trip', () => {
         await mockTrip(page);
         await seedTrips(page, [savedTrip('trip-1')]);
         await page.goto('/prague/stop/U1111Z1P');
-        await page.getByTestId('my-trip-bell').first().click();
+        await page.getByTestId('my-trip-chip').first().click();
         const sheet = page.getByRole('dialog').filter({ has: page.getByTestId('my-trip-save') });
         await sheet.getByRole('button', { name: /Getting off|Výstup/ }).click();
         await sheet.getByRole('button', { name: /^Vysočanská/ }).click();

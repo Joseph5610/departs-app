@@ -28,7 +28,7 @@ interface ToggleSectionProps {
 
 /** A settings card with a switch; its children expand underneath while the switch is on. */
 export const ToggleSection = ({ title, description, icon: Icon, isChecked, onToggle, children, className }: ToggleSectionProps) => (
-    <Card variant="subtle" size="none" className={className}>
+    <Card size="none" className={className}>
         <Item
             variant="settings"
             size="none"

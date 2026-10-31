@@ -139,7 +139,7 @@ export const FeedbackModal = memo(() => {
                                     <FieldLabel className="micro-label-widest text-muted-foreground px-1">
                                         {t('feedback.type')}
                                     </FieldLabel>
-                                    <Card variant="subtle" size="none">
+                                    <Card size="none">
                                         <div className="p-3">
                                             <div className="grid grid-cols-3 gap-2">
                                                 <TypeButton
@@ -215,7 +215,7 @@ export const FeedbackModal = memo(() => {
                             name="includeDiagnostics"
                             render={({ field }) => (
                                 <Field className="gap-0">
-                                    <Card variant="subtle" size="none" className="overflow-hidden">
+                                    <Card size="none" className="overflow-hidden">
                                         <Item
                                             variant="settings"
                                             size="none"
@@ -269,7 +269,7 @@ export const FeedbackModal = memo(() => {
                 </ScrollArea>
                 
                 <div className="px-6 pb-6 pt-3 shrink-0 border-t border-border/50 flex gap-3">
-                    <Button type="button" variant="outline" onClick={onClose} className="flex-1 rounded-xl h-10 font-semibold cursor-pointer">
+                    <Button type="button" variant="secondary" onClick={onClose} className="flex-1 h-10 font-semibold cursor-pointer">
                         {t('common.cancel')}
                     </Button>
                     <Button 

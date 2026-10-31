@@ -160,6 +160,11 @@ test.describe('Favorites Tests', () => {
             await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x - i * 10, y: y + i * 2 }] });
         }
         expect(await sheetTop()).toBe(before);
+        const block = page.getByText('Pin', { exact: true });
+        await expect(block).toBeVisible();
+        const swipeBlock = block.locator('..');
+        await expect(swipeBlock).toHaveCSS('width', '88px');
+        await expect(swipeBlock).toHaveCSS('border-top-left-radius', '22px');
         await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
 
         await expect(page.getByText('Line C towards Letňany added to favorites')).toBeVisible();

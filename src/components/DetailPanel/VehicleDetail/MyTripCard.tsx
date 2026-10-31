@@ -29,7 +29,7 @@ export const MyTripCard = ({ trip, exit, lastStopName, onOpen, onEnd }: MyTripCa
     const exitMeta = exit?.arrivalTime ? `${t('ride.arrivesAtLabel')} ${exit.arrivalTime}` : '';
 
     return (
-        <Card variant="inset" size="none" className="overflow-hidden" data-testid="my-trip-card">
+        <Card size="none" className="overflow-hidden" data-testid="my-trip-card">
             <div className="flex h-10 items-center justify-between gap-2 pl-4 pr-2.5">
                 <span className="micro-label-widest text-muted-foreground">{t('myTrip.title')}</span>
                 <Button variant="ghost" size="icon-xs" onClick={onEnd} aria-label={t('myTrip.end')} title={t('myTrip.end')} className="size-7 text-muted-foreground hover:text-foreground">

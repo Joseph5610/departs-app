@@ -44,7 +44,7 @@ export const PointOfSaleHero = ({ pos, status }: PointOfSaleHeroProps) => {
     return (
         <Card
             size="none"
-            className="border border-border/50 ring-0 overflow-hidden relative flex flex-col shadow-sm dark:inset-shadow-[0_1px_0_rgb(255_255_255/0.07)]"
+            className="overflow-hidden relative flex flex-col"
             style={tone ? {
                 backgroundImage: `linear-gradient(160deg, color-mix(in srgb, ${TONE_TINT[tone]} 9%, var(--hero-base)), var(--hero-base))`
             } : { backgroundColor: 'var(--hero-base)' }}

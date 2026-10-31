@@ -88,10 +88,10 @@ export const Search = memo(() => {
             >
                 <div ref={containerRef}>
                     <div
-                        className="flex h-11 glassy rounded-2xl overflow-hidden transition-colors items-center focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+                        className="flex h-11 glassy rounded-full overflow-hidden transition-colors items-center focus-within:ring-2 focus-within:ring-primary/20"
                         data-testid="search-container"
                     >
-                        <CitySwitcher variant="ghost" className="w-12 pl-1 rounded-l-2xl rounded-r-none border-r border-border/40 hover:bg-muted/50" />
+                        <CitySwitcher variant="ghost" className="w-12 pl-1 rounded-l-full rounded-r-none border-r border-sep hover:bg-muted/50" />
 
                         <div className="relative flex-1 group h-full" onClick={() => inputRef.current?.focus()}>
                             <Autocomplete.Input
@@ -100,7 +100,7 @@ export const Search = memo(() => {
                                 aria-label={s.lineFilterLabel ?? t('search.placeholder')}
                                 onFocus={() => setIsOpen(true)}
                                 placeholder={activeFilter ? undefined : t('search.placeholder')}
-                                className="h-full w-full bg-transparent border-0! pl-10 text-title truncate placeholder:text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0! focus-visible:border-transparent! shadow-none! rounded-none outline-none"
+                                className="h-full w-full bg-transparent border-0! pl-10 text-title truncate placeholder:text-sm placeholder:text-muted-foreground focus-visible:ring-0! focus-visible:border-transparent! shadow-none! rounded-none outline-none"
                                 data-testid="search-input"
                                 readOnly={!!activeFilter}
                             />

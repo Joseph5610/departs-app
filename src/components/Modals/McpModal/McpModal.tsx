@@ -35,7 +35,7 @@ export const McpModal = () => {
                             {t('mcp.subtitle')}
                         </p>
 
-                        <Card variant="subtle" size="none">
+                        <Card size="none">
                             <div className="p-4 flex flex-col gap-2">
                                 <span className="text-label text-muted-foreground font-bold uppercase tracking-widest">
                                     {t('mcp.endpointLabel')}
@@ -46,8 +46,8 @@ export const McpModal = () => {
                                     </code>
                                     <Button
                                         size="sm"
-                                        variant="outline"
-                                        className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
+                                        variant="secondary"
+                                        className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 text-foreground transition-colors cursor-pointer"
                                         onClick={() => copy(SITE.MCP_URL, 'endpoint')}
                                     >
                                         {copiedKey === 'endpoint' ? (
@@ -67,7 +67,7 @@ export const McpModal = () => {
                         </Card>
 
                         <div className="flex flex-col gap-4">
-                            <Card variant="subtle" size="none">
+                            <Card size="none">
                                 <div className="p-4 flex flex-col gap-2.5">
                                     <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
                                         <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
@@ -83,7 +83,7 @@ export const McpModal = () => {
                                 </div>
                             </Card>
 
-                            <Card variant="subtle" size="none">
+                            <Card size="none">
                                 <div className="p-4 flex flex-col gap-2.5">
                                     <div className="flex items-center justify-between gap-2">
                                         <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
@@ -94,8 +94,8 @@ export const McpModal = () => {
                                         </div>
                                         <Button
                                             size="sm"
-                                            variant="outline"
-                                            className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
+                                            variant="secondary"
+                                            className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 text-foreground transition-colors cursor-pointer"
                                             onClick={() => copy(`claude mcp add --transport sse departs ${SITE.MCP_URL}`, 'claudeCode')}
                                         >
                                             {copiedKey === 'claudeCode' ? (
@@ -117,7 +117,7 @@ export const McpModal = () => {
                                 </div>
                             </Card>
 
-                            <Card variant="subtle" size="none">
+                            <Card size="none">
                                 <div className="p-4 flex flex-col gap-2.5">
                                     <div className="flex items-center justify-between gap-2">
                                         <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
@@ -128,8 +128,8 @@ export const McpModal = () => {
                                         </div>
                                         <Button
                                             size="sm"
-                                            variant="outline"
-                                            className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
+                                            variant="secondary"
+                                            className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 text-foreground transition-colors cursor-pointer"
                                             onClick={() => copy(JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", SITE.MCP_URL] } } }, null, 2), 'cursor')}
                                         >
                                             {copiedKey === 'cursor' ? (

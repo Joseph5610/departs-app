@@ -18,7 +18,7 @@ export const VehicleDetailSkeleton = () => {
 const VehicleHeroSkeleton = () => (
     <Card
         size="none"
-        className="border border-border/50 ring-0 overflow-hidden relative flex flex-col shadow-sm bg-(--hero-base)"
+        className="overflow-hidden relative flex flex-col bg-(--hero-base)"
     >
         <div className="flex flex-col p-4 pb-3">
             <div className="flex justify-between items-start gap-3">

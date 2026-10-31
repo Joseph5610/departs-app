@@ -20,7 +20,7 @@ export const FavoritesSkeleton = ({ kind, count }: FavoritesSkeletonProps) => ki
 ) : (
     <SkeletonList card={false} className="gap-3">
         {Array.from({ length: count }, (_, idx) => (
-            <Card key={idx} size="none" variant="inset" className="px-2">
+            <Card key={idx} size="none" className="px-3.5">
                 {/* Mirrors FavoriteStopSection: the stop header, a divider, then two departure rows. */}
                 <div className="flex flex-col gap-1 py-2.5">
                     <div className="flex items-center gap-3 py-2 pl-2 pr-3">

@@ -62,6 +62,7 @@ import { StatsTabs } from './Stats/StatsTabs';
 import { FavoritesTabs } from '@/components/DetailPanel/FavoritesPanel/FavoritesTabs';
 
 const renderSheetControls = (hidden: boolean) => <MapControls placement="sheet" hidden={hidden} />;
+const renderBoardToolbar = (collapsed: boolean) => <PanelActions layout="toolbar" collapsed={collapsed} />;
 const renderMobileHome = (isFull: boolean, isPeek: boolean) => <HomeSections isFull={isFull} isPeek={isPeek} />;
 
 /**
@@ -160,6 +161,7 @@ const MapInner = () => {
         else if (sheetCard === 'alerts') setIsAlertsOpen(false);
         else setIsCityPickerOpen(false);
     }, [sheetCard, setIsSettingsOpen, setIsAlertsOpen, setIsCityPickerOpen]);
+    const showsStopBoard = !sheetCard && !isStatsRoute && !isFavoritesRoute && !selectedVehicle;
     const sheetCardTitle = sheetCard === 'settings' ? t('settings.title') : sheetCard === 'alerts' ? t('alerts.title') : t('map.controls.switchCity');
     const sheetCardContent = useMemo(() => (
         <Suspense fallback={null}>
@@ -342,12 +344,13 @@ const MapInner = () => {
                 onClose={sheetCard ? closeSheetCard : closePanel}
                 onBack={!sheetCard && shouldShowBackButton ? handleBack : undefined}
                 title={sheetCard ? sheetCardTitle : detailTitle}
-                platformCode={(!sheetCard && !isStatsRoute && !isFavoritesRoute && !selectedVehicle) ? selectedStop?.board?.code : undefined}
+                platformCode={showsStopBoard ? selectedStop?.board?.code : undefined}
                 subHeader={sheetCard ? undefined : detailSubHeader}
                 actions={sheetCard ? undefined : detailActions}
                 collapseRequest={drawerCollapseRequest}
                 floating={renderSheetControls}
                 homeHeader={mobileSearch}
+                toolbar={showsStopBoard && selectedStop ? renderBoardToolbar : undefined}
                 home={renderMobileHome}
                 minSnap={sheetCard && sheetCard !== 'city' ? 'full' : 'half'}
                 selfScrolling={sheetCard === 'alerts'}

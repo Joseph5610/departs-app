@@ -86,7 +86,7 @@ export const AlertsContent = () => {
 
     return (
         <div className="flex-1 flex flex-col min-h-0">
-            <div className="pt-1 pb-3 px-6 shrink-0 border-b border-border/50 bg-transparent">
+            <div className="pt-1 pb-3 px-(--panel-gutter) shrink-0 border-b border-border/50 bg-transparent">
                 <div className="flex flex-col gap-3">
                     <Tabs value={filterMode} onValueChange={(v) => setFilterMode(v as AlertFilterMode)}>
                         <TabsList variant="pill" className="w-full grid grid-cols-3">
@@ -121,7 +121,7 @@ export const AlertsContent = () => {
                 </div>
             </div>
 
-            <div className="flex-1 min-h-0 px-6 py-2">
+            <div className="flex-1 min-h-0 px-(--panel-gutter) py-2">
                 {sections.length === 0 && !loadingRSS ? (
                     <div className="flex flex-1 items-center justify-center py-12 h-full">
                         <Empty className="animate-in fade-in zoom-in-95 duration-300">
@@ -174,13 +174,12 @@ export const AlertsContent = () => {
 
                             return (
                                 <Card
-                                    variant="inset"
                                     size="none"
                                     className={cn(
                                         "overflow-hidden rounded-none transition-colors",
-                                        !isFirst && "border-t-0",
-                                        isFirst && "rounded-t-2xl mt-1.5",
-                                        isLast && "rounded-b-2xl mb-3"
+                                        !isFirst && "relative before:absolute before:inset-x-3.5 before:top-0 before:h-[0.5px] before:bg-sep",
+                                        isFirst && "rounded-t-surface mt-1.5",
+                                        isLast && "rounded-b-surface mb-3"
                                     )}
                                 >
                                     <CondensedAlertItem key={item.guid ?? `${item.title}-${index}`} item={item} defaultExpanded={index === focusedIndex} />

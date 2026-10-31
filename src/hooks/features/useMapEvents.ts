@@ -78,6 +78,10 @@ export const useMapEvents = () => {
 
     const onLoad = useCallback((evt: { target: Map }) => {
         const map = evt.target;
+        // MapLibre opens the compact attribution on load and on crossing its width limit; the phone keeps only its button.
+        const foldAttribution = () => map.getContainer().querySelector('.maplibregl-compact-show')?.classList.remove('maplibregl-compact-show');
+        foldAttribution();
+        map.on('resize', foldAttribution);
         const style = map.getStyle();
         const layers = style?.layers;
         if (layers) {

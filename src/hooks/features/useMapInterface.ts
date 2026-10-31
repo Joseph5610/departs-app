@@ -9,7 +9,7 @@ import { MAP_LAYERS } from '@/config/mapLayers';
 import { hasPosition } from '@/lib/geo';
 import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
-import { MAP_CAMERA, LAYOUT, SELECTED_VEHICLE_PULSE } from '@/config/constants';
+import { MAP_CAMERA, SELECTED_VEHICLE_PULSE, SHEET } from '@/config/constants';
 
 /** The panel's inset from the viewport lives in index.css; the camera padding must match it. */
 const readSidebarInsetPx = (): number =>
@@ -17,7 +17,7 @@ const readSidebarInsetPx = (): number =>
 
 /** The map area the mobile sheet or the desktop panel `sidebarWidth` wide covers, kept clear by the camera. */
 const cameraPadding = (isMobile: boolean, sidebarWidth: number) => isMobile
-    ? { bottom: window.innerHeight / LAYOUT.BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
+    ? { bottom: window.innerHeight * SHEET.HALF, top: 0, left: 0, right: 0 }
     : { bottom: 0, top: 0, left: sidebarWidth + readSidebarInsetPx(), right: 0 };
 
 /**

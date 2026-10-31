@@ -305,6 +305,8 @@
     "collapseRides": "Sbalit cesty"
   },
   "myTrip": {
+    "swipeTake": "Jedu",
+    "swipeEdit": "Upravit",
     "aboard": "Bez nástupu",
     "boardAt": "{{stop}} · odjezd {{time}}",
     "boardTitle": "Nástup",
@@ -502,6 +504,8 @@
     "title": "Oblíbené",
     "empty": "Zatím žádné oblíbené",
     "emptySub": "Označte zastávku hvězdičkou nebo připněte linku z odjezdové tabule a najdete je tady.",
+    "swipePin": "Připnout",
+    "swipeUnpin": "Odebrat",
     "pinLine": "Přidat linku {{line}} směr {{headsign}} do oblíbených",
     "unpinLine": "Odebrat linku {{line}} směr {{headsign}} z oblíbených",
     "linePinned": "Linka {{line}} směr {{headsign}} přidána do oblíbených",
@@ -524,7 +528,6 @@
     "disruptionsOnYourLines_other": "{{count}} mimořádností na vašich linkách",
     "useLocationShort": "Použít polohu",
     "nearby": "Poblíž",
-    "seeAll": "Zobrazit vše",
     "network": "Síť",
     "locationNeeded": "Povolte polohu a uvidíte zastávky kolem sebe.",
     "noNearby": "V docházkové vzdálenosti nejsou žádné zastávky.",

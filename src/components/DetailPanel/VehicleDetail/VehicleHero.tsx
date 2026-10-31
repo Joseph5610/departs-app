@@ -41,7 +41,7 @@ export const VehicleHero = ({
     return (
         <Card 
             size="none"
-            className="border border-border/50 ring-0 overflow-hidden relative flex flex-col shadow-sm dark:inset-shadow-[0_1px_0_rgb(255_255_255/0.07)]"
+            className="overflow-hidden relative flex flex-col"
             style={{
                 backgroundImage: `linear-gradient(160deg, color-mix(in srgb, ${bgColor} 18%, var(--hero-base)), color-mix(in srgb, ${bgColor} 11%, var(--hero-base)))`
             }}
