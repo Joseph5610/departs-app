@@ -54,7 +54,7 @@ export const BoardRow = ({ action, tripAction, ...props }: BoardRowProps) => {
                 )}
                 {tripAction && (
                     <ContextMenuItem onClick={tripAction.onTrigger}>
-                        <Route strokeWidth={1.75} className="text-primary" />
+                        <Route strokeWidth={1.75} className="text-tint-mint" />
                         {tripAction.label}
                     </ContextMenuItem>
                 )}
@@ -72,7 +72,7 @@ const SwipeBlock = ({ label, className, children }: { label: string; className: 
         className={cn("pointer-events-none absolute inset-y-2 flex flex-col items-center justify-center gap-0.75 overflow-hidden rounded-surface [transition:var(--swipe-block-transition,none),background-color_150ms,color_150ms]", className)}
     >
         {children}
-        <span className="whitespace-nowrap text-caption leading-3.25 font-semibold opacity-0 group-data-swipe-label/row:opacity-100">{label}</span>
+        <span className="whitespace-nowrap type-control opacity-0 group-data-swipe-label/row:opacity-100">{label}</span>
     </span>
 );
 
@@ -87,7 +87,7 @@ const RowBody = ({ action, tripAction, below, className, children, outer, ...lea
                 </SwipeBlock>
             )}
             {tripAction && (
-                <SwipeBlock label={tripAction.swipeLabel} className="left-0 w-(--swipe-right,0px) bg-primary/22 text-tint-mint group-data-armed/row:bg-primary group-data-armed/row:text-primary-foreground">
+                <SwipeBlock label={tripAction.swipeLabel} className="left-0 w-(--swipe-right,0px) bg-selected text-tint-mint group-data-armed/row:bg-primary group-data-armed/row:text-primary-foreground">
                     <Route size={20} strokeWidth={2.25} className={SWIPE_ICON} />
                 </SwipeBlock>
             )}
@@ -108,7 +108,7 @@ const RowBody = ({ action, tripAction, below, className, children, outer, ...lea
 export const RowHeadsign = ({ headsign, isPinned = false, children }: { headsign: string; isPinned?: boolean; children?: React.ReactNode }) => {
     const [lead, last] = splitLastWord(wrappableName(headsign));
     return (
-        <span className="col-start-2 min-w-0 py-[calc((--spacing(6)-1lh)/2)] text-title font-medium leading-tight text-foreground wrap-break-word">
+        <span className="col-start-2 min-w-0 py-[calc((--spacing(6)-1lh)/2)] type-headsign text-foreground wrap-break-word">
             {lead}
             <span className="inline-flex items-center gap-x-1.5 whitespace-nowrap">
                 {last}
@@ -121,5 +121,5 @@ export const RowHeadsign = ({ headsign, isPinned = false, children }: { headsign
 
 /** A row's second line, under the headsign: the departure time, or why there is none. */
 export const RowTimeLine = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-    <span className={cn("col-start-2 row-start-2 mt-0.5 flex min-w-0 items-center gap-1.25 text-body-sm leading-4.5 text-muted-foreground tabular-nums", className)}>{children}</span>
+    <span className={cn("col-start-2 row-start-2 mt-0.5 flex min-w-0 items-center gap-1.25 type-meta text-muted-foreground tabular-nums", className)}>{children}</span>
 );

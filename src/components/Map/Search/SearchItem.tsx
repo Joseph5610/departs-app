@@ -7,7 +7,7 @@ import type { LineBadgeData } from '@/domain/routes';
 
 interface SearchItemProps {
     icon: React.ReactNode;
-    title: string;
+    title?: string;
     subtitle?: string;
     lines?: LineBadgeData[];
     onClick: () => void;
@@ -48,13 +48,34 @@ export const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
             })}
             
             {uniqueLines.length > 5 && (
-                <span className="inline-flex items-center justify-center h-4.25 px-1 min-w-4.25 rounded-badge bg-fill-2 text-muted-foreground text-caption font-bold mr-1.5">
+                <span className="inline-flex items-center justify-center h-4.5 px-1 min-w-4.5 rounded-badge bg-fill-2 text-muted-foreground type-micro mr-1.5">
                     +{uniqueLines.length - 5}
                 </span>
             )}
         </>
     );
 };
+
+/** A search result's text, the same on the desktop dropdown and the phone's list. */
+export const SearchRowBody = ({ title, subtitle, lines }: Pick<SearchItemProps, 'title' | 'subtitle' | 'lines'>) => (
+    <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+        {title && (
+            <span className="text-foreground type-group truncate">
+                {title}
+            </span>
+        )}
+        {(subtitle || (lines && lines.length > 0)) && (
+            <div className="flex flex-wrap items-center gap-y-1">
+                <LineBadges lines={lines} />
+                {subtitle && (
+                    <span className="text-muted-foreground type-note truncate">
+                        {subtitle}
+                    </span>
+                )}
+            </div>
+        )}
+    </div>
+);
 
 /**
  * SearchItem
@@ -70,33 +91,17 @@ export const SearchItem = ({ icon, title, subtitle, lines, onClick, variant = 'd
             onClick={onClick}
             data-testid={testId}
             className={cn(
-                'relative w-full px-3.5 py-3 min-h-13 flex items-center gap-3 rounded-2xl cursor-pointer select-none outline-hidden text-sm transition-colors [&_svg]:pointer-events-none [&_svg]:shrink-0',
-                variant === 'primary'
-                    ? 'data-highlighted:bg-primary/15 hover:bg-primary/15 text-primary'
-                    : 'data-highlighted:bg-fill hover:bg-fill active:bg-fill-2'
+                'row-hover w-full px-3.5 py-2 min-h-11 flex items-center gap-3 select-none type-row [&_svg]:pointer-events-none [&_svg]:shrink-0',
+                variant === 'primary' && 'text-tint-mint'
             )}
         >
             <div className={cn(
                 'shrink-0 flex items-center justify-center',
-                variant === 'primary' ? 'text-primary' : highlight ? 'text-favorite' : 'text-muted-foreground'
+                variant === 'primary' ? 'text-tint-mint' : highlight ? 'text-favorite' : 'text-muted-foreground'
             )}>
                 {icon}
             </div>
-            <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                <span className="text-foreground font-medium leading-tight text-base truncate">
-                    {title}
-                </span>
-                
-                <div className="flex flex-wrap items-center gap-y-1">
-                    <LineBadges lines={lines} />
-
-                    {subtitle && (
-                        <span className="text-muted-foreground text-body-sm truncate">
-                            {subtitle}
-                        </span>
-                    )}
-                </div>
-            </div>
+            <SearchRowBody title={title} subtitle={subtitle} lines={lines} />
         </Autocomplete.Item>
     );
 };

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<title>Návrh: nastavenia</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+@font-face { font-family: 'Geist Variable'; font-style: normal; font-display: swap; font-weight: 100 900; src: url(/_blob/bfb99ab00ab27c1f4727d7cb42a8f1d5) format('woff2-variations'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Geist Variable'; font-style: normal; font-display: swap; font-weight: 100 900; src: url(/_blob/e70cefe43f47d3bd5f067afbc5826a84) format('woff2-variations'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+body { margin: 0; }
+</style>
+</helmet>
+<div class="phone root-type th-dark {{tallClass}}">
+  <img class="map" style="height: 844px;" src="/_blob/865bbeb5ef36d05a251b1ba44071d2ea" alt="">
+  <div class="dim" style="opacity: 0.25;"></div>
+  <div class="sc-sheet {{tallClass}}">
+    <div class="mat rim rim-top" style="background: var(--mat-solid);"></div>
+    <div class="sc-in">
+      <button class="grab" aria-label="Zmeniť výšku panela"><span></span></button>
+      <div class="sc-head">
+        <h1 class="sc-title grow">Nastavenia</h1>
+        <button class="nb-close well" aria-label="Zavrieť"><svg class="ic" style="stroke-width: 2.5;" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
+      <div class="sc-scroll">
+        <div class="sc-h" style="margin-top: 0;">Upozornenia</div>
+        <div class="sc-group">
+          <div class="sc-set">
+            <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+            <span class="grow"><span class="sc-set-t">Mimoriadnosti na mojich linkách</span><span class="t-sub">Upozorní na novú mimoriadnosť na pripnutých linkách a ukáže ich počet na ikone appky</span></span>
+            <span class="sw sw-new off"><i></i></span>
+          </div>
+        </div>
+
+        <div class="sc-h">Vzhľad</div>
+        <span class="seg seg-new sc-seg-fill"><span>Svetlý</span><span class="on">Tmavý</span><span>Systém</span></span>
+
+        <div class="sc-h">Živé dáta</div>
+        <div class="sc-group">
+          <div class="sc-set">
+            <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2h4"/><path d="M12 14l3-3"/><circle cx="12" cy="14" r="8"/></svg>
+            <span class="grow"><span class="sc-set-t">Obnova živých dát</span><span class="t-sub">Pomalšia šetrí dáta aj batériu.</span></span>
+            <span class="seg seg-new seg-sm"><span class="on">10s</span><span>20s</span><span>30s</span></span>
+          </div>
+        </div>
+
+        <div class="sc-h">Mapa</div>
+        <div class="sc-group">
+          <div class="sc-set">
+            <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></svg>
+            <span class="grow"><span class="sc-set-t">Poloha vozidiel v reálnom čase</span><span class="t-sub">Zobraziť autobusy, električky a metro</span></span>
+            <span class="sw sw-new"><i></i></span>
+          </div>
+          <div class="sc-sub">
+            <div class="sc-sub-h">Filtre</div>
+            <div class="sc-chips">
+              <span class="sc-chip on"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3.1V7a4 4 0 0 0 8 0V3.1"/><path d="m9 15-1-1"/><path d="m15 15 1-1"/><path d="M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z"/><path d="m8 19-2 3"/><path d="m16 19 2 3"/></svg>Metro</span>
+              <span class="sc-chip on"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/></svg>Električka</span>
+              <span class="sc-chip"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/></svg>Autobus</span>
+              <span class="sc-chip"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/></svg>Vlak</span>
+              <span class="sc-chip"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.4 19 21 12H3l1.6 7"/><path d="M12 12V5"/><path d="M6 12V8a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v4"/></svg>Prievoz</span>
+              <span class="sc-chip"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4l20-2"/><path d="M12 3v7"/><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M4 15h16"/></svg>Lanovka</span>
+              <span class="sc-chip"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9 15 15 9"/></svg>Všetko</span>
+            </div>
+            <div class="sc-sub-h">Filtrovať podľa meškania</div>
+            <div class="sc-chips">
+              <span class="sc-chip delay"><i style="background: var(--tint-sky);"></i>Vpred (≥1m)</span>
+              <span class="sc-chip delay"><i style="background: var(--tint-mint);"></i>Načas (-1–2m)</span>
+              <span class="sc-chip delay"><i style="background: var(--tint-amber);"></i>2–5 min</span>
+              <span class="sc-chip delay"><i style="background: oklch(0.712 0.194 13.43);"></i>5–10 min</span>
+              <span class="sc-chip delay"><i style="background: oklch(0.714 0.203 305.5);"></i>&gt;10 min</span>
+            </div>
+          </div>
+          <div class="sc-set">
+            <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/></svg>
+            <span class="grow"><span class="sc-set-t">Farby vozidiel podľa meškania</span><span class="t-sub">Zobraziť farbu vozidiel podľa ich aktuálneho meškania namiesto farby linky</span></span>
+            <span class="sw sw-new off"><i></i></span>
+          </div>
+        </div>
+
+        <div class="sc-group" style="margin-top: 20px;">
+          <div class="sc-set">
+            <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 4.99-5.54 10.19-7.4 11.8a1 1 0 0 1-1.2 0C9.54 20.19 4 14.99 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+            <span class="grow"><span class="sc-set-t">Zobraziť zastávky</span><span class="t-sub">Zobraziť zastávky a stanice</span></span>
+            <span class="sw sw-new"><i></i></span>
+          </div>
+          <div class="sc-set">
+            <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16"/><path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2"/><path d="M9 20h6"/></svg>
+            <span class="grow"><span class="sc-set-t">Zobraziť popisy</span><span class="t-sub">Zobraziť názvy zastávok na mape</span></span>
+            <span class="sw sw-new"><i></i></span>
+          </div>
+          <div class="sc-sub">
+            <div class="sc-sub-h">Filtre</div>
+            <div class="sc-chips">
+              <span class="sc-chip"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3.1V7a4 4 0 0 0 8 0V3.1"/><path d="m9 15-1-1"/><path d="m15 15 1-1"/><path d="M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z"/><path d="m8 19-2 3"/><path d="m16 19 2 3"/></svg>Metro</span>
+              <span class="sc-chip"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/></svg>Vlak</span>
+              <span class="sc-chip on"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9 15 15 9"/></svg>Všetko</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sc-group" style="margin-top: 20px;">
+          <div class="sc-set">
+            <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.5" r="2.5"/><path d="m10.2 6.3-3.9 3.9"/><circle cx="4.5" cy="12" r="2.5"/><path d="M7 12h10"/><circle cx="19.5" cy="12" r="2.5"/><path d="m13.8 17.7 3.9-3.9"/><circle cx="12" cy="19.5" r="2.5"/></svg>
+            <span class="grow"><span class="sc-set-t">Linky MHD</span><span class="t-sub">Zobraziť hlavné linky na mape</span></span>
+            <span class="sw sw-new"><i></i></span>
+          </div>
+          <div class="sc-set">
+            <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="8" rx="1"/><path d="M17 14v7"/><path d="M7 14v7"/><path d="M17 3v3"/><path d="M7 3v3"/><path d="M10 14 2.3 6.3"/><path d="m14 6 7.7 7.7"/><path d="m8 6 8 8"/></svg>
+            <span class="grow"><span class="sc-set-t">Výluky na mape</span><span class="t-sub">Zobraziť výluky a presunuté zastávky na mape</span></span>
+            <span class="sw sw-new"><i></i></span>
+          </div>
+          <div class="sc-set">
+            <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+            <span class="grow"><span class="sc-set-t">Predajné miesta</span><span class="t-sub">Zobraziť automaty, infocentrá a pokladne na mape</span></span>
+            <span class="sw sw-new off"><i></i></span>
+          </div>
+          <div class="sc-set">
+            <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.1 4.6a2 2 0 0 0 1.8 0l3.7-1.9A1 1 0 0 1 21 3.6v12.8a1 1 0 0 1-.6.9l-4.5 2.3a2 2 0 0 1-1.8 0l-4.2-2.2a2 2 0 0 0-1.8 0l-3.7 1.9A1 1 0 0 1 3 20.4V7.6a1 1 0 0 1 .6-.9l4.5-2.3a2 2 0 0 1 1.8 0z"/><path d="M15 5.8v15"/><path d="M9 3.2v15"/></svg>
+            <span class="grow"><span class="sc-set-t">Podkladová mapa</span><span class="t-sub">Zobraziť popisy ulíc, miest a zaujímavých miest</span></span>
+            <span class="sw sw-new"><i></i></span>
+          </div>
+        </div>
+
+        <div class="sc-h">Jazyk</div>
+        <span class="seg seg-new sc-seg-fill"><span>Čeština</span><span class="on">Slovenčina</span><span>English</span></span>
+
+        <div class="sc-h">AI integrácie</div>
+        <div class="sc-group">
+          <div class="sc-set">
+            <svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.9 5.6a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-2.1a2 2 0 0 0 1.3-1.3z"/></svg>
+            <span class="grow"><span class="sc-set-t">AI integrácie</span><span class="t-sub">Pripojte AI asistentov a vývojové nástroje priamo k živým dátam MHD.</span></span>
+            <svg class="ic chev" width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </div>
+
+        <div class="sc-group" style="margin-top: 20px;">
+          <div class="sc-set"><svg class="ic" style="color: var(--tint-red);" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span class="grow sc-set-t">Vymazať históriu hľadania</span></div>
+          <div class="sc-set"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="grow sc-set-t">Odoslať spätnú väzbu</span><svg class="ic chev" width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="sc-set"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg><span class="grow sc-set-t">Nainštalovať aplikáciu</span></div>
+          <div class="sc-set"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8"/><path d="M21 3v5h-5"/></svg><span class="grow sc-set-t">Skontrolovať aktualizácie</span><span class="t-sub">v0.95.0</span></div>
+        </div>
+
+        <div class="sc-group" style="margin-top: 20px;">
+          <div class="sc-set"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.6 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/></svg><span class="grow sc-set-t">Zásady ochrany súkromia</span><svg class="ic chev" width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="sc-set"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h6"/></svg><span class="grow sc-set-t">Podmienky používania</span><svg class="ic chev" width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="sc-set"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 8a4 4 0 0 0 6 0z"/><path d="M19 7l-3 8a4 4 0 0 0 6 0z"/></svg><span class="grow sc-set-t">Zdroje údajov a licencie</span><svg class="ic chev" width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
+        </div>
+        <p class="sc-foot" style="text-align: center; margin-top: 14px;">Databáza zastávok aktualizovaná: [dátum]</p>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tall":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const tall = this.props.tall === true || this.props.tall === 'true';
+    return { tallClass: tall ? 'tall' : '' };
+  }
+}
+</script>
+</body>
+</html>

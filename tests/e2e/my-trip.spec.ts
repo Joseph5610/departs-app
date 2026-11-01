@@ -64,7 +64,7 @@ test.describe('My trip', () => {
         // The board's stop is the boarding stop, with a lead preselected.
         await expect(sheet.getByText('Hlavní nádraží', { exact: false }).first()).toBeVisible();
         await sheet.getByRole('button', { name: /Boarding|Nástup/ }).click();
-        await expect(sheet.locator('[data-slot=toggle-group-item][aria-pressed=true]')).toHaveCount(1);
+        await expect(sheet.locator('[role=group] button[aria-pressed=true]')).toHaveCount(1);
 
         await sheet.getByRole('button', { name: /Getting off|Výstup|Výstup/ }).click();
         await sheet.getByRole('button', { name: /Florenc/ }).click();
@@ -94,7 +94,7 @@ test.describe('My trip', () => {
         const sheet = page.getByRole('dialog').filter({ has: page.getByTestId('my-trip-save') });
         await sheet.getByRole('button', { name: /Boarding|Nástup/ }).click();
         await sheet.getByRole('button', { name: /No alert|Bez upozornění/ }).click();
-        await expect(sheet.locator('[data-slot=toggle-group-item][aria-pressed=true]')).toHaveText(/No alert|Bez upozornění/);
+        await expect(sheet.locator('[role=group] button[aria-pressed=true]')).toHaveText(/No alert|Bez upozornění/);
         await sheet.getByRole('button', { name: /Getting off|Výstup/ }).click();
         await sheet.getByRole('button', { name: /Florenc/ }).click();
         await sheet.getByTestId('my-trip-save').click();
@@ -180,6 +180,21 @@ test.describe('My trip', () => {
         expect(shared).toContain('/prague/trip/trip-1/veh-1?board=1&exit=2');
         expect(shared).toContain('Hlavní nádraží');
         expect(shared).toContain('Florenc');
+    });
+
+    // One sheet at a time: on a phone My trip replaces the sheet's content, and going back restores it.
+    test('opens as a card in the phone sheet', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await mockTrip(page);
+        await seedTrips(page, [savedTrip('trip-1')]);
+        await page.goto('/prague/stop/U1111Z1P');
+        await page.getByTestId('my-trip-chip').first().click();
+
+        const panel = page.getByTestId('detail-panel');
+        await expect(panel.getByTestId('my-trip-save')).toBeVisible();
+        await expect(page.locator('[data-slot="dialog-content"]')).toHaveCount(0);
+        await panel.getByRole('button', { name: /Back|Zpět|Späť/ }).click();
+        await expect(page.getByTestId('departure-item-trip-1')).toBeVisible();
     });
 
     test('stacks two trips behind a tab and fans them out', async ({ page }) => {

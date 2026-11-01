@@ -41,12 +41,12 @@ export const DepartureChip = memo(({ departure: dep, timeZone, isHighlighted, on
     return (
         <ButtonTooltip label={tooltip}>
         <Button
-            variant="ghost"
+            variant="pill"
+            size="chip"
             {...tap}
             data-testid={`departure-item-${dep.tripId}`}
             aria-label={`${label}, ${tooltip}`}
             className={cn(
-                "h-7 gap-1.25 rounded-full bg-fill px-2.75 text-body-sm font-semibold tabular-nums text-muted-foreground hover:bg-fill-2 hover:text-foreground",
                 dep.isCanceled && "line-through opacity-60",
                 mark && "bg-primary/15 text-foreground ring-1 ring-primary/60"
             )}

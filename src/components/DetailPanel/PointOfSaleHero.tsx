@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Banknote, CreditCard, MapPin, Smartphone } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
 import { weekdayShortNames } from '@/domain/time';
@@ -17,7 +18,7 @@ type Tone = 'open' | 'soon' | 'closed';
 
 const TONE_TEXT: Record<Tone, string> = {
     open: 'text-emerald-500',
-    soon: 'text-amber-500',
+    soon: 'text-tint-amber',
     closed: 'text-destructive',
 };
 
@@ -57,10 +58,10 @@ export const PointOfSaleHero = ({ pos, status }: PointOfSaleHeroProps) => {
                             {pos.payMethods.map(pm => {
                                 const Icon = PAY_ICONS[pm];
                                 return (
-                                    <span key={pm} className="flex h-7 items-center gap-1.5 rounded-full bg-foreground/5 px-3 text-body-sm text-foreground/80">
-                                        <Icon size={14} strokeWidth={1.5} className="text-muted-foreground" />
+                                    <Badge key={pm} variant="info">
+                                        <Icon size={14} strokeWidth={1.5} />
                                         {t(`pos.payMethods.${pm}`, pm)}
-                                    </span>
+                                    </Badge>
                                 );
                             })}
                         </div>
@@ -69,7 +70,7 @@ export const PointOfSaleHero = ({ pos, status }: PointOfSaleHeroProps) => {
             )}
 
             {pos.address && (
-                <div className={cn("flex items-start gap-2 px-4 py-3 bg-foreground/3 text-body-sm text-foreground/80", hasBody && "border-t border-border/50")}>
+                <div className={cn("flex items-start gap-2 px-4 py-3 bg-foreground/3 type-meta text-foreground/80", hasBody && "border-t border-border/50")}>
                     <MapPin size={14} strokeWidth={1.5} className="mt-0.5 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 wrap-break-word">{pos.address}</span>
                 </div>
@@ -98,8 +99,8 @@ const OpeningState = ({ status, tone }: { status: OpeningStatus; tone: Tone }) =
 
     return (
         <div className="flex flex-col gap-0.5">
-            <span className={cn("text-heading font-semibold", TONE_TEXT[tone])}>{state}</span>
-            {note && <span className="text-body-sm text-muted-foreground">{note}</span>}
+            <span className={cn("type-section", TONE_TEXT[tone])}>{state}</span>
+            {note && <span className="type-meta text-muted-foreground">{note}</span>}
         </div>
     );
 };

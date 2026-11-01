@@ -1,11 +1,11 @@
 import { useState, useRef, useMemo, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { toast } from 'sonner';
 import { useMutation } from '@tanstack/react-query';
-import { Bug, Lightbulb, MessageSquare, Loader2, Send, MessageSquareHeart } from 'lucide-react';
+import { Activity, Bug, Lightbulb, MessageSquare, Loader2, Send } from 'lucide-react';
 import { z } from 'zod';
 import { apiFetch } from '@/lib/apiClient';
 
@@ -19,11 +19,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
-import { IconToggle, type IconToggleProps } from '@/components/IconToggle';
+import { SegmentedControl } from '@/components/SegmentedControl';
+import { ToggleSection } from '@/components/Modals/SettingsModal/SettingsControls';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Item, ItemActions, ItemContent, ItemDescription, ItemTitle } from '@/components/ui/item';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
 
 import { useUiStore } from '@/state/uiStore';
@@ -36,9 +35,7 @@ import { PrivacyNote } from './PrivacyNote';
 const baseFormSchema = feedbackPayloadSchema.omit({ diagnostics: true, turnstileToken: true });
 type FormValues = z.infer<typeof baseFormSchema>;
 
-const TypeButton = (props: Omit<IconToggleProps, 'className' | 'labelClassName'>) => (
-    <IconToggle {...props} className="py-3 rounded-xl text-xs cursor-pointer" labelClassName="text-xs font-bold" />
-);
+const FIELD_LABEL = 'type-label text-muted-foreground px-0.5';
 
 export const FeedbackModal = memo(() => {
     const { t } = useTranslation();
@@ -65,8 +62,6 @@ export const FeedbackModal = memo(() => {
         mode: 'onChange'
     });
 
-    const includeDiagnostics = useWatch({ control: form.control, name: 'includeDiagnostics' });
-    
     const diagnosticSnapshot = useMemo(() => {
         return isOpen ? getDiagnosticSnapshot() : undefined;
     }, [isOpen]);
@@ -117,53 +112,36 @@ export const FeedbackModal = memo(() => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent variant="default" phoneLayout="page" className="max-w-xl" data-testid="feedback-modal-content">
-                <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
-                    <DialogTitle className="flex items-center gap-2 text-lg font-bold">
-                        <MessageSquareHeart className="size-5 text-primary" />
-                        <span>{t('feedback.title')}</span>
-                    </DialogTitle>
-                    <DialogDescription className="text-xs text-muted-foreground leading-relaxed mt-1">
+            <DialogContent phoneLayout="page" className="max-w-xl" data-testid="feedback-modal-content">
+                <DialogHeader className="px-(--panel-gutter) pt-6 pb-2 shrink-0">
+                    <DialogTitle>{t('feedback.title')}</DialogTitle>
+                    <DialogDescription className="type-meta text-muted-foreground">
                         {t('feedback.description')}
                     </DialogDescription>
                 </DialogHeader>
 
-                <ScrollArea className="flex-1 min-h-0 px-6">
-                    <form id="feedback-form" onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5 py-2 pb-6">
+                <ScrollArea className="flex-1 min-h-0 px-(--panel-gutter)">
+                    <form id="feedback-form" onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5 pt-2 pb-4">
                         
                         <Controller
                             control={form.control}
                             name="type"
                             render={({ field, fieldState }) => (
-                                <Field className="gap-1.5">
-                                    <FieldLabel className="micro-label-widest text-muted-foreground px-1">
+                                <Field className="gap-2">
+                                    <FieldLabel className={FIELD_LABEL}>
                                         {t('feedback.type')}
                                     </FieldLabel>
-                                    <Card size="none">
-                                        <div className="p-3">
-                                            <div className="grid grid-cols-3 gap-2">
-                                                <TypeButton
-                                                    icon={Bug}
-                                                    label={t('feedback.typeBug')}
-                                                    isActive={field.value === 'bug'}
-                                                    onClick={() => field.onChange('bug')}
-                                                />
-                                                <TypeButton
-                                                    icon={Lightbulb}
-                                                    label={t('feedback.typeFeature')}
-                                                    isActive={field.value === 'feature_request'}
-                                                    onClick={() => field.onChange('feature_request')}
-                                                />
-                                                <TypeButton
-                                                    icon={MessageSquare}
-                                                    label={t('feedback.typeOther')}
-                                                    isActive={field.value === 'other'}
-                                                    onClick={() => field.onChange('other')}
-                                                />
-                                            </div>
-                                        </div>
-                                    </Card>
-                                    <FieldError className="text-[0.8rem] font-medium" errors={[fieldState.error]} />
+                                    <SegmentedControl
+                                        fill
+                                        value={field.value}
+                                        onChange={field.onChange}
+                                        options={[
+                                            { value: 'bug', label: <><Bug size={15} strokeWidth={1.75} />{t('feedback.typeBug')}</> },
+                                            { value: 'feature_request', label: <><Lightbulb size={15} strokeWidth={1.75} />{t('feedback.typeFeature')}</> },
+                                            { value: 'other', label: <><MessageSquare size={15} strokeWidth={1.75} />{t('feedback.typeOther')}</> },
+                                        ]}
+                                    />
+                                    <FieldError className="type-meta" errors={[fieldState.error]} />
                                 </Field>
                             )}
                         />
@@ -172,18 +150,18 @@ export const FeedbackModal = memo(() => {
                             control={form.control}
                             name="message"
                             render={({ field, fieldState }) => (
-                                <Field className="gap-1.5">
-                                    <FieldLabel htmlFor="feedback-message" className="micro-label-widest text-muted-foreground px-1">
+                                <Field className="gap-2">
+                                    <FieldLabel htmlFor="feedback-message" className={FIELD_LABEL}>
                                         {t('feedback.message')} *
                                     </FieldLabel>
                                     <Textarea
                                         id="feedback-message"
                                         aria-invalid={fieldState.invalid}
                                         placeholder={t('feedback.messagePlaceholder')}
-                                        className="min-h-28 resize-none rounded-xl border-border/80 bg-card focus-visible:ring-primary/40 text-sm leading-relaxed"
+                                        className="min-h-28 resize-none"
                                         {...field}
                                     />
-                                    <FieldError className="text-[0.8rem] font-medium" errors={[fieldState.error]} />
+                                    <FieldError className="type-meta" errors={[fieldState.error]} />
                                 </Field>
                             )}
                         />
@@ -192,20 +170,19 @@ export const FeedbackModal = memo(() => {
                             control={form.control}
                             name="email"
                             render={({ field, fieldState }) => (
-                                <Field className="gap-1.5">
-                                    <FieldLabel htmlFor="feedback-email" className="micro-label-widest text-muted-foreground px-1">
+                                <Field className="gap-2">
+                                    <FieldLabel htmlFor="feedback-email" className={FIELD_LABEL}>
                                         {t('feedback.email')}
                                     </FieldLabel>
                                     <Input
                                         id="feedback-email"
                                         aria-invalid={fieldState.invalid}
                                         type="email"
-                                        placeholder={t('feedback.emailPlaceholder')} 
-                                        className="rounded-xl border-border/80 bg-card focus-visible:ring-primary/40 text-sm h-11"
+                                        placeholder={t('feedback.emailPlaceholder')}
                                         {...field} 
                                         value={field.value || ''}
                                     />
-                                    <FieldError className="text-[0.8rem] font-medium" errors={[fieldState.error]} />
+                                    <FieldError className="type-meta" errors={[fieldState.error]} />
                                 </Field>
                             )}
                         />
@@ -215,31 +192,22 @@ export const FeedbackModal = memo(() => {
                             name="includeDiagnostics"
                             render={({ field }) => (
                                 <Field className="gap-0">
-                                    <Card size="none" className="overflow-hidden">
-                                        <Item
-                                            variant="settings"
-                                            size="none"
-                                            className="w-full border-0 p-4"
+                                    <Card size="none">
+                                        <ToggleSection
+                                            title={t('feedback.diagnostics')}
+                                            description={t('feedback.diagnosticsDesc')}
+                                            icon={Activity}
+                                            isChecked={field.value}
+                                            onToggle={field.onChange}
                                         >
-                                            <ItemContent>
-                                                <ItemTitle className="text-foreground">{t('feedback.diagnostics')}</ItemTitle>
-                                                <ItemDescription className="text-xs leading-relaxed mt-0.5">{t('feedback.diagnosticsDesc')}</ItemDescription>
-                                            </ItemContent>
-                                            <ItemActions>
-                                                <Switch 
-                                                    checked={field.value} 
-                                                    onCheckedChange={field.onChange} 
-                                                />
-                                            </ItemActions>
-                                        </Item>
-
-                                        {includeDiagnostics && diagnosticSnapshot && (
-                                            <div className="px-4 pb-4 pt-1 border-t border-border/50">
-                                                <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-caption font-mono text-foreground leading-relaxed overflow-x-auto select-all max-h-44">
-                                                    {JSON.stringify(diagnosticSnapshot, null, 2)}
-                                                </pre>
-                                            </div>
-                                        )}
+                                            {diagnosticSnapshot && (
+                                                <div className="p-3.5">
+                                                    <pre className="max-h-48 overflow-auto rounded-nested bg-fill p-3 font-mono type-meta text-muted-foreground">
+                                                        {JSON.stringify(diagnosticSnapshot, null, 2)}
+                                                    </pre>
+                                                </div>
+                                            )}
+                                        </ToggleSection>
                                     </Card>
                                 </Field>
                             )}
@@ -260,7 +228,7 @@ export const FeedbackModal = memo(() => {
                             </div>
                         ) : (
                             <Alert variant="warning">
-                                <AlertDescription className="text-xs">{t('feedback.unavailable')}</AlertDescription>
+                                <AlertDescription className="type-note">{t('feedback.unavailable')}</AlertDescription>
                             </Alert>
                         )}
 
@@ -268,20 +236,20 @@ export const FeedbackModal = memo(() => {
                     </form>
                 </ScrollArea>
                 
-                <div className="px-6 pb-6 pt-3 shrink-0 border-t border-border/50 flex gap-3">
-                    <Button type="button" variant="secondary" onClick={onClose} className="flex-1 h-10 font-semibold cursor-pointer">
+                <div className="flex shrink-0 gap-2 px-(--panel-gutter) pt-2 pb-4">
+                    <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
                         {t('common.cancel')}
                     </Button>
                     <Button 
                         type="submit" 
                         form="feedback-form" 
                         disabled={!form.formState.isValid || !turnstileToken || submitMutation.isPending} 
-                        className="flex-1 rounded-xl h-10 font-semibold cursor-pointer"
+                        className="flex-1"
                     >
                         {submitMutation.isPending ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            <Loader2 className="size-4 animate-spin" />
                         ) : (
-                            <Send className="w-4 h-4 mr-2" />
+                            <Send className="size-4" />
                         )}
                         {t('feedback.submit')}
                     </Button>

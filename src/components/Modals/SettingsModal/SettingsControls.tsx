@@ -1,18 +1,38 @@
+import { SectionHeading } from '@/components/SectionHeading';
 import React from 'react';
-import { Switch } from '@/components/ui/switch';
-import { Card } from '@/components/ui/card';
-import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
 import { cn } from '@/lib/cn';
-import { IconToggle, type IconToggleProps } from '@/components/IconToggle';
+import { Switch } from '@/components/ui/switch';
+import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, ItemActions } from '@/components/ui/item';
 
-export const FilterHeading = ({ children }: { children: React.ReactNode }) => (
-    <div className="text-muted-foreground text-label uppercase font-bold tracking-[0.2em]">
-        {children}
+/** A row's title and explanation. */
+export const RowText = ({ title, description, className }: { title: string; description?: string; className?: string }) => (
+    <ItemContent className={cn("min-w-0 gap-0", className)}>
+        <ItemTitle className="w-full type-row text-foreground">{title}</ItemTitle>
+        {description && <ItemDescription className="line-clamp-none type-note">{description}</ItemDescription>}
+    </ItemContent>
+);
+
+interface FilterGroupProps {
+    title: string;
+    /** Shown right of the title, such as an "All" link. */
+    action?: React.ReactNode;
+    children: React.ReactNode;
+}
+
+/** A row's nested filters: a small heading over a wrapping set of chips. */
+export const FilterGroup = ({ title, action, children }: FilterGroupProps) => (
+    <div className="flex flex-col gap-2">
+        <div className="flex min-h-4.5 items-center justify-between">
+            <SectionHeading className="px-0">{title}</SectionHeading>
+            {action}
+        </div>
+        <div className="flex flex-wrap gap-x-1.5 gap-y-2">{children}</div>
     </div>
 );
 
-export const FilterButton = (props: Omit<IconToggleProps, 'className' | 'labelClassName'>) => (
-    <IconToggle {...props} className="py-2.5 rounded-2xl text-sm" labelClassName="micro-label" />
+/** What a row reveals while its switch is on, aligned to the row's text. */
+export const RowDetails = ({ children }: { children: React.ReactNode }) => (
+    <div className="row-separator flex flex-col gap-3.5 py-2.5 pr-3.5 pl-11.5 motion-safe:animate-in motion-safe:fade-in">{children}</div>
 );
 
 interface ToggleSectionProps {
@@ -23,48 +43,24 @@ interface ToggleSectionProps {
     onToggle: (val: boolean) => void;
     /** Revealed below the switch while it is on. */
     children?: React.ReactNode;
-    className?: string;
 }
 
-/** A settings card with a switch; its children expand underneath while the switch is on. */
-export const ToggleSection = ({ title, description, icon: Icon, isChecked, onToggle, children, className }: ToggleSectionProps) => (
-    <Card size="none" className={className}>
+/** A row of a settings group with a switch; its children appear underneath while the switch is on. */
+export const ToggleSection = ({ title, description, icon: Icon, isChecked, onToggle, children }: ToggleSectionProps) => (
+    <>
         <Item
-            variant="settings"
+            variant="row"
             size="none"
-            className={cn(
-                "w-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset border-0",
-                isChecked && children ? "rounded-t-xl" : "rounded-xl"
-            )}
             render={<button onClick={() => onToggle(!isChecked)} />}
         >
-            <ItemMedia variant="icon" className={cn(isChecked ? "text-primary" : "text-muted-foreground")}>
-                <Icon size={20} strokeWidth={1.5} />
+            <ItemMedia variant="rowIcon" className="text-muted-foreground">
+                <Icon strokeWidth={1.75} />
             </ItemMedia>
-            <ItemContent>
-                <ItemTitle className="text-foreground">{title}</ItemTitle>
-                <ItemDescription className="text-xs">{description}</ItemDescription>
-            </ItemContent>
+            <RowText title={title} description={description} />
             <ItemActions>
-                <Switch
-                    checked={isChecked}
-                    onCheckedChange={onToggle}
-                    className="ml-3 sm:ml-4"
-                />
+                <Switch checked={isChecked} onCheckedChange={onToggle} />
             </ItemActions>
         </Item>
-
-        {children && (
-            <div
-                className={cn(
-                    "grid transition-[grid-template-rows,opacity] duration-300 ease-in-out border-t border-border/50",
-                    isChecked ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none border-t-0"
-                )}
-            >
-                <div className="overflow-hidden flex flex-col">
-                    {children}
-                </div>
-            </div>
-        )}
-    </Card>
+        {isChecked && children}
+    </>
 );

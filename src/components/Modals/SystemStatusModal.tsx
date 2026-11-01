@@ -7,7 +7,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
-import { Item, ItemActions, ItemContent, ItemGroup, ItemMedia, ItemTitle } from '@/components/ui/item';
+import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { secondsUntilRefresh, useSystemStatus } from '@/hooks/derived/useSystemStatus';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { useNow } from '@/hooks/useNow';
@@ -83,23 +83,23 @@ const SystemStatusDetails = () => {
                 return {
                     label: t('liveStatus.stale'),
                     description: t('liveStatus.statusStaleDesc'),
-                    color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
-                    icon: <AlertTriangle className="w-5 h-5 text-amber-500" strokeWidth={1.5} />
+                    color: 'text-tint-amber bg-amber-500/10 border-amber-500/20',
+                    icon: <AlertTriangle className="w-5 h-5 text-tint-amber" strokeWidth={1.5} />
                 };
             case 'refreshing':
                 return {
                     label: t('liveStatus.refreshing'),
                     description: t('liveStatus.refreshingDesc'),
-                    color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
-                    icon: <RefreshCw className="w-5 h-5 text-amber-500 animate-spin" strokeWidth={1.5} />
+                    color: 'text-tint-amber bg-amber-500/10 border-amber-500/20',
+                    icon: <RefreshCw className="w-5 h-5 text-tint-amber animate-spin" strokeWidth={1.5} />
                 };
             case 'healthy':
             default:
                 return {
                     label: t('liveStatus.statusOk'),
                     description: t('liveStatus.statusOkDesc'),
-                    color: 'text-primary bg-primary/10 border-primary/20',
-                    icon: <CheckCircle2 className="w-5 h-5 text-primary" strokeWidth={1.5} />
+                    color: 'text-tint-mint bg-primary/10 border-primary/20',
+                    icon: <CheckCircle2 className="w-5 h-5 text-tint-mint" strokeWidth={1.5} />
                 };
         }
     };
@@ -112,79 +112,77 @@ const SystemStatusDetails = () => {
         <>
             <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-primary" strokeWidth={1.5} />
+                    <Activity className="w-5 h-5 text-tint-mint" strokeWidth={1.5} />
                     {t('liveStatus.modalTitle')}
                 </DialogTitle>
             </DialogHeader>
 
             <div className="flex flex-col gap-3">
-                <div className={cn("flex items-start gap-3 p-3.5 rounded-2xl border", statusDetails.color)}>
+                <div className={cn("flex items-start gap-3 p-3.5 rounded-surface", statusDetails.color)}>
                     <span className="shrink-0 pt-0.5">{statusDetails.icon}</span>
                     <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                        <span className="text-sm font-bold tracking-tight text-foreground">{statusDetails.label}</span>
-                        <p className="text-xs text-muted-foreground leading-snug">{statusDetails.description}</p>
+                        <span className="type-row text-foreground">{statusDetails.label}</span>
+                        <p className="type-note text-muted-foreground">{statusDetails.description}</p>
                     </div>
                 </div>
 
-                <Card size="none" className="overflow-hidden gap-0">
-                    <ItemGroup className="gap-0">
-                        <Item variant="settings" size="none" className="flex-nowrap hover:bg-transparent active:bg-transparent">
-                            <ItemMedia variant="icon" className="text-muted-foreground">
+                <Card size="none">
+                        <Item variant="row" size="none" >
+                            <ItemMedia variant="rowIcon" className="text-muted-foreground">
                                 {status.isOnline ? <Wifi strokeWidth={1.5} /> : <WifiOff strokeWidth={1.5} />}
                             </ItemMedia>
                             <ItemContent className="flex-none">
-                                <ItemTitle className="text-muted-foreground font-normal whitespace-nowrap">{t('liveStatus.connection')}</ItemTitle>
+                                <ItemTitle className="type-row text-foreground whitespace-nowrap">{t('liveStatus.connection')}</ItemTitle>
                             </ItemContent>
-                            <ItemActions className={cn("ml-auto text-sm font-semibold", status.isOnline ? "text-green-500" : "text-destructive")}>
+                            <ItemActions className={cn("ml-auto type-row", status.isOnline ? "text-tint-mint" : "text-destructive")}>
                                 {status.isOnline ? t('liveStatus.online') : t('liveStatus.offline')}
                             </ItemActions>
                         </Item>
 
-                        <Item variant="settings" size="none" className="flex-nowrap" render={<a href={providerUrl} target="_blank" rel="noopener noreferrer" />}>
-                            <ItemMedia variant="icon" className="text-muted-foreground">
+                        <Item variant="row" size="none" render={<a href={providerUrl} target="_blank" rel="noopener noreferrer" />}>
+                            <ItemMedia variant="rowIcon" className="text-muted-foreground">
                                 <Database strokeWidth={1.5} />
                             </ItemMedia>
                             <ItemContent className="flex-none">
-                                <ItemTitle className="text-muted-foreground font-normal whitespace-nowrap">{t('liveStatus.dataProvider')}</ItemTitle>
+                                <ItemTitle className="type-row text-foreground whitespace-nowrap">{t('liveStatus.dataProvider')}</ItemTitle>
                             </ItemContent>
-                            <ItemActions className="flex-1 justify-end text-sm font-semibold min-w-0">
+                            <ItemActions className="flex-1 justify-end type-row min-w-0">
                                 <span className="truncate">{providerName}</span>
                                 <ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
                             </ItemActions>
                         </Item>
 
-                        <Item variant="settings" size="none" className="flex-nowrap hover:bg-transparent active:bg-transparent">
-                            <ItemMedia variant="icon" className="text-muted-foreground">
+                        <Item variant="row" size="none" >
+                            <ItemMedia variant="rowIcon" className="text-muted-foreground">
                                 <RefreshCw strokeWidth={1.5} />
                             </ItemMedia>
                             <ItemContent className="flex-none">
-                                <ItemTitle className="text-muted-foreground font-normal whitespace-nowrap">{t('liveStatus.dataFreshness')}</ItemTitle>
+                                <ItemTitle className="type-row text-foreground whitespace-nowrap">{t('liveStatus.dataFreshness')}</ItemTitle>
                             </ItemContent>
-                            <ItemActions className="ml-auto text-sm tabular-nums gap-1.5 whitespace-nowrap">
+                            <ItemActions className="ml-auto type-row tabular-nums gap-1.5 whitespace-nowrap">
                                 <span className="font-semibold">{freshnessText}</span>
                                 {!status.isFetching && (
-                                    <span className="text-xs text-muted-foreground">
+                                    <span className="type-note text-muted-foreground">
                                         · {t('liveStatus.nextRefreshIn', { seconds: nextRefreshIn })}
                                     </span>
                                 )}
                             </ItemActions>
                         </Item>
 
-                        <Item variant="settings" size="none" className="flex-nowrap hover:bg-transparent active:bg-transparent">
-                            <ItemMedia variant="icon" className="text-muted-foreground">
+                        <Item variant="row" size="none" >
+                            <ItemMedia variant="rowIcon" className="text-muted-foreground">
                                 <Timer strokeWidth={1.5} />
                             </ItemMedia>
                             <ItemContent className="flex-none">
-                                <ItemTitle className="text-muted-foreground font-normal whitespace-nowrap">{t('liveStatus.refreshInterval')}</ItemTitle>
+                                <ItemTitle className="type-row text-foreground whitespace-nowrap">{t('liveStatus.refreshInterval')}</ItemTitle>
                             </ItemContent>
                             <ItemActions className="ml-auto">
-                                <RefreshIntervalPicker className="w-36" />
+                                <RefreshIntervalPicker />
                             </ItemActions>
                         </Item>
-                    </ItemGroup>
-                </Card>
+                    </Card>
 
-                <p className="flex gap-2 px-1 text-caption leading-snug text-muted-foreground">
+                <p className="flex gap-2 px-1 type-note text-muted-foreground">
                     <Info className="w-3.5 h-3.5 shrink-0 mt-px" strokeWidth={1.5} />
                     {t('liveStatus.explanationText', { seconds: refreshIntervalS })}
                 </p>
@@ -195,7 +193,7 @@ const SystemStatusDetails = () => {
 
 export const SystemStatusModal = memo(({ isOpen, onClose }: SystemStatusModalProps) => (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent aria-describedby={undefined} variant="default" className="h-auto max-w-105 p-5 gap-4!">
+        <DialogContent aria-describedby={undefined} className="h-auto max-w-105 p-5 gap-4!">
             <SystemStatusDetails />
         </DialogContent>
     </Dialog>

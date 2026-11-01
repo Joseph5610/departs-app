@@ -22,7 +22,7 @@ export const StopTitle = memo(({ title }: StopTitleProps) => {
                     <Hand size={18} className="text-muted-foreground opacity-60 hover:text-foreground hover:opacity-100 transition-colors" strokeWidth={2} />
                 </PopoverTrigger>
                 <PopoverContent side="top" className="w-auto px-3 py-1.5 min-w-30 text-center">
-                    <span className="text-sm font-medium">{t('map.vehicleDetails.requestStop')}</span>
+                    <span className="type-row">{t('map.vehicleDetails.requestStop')}</span>
                 </PopoverContent>
             </Popover>
         </span>

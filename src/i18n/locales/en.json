@@ -188,8 +188,8 @@
         "standard": "The operator reports position and delay in real time."
       },
       "liveDataAge": "{{seconds}}s ago",
-      "showPastStops": "Show past stops",
-      "hidePastStops": "Hide past stops",
+      "pastStops_one": "{{count}} past stop",
+      "pastStops_other": "{{count}} past stops",
       "scheduledTime": "sched.",
       "shareTitle": "Line {{line}}",
       "requestStop": "Request Stop",
@@ -320,7 +320,6 @@
     "updated": "Trip updated",
     "showTrip": "Show trip",
     "take": "I'm taking this trip",
-    "takeSub": "We'll alert you to board and to get off",
     "title": "My trip",
     "toEnd": "To the end, {{stop}}",
     "tooLate": "It leaves too soon for an alert",

@@ -57,7 +57,7 @@ export const CitySwitcher = ({ className, variant = "tinted" }: CitySwitcherProp
                             aria-label={t('map.controls.switchCity')}
                             className={cn(
                                 "h-11 w-11 shrink-0 transition-[transform,box-shadow,background-color] duration-500",
-                                isHighlighting && "ring-2 ring-primary/80 bg-primary/20 text-primary scale-110 shadow-[0_0_20px_rgba(var(--color-primary),0.4)]",
+                                isHighlighting && "ring-2 ring-primary/80 bg-primary/20 text-tint-mint scale-110 shadow-[0_0_20px_rgba(var(--color-primary),0.4)]",
                                 className
                             )}
                             data-testid="map-city-switcher-btn"
@@ -67,13 +67,13 @@ export const CitySwitcher = ({ className, variant = "tinted" }: CitySwitcherProp
                     } />
                 } />
                 <TooltipContent side="bottom" sideOffset={8}>
-                    <p className="font-medium text-xs">{t('map.controls.switchCity')}</p>
+                    <p className="type-note">{t('map.controls.switchCity')}</p>
                 </TooltipContent>
             </Tooltip>
             <DialogContent className="sm:max-w-100 p-6 h-auto">
                 <DialogHeader className="pb-4 space-y-1.5">
-                    <DialogTitle className="text-xl font-bold">{t('map.controls.switchCity')}</DialogTitle>
-                    <p className="text-sm text-muted-foreground/80 font-medium">{t('map.regions.title')}</p>
+                    <DialogTitle className="type-title">{t('map.controls.switchCity')}</DialogTitle>
+                    <p className="type-row text-muted-foreground/80">{t('map.regions.title')}</p>
                 </DialogHeader>
                 <ScrollArea className="max-h-[60vh] pr-4 -mr-4">
                     <CitySelectionList 

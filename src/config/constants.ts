@@ -55,6 +55,8 @@ export const SHEET = {
     PEEK_CONTENT_PX: 68,
     /** The peek capsule floats at least this far above the screen's bottom edge. */
     PEEK_BOTTOM_PX: 12,
+    /** The home indicator's inset assumed in an installed app, as iOS reports 0 while one launches. */
+    STANDALONE_BOTTOM_INSET_PX: 34,
     /** How far the capsule reaches into the home indicator's inset. */
     PEEK_HOME_INDICATOR_OVERLAP_PX: 4,
     HALF: 0.56,
@@ -376,6 +378,8 @@ export const BOARD_CONFIG = {
 
 /** A trip whose last stop is this far in the past is shown as ended. */
 export const TRIP_CONFIG = {
+    /** Line badges a collapsed transfers row shows before a "+n". */
+    TRANSFER_PREVIEW_LINES: 5,
     ENDED_GRACE_S: 120,
     /** How often views re-check whether a trip has ended. */
     ENDED_CHECK_MS: 15_000,
@@ -535,3 +539,8 @@ export const ENRICHMENT_CONFIG = {
     RECONNECT_BASE_MS: 1000,
     RECONNECT_MAX_MS: 30_000,
 };
+
+/** The alerts list: the height of a section heading, pinned over the list's top. */
+export const ALERTS_LIST = {
+    HEADING_PX: 40,
+} as const;

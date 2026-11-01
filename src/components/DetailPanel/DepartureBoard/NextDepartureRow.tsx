@@ -65,11 +65,11 @@ export const NextDepartureRow = memo(({
             tripAction={trip ? { onTrigger: trip.open, label: trip.label, swipeLabel: trip.swipeLabel, isActive: trip.isSet } : undefined}
             below={children}
             className={cn(
-                "cursor-pointer outline-none before:absolute before:-inset-y-1.5 before:-inset-x-2.5 before:-z-10 before:rounded-2xl before:transition-colors hover:before:bg-fill focus-visible:before:ring-2 focus-visible:before:ring-primary/50",
+                "row-hover-board",
                 mark && MARKED_BACKDROP
             )}
         >
-            {!hidesBadge && <LineBadge name={line} routeColor={routeColor} size="board" className="justify-self-start" />}
+            {!hidesBadge && <LineBadge name={line} routeColor={routeColor} size="lg" className="justify-self-start" />}
             <RowHeadsign headsign={headsign} isPinned={action?.isActive}><InterchangeBadges codes={forHeadsign(dep.headsign, dep.line)} /></RowHeadsign>
             <LiveCountdown departure={dep} size="lg" />
 

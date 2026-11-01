@@ -55,7 +55,7 @@ export const FavoriteLineRow = ({ favorite, stop, departures, isFirst }: Favorit
             variant="ghost"
             onClick={openBoard}
             aria-label={t('favorites.openBoard')}
-            className="h-auto w-fit max-w-full justify-start gap-0.5 rounded-md p-0 text-xs font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
+            className="h-auto w-fit max-w-full justify-start gap-0.5 rounded-badge p-0 type-note text-muted-foreground hover:bg-transparent hover:text-foreground"
         >
             <span className="truncate">{t('favorites.fromStop', { stop: stopName })}</span>
             <ChevronRight size={14} strokeWidth={1.75} className="shrink-0" />
@@ -68,7 +68,7 @@ export const FavoriteLineRow = ({ favorite, stop, departures, isFirst }: Favorit
             {!isFirst && <RowSeparator />}
             <BoardSection>
                 <BoardRow action={{ onTrigger: pin.toggle, isActive: pin.isPinned, label: pin.label, swipeLabel: pin.swipeLabel }} below={boardLink}>
-                    <LineBadge name={favorite.line} routeColor={routeColor} size="board" className="justify-self-start" />
+                    <LineBadge name={favorite.line} routeColor={routeColor} size="lg" className="justify-self-start" />
                     <RowHeadsign headsign={favorite.headsign} isPinned={pin.isPinned} />
                     <RowTimeLine>{t('map.departures.noUpcoming')}</RowTimeLine>
                 </BoardRow>

@@ -18,7 +18,8 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { MAP_CAMERA } from '@/config/constants';
 
-const SHEET_PILL = 'glassy rounded-full overflow-hidden';
+// The fade stays on the glass itself: on a parent it would cut the glass off from the map behind it.
+const SHEET_PILL = 'glassy rounded-full overflow-hidden opacity-(--sheet-controls-opacity,1)';
 
 interface MapControlsProps {
     /** `corner` floats top-right of the map; `sheet` rides above the mobile sheet's top edge with only settings and locate. */
@@ -110,7 +111,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
             strokeWidth={1.5}
             className={cn(
                 "transition-all",
-                isGeoPending ? "animate-spin text-primary" : "transition-transform"
+                isGeoPending ? "animate-spin text-tint-mint" : "transition-transform"
             )}
          />
     );
@@ -143,7 +144,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
             >
                 <AlertTriangle size={20} strokeWidth={1.5} className={cn(incidentsCount > 0 ? "text-destructive" : "transition-transform hover:scale-110")} />
                 {incidentsCount > 0 && (
-                    <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground text-micro font-bold px-1 py-0 rounded-full min-w-4 text-center shadow-sm pointer-events-none">
+                    <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground type-micro px-1 py-0 rounded-full min-w-4 text-center shadow-sm pointer-events-none">
                         {incidentsCount}
                     </span>
                 )}
@@ -166,7 +167,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
         return (
             <div
                 className={cn(
-                    "absolute bottom-full right-3 mb-3 flex flex-col gap-2 items-end opacity-(--sheet-controls-opacity,1)",
+                    "absolute bottom-full right-3 mb-3 flex flex-col gap-2 items-end",
                     hidden && "pointer-events-none"
                 )}
                 data-testid="map-controls"
@@ -214,7 +215,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                             size={20}
                             strokeWidth={1.5}
                             className={cn(
-                                isFavoritesRoute ? "fill-primary text-primary" : "transition-transform hover:scale-110"
+                                isFavoritesRoute ? "fill-primary text-tint-mint" : "transition-transform hover:scale-110"
                             )}
                          />
                     </ControlButton>
@@ -229,7 +230,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                             size={20}
                             strokeWidth={1.5}
                             className={cn(
-                                isStatsRoute ? "text-primary" : "transition-transform hover:scale-110"
+                                isStatsRoute ? "text-tint-mint" : "transition-transform hover:scale-110"
                             )}
                         />
                     </ControlButton>
@@ -285,7 +286,7 @@ const ControlButton = ({ children, onClick, title, testId, inPill = false, inShe
             </Button>
         } />
         <TooltipContent side="left" sideOffset={8}>
-            <p className="font-medium text-xs">{title}</p>
+            <p className="type-note">{title}</p>
         </TooltipContent>
     </Tooltip>
 );

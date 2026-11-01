@@ -1,6 +1,6 @@
 import { memo, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, ChevronDown, ChevronRight, Train } from 'lucide-react';
+import { ArrowRight, ChevronDown, Train } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import type { DepartureClickHandler, Platform, SelectedStop, AppError } from '@/types';
@@ -19,6 +19,7 @@ import { useOpenStop } from '@/hooks/features/useOpenStop';
 import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
 import { safeHexColor } from '@/lib/color';
 import { badgeColumnStyle } from '@/lib/lineBadge';
+import { SectionTitle } from '@/components/SectionTitle';
 import { PlatformCircle } from '@/components/PlatformCircle';
 import { LineBadge } from '@/components/LineBadge';
 import { useSelectionStore } from '@/state/selectionStore';
@@ -139,17 +140,16 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                     <Empty className="py-12">
                         <EmptyHeader>
                             <EmptyMedia
-                                variant="icon"
-                                className="size-14 rounded-2xl bg-muted/30 border border-border/50 text-muted-foreground shadow-sm [&_svg:not([class*='size-'])]:size-7"
+                                variant="tile" className="bg-fill text-muted-foreground"
                             >
                                 <Train strokeWidth={1.5} className="opacity-50" />
                             </EmptyMedia>
-                            <EmptyTitle className="text-base font-bold text-foreground/80">
+                            <EmptyTitle className="type-headsign text-foreground/80">
                                 {selectedLine
                                     ? t('map.departures.noUpcomingForLine', { line: selectedLine })
                                     : t('map.departures.noUpcoming')}
                             </EmptyTitle>
-                            <EmptyDescription className="text-sm">
+                            <EmptyDescription className="type-row">
                                 {t('map.departures.noUpcomingDescription')}
                             </EmptyDescription>
                         </EmptyHeader>
@@ -157,7 +157,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                 </MetroClosedOr>
             ) : (
                 sections ? (
-                    <div className="@container">
+                    <div className="@container first:mt-3.5">
                         <div className="grid grid-cols-1 items-start gap-5 @2xl:grid-cols-2">
                             {sections.map(section => (
                                 <PlatformSectionView
@@ -275,33 +275,19 @@ interface PlatformHeaderProps {
 const PlatformHeader = ({ section, platformStopId }: PlatformHeaderProps) => {
     const { t } = useTranslation();
     const openStop = useOpenStop();
+    const onOpen = platformStopId ? () => openStop(platformStopId) : undefined;
     const title = section.metroLine ? (
-        <>
-            <LineBadge name={section.metroLine} routeColor={section.metroColor ?? FALLBACK_ROUTE_COLOR} />
-            <span className="text-heading font-semibold text-foreground">{t('map.departures.metroSection', { line: section.metroLine })}</span>
-        </>
+        <SectionTitle onOpen={onOpen} lead={<LineBadge name={section.metroLine} routeColor={section.metroColor ?? FALLBACK_ROUTE_COLOR} />}>
+            {t('map.departures.metroSection', { line: section.metroLine })}
+        </SectionTitle>
     ) : section.platform ? (
-        <>
-            <PlatformCircle code={section.platform} size="section" />
-            <span className="text-heading font-semibold text-foreground">
-                {t('map.departures.platformSection', { code: section.platform })}
-            </span>
-        </>
+        <SectionTitle onOpen={onOpen} lead={<PlatformCircle code={section.platform} size="section" />}>
+            {t('map.departures.platformSection', { code: section.platform })}
+        </SectionTitle>
     ) : (
-        <span className="flex min-w-0 items-center gap-2 text-heading font-semibold text-foreground">
-            <ArrowRight size={16} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-hidden="true" />
-            <span className="truncate">{t('map.departures.towardsSection', { stop: section.direction })}</span>
-        </span>
+        <SectionTitle onOpen={onOpen} lead={<ArrowRight size={16} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-hidden="true" />}>
+            {t('map.departures.towardsSection', { stop: section.direction })}
+        </SectionTitle>
     );
-    if (!platformStopId) return <div className="flex items-center gap-2 py-1">{title}</div>;
-    return (
-        <button
-            type="button"
-            onClick={() => openStop(platformStopId)}
-            className="flex items-center gap-2 py-1 text-left outline-none focus-visible:underline"
-        >
-            {title}
-            <ChevronRight size={17} strokeWidth={2.5} className="-ml-1 shrink-0 text-label-3" aria-hidden="true" />
-        </button>
-    );
+    return <div className="mb-2 flex min-h-6 items-center">{title}</div>;
 };

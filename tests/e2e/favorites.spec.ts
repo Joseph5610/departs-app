@@ -202,7 +202,7 @@ test.describe('Favorites Tests', () => {
 
         const linesTab = page.getByTestId('favorites-tab-lines');
         const stopsTab = page.getByTestId('favorites-tab-stops');
-        await expect(linesTab).toHaveAttribute('aria-selected', 'true');
+        await expect(linesTab).toHaveAttribute('aria-pressed', 'true');
         await expect(page.getByText('Letňany')).toBeVisible();
         await expect(page.getByText('Hlavní nádraží', { exact: true })).not.toBeVisible();
 
@@ -211,7 +211,7 @@ test.describe('Favorites Tests', () => {
         await expect(page.getByText('Letňany')).not.toBeVisible();
 
         await page.reload();
-        await expect(page.getByTestId('favorites-tab-stops')).toHaveAttribute('aria-selected', 'true');
+        await expect(page.getByTestId('favorites-tab-stops')).toHaveAttribute('aria-pressed', 'true');
     });
 
     test('should reorder pinned stops by dragging their handle', async ({ page }) => {

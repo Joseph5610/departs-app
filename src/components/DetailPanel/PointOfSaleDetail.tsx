@@ -42,7 +42,7 @@ export const PointOfSaleDetail = ({ pos }: PointOfSaleDetailProps) => {
                     {pos.openingHours.map((oh) => {
                         const isToday = coversDay(oh, today);
                         return (
-                            <div key={`${oh.from}-${oh.to}-${oh.hours}`} className="flex items-center justify-between gap-3 px-3 py-2.5 text-body-sm border-b border-border/40 last:border-b-0">
+                            <div key={`${oh.from}-${oh.to}-${oh.hours}`} className="flex items-center justify-between gap-3 px-3 py-2.5 type-meta border-b border-border/40 last:border-b-0">
                                 <span className={cn("font-medium", isToday ? "text-foreground" : "text-muted-foreground")}>{formatDayRange(oh.from, oh.to, weekdayNames)}</span>
                                 <span className={cn("tabular-nums text-right", isToday ? "font-medium text-foreground" : "text-muted-foreground")}>{oh.hours.replace(/,/g, ', ')}</span>
                             </div>

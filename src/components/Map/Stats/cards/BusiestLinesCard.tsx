@@ -1,4 +1,5 @@
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { StatsCard } from './StatsCard';
 import { Hash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LineBadge } from '@/components/LineBadge';
@@ -17,27 +18,19 @@ export const BusiestLinesCard = ({ stats }: BusiestLinesCardProps) => {
     }
 
     return (
-        <Card size="none">
-            <CardHeader className="p-3.5 pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                    <Hash size={16} className="text-fuchsia-400" />
-                    <span>{t('stats.busiestLines')}</span>
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3.5 pt-0">
+        <StatsCard icon={Hash} title={t('stats.busiestLines')} iconClassName="text-fuchsia-400">
                 <div className="flex flex-wrap gap-2">
                     {stats.busiest_lines.map((item) => (
-                        <div key={item.line} className="flex items-center gap-1.5 bg-muted/50 border border-border/50 px-2 py-1 rounded-md">
+                        <Badge key={item.line} variant="info" className="pl-1.5">
                             <LineBadge 
                                 name={item.line} 
                                 routeColor={item.route_color || FALLBACK_ROUTE_COLOR}
-                                size="sm"
+                                size="row"
                             />
-                            <span className="text-xs font-bold text-foreground tabular-nums">{item.count} {t('stats.cars')}</span>
-                        </div>
+                            <span className="type-control text-foreground tabular-nums">{item.count} {t('stats.cars')}</span>
+                        </Badge>
                     ))}
                 </div>
-            </CardContent>
-        </Card>
+        </StatsCard>
     );
 };

@@ -1,14 +1,14 @@
 import { cn } from '@/lib/cn';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Reorder } from 'framer-motion';
 import { Star } from 'lucide-react';
 import { usePreferencesStore } from '@/state/preferencesStore';
+import { useUiStore } from '@/state/uiStore';
 import { useFavorites } from '@/hooks/derived/useFavorites';
 import { useFavoriteDepartures } from '@/hooks/data/useFavoriteDepartures';
 import { moveShown, nextDepartures } from '@/domain/departures';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LineBadge } from '@/components/LineBadge';
 
@@ -52,13 +52,14 @@ export const FavoritesPanel = () => {
         [favoriteStops, reorderStops]
     );
 
-    const [isReordering, setIsReordering] = useState(false);
+    const isReordering = useUiStore(s => s.isReorderingFavorites);
+    const setIsReordering = useUiStore(s => s.actions.setIsReorderingFavorites);
+    useEffect(() => () => setIsReordering(false), [setIsReordering]);
     // Each list shares one badge column, as wide as its widest badge, like the rows of a board.
     const lineBadgeColumn = useMemo(() => badgeColumnStyle(lines.map(fav => fav.line)), [lines]);
     const stopBadgeColumn = useMemo(() => badgeColumnStyle(stops.flatMap(pin =>
         nextDepartures(departuresByStop.get(pin.stop.id) ?? [], DEPARTURES_CONFIG.FAVORITE_CARD_COUNT).map(dep => String(dep.line))
     )), [stops, departuresByStop]);
-    const canReorder = lines.length > 1 || stops.length > 1;
     const isLoading = stopsLoading || departuresLoading;
     const showsStops = hasTabs ? tab === 'stops' : favoriteLines.length === 0;
 
@@ -68,15 +69,14 @@ export const FavoritesPanel = () => {
             <Empty className="py-16 animate-in fade-in duration-500">
                 <EmptyHeader>
                     <EmptyMedia
-                        variant="icon"
-                        className="size-14 rounded-2xl bg-primary/10 border border-primary/20 text-primary shadow-[0_0_20px_rgba(var(--color-primary),0.1)] [&_svg:not([class*='size-'])]:size-7"
+                        variant="tile" className="bg-selected text-tint-mint"
                     >
                         <Star strokeWidth={1.5} />
                     </EmptyMedia>
-                    <EmptyTitle className="text-base font-bold text-foreground/90">
+                    <EmptyTitle className="type-headsign text-foreground/90">
                         {t('favorites.empty')}
                     </EmptyTitle>
-                    <EmptyDescription className="text-body-sm max-w-64 text-balance">
+                    <EmptyDescription className="type-meta max-w-64 text-balance">
                         {t('favorites.emptySub')}
                     </EmptyDescription>
                 </EmptyHeader>
@@ -86,20 +86,6 @@ export const FavoritesPanel = () => {
 
     return (
         <div className="flex flex-col">
-            {canReorder && (
-                <div className="flex justify-end pb-1 pr-4">
-                    <Button
-                        variant="link"
-                        size="sm"
-                        onClick={() => setIsReordering(on => !on)}
-                        disabled={isLoading}
-                        data-testid="favorites-reorder-toggle"
-                        className="px-0"
-                    >
-                        {isReordering ? t('favorites.reorderDone') : t('favorites.reorderStart')}
-                    </Button>
-                </div>
-            )}
             {isLoading ? (
                 <FavoritesSkeleton kind={showsStops ? 'stops' : 'lines'} count={hasTabs ? lines.length + stops.length : pinnedStopCount + favoriteLines.length} />
             ) : (
@@ -111,7 +97,7 @@ export const FavoritesPanel = () => {
                                 <SortableFavorite key={`${fav.stopId}|${fav.line}|${fav.headsign}`} value={fav} sortable={isReordering && lines.length > 1} onMove={moveLine}>
                                     {(handle) => isReordering ? (
                                         <FavoriteReorderRow
-                                            lead={<LineBadge name={fav.line} routeColor={safeHexColor(lineColorAt(lineStops.get(fav.stopId), fav.line)) || FALLBACK_ROUTE_COLOR} size="board" />}
+                                            lead={<LineBadge name={fav.line} routeColor={safeHexColor(lineColorAt(lineStops.get(fav.stopId), fav.line)) || FALLBACK_ROUTE_COLOR} size="lg" />}
                                             title={fav.headsign}
                                             subtitle={stopName(lineStops.get(fav.stopId), t)}
                                             isFirst={idx === 0}
@@ -148,17 +134,16 @@ export const FavoritesPanel = () => {
                         </Reorder.Group>
                     </Card>
                 ) : (
-                    // One card per stop: each is its own small board.
-                    <div className={cn("flex flex-col gap-3", lines.length > 0 && "mt-3")} style={stopBadgeColumn}>
+                    // Each stop is its own small board, its header above its card.
+                    <div className={cn("flex flex-col gap-5", lines.length > 0 && "mt-5")} style={stopBadgeColumn}>
                         {stops.map(pin => (
-                            <Card key={pin.stop.id} size="none" className="px-3.5 animate-in fade-in duration-200">
-                                <FavoriteStopSection
-                                    pins={pin.pins}
-                                    stop={pin.stop}
-                                    departures={departuresByStop.get(pin.stop.id) ?? []}
-                                    isError={isError}
-                                />
-                            </Card>
+                            <FavoriteStopSection
+                                key={pin.stop.id}
+                                pins={pin.pins}
+                                stop={pin.stop}
+                                departures={departuresByStop.get(pin.stop.id) ?? []}
+                                isError={isError}
+                            />
                         ))}
                     </div>
                 ))}

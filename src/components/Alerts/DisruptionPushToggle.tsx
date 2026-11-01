@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { BellRing } from 'lucide-react';
 import { ToggleSection } from '@/components/Modals/SettingsModal/SettingsControls';
+import { Card } from '@/components/ui/card';
 import { useDisruptionPushToggle } from '@/hooks/features/useDisruptionPush';
 import { usePreferencesStore } from '@/state/preferencesStore';
 
@@ -11,13 +12,14 @@ export const DisruptionPushToggle = ({ className }: { className?: string }) => {
     const toggle = useDisruptionPushToggle();
 
     return (
-        <ToggleSection
-            title={t('disruptionPush.settingTitle')}
-            description={t('disruptionPush.settingDescription')}
-            icon={BellRing}
-            isChecked={isOn}
-            onToggle={(on) => void toggle(on)}
-            className={className}
-        />
+        <Card size="none" className={className}>
+            <ToggleSection
+                title={t('disruptionPush.settingTitle')}
+                description={t('disruptionPush.settingDescription')}
+                icon={BellRing}
+                isChecked={isOn}
+                onToggle={(on) => void toggle(on)}
+            />
+        </Card>
     );
 };

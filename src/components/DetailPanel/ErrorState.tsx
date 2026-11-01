@@ -50,15 +50,14 @@ export const ErrorState = memo(({ error, onRetry, title }: ErrorStateProps) => {
         <Empty className="py-16 animate-in fade-in zoom-in-95 duration-500">
             <EmptyHeader>
                 <EmptyMedia
-                    variant="icon"
-                    className={`size-14 rounded-2xl border shadow-sm ${isNotFound ? 'bg-primary/10 border-primary/20 text-primary/90' : 'bg-destructive/10 border-destructive/20 text-destructive/90'} [&_svg:not([class*='size-'])]:size-7`}
+                    variant="tile" className={isNotFound ? "bg-selected text-tint-mint" : "bg-tint-red/16 text-destructive"}
                 >
                     <Icon strokeWidth={1.5} />
                 </EmptyMedia>
-                <EmptyTitle className="text-base font-bold text-foreground/90">
+                <EmptyTitle className="type-headsign text-foreground/90">
                     {displayTitle}
                 </EmptyTitle>
-                <EmptyDescription className="text-body-sm max-w-55">
+                <EmptyDescription className="type-meta max-w-55">
                     {message}
                 </EmptyDescription>
             </EmptyHeader>
@@ -69,7 +68,7 @@ export const ErrorState = memo(({ error, onRetry, title }: ErrorStateProps) => {
                         variant="secondary"
                         size="sm"
                         onClick={onRetry}
-                        className="gap-2 font-semibold text-xs uppercase tracking-[0.12em] rounded-full px-5 py-4"
+                        className="gap-2 type-group rounded-full px-5 py-4"
                     >
                         <RefreshCw size={14} strokeWidth={1.5} />
                         {t('common.retry')}

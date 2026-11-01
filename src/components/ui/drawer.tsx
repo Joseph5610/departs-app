@@ -69,7 +69,7 @@ function DrawerOverlay({
     <DrawerPrimitive.Backdrop
       data-slot="drawer-overlay"
       className={cn(
-        "fixed inset-0 z-500 min-h-dvh bg-black/10 opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))] transition-opacity duration-450 ease-[cubic-bezier(0.32,0.72,0,1)] select-none data-ending-style:pointer-events-none data-ending-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-snap-points:[--drawer-overlay-min-opacity:0.5] data-starting-style:opacity-0 data-swiping:duration-0 supports-backdrop-filter:backdrop-blur-xs supports-[-webkit-touch-callout:none]:absolute",
+        "fixed inset-0 z-500 min-h-dvh bg-black/10 opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))] transition-opacity duration-450 ease-[cubic-bezier(0.32,0.72,0,1)] select-none data-ending-style:pointer-events-none data-ending-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-snap-points:[--drawer-overlay-min-opacity:0.5] data-starting-style:opacity-0 data-swiping:duration-0 supports-backdrop-filter: supports-[-webkit-touch-callout:none]:absolute",
         className
       )}
       {...props}
@@ -128,7 +128,7 @@ function DrawerContent({
           data-snap-points={hasSnapPoints ? "" : undefined}
           className={cn(
             // Base.
-            "group/drawer-popup pointer-events-auto fixed z-500 m-(--drawer-inset,0px) flex h-(--drawer-content-height) max-h-(--drawer-content-max-height,none) min-h-0 w-(--drawer-content-width,auto) transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col text-sm transition-[transform,height,opacity,filter] duration-450 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none select-none [interpolate-size:allow-keywords] data-[swipe-direction=down]:rounded-t-sheet data-[swipe-direction=left]:rounded-r-xl data-[swipe-direction=right]:rounded-l-xl data-[swipe-direction=up]:rounded-b-xl",
+            "group/drawer-popup pointer-events-auto fixed z-500 m-(--drawer-inset,0px) flex h-(--drawer-content-height) max-h-(--drawer-content-max-height,none) min-h-0 w-(--drawer-content-width,auto) transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col type-row transition-[transform,height,opacity,filter] duration-450 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none select-none [interpolate-size:allow-keywords] data-[swipe-direction=down]:rounded-t-sheet data-[swipe-direction=left]:rounded-r-surface data-[swipe-direction=right]:rounded-l-surface data-[swipe-direction=up]:rounded-b-surface",
             // Nested.
             "data-nested-drawer-open:overflow-hidden data-nested-drawer-open:brightness-95",
             // Bleed.
@@ -205,7 +205,7 @@ function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
     <DrawerPrimitive.Title
       data-slot="drawer-title"
       className={cn(
-        "cn-font-heading text-base font-medium text-foreground",
+        "cn-font-heading type-row text-foreground",
         className
       )}
       {...props}
@@ -220,7 +220,7 @@ function DrawerDescription({
   return (
     <DrawerPrimitive.Description
       data-slot="drawer-description"
-      className={cn("text-sm text-balance text-muted-foreground", className)}
+      className={cn("type-row text-balance text-muted-foreground", className)}
       {...props}
     />
   )

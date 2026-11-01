@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useSelectionStore } from '@/state/selectionStore';
 import { cn } from '@/lib/cn';
+import { Item } from '@/components/ui/item';
 import { getDelayStatus } from '@/domain/delay';
 import { vehicleDisplayNumber, type EnrichedVehicleItem } from '@/domain/vehicles';
 
@@ -36,22 +37,16 @@ export const VehicleMonitorRow = memo(({ item }: VehicleMonitorRowProps) => {
     const displayId = item.vehicleId ? `#${vehicleDisplayNumber(item.vehicleId)}` : '—';
 
     return (
-        <div
-            onClick={handleClick}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); } }}
-            role="button"
-            tabIndex={0}
-            className="group flex items-center justify-between gap-3 px-3 py-2 border-b border-border/20 hover:bg-muted/40 transition-colors cursor-pointer select-none"
-        >
+        <Item variant="row" size="none" render={<button type="button" onClick={handleClick} />} className="group justify-between px-3 [--row-sep:0.75rem]">
             <div className="flex items-center gap-2.5 shrink-0 min-w-36">
                 <LineBadge
                     name={item.line}
                     routeColor={item.routeColor}
-                    size="md"
-                    className="shadow-xs shrink-0"
+                    size="row"
+                    className="shrink-0"
                 />
 
-                <span className="text-xs font-semibold font-mono tracking-tight text-foreground/90 truncate max-w-28">
+                <span className="type-control font-mono tracking-tight text-foreground/90 truncate max-w-28">
                     {displayId}
                 </span>
             </div>
@@ -60,18 +55,13 @@ export const VehicleMonitorRow = memo(({ item }: VehicleMonitorRowProps) => {
 
             <div className="flex items-center gap-2 shrink-0">
                 {delaySeconds === null ? (
-                    <Badge variant="outline" className="text-label font-medium text-muted-foreground bg-muted/20 border-transparent px-1.5 py-0.5">
+                    <Badge variant="muted" className="type-badge text-muted-foreground">
                         {t('map.vehicleDetails.notAvailable')}
                     </Badge>
                 ) : (
                     <Badge
-                        variant="outline"
-                        className={cn(
-                            "text-label font-bold tabular-nums px-2 py-0.5 border-transparent shadow-2xs",
-                            isLate ? "bg-destructive/10 text-destructive border-destructive/20" :
-                            isEarly ? "bg-sky-500/10 text-sky-400 border-sky-500/20" :
-                            "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        )}
+                        variant="muted"
+                        className={cn("type-badge tabular-nums", isLate ? "bg-destructive/10 text-destructive" : isEarly ? "bg-sky-500/10 text-sky-400" : "bg-emerald-500/10 text-emerald-400")}
                     >
                         {isLate
                             ? `+${t('map.departures.minutes', { count: delayMinutes || 1 })}`
@@ -81,9 +71,9 @@ export const VehicleMonitorRow = memo(({ item }: VehicleMonitorRowProps) => {
                     </Badge>
                 )}
 
-                <ChevronRight size={14} className="text-muted-foreground/40 group-hover:text-foreground transition-colors" />
+                <ChevronRight size={14} className="text-label-3 transition-colors group-hover:text-foreground" />
             </div>
-        </div>
+        </Item>
     );
 });
 

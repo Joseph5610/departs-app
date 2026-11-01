@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Item } from '@/components/ui/item';
+import { StatsCard } from './StatsCard';
 import { TrendingUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { CityStats } from '@/types';
@@ -13,12 +14,12 @@ export const OtherDataCard = ({ activeStats, networkStats }: OtherDataCardProps)
     const { t, i18n } = useTranslation();
 
     const renderStatRow = (label: string, value: React.ReactNode) => (
-        <div className="flex justify-between items-center py-2.5 border-b border-border/50 last:border-0">
-            <span className="text-title font-medium text-foreground/80">{label}</span>
-            <span className="text-title font-bold text-foreground tracking-tight tabular-nums">
+        <Item variant="row" size="none" className="justify-between [--row-sep:0.875rem]">
+            <span className="type-row text-muted-foreground">{label}</span>
+            <span className="type-headsign text-foreground tabular-nums">
                 {value}
             </span>
-        </div>
+        </Item>
     );
 
     const formatPercentage = (count: number, total: number) => {
@@ -35,14 +36,7 @@ export const OtherDataCard = ({ activeStats, networkStats }: OtherDataCardProps)
     }
 
     return (
-        <Card size="none" className="mb-4">
-            <CardHeader className="p-3.5 pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                    <TrendingUp size={16} className="text-primary" />
-                    <span>{t('stats.otherData')}</span>
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3.5 pt-0">
+        <StatsCard icon={TrendingUp} title={t('stats.otherData')} iconClassName="text-tint-mint" className="mb-4" flush>
                 <div className="flex flex-col">
                     {activeStats.total_delay_seconds > 0 &&
                         renderStatRow(t('stats.totalDelay'), <span className="text-destructive font-bold tabular-nums">{t('stats.hoursValue', { value: Math.round(activeStats.total_delay_seconds / 3600) })}</span>)
@@ -56,7 +50,6 @@ export const OtherDataCard = ({ activeStats, networkStats }: OtherDataCardProps)
                         renderStatRow(t('stats.airConditioned'), formatPercentage(activeStats.air_conditioned_count, activeStats.total_vehicles))
                     }
                 </div>
-            </CardContent>
-        </Card>
+        </StatsCard>
     );
 };

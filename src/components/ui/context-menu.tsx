@@ -56,7 +56,7 @@ function ContextMenuLabel({
     <ContextMenuPrimitive.GroupLabel
       data-slot="context-menu-label"
       data-inset={inset}
-      className={cn("px-3 pt-2 pb-1.5 micro-label-widest text-caption text-muted-foreground data-inset:pl-7", className)}
+      className={cn("px-3 pt-2 pb-1.5 type-label text-muted-foreground data-inset:pl-7", className)}
       {...props}
     />
   )
@@ -77,7 +77,7 @@ function ContextMenuItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "group/context-menu-item relative flex cursor-pointer items-center gap-2.5 min-h-10 rounded-2xl px-3 text-sm outline-hidden select-none focus:bg-fill focus:text-foreground not-data-[variant=destructive]:focus:**:text-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive",
+        "group/context-menu-item relative flex cursor-pointer items-center gap-2.5 min-h-10 rounded-nested px-3 type-row outline-hidden select-none focus:bg-fill focus:text-foreground not-data-[variant=destructive]:focus:**:text-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive",
         className
       )}
       {...props}

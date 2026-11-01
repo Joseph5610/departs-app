@@ -108,8 +108,8 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
 
     const chips = layout === 'chips';
     const toolbar = layout === 'toolbar';
-    const chipClassName = chips ? 'size-7 rounded-full bg-field' : undefined;
-    const toolbarButton = toolbar ? 'relative mx-0.5 size-10 rounded-full text-foreground after:absolute after:inset-x-0 after:-inset-y-0.5 transition-[width,margin,opacity,background-color] duration-200 hover:bg-fill-2 aria-expanded:bg-fill-2 active:bg-fill-2' : undefined;
+    const chipClassName = chips ? 'size-control-sm bg-field' : undefined;
+    const toolbarButton = toolbar ? 'relative mx-0.5 size-10 rounded-full text-foreground after:absolute after:-inset-0.5 transition-[width,margin,opacity,background-color] duration-200' : undefined;
     const toolbarFold = toolbar ? cn(TOOLBAR_FOLD, collapsed && 'mx-0 w-0 overflow-hidden opacity-0') : undefined;
     const foldHidden = toolbar && collapsed ? { tabIndex: -1, 'aria-hidden': true } : undefined;
     // A stop pinned under an older id (an alias, a pre-stops.json PID id) counts as pinned, and unpinning drops every such id.
@@ -134,8 +134,8 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
             {stopId ? (
                 <ButtonTooltip label={isFavorite ? t('map.departures.removeFromFavorites') : t('map.departures.addToFavorites')}>
                 <Button
-                    variant="ghost"
-                    size="icon-sm"
+                    variant={toolbar ? 'quiet' : 'ghost'}
+                    size="icon-xs"
                     onClick={handleToggleFavorite}
                     aria-label={isFavorite ? t('map.departures.removeFromFavorites') : t('map.departures.addToFavorites')}
                     aria-pressed={isFavorite}
@@ -143,25 +143,26 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
                     {...foldHidden}
                     className={cn("shrink-0 text-muted-foreground", chipClassName, toolbarButton, toolbarFold, isFavorite && "text-favorite hover:text-favorite-hover")}
                 >
-                    <Star size={chips ? 14 : 18} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={toolbar ? 1.75 : 1.5} className={toolbar ? 'size-4.75' : undefined} />
+                    <Star size={chips ? 14 : 19} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={1.75} className={toolbar ? 'size-4.75' : undefined} />
                 </Button>
                 </ButtonTooltip>
             ) : (
                 <ButtonTooltip label={t('common.share')}>
                 <Button
-                    variant="ghost"
-                    size="icon-sm"
+                    variant={toolbar ? 'quiet' : 'ghost'}
+                    size="icon-xs"
                     onClick={handleShare}
                     aria-label={t('common.share')}
                     data-testid="share-btn"
-                    className="shrink-0 text-muted-foreground"
+                    {...foldHidden}
+                    className={cn("shrink-0 text-muted-foreground", toolbarButton, toolbarFold)}
                 >
-                    <Share size={18} strokeWidth={1.5} />
+                    <Share size={19} strokeWidth={1.75} className={toolbar ? 'size-4.75' : undefined} />
                 </Button>
                 </ButtonTooltip>
             )}
             {toolbar && stopId && (
-                <Button variant="ghost" size="icon" onClick={handleShare} aria-label={t('common.share')} data-testid="share-btn" className={cn("shrink-0", toolbarButton, toolbarFold)} {...foldHidden}>
+                <Button variant={toolbar ? 'quiet' : 'ghost'} size="icon" onClick={handleShare} aria-label={t('common.share')} data-testid="share-btn" className={cn("shrink-0", toolbarButton, toolbarFold)} {...foldHidden}>
                     <Share strokeWidth={1.75} className="size-4.75" />
                 </Button>
             )}
@@ -169,13 +170,13 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
                 <ButtonTooltip label={t('common.moreOptions')}>
                 <DropdownMenuTrigger render={
                     <Button
-                        variant="ghost"
-                        size="icon-sm"
+                        variant={toolbar ? 'quiet' : 'ghost'}
+                        size="icon-xs"
                         aria-label={t('common.moreOptions')}
                         data-testid="more-options-btn"
                         className={cn("shrink-0 text-muted-foreground", chipClassName, toolbarButton)}
                     >
-                        <MoreHorizontal size={chips ? 16 : 20} strokeWidth={toolbar ? 1.75 : 1.5} className={toolbar ? 'size-4.75' : undefined} />
+                        <MoreHorizontal size={chips ? 16 : 19} strokeWidth={1.75} className={toolbar ? 'size-4.75' : undefined} />
                     </Button>
                 } />
                 </ButtonTooltip>
@@ -236,7 +237,7 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
             data-testid="sheet-toolbar"
             className={cn(
                 "glassy fixed! bottom-[max(1rem,calc(env(safe-area-inset-bottom,0px)-0.375rem))] flex h-12 items-center justify-end rounded-full px-0.5 transition-[width,right] duration-450 ease-[cubic-bezier(.32,.72,0,1)]",
-                collapsed ? "right-4 w-12" : "right-[calc(50%-4.25rem)] w-34"
+                collapsed ? "right-4 w-12" : stopId ? "right-[calc(50%-4.25rem)] w-34" : "right-[calc(50%-2.875rem)] w-23"
             )}
         >
             {content}
