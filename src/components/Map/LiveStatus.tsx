@@ -33,8 +33,8 @@ export const LiveStatus = () => {
         if (status.type === 'offline') return { text: t('liveStatus.offline'), color: 'text-neutral-500', icon: <WifiOff className="size-3 shrink-0" /> };
         if (status.type === 'app_error') return { text: t('liveStatus.appError'), color: 'text-destructive', icon: <AlertTriangle className="size-3 shrink-0" /> };
         if (status.type === 'upstream_offline') return { text: t('liveStatus.upstreamError'), color: 'text-orange-500', icon: <AlertTriangle className="size-3 shrink-0" /> };
-        if (status.type === 'stale') return { text: t('liveStatus.stale'), color: 'text-amber-500', icon: <SignalMark /> };
-        if (status.type === 'refreshing') return { text: t('liveStatus.refreshing'), color: 'text-amber-500', icon: <SignalMark className="animate-pulse" /> };
+        if (status.type === 'stale') return { text: t('liveStatus.stale'), color: 'text-tint-amber', icon: <SignalMark /> };
+        if (status.type === 'refreshing') return { text: t('liveStatus.refreshing'), color: 'text-tint-amber', icon: <SignalMark className="animate-pulse" /> };
         if (isFiltered) return {
             text: t('liveStatus.filtered'),
             color: 'text-purple-400',
@@ -43,7 +43,7 @@ export const LiveStatus = () => {
         };
         return {
             text: t('liveStatus.live'),
-            color: 'text-primary',
+            color: 'text-tint-mint',
             icon: <SignalMark />,
             showCountdown: true
         };
@@ -62,7 +62,7 @@ export const LiveStatus = () => {
             <div className="pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-300">
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    className="glassy px-3 py-1.5 rounded-full cursor-pointer hover:bg-white/10 active:bg-white/15 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 flex items-center"
+                    className="glassy hit-target px-3 py-1.5 rounded-full cursor-pointer hover:bg-white/10 active:bg-white/15 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 flex items-center"
                 >
                     <div className={cn("flex items-center gap-1.5 h-3", config.color)}>
                         {config.icon}

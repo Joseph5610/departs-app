@@ -6,7 +6,6 @@ import { LINE_BADGE_SIZES, lineBadgeWidth, type LineBadgeSize } from '@/lib/line
 interface LineBadgeProps {
     name: string;
     routeColor: string;
-    /** Size variant — defaults to 'md' */
     size?: LineBadgeSize;
     className?: string;
 }
@@ -16,22 +15,18 @@ interface LineBadgeProps {
  *
  * Coloured pill showing a transit line name (Metro, Tram, Bus, etc).
  */
-export const LineBadge = ({ name, routeColor: rawColor, size = 'md', className }: LineBadgeProps) => {
+export const LineBadge = ({ name, routeColor: rawColor, size = 'row', className }: LineBadgeProps) => {
     const routeColor = safeHexColor(rawColor) ?? FALLBACK_ROUTE_COLOR;
-    const len = name.length;
-    const config = LINE_BADGE_SIZES[size] || LINE_BADGE_SIZES.md;
-    const calculatedMinWidth = lineBadgeWidth(name, size in LINE_BADGE_SIZES ? size : 'md');
+    const config = LINE_BADGE_SIZES[size];
+    const calculatedMinWidth = lineBadgeWidth(name, size);
 
     const textColor = getContrastColor(routeColor);
-    const isLightBg = textColor === '#000000';
 
     return (
         <span
             className={cn(
-                'inline-flex items-center justify-center shrink-0 whitespace-nowrap border',
-                isLightBg ? 'border-black/15 dark:border-black/40' : 'border-transparent',
+                'inline-flex items-center justify-center shrink-0 whitespace-nowrap',
                 config.classes,
-                size === 'sm' && len > 1 && 'text-nano',
                 className
             )}
             style={{ 

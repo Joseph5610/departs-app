@@ -12,6 +12,8 @@ export type TimelineStop = Required<Required<DisplayVehicle>['stop_times']>['fea
 export interface StopTimelineProps {
     stopTimes: TimelineStop[];
     routeName: DisplayVehicle['routeName'];
+    /** The line's colour, which the route's rail is drawn in. */
+    routeColor: string;
     effectiveSequence: DisplayVehicle['effectiveSequence'];
     delay?: number | null;
     tripId: string;

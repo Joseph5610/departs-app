@@ -56,10 +56,13 @@ const StatsPanel = lazy(() => import('./Stats/StatsPanel').then(m => ({ default:
 const SettingsCardContent = lazy(() => import('@/components/Modals/SettingsModal/SettingsModal').then(m => ({ default: m.SettingsContent })));
 const CityPickerCard = lazy(() => import('./CityPickerCard').then(m => ({ default: m.CityPickerCard })));
 const AlertsCardContent = lazy(() => import('@/components/Modals/AlertsModal').then(m => ({ default: m.AlertsContent })));
+const MyTripCardTitle = lazy(() => import('@/components/Modals/MyTripSheet').then(m => ({ default: m.MyTripCardTitle })));
+const MyTripCardContent = lazy(() => import('@/components/Modals/MyTripSheet').then(m => ({ default: m.MyTripCardContent })));
 const MyTripSheet = lazy(() => import('@/components/Modals/MyTripSheet').then(m => ({ default: m.MyTripSheet })));
 const McpModal = lazy(() => import('@/components/Modals/McpModal/McpModal').then(m => ({ default: m.McpModal })));
 import { StatsTabs } from './Stats/StatsTabs';
 import { FavoritesTabs } from '@/components/DetailPanel/FavoritesPanel/FavoritesTabs';
+import { FavoritesReorderButton } from '@/components/DetailPanel/FavoritesPanel/FavoritesReorderButton';
 
 const renderSheetControls = (hidden: boolean) => <MapControls placement="sheet" hidden={hidden} />;
 const renderBoardToolbar = (collapsed: boolean) => <PanelActions layout="toolbar" collapsed={collapsed} />;
@@ -148,24 +151,26 @@ const MapInner = () => {
     ), [isStatsRoute, isFavoritesRoute, selectedPos]);
 
     const hasVehicleActions = !isStatsRoute && !isFavoritesRoute && !selectedPos && Boolean(selectedVehicle);
-    const detailActions = useMemo(() => (hasVehicleActions ? <PanelActions /> : undefined), [hasVehicleActions]);
+    const detailActions = useMemo(() => (isFavoritesRoute ? <FavoritesReorderButton /> : hasVehicleActions ? <PanelActions /> : undefined), [isFavoritesRoute, hasVehicleActions]);
 
     const detailContent = useMemo(() => (
         isStatsRoute ? <Suspense fallback={null}><StatsPanel /></Suspense> : isFavoritesRoute ? <FavoritesPanel /> : <DetailPanelContent />
     ), [isStatsRoute, isFavoritesRoute]);
 
     // On phones settings, alerts and the city picker are cards in the sheet, over the home or whichever panel is open.
-    const sheetCard = !isMobile ? null : isSettingsOpen ? 'settings' : isAlertsOpen ? 'alerts' : isCityPickerOpen ? 'city' : null;
+    const { closeMyTrip } = useUiStore(st => st.actions);
+    const sheetCard = !isMobile ? null : isMyTripOpen ? 'myTrip' : isSettingsOpen ? 'settings' : isAlertsOpen ? 'alerts' : isCityPickerOpen ? 'city' : null;
     const closeSheetCard = useCallback(() => {
-        if (sheetCard === 'settings') setIsSettingsOpen(false);
+        if (sheetCard === 'myTrip') closeMyTrip();
+        else if (sheetCard === 'settings') setIsSettingsOpen(false);
         else if (sheetCard === 'alerts') setIsAlertsOpen(false);
         else setIsCityPickerOpen(false);
-    }, [sheetCard, setIsSettingsOpen, setIsAlertsOpen, setIsCityPickerOpen]);
+    }, [sheetCard, closeMyTrip, setIsSettingsOpen, setIsAlertsOpen, setIsCityPickerOpen]);
     const showsStopBoard = !sheetCard && !isStatsRoute && !isFavoritesRoute && !selectedVehicle;
-    const sheetCardTitle = sheetCard === 'settings' ? t('settings.title') : sheetCard === 'alerts' ? t('alerts.title') : t('map.controls.switchCity');
+    const sheetCardTitle = sheetCard === 'myTrip' ? <Suspense fallback={null}><MyTripCardTitle /></Suspense> : sheetCard === 'settings' ? t('settings.title') : sheetCard === 'alerts' ? t('alerts.title') : t('map.controls.switchCity');
     const sheetCardContent = useMemo(() => (
         <Suspense fallback={null}>
-            {sheetCard === 'settings' ? <SettingsCardContent /> : sheetCard === 'alerts' ? <AlertsCardContent /> : <CityPickerCard />}
+            {sheetCard === 'myTrip' ? <MyTripCardContent /> : sheetCard === 'settings' ? <SettingsCardContent /> : sheetCard === 'alerts' ? <AlertsCardContent /> : <CityPickerCard />}
         </Suspense>
     ), [sheetCard]);
 
@@ -302,11 +307,11 @@ const MapInner = () => {
                         anchor="bottom"
                     >
                         <div className="flex flex-col items-center">
-                            <div className="bg-primary text-primary-foreground px-2 py-0.5 rounded-md text-sm font-bold shadow-md whitespace-nowrap mb-1">
+                            <div className="bg-primary text-primary-foreground px-2 py-0.5 rounded-badge type-row shadow-md whitespace-nowrap mb-1">
                                 {selectedPlace.name}
                             </div>
-                            <div className="text-primary drop-shadow-md">
-                                <MapPin size={24} fill="currentColor" className="text-primary"  strokeWidth={1.5} />
+                            <div className="text-tint-mint drop-shadow-md">
+                                <MapPin size={24} fill="currentColor" className="text-tint-mint"  strokeWidth={1.5} />
                             </div>
                         </div>
                     </Marker>
@@ -342,18 +347,19 @@ const MapInner = () => {
                 isOpen={!!sheetCard || isFavoritesRoute || isStatsRoute || !!selectedStop || !!selectedVehicle || !!selectedPos}
                 id={sheetCard ?? (isStatsRoute ? 'stats' : isFavoritesRoute ? 'favorites' : (selectedId || selectedStopId || posId || undefined))}
                 onClose={sheetCard ? closeSheetCard : closePanel}
-                onBack={!sheetCard && shouldShowBackButton ? handleBack : undefined}
+                onBack={sheetCard === 'myTrip' ? closeSheetCard : !sheetCard && shouldShowBackButton ? handleBack : undefined}
                 title={sheetCard ? sheetCardTitle : detailTitle}
                 platformCode={showsStopBoard ? selectedStop?.board?.code : undefined}
                 subHeader={sheetCard ? undefined : detailSubHeader}
-                actions={sheetCard ? undefined : detailActions}
+                actions={sheetCard || (isMobile && hasVehicleActions) ? undefined : detailActions}
                 collapseRequest={drawerCollapseRequest}
                 floating={renderSheetControls}
                 homeHeader={mobileSearch}
-                toolbar={showsStopBoard && selectedStop ? renderBoardToolbar : undefined}
+                toolbar={!sheetCard && (hasVehicleActions || (showsStopBoard && selectedStop?.board)) ? renderBoardToolbar : undefined}
                 home={renderMobileHome}
-                minSnap={sheetCard && sheetCard !== 'city' ? 'full' : 'half'}
-                selfScrolling={sheetCard === 'alerts'}
+                minSnap={sheetCard === 'settings' || sheetCard === 'alerts' ? 'full' : 'half'}
+                selfScrolling={sheetCard === 'alerts' || sheetCard === 'myTrip'}
+                opensAtHalf={sheetCard === 'myTrip'}
             >
                 {sheetCard ? sheetCardContent : detailContent}
             </DetailPanel>

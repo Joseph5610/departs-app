@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<title>Detail spoja: celý obsah</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="screens.css">
+</head>
+<body>
+<x-dc>
+<helmet><style>body { margin: 0; }</style></helmet>
+<dc-import name="ScreenTrip" tall="{{yes}}" hint-size="390px,1100px"></dc-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1072}}'>
+class Component extends DCLogic {
+  renderVals() { return { yes: true }; }
+}
+</script>
+</body>
+</html>

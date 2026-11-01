@@ -24,7 +24,7 @@ const AttributionItem = ({ source }: { source: DataAttribution }) => {
     const licenseUrl = DATA_LICENSE_URLS[source.license];
     const licenseLabel = t(`settings.attributions.licenses.${source.license}`);
     return (
-        <Item variant="settings" size="none">
+        <Item variant="row" size="none">
             <ItemMedia variant="icon" className="text-muted-foreground">
                 <Database size={18} strokeWidth={2} />
             </ItemMedia>
@@ -57,7 +57,7 @@ interface LinkedItemProps {
 
 /** A row that links as a whole, so its badge stays a plain label: an anchor can't nest inside the row's own anchor. */
 const LinkedItem = ({ href, icon, title, description, badge }: LinkedItemProps) => (
-    <Item variant="settings" size="none" render={<a href={href} target="_blank" rel="noopener noreferrer" />}>
+    <Item variant="row" size="none" render={<a href={href} target="_blank" rel="noopener noreferrer" />}>
         <ItemMedia variant="icon" className="text-muted-foreground">{icon}</ItemMedia>
         <ItemContent>
             <ItemTitle className="text-foreground">{title}</ItemTitle>

@@ -93,29 +93,27 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-            <div className="w-full max-w-md bg-card border border-border shadow-2xl rounded-3xl overflow-hidden ring-1 ring-black/5">
-                <Empty className="py-8">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-background pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
+            <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center">
+                <Empty className="border-0 px-4 py-8">
                     <EmptyHeader>
                         <EmptyMedia
-                            variant="icon"
-                            className="size-14 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive shadow-[0_0_20px_color-mix(in_oklch,var(--color-destructive)_10%,transparent)] [&_svg:not([class*='size-'])]:size-7"
+                            variant="tile" className="bg-tint-red/16 text-destructive"
                         >
                             <AlertCircle strokeWidth={1.5} />
                         </EmptyMedia>
-                        <EmptyTitle className="text-xl font-bold text-foreground">
+                        <EmptyTitle className="type-title text-foreground">
                             {t('errors.crash.title')}
                         </EmptyTitle>
-                        <EmptyDescription className="text-sm">
+                        <EmptyDescription className="type-meta">
                             {t('errors.crash.description')}
                         </EmptyDescription>
                     </EmptyHeader>
-                    <EmptyContent className="w-full flex flex-col gap-4 pt-4 px-6">
+                    <EmptyContent className="w-full flex flex-col gap-3 pt-4">
                         <Button
-                            size="lg"
                             variant="default"
                             onClick={() => window.location.reload()}
-                            className="w-full font-bold flex items-center justify-center gap-2 rounded-xl shadow-sm"
+                            className="w-full gap-2"
                         >
                             <RefreshCcw size={18} strokeWidth={2} />
                             {t('errors.crash.refresh')}
@@ -126,11 +124,10 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
                             {!isSubmitted ? (
                                 <div className="flex flex-col gap-2 w-full">
                                     <Button
-                                        size="lg"
                                         variant="secondary"
                                         onClick={handleReportCrash}
                                         disabled={!turnstileToken || isSubmitting}
-                                        className="w-full font-bold flex items-center justify-center gap-2 transition-colors"
+                                        className="w-full gap-2"
                                     >
                                         {isSubmitting ? (
                                             <>
@@ -145,14 +142,14 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
                                         )}
                                     </Button>
                                     {submitError && (
-                                        <div className="text-destructive text-sm text-center font-medium mt-1 bg-destructive/10 py-2 rounded-lg">
+                                        <div className="rounded-surface bg-tint-red/16 px-3.5 py-2 text-center type-meta text-destructive">
                                             {submitError}
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <div className="flex items-center justify-center gap-2 text-sm text-foreground font-bold h-11 bg-muted/40 rounded-xl w-full border border-border animate-in fade-in slide-in-from-bottom-2 duration-300 shadow-sm">
-                                    <CheckCircle2 size={18} strokeWidth={2} className="text-primary" />
+                                <div className="flex items-center justify-center gap-2 type-row text-foreground h-11 bg-field rounded-full w-full animate-in fade-in slide-in-from-bottom-2 duration-300 shadow-sm">
+                                    <CheckCircle2 size={18} strokeWidth={2} className="text-tint-mint" />
                                     {t('errors.crash.sent')}
                                 </div>
                             )}
@@ -169,13 +166,13 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
                             </>
                         )}
 
-                        <div className="mt-4 pt-4 border-t border-border/50 text-left w-full flex flex-col gap-2">
-                            <p className="text-destructive text-xs font-mono leading-relaxed break-all font-semibold">
+                        <div className="mt-3 flex w-full flex-col gap-2 rounded-surface bg-fill p-3.5 text-left">
+                            <p className="text-destructive type-control font-mono break-all">
                                 {error?.toString()}
                             </p>
                             {errorInfo && (
                                 <div className="max-h-48 overflow-y-auto overflow-x-auto custom-scrollbar w-full">
-                                    <pre className="text-muted-foreground/70 text-label font-mono leading-relaxed whitespace-pre w-full">
+                                    <pre className="text-muted-foreground type-note font-mono whitespace-pre w-full">
                                         {errorInfo.componentStack}
                                     </pre>
                                 </div>

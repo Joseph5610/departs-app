@@ -7,10 +7,12 @@ import { createCn } from 'cn/config';
 export const cn = createCn({
     extend: {
         theme: {
-            radius: ['sheet', 'surface', 'badge'],
+            radius: ['sheet', 'surface', 'nested', 'badge'],
+            spacing: ['control-sm', 'control-md', 'control-lg'],
         },
         classGroups: {
-            'font-size': [{ text: ['nano', 'micro', 'label', 'badge', 'caption', 'body-sm', 'title', 'heading', 'sheet-title'] }],
+            'type-style': [{ type: ['title', 'section', 'headsign', 'row', 'field', 'group', 'meta', 'note', 'control', 'label', 'badge', 'micro', 'pill'] }],
+            'font-size': [{ text: ['nano', 'micro', 'label', 'badge', 'caption', 'body-sm', 'title', 'heading'] }],
         },
     },
 });

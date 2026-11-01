@@ -35,7 +35,7 @@ function ItemSeparator({
 }
 
 const itemVariants = cva(
-  "group/item flex w-full flex-wrap items-center rounded-lg border text-sm transition-colors duration-100 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [a]:transition-colors [a]:hover:bg-muted",
+  "group/item flex w-full flex-wrap items-center rounded-surface border type-row transition-colors duration-100 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [a]:transition-colors [a]:hover:bg-muted",
   {
     variants: {
       variant: {
@@ -43,8 +43,7 @@ const itemVariants = cva(
         outline: "border-border",
         muted: "border-transparent bg-muted/50",
         /** A row in a grouped list; its separator starts at the text, `--row-sep` from the left. */
-        row: "relative min-h-12 border-0 rounded-none first:rounded-t-surface last:rounded-b-surface bg-transparent px-3.5 py-2.5 [button&]:active:bg-fill [a&]:active:bg-fill [--row-sep:2.875rem] not-last:after:absolute not-last:after:right-0 not-last:after:bottom-0 not-last:after:left-(--row-sep) not-last:after:h-[0.5px] not-last:after:bg-sep",
-        settings: "border-0 border-b border-border/50 last:border-0 rounded-none bg-transparent hover:bg-foreground/5 active:bg-foreground/10 px-4 py-3",
+        row: "row-separator min-h-11 flex-nowrap gap-3 border-0 rounded-none bg-transparent px-3.5 py-2 text-left focus-visible:ring-0 [button&]:row-hover-group [a&]:row-hover-group",
       },
       size: {
         default: "gap-2.5 px-3 py-2.5",
@@ -91,9 +90,9 @@ const itemMediaVariants = cva(
       variant: {
         default: "bg-transparent",
         icon: "[&_svg:not([class*='size-'])]:size-4",
-        rowIcon: "[&_svg:not([class*='size-'])]:size-5",
+        rowIcon: "group-has-data-[slot=item-description]/item:translate-y-0 group-has-data-[slot=item-description]/item:self-center [&_svg:not([class*='size-'])]:size-5",
         image:
-          "size-10 overflow-hidden rounded-sm group-data-[size=sm]/item:size-8 group-data-[size=xs]/item:size-6 [&_img]:size-full [&_img]:object-cover",
+          "size-10 overflow-hidden rounded-badge group-data-[size=sm]/item:size-8 group-data-[size=xs]/item:size-6 [&_img]:size-full [&_img]:object-cover",
       },
     },
     defaultVariants: {
@@ -135,7 +134,7 @@ function ItemTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="item-title"
       className={cn(
-        "line-clamp-1 flex w-fit items-center gap-2 text-sm leading-snug font-medium underline-offset-4",
+        "line-clamp-1 flex w-fit items-center gap-2 type-row underline-offset-4",
         className
       )}
       {...props}
@@ -148,7 +147,7 @@ function ItemDescription({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="item-description"
       className={cn(
-        "line-clamp-2 text-left text-sm leading-normal font-normal text-muted-foreground group-data-[size=xs]/item:text-xs [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary",
+        "line-clamp-2 text-left type-row text-muted-foreground group-data-[size=xs]/item:text-xs [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-tint-mint",
         className
       )}
       {...props}

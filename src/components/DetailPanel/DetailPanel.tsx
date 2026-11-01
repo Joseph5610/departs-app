@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { ArrowLeft, X } from 'lucide-react';
+import { ChevronLeft, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/cn';
 import { DrawerTitle } from '@/components/ui/drawer';
@@ -39,6 +39,8 @@ interface DetailPanelProps {
     home?: (isFull: boolean, isPeek: boolean) => React.ReactNode;
     /** Mobile only: the height the panel opens at least at. */
     minSnap?: 'half' | 'full';
+    /** The phone's card opens exactly at half, as its content is short. */
+    opensAtHalf?: boolean;
     /** Mobile only: the content brings its own scroll container. */
     selfScrolling?: boolean;
     children: React.ReactNode;
@@ -50,19 +52,19 @@ interface DetailPanelProps {
  * Responsive panel for displaying stop and vehicle details.
  * Uses a sidebar (Sheet) on desktop; on mobile, the one bottom sheet that also holds the home content.
  */
-export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, actions, collapseRequest, floating, homeHeader, toolbar, home, minSnap = 'half', selfScrolling, children }: DetailPanelProps) => {
+export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, actions, opensAtHalf, collapseRequest, floating, homeHeader, toolbar, home, minSnap = 'half', selfScrolling, children }: DetailPanelProps) => {
     const isMobile = useIsMobile();
     const { t } = useTranslation();
 
     const backButton = onBack && (
         <Button
-            variant="ghost"
-            size="icon-sm"
+            variant="secondary"
+            size="icon-xs"
             onClick={onBack}
             aria-label={t('common.back')}
-            className="shrink-0 -ml-2 text-muted-foreground"
+            className="shrink-0 text-muted-foreground"
         >
-            <ArrowLeft size={20}  strokeWidth={1.5} />
+            <ChevronLeft strokeWidth={2.5} className="size-4" />
         </Button>
     );
 
@@ -73,11 +75,11 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
     const titleText = typeof title === 'string' ? <span className="block min-w-0 truncate">{title}</span> : title;
 
     const titleElement = isMobile ? (
-        <DrawerTitle className="min-w-0 flex-1 text-sheet-title leading-7 font-bold tracking-[-0.02em] text-foreground">
+        <DrawerTitle className="min-w-0 flex-1 type-title text-foreground">
             {titleText}
         </DrawerTitle>
     ) : (
-        <SheetTitle className="min-w-0 flex-1 text-sheet-title leading-7 font-bold tracking-[-0.02em] text-foreground text-left">
+        <SheetTitle className="min-w-0 flex-1 type-title text-foreground text-left">
             {titleText}
         </SheetTitle>
     );
@@ -102,7 +104,7 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
                 {platformBadge}
                 {titleElement}
             </div>
-            {actions}
+            {actions && <div className="flex shrink-0 items-center">{actions}</div>}
             {closeButton}
         </div>
     );
@@ -113,6 +115,7 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
                 isOpen={isOpen}
                 cardKey={isOpen ? id ?? 'panel' : null}
                 minSnap={minSnap}
+                opensAtHalf={opensAtHalf}
                 collapseRequest={collapseRequest}
                 header={headerContent}
                 subHeader={subHeader}
@@ -151,7 +154,7 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
                 initialFocus={false}
                 data-testid="detail-panel"
             >
-                {/* Clips the content to the rounded panel; the resize handle outside it reaches past the edge. */}
+                {/* Clips the content to the rounded-badge panel; the resize handle outside it reaches past the edge. */}
                 <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden rounded-[inherit]">
                     <div className="shrink-0 flex flex-col">
                         <div className="px-6 pt-6 pb-2">

@@ -38,7 +38,7 @@ const RowsPlaceholder = () => (
     <div className="flex flex-col gap-2" aria-hidden="true">
         {[0, 1].map(i => (
             <div key={i} className="flex items-center gap-2">
-                <Skeleton className="h-4 w-7 rounded" />
+                <Skeleton className="h-4 w-7 rounded-badge" />
                 <Skeleton className="h-3.5 flex-1" />
                 <Skeleton className="h-3.5 w-10" />
             </div>
@@ -48,7 +48,7 @@ const RowsPlaceholder = () => (
 
 const NoDepartures = () => {
     const { t } = useTranslation();
-    return <div className="mt-auto text-body-sm text-muted-foreground">{t('map.departures.noUpcoming')}</div>;
+    return <div className="mt-auto type-meta text-muted-foreground">{t('map.departures.noUpcoming')}</div>;
 };
 
 interface CompactStopCardProps {
@@ -72,15 +72,15 @@ export const CompactStopCard = ({ stop, departures, isLoading }: CompactStopCard
         <CardShell onOpen={open} testId={`favorite-mini-stop-${stop.id}`}>
             <div className="flex min-w-0 items-center gap-1.5">
                 <Star size={14} strokeWidth={1.5} className="shrink-0 fill-favorite text-favorite" />
-                <span className="truncate text-title font-medium text-foreground">{stop.name}</span>
+                <span className="truncate type-headsign text-foreground">{stop.name}</span>
             </div>
             {next.length === 0 ? (isLoading ? <RowsPlaceholder /> : <NoDepartures />) : (
                 <div className="mt-auto flex flex-col gap-2">
                     {next.map(dep => (
                         <div key={`${dep.tripId}-${dep.timestamp}`} className="flex min-w-0 items-center gap-2">
                             <LineBadge name={String(dep.line)} routeColor={dep.route_color || FALLBACK_ROUTE_COLOR} size="row" />
-                            <span className="min-w-0 flex-1 truncate text-body-sm text-muted-foreground">{dep.headsign}</span>
-                            <span className="shrink-0 text-body-sm font-semibold tabular-nums text-foreground"><MinutesUntil timestamp={dep.timestamp} /></span>
+                            <span className="min-w-0 flex-1 truncate type-meta text-muted-foreground">{dep.headsign}</span>
+                            <span className="shrink-0 type-group tabular-nums text-foreground"><MinutesUntil timestamp={dep.timestamp} /></span>
                         </div>
                     ))}
                 </div>
@@ -117,16 +117,16 @@ export const CompactLineCard = ({ favorite, stop, departures, isLoading }: Compa
     return (
         <CardShell onOpen={open} testId={`favorite-mini-line-${favorite.stopId}-${favorite.line}`}>
             <div className="flex min-w-0 items-center justify-between gap-2">
-                <LineBadge name={favorite.line} routeColor={routeColor} size="chip" />
+                <LineBadge name={favorite.line} routeColor={routeColor} size="lg" />
                 {next[0] ? (
-                    <span className="truncate text-title font-semibold tabular-nums text-foreground"><MinutesUntil timestamp={next[0].timestamp} /></span>
+                    <span className="truncate type-headsign tabular-nums text-foreground"><MinutesUntil timestamp={next[0].timestamp} /></span>
                 ) : isLoading && <Skeleton className="h-5 w-12" />}
             </div>
             <div className="min-w-0">
-                <div className="truncate text-title leading-5 font-medium text-foreground">{favorite.headsign}</div>
-                {stopName && <div className="truncate text-body-sm leading-4.5 text-muted-foreground">{t('favorites.fromStop', { stop: stopName })}</div>}
+                <div className="truncate type-headsign text-foreground">{favorite.headsign}</div>
+                {stopName && <div className="truncate type-meta text-muted-foreground">{t('favorites.fromStop', { stop: stopName })}</div>}
                 {next[1] && (
-                    <div className="truncate text-body-sm leading-4.5 text-muted-foreground">
+                    <div className="truncate type-meta text-muted-foreground">
                         {t('home.then')} <MinutesUntil timestamp={next[1].timestamp} />
                     </div>
                 )}

@@ -4,11 +4,27 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.97.0] - 2026-11-01
+
+### Changed
+
+- All screens share one type scale, one list row with one hover, section titles and info pills.
+- A higher-contrast dark palette, solid mint for selected segments and chips, and clearer glass in light mode.
+- Taking a trip opens at half height on phones, and its alert times use the app's filter chips.
+- The trip timeline follows the line's colour, and alerts show their count and mode icon in section headings.
+
+### Fixed
+
+- Alert section headings no longer overlap at the end of the list, and filter labels no longer jump when picked.
+- Recent line filters show their badges in the colours of their own city.
+
 ## [0.96.0] - 2026-10-31
 
 ### Changed
 
 - New iOS-style foundations: three glass materials, one corner system, softer separators and borderless cards, capsule buttons, larger switches and segmented controls.
+- Settings, alerts, favourites, search and trip details follow the new design, with sliding segmented controls; on phones My trip replaces the sheet's content instead of opening a second sheet.
+- Increased contrast and reduced transparency drop the glass for solid surfaces, and small controls have larger touch targets.
 - Swiping a departure reveals a labelled action block that turns solid once letting go runs it.
 - Departure boards are a flat list with a larger title and a `My trip` mark on taken trips, and on phones favourite, share and more moved to a glass toolbar that folds while scrolling.
 - The phone's home sheet has grouped favourites, nearby stops and network links, and its favourites title opens the full list.

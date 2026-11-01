@@ -1,4 +1,5 @@
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { StatsCard } from './StatsCard';
 import { Activity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getRouteTypeI18nKey } from '@/domain/routes';
@@ -16,28 +17,20 @@ export const VehicleMixCard = ({ stats }: VehicleMixCardProps) => {
     }
 
     return (
-        <Card size="none">
-            <CardHeader className="p-3.5 pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                    <Activity size={16} className="text-primary" />
-                    <span>{t('stats.vehicleMix')}</span>
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3.5 pt-0">
+        <StatsCard icon={Activity} title={t('stats.vehicleMix')} iconClassName="text-tint-mint">
                 <div className="flex flex-wrap gap-2">
                     {Object.entries(stats.vehicle_types)
                         .sort((a, b) => b[1] - a[1])
                         .map(([type, count]) => {
                             const label = t(getRouteTypeI18nKey(type));
                             return (
-                                <div key={type} className="flex items-center gap-1.5 bg-muted/50 border border-border/50 px-2.5 py-1 rounded-md">
-                                    <span className="text-xs font-medium text-foreground/80">{label}</span>
-                                    <span className="text-xs font-bold text-foreground tabular-nums">{count}</span>
-                                </div>
+                                <Badge key={type} variant="info">
+                                    {label}
+                                    <span className="type-control text-foreground tabular-nums">{count}</span>
+                                </Badge>
                             );
                     })}
                 </div>
-            </CardContent>
-        </Card>
+        </StatsCard>
     );
 };

@@ -18,24 +18,20 @@ export const FavoritesSkeleton = ({ kind, count }: FavoritesSkeletonProps) => ki
         ))}
     </SkeletonList>
 ) : (
-    <SkeletonList card={false} className="gap-3">
+    <SkeletonList card={false} className="gap-5">
         {Array.from({ length: count }, (_, idx) => (
-            <Card key={idx} size="none" className="px-3.5">
-                {/* Mirrors FavoriteStopSection: the stop header, a divider, then two departure rows. */}
-                <div className="flex flex-col gap-1 py-2.5">
-                    <div className="flex items-center gap-3 py-2 pl-2 pr-3">
-                        <Skeleton className="size-9 shrink-0 rounded-full" />
-                        <div className="flex min-w-0 flex-1 flex-col gap-1">
-                            <Skeleton className={cn("h-4.5", idx % 2 ? "w-32" : "w-44")} />
-                            <Skeleton className="h-3 w-14" />
-                        </div>
-                        <Skeleton className="size-4 rounded-full" />
-                    </div>
-                    <RowSeparator inset={false} className="my-1" />
-                    <NextDepartureRowSkeleton headsignWidth="w-32" />
-                    <NextDepartureRowSkeleton headsignWidth="w-24" />
+            <div key={idx} className="flex flex-col gap-2">
+                {/* Mirrors FavoriteStopSection: the stop header above a card of departure rows. */}
+                <div className="flex min-h-7 items-center gap-2">
+                    <Skeleton className="size-5.5 shrink-0 rounded-full" />
+                    <Skeleton className={cn("h-4.5", idx % 2 ? "w-32" : "w-44")} />
                 </div>
-            </Card>
+                <Card size="none" className="px-3.5">
+                    <NextDepartureRowSkeleton headsignWidth="w-32" />
+                    <RowSeparator />
+                    <NextDepartureRowSkeleton headsignWidth="w-24" />
+                </Card>
+            </div>
         ))}
     </SkeletonList>
 );

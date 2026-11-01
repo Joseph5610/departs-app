@@ -10,7 +10,6 @@ import { useDepartures } from '@/hooks/data/useDepartures';
 import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
 import { departureLines, lineChips } from '@/domain/departures';
 import { useRouteMetadata } from '@/hooks/data/useRouteMetadata';
-import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/cn';
 import { LineBadge } from '@/components/LineBadge';
@@ -62,12 +61,12 @@ export const DepartureBoardHeader = memo(() => {
     return (
         <div className="px-(--panel-gutter) pb-0 shrink-0 flex flex-col gap-2.5">
             <div className="flex w-full min-h-8 items-center gap-3">
-                <div className="flex min-w-0 flex-1 items-center gap-3 overflow-x-auto no-scrollbar text-body-sm text-muted-foreground">
+                <div className="-my-1.5 flex min-w-0 flex-1 items-center gap-3 overflow-x-auto py-1.5 no-scrollbar type-meta text-muted-foreground">
                     <NavigatePill />
 
                     {delayStats && delayStats.sampleSize >= 2 && (
                         <Popover>
-                            <PopoverTrigger render={<Button variant="ghost" className="h-auto shrink-0 gap-1.5 whitespace-nowrap rounded-md p-0 text-body-sm font-normal text-muted-foreground hover:bg-transparent hover:text-foreground" />}>
+                            <PopoverTrigger className="hit-target flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-badge type-meta text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
                                 <Activity size={14} strokeWidth={1.75} className={cn(
                                     delayStats.trend === 'worsening' ? "text-destructive" :
                                     delayStats.trend === 'improving' || delayStats.averageDelayMin === 0 ? "text-tint-mint" :
@@ -78,7 +77,7 @@ export const DepartureBoardHeader = memo(() => {
                                     : `~${delayStats.averageDelayMin > 0 ? '+' : ''}${t('map.departures.minutes', { count: delayStats.averageDelayMin })}`}
                             </PopoverTrigger>
                             <PopoverContent side="bottom" align="center" className="w-auto">
-                                <span className="text-body-sm font-medium text-foreground/90">
+                                <span className="type-meta text-foreground/90">
                                     {t('map.departures.delayStatsTooltip', { count: delayStats.sampleSize })}
                                 </span>
                             </PopoverContent>
@@ -91,7 +90,7 @@ export const DepartureBoardHeader = memo(() => {
                             type="button"
                             onClick={() => navigate(paths.stop(twin.city, twin.stopId))}
                             aria-label={t('map.departures.otherNetworkBoard', { network: twinLabel })}
-                            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md font-medium text-foreground outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring/50"
+                            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-badge font-medium text-foreground outline-none transition-colors hover:text-tint-mint focus-visible:ring-2 focus-visible:ring-ring/50"
                         >
                             <ArrowLeftRight size={14} strokeWidth={1.5} className="text-muted-foreground" />
                             {twinLabel}
@@ -143,7 +142,7 @@ export const DepartureBoardHeader = memo(() => {
                                             key={name}
                                             onClick={() => toggleLineFilter(name)}
                                             className={cn(
-                                                "flex transition-[transform,opacity] active:scale-95 select-none cursor-pointer hover:brightness-110 rounded-badge",
+                                                "hit-target flex transition-[transform,opacity] active:scale-95 select-none cursor-pointer hover:brightness-110 rounded-badge",
                                                 isDimmed ? "opacity-30" : "opacity-100",
                                                 isActive && "z-10 ring-2 ring-primary/40"
                                             )}
@@ -165,7 +164,7 @@ DepartureBoardHeader.displayName = 'DepartureBoardHeader';
 /** A row of filter chips scrolling sideways under the board header, fading out at its right edge. */
 const ChipStrip = ({ children }: { children: React.ReactNode }) => (
     <div
-        className="-mx-(--panel-gutter) overflow-x-auto px-(--panel-gutter) pb-1.5 pt-0.5 no-scrollbar"
+        className="-mx-(--panel-gutter) -my-2 overflow-x-auto px-(--panel-gutter) pt-2.5 pb-2.5 no-scrollbar"
         style={{
             maskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)',
             WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)'
@@ -195,7 +194,7 @@ const PropertyToggle = ({ isActive, onToggle, activeClassName, label, testId, ch
         aria-label={label}
         data-testid={testId}
         className={cn(
-            "flex size-6 shrink-0 items-center justify-center rounded-full transition-[transform,colors] active:scale-95 select-none cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+            "hit-target flex size-6 shrink-0 items-center justify-center rounded-full transition-[transform,colors] active:scale-95 select-none cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
             isActive ? activeClassName : "bg-field text-muted-foreground hover:text-foreground"
         )}
     >

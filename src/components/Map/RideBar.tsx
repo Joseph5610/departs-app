@@ -1,8 +1,9 @@
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BellRing, Check, ChevronDown, ChevronUp, Share2, UserRound, X } from 'lucide-react';
+import { BellRing, Check, ChevronDown, ChevronUp, Share, UserRound, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { Button } from '@/components/ui/button';
 import { RIDE_CONFIG } from '@/config/constants';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
@@ -21,7 +22,6 @@ import { LineBadge } from '@/components/LineBadge';
 import { toast } from 'sonner';
 import { notificationPermission, requestNotificationPermission } from '@/lib/notifications';
 
-const iconButton = "shrink-0 grid place-items-center size-7 rounded-full cursor-pointer outline-none hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-primary/50";
 
 
 /** One ride's bar: its exit stop, stops left and arrival; opens the trip. */
@@ -49,29 +49,29 @@ const RideBarItem = ({ ride, kind, status }: { ride: Ride; kind: RideKind; statu
         : isNext ? t('ride.kickerNext')
         : isArrived ? t(isFollowed ? 'share.kickerArrived' : 'ride.kickerArrived')
         : t(isFollowed ? 'share.kickerRiding' : 'ride.kickerRiding');
-    const arrivalClass = delayTone === 'late' ? (isAccent ? "rounded px-1 bg-background/90 text-destructive" : "text-destructive")
-        : delayTone === 'early' ? (isAccent ? "rounded px-1 bg-background/90 text-sky-500" : "text-sky-500")
+    const arrivalClass = delayTone === 'late' ? (isAccent ? "" : "text-destructive")
+        : delayTone === 'early' ? (isAccent ? "rounded-badge px-1 bg-background/90 text-sky-500" : "text-sky-500")
         : "";
     const tripPath = paths.trip(ride.city, ride.tripId, ride.vehicleId) + (isFollowed ? `?exit=${ride.exitSequence}` : '');
     const subtle = isAccent ? "text-primary-foreground/75" : "text-muted-foreground";
 
     return (
         <BarFrame testId={isFollowed ? 'follow-bar' : 'ride-bar'} isAccent={isAccent}>
-            <div className="flex items-center gap-1 pl-2.5 pr-1.5 py-2">
+            <div className="flex items-center gap-1 pl-3 pr-1.5 py-2.5">
                 <BarMain onClick={() => navigate(tripPath)} label={t(isFollowed ? 'share.openFollowed' : 'ride.open')}>
                     <span className="relative shrink-0">
                         {routeName && <LineBadge name={routeName} routeColor={routeColor} size="lg" />}
                         {isFollowed && (
-                            <span className="absolute -bottom-1.5 -right-1.5 grid place-items-center size-4 rounded-full bg-background text-foreground ring-1 ring-border">
+                            <span className="absolute -bottom-1.5 -right-1.5 grid place-items-center size-4 rounded-full bg-background text-foreground">
                                 <UserRound size={10} strokeWidth={2.5} />
                             </span>
                         )}
                     </span>
                     <span className="flex flex-col min-w-0 flex-1 leading-tight">
-                        <span className={cn("micro-label truncate", isAccent ? "text-primary-foreground/80" : "text-primary")}>{kicker}</span>
-                        <span className="text-sm font-bold truncate">{exitStopName}</span>
+                        <span className={cn("type-label truncate", isAccent ? "text-primary-foreground/80" : "text-tint-mint")}>{kicker}</span>
+                        <span className="type-row truncate">{exitStopName}</span>
                         {(showStopsLeft || showArrival) && (
-                            <span className={cn("text-caption tabular-nums truncate", subtle)}>
+                            <span className={cn("type-note tabular-nums truncate", subtle)}>
                                 {showStopsLeft && t('ride.stopsLeft', { count: stopsLeft })}
                                 {showStopsLeft && showArrival && ' · '}
                                 {showArrival && (
@@ -87,11 +87,11 @@ const RideBarItem = ({ ride, kind, status }: { ride: Ride; kind: RideKind; statu
                         {isArrived ? (
                             <Check size={22} strokeWidth={2.5} className="ml-auto" />
                         ) : minutesToArrival === null ? null : minutesToArrival === 0 ? (
-                            <span className="text-sm font-black">{t('map.departures.now')}</span>
+                            <span className="type-row">{t('map.departures.now')}</span>
                         ) : (
                             <>
-                                <span className="text-xl font-black">{minutesToArrival}</span>
-                                <span className={cn("block text-label font-semibold mt-0.5", subtle)}>min</span>
+                                <span className="type-section tabular-nums">{minutesToArrival}</span>
+                                <span className={cn("block type-control mt-0.5", subtle)}>min</span>
                             </>
                         )}
                     </span>
@@ -99,18 +99,18 @@ const RideBarItem = ({ ride, kind, status }: { ride: Ride; kind: RideKind; statu
                 <BarDivider isAccent={isAccent} />
                 <span className="flex flex-col gap-0.5">
                     {isFollowed && isLive && askNotifications ? (
-                        <button
+                        <Button variant="quiet" size="icon-2xs"
                             type="button"
                             onClick={() => { void enableNotifications(); }}
                             aria-label={t('share.notifyMe')}
                             title={t('share.notifyMe')}
                             data-testid="follow-notify"
-                            className={iconButton}
+                            className="shrink-0"
                         >
-                            <BellRing size={14} strokeWidth={2} />
-                        </button>
+                            <BellRing size={15} strokeWidth={1.75} />
+                        </Button>
                     ) : !isFollowed && isLive ? (
-                        <button
+                        <Button variant="quiet" size="icon-2xs"
                             type="button"
                             onClick={() => shareTrip({
                                 city: ride.city,
@@ -123,24 +123,24 @@ const RideBarItem = ({ ride, kind, status }: { ride: Ride; kind: RideKind; statu
                             })}
                             aria-label={t('share.shareRide')}
                             data-testid="ride-share"
-                            className={iconButton}
+                            className="shrink-0"
                         >
-                            <Share2 size={14} strokeWidth={2} />
-                        </button>
+                            <Share size={15} strokeWidth={1.75} />
+                        </Button>
                     ) : null}
-                    <button
+                    <Button variant="quiet" size="icon-2xs"
                         type="button"
                         onClick={() => (isFollowed ? unfollow(true) : endTrip(ride.tripId))}
                         aria-label={t(isFollowed ? 'share.stopWatching' : 'ride.end')}
-                        className={iconButton}
+                        className="shrink-0"
                     >
-                        <X size={14} strokeWidth={2} />
-                    </button>
+                        <X size={15} strokeWidth={2} />
+                    </Button>
                 </span>
             </div>
             {progress !== null && !isArrived && (
                 <span
-                    className={cn("absolute left-0 bottom-0 h-[3px] rounded-r-full transition-[width] duration-700", isAccent ? "bg-primary-foreground/70" : "bg-primary")}
+                    className={cn("absolute left-0 bottom-0 h-0.75 rounded-r-full transition-[width] duration-700", isAccent ? "bg-primary-foreground/70" : "bg-primary")}
                     style={{ width: `${Math.round(progress * 100)}%` }}
                     aria-hidden="true"
                 />
@@ -154,8 +154,8 @@ const BarFrame = ({ testId, isAccent, children }: { testId: string; isAccent: bo
     <div
         data-testid={testId}
         className={cn(
-            "pointer-events-auto relative overflow-hidden rounded-2xl w-full md:w-[21rem] animate-in fade-in slide-in-from-top-2 duration-300 transition-colors",
-            isAccent ? "bg-primary text-primary-foreground shadow-lg" : "glassy"
+            "pointer-events-auto relative overflow-hidden rounded-surface w-full md:w-84 animate-in fade-in slide-in-from-top-2 duration-300 transition-colors",
+            isAccent ? "bg-primary text-primary-foreground shadow-(--shadow-float)" : "glassy"
         )}
     >
         {children}
@@ -168,14 +168,14 @@ const BarMain = ({ onClick, label, children }: { onClick: () => void; label: str
         type="button"
         onClick={onClick}
         aria-label={label}
-        className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer rounded-surface text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
     >
         {children}
     </button>
 );
 
 const BarDivider = ({ isAccent }: { isAccent: boolean }) => (
-    <span className={cn("w-px self-stretch my-1 mx-0.5", isAccent ? "bg-primary-foreground/20" : "bg-border")} aria-hidden="true" />
+    <span className={cn("w-[0.5px] self-stretch my-1 mx-0.5", isAccent ? "bg-primary-foreground/20" : "bg-sep")} aria-hidden="true" />
 );
 
 /** A My trip before boarding: the stop, the expected departure and the minutes left; opens the trip, like a ride's bar. */
@@ -188,21 +188,21 @@ const BoardingBarItem = ({ status, kind }: { status: BoardingStatus; kind: RideK
     const subtle = isSoon ? "text-primary-foreground/75" : "text-muted-foreground";
     return (
         <BarFrame testId={isFollowed ? 'follow-boarding-bar' : 'boarding-bar'} isAccent={isSoon}>
-            <div className="flex items-center gap-1 pl-2.5 pr-1.5 py-2">
+            <div className="flex items-center gap-1 pl-3 pr-1.5 py-2.5">
                 <BarMain onClick={() => navigate(paths.trip(trip.city, trip.tripId, trip.vehicleId))} label={t('ride.open')}>
                     {routeName && <LineBadge name={routeName} routeColor={routeColor} size="lg" />}
                     <span className="flex flex-col min-w-0 flex-1 leading-tight">
-                        <span className={cn("micro-label truncate", isSoon ? "text-primary-foreground/80" : "text-primary")}>{t(isFollowed ? 'share.kickerBoard' : 'myTrip.kickerBoard')}</span>
-                        <span className="text-sm font-bold truncate">{stopName}</span>
-                        <span className={cn("text-caption tabular-nums truncate", subtle)}>{t('myTrip.departs', { time: departureTime })}</span>
+                        <span className={cn("type-label truncate", isSoon ? "text-primary-foreground/80" : "text-tint-mint")}>{t(isFollowed ? 'share.kickerBoard' : 'myTrip.kickerBoard')}</span>
+                        <span className="type-row truncate">{stopName}</span>
+                        <span className={cn("type-note tabular-nums truncate", subtle)}>{t('myTrip.departs', { time: departureTime })}</span>
                     </span>
                     <span className="shrink-0 min-w-11 text-right leading-none tabular-nums">
                         {minutes === 0 ? (
-                            <span className="text-sm font-black">{t('map.departures.now')}</span>
+                            <span className="type-row">{t('map.departures.now')}</span>
                         ) : (
                             <>
-                                <span className="text-xl font-black">{minutes}</span>
-                                <span className={cn("block text-label font-semibold mt-0.5", subtle)}>min</span>
+                                <span className="type-section tabular-nums">{minutes}</span>
+                                <span className={cn("block type-control mt-0.5", subtle)}>min</span>
                             </>
                         )}
                     </span>
@@ -210,7 +210,7 @@ const BoardingBarItem = ({ status, kind }: { status: BoardingStatus; kind: RideK
                 <BarDivider isAccent={isSoon} />
                 <span className="flex flex-col gap-0.5">
                     {!isFollowed && (
-                        <button
+                        <Button variant="quiet" size="icon-2xs"
                             type="button"
                             onClick={() => shareTrip({
                                 city: trip.city, tripId: trip.tripId, vehicleId: trip.vehicleId, line: routeName, headsign,
@@ -218,19 +218,19 @@ const BoardingBarItem = ({ status, kind }: { status: BoardingStatus; kind: RideK
                                 ride: trip.toEnd ? undefined : { exitSequence: trip.exitSequence, stopName: trip.exitStopName ?? '', time: arrivalTime },
                             })}
                             aria-label={t('share.shareTrip')}
-                            className={iconButton}
+                            className="shrink-0"
                         >
-                            <Share2 size={14} strokeWidth={2} />
-                        </button>
+                            <Share size={15} strokeWidth={1.75} />
+                        </Button>
                     )}
-                    <button
+                    <Button variant="quiet" size="icon-2xs"
                         type="button"
                         onClick={() => (isFollowed ? unfollow(true) : endTrip(trip.tripId))}
                         aria-label={t(isFollowed ? 'share.stopWatching' : 'myTrip.end')}
-                        className={iconButton}
+                        className="shrink-0"
                     >
-                        <X size={14} strokeWidth={2} />
-                    </button>
+                        <X size={15} strokeWidth={2} />
+                    </Button>
                 </span>
             </div>
         </BarFrame>
@@ -327,7 +327,7 @@ export const RideBar = () => {
         >
             {/* One structure open or folded, so the front bar never remounts (and replays its entrance); the rest slide open under it. */}
             <div
-                className={cn("relative flex w-full flex-col items-center md:w-[21rem]", isStack && "pointer-events-auto transition-[padding] duration-300 ease-out", isStack && !isExpanded && "pb-5")}
+                className={cn("relative flex w-full flex-col items-center md:w-84", isStack && "pointer-events-auto transition-[padding] duration-300 ease-out", isStack && !isExpanded && "pb-5")}
                 onPointerEnter={isStack ? hoverOpen : undefined}
                 onPointerLeave={isStack ? hoverFold : undefined}
             >
@@ -357,12 +357,12 @@ export const RideBar = () => {
                                 "flex cursor-pointer items-center justify-center gap-1 text-muted-foreground outline-none transition-all duration-300 ease-out hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/50",
                                 isExpanded
                                     ? "mt-1.5 h-5 w-12 rounded-full glassy"
-                                    : "absolute inset-x-5 bottom-0 z-0 h-9 items-end rounded-b-2xl border border-t-0 border-border bg-card pb-1 shadow-md"
+                                    : "glassy-thick absolute! inset-x-5 bottom-0 z-0 h-9 items-end rounded-b-surface pb-1"
                             )}
                         >
                             {isExpanded ? <ChevronUp size={14} strokeWidth={2} /> : (
                                 <>
-                                    <span className="micro-label tabular-nums">+{back.length}</span>
+                                    <span className="type-label tabular-nums">+{back.length}</span>
                                     <ChevronDown size={12} strokeWidth={2.5} />
                                 </>
                             )}

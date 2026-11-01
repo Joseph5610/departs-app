@@ -12,7 +12,7 @@ import { usePinLine } from '@/hooks/features/usePinLine';
 import type { Departure, DepartureClickHandler } from '@/types';
 import { DepartureChip } from './DepartureChip';
 import { NextDepartureRow } from './NextDepartureRow';
-import { Amenities, ExpectedTime, LiveCountdown, MARKED_ROW, TripNotes } from './DepartureParts';
+import { Amenities, ExpectedTime, LiveCountdown, MARKED_BACKDROP, TripNotes } from './DepartureParts';
 import { RowSeparator } from './RowSeparator';
 import { BoardSection } from './BoardRow';
 
@@ -141,23 +141,24 @@ const TripRow = memo(({ departure: dep, timeZone, isHighlighted, onDepartureClic
     const tap = useDepartureTap(dep, onDepartureClick);
 
     return (
-        <Button
-            variant="ghost"
+        <button
+            type="button"
             {...tap}
             data-testid={`departure-item-${dep.tripId}`}
             className={cn(
-                "-mx-2 grid h-auto w-[calc(100%+1rem)] grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 whitespace-normal rounded-lg px-2 py-2 text-left font-normal hover:bg-foreground/5",
-                mark && MARKED_ROW
+                "grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 py-2 text-left",
+                "row-hover-nested",
+                mark && MARKED_BACKDROP
             )}
         >
-            <span className="flex min-w-0 items-center gap-3 text-body-sm text-muted-foreground">
+            <span className="flex min-w-0 items-center gap-3 type-meta text-muted-foreground">
                 <ExpectedTime departure={dep} timeZone={timeZone} />
                 <MyTripChip departure={dep} markOnly />
                 <Amenities departure={dep} />
             </span>
             <LiveCountdown departure={dep} size="md" />
             <TripNotes departure={dep} mark={mark} className="col-span-2" />
-        </Button>
+        </button>
     );
 });
 

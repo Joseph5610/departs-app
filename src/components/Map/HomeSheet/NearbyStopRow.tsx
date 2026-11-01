@@ -37,14 +37,14 @@ export const NearbyStopRow = ({ nearby, location, departures }: NearbyStopRowPro
         <Item
             variant="row"
             size="none"
-            className="flex-nowrap text-left [--row-sep:3.875rem]"
+            className="[--row-sep:3.875rem]"
             render={<button type="button" onClick={open} data-testid={`nearby-stop-${stop.id}`} />}
         >
             <ItemMedia variant="icon" className="size-9 rounded-full bg-fill-2 text-foreground [&_svg]:size-4.75!">
                 <StopModeIcon lines={stop.lines} />
             </ItemMedia>
             <ItemContent className="min-w-0 gap-1">
-                <ItemTitle className="w-full text-title leading-5 font-medium text-foreground">
+                <ItemTitle className="w-full type-headsign text-foreground">
                     <span className="truncate">{stop.name}</span>
                 </ItemTitle>
                 <div className="flex flex-wrap items-center gap-1">
@@ -55,12 +55,12 @@ export const NearbyStopRow = ({ nearby, location, departures }: NearbyStopRowPro
             </ItemContent>
             <ItemActions className="shrink-0 flex-col items-end gap-0.5">
                 {next && (
-                    <span className="flex items-center gap-1.5 text-title leading-5 font-semibold tabular-nums text-foreground">
+                    <span className="flex items-center gap-1.5 type-headsign tabular-nums text-foreground">
                         <LineBadge name={String(next.line)} routeColor={next.route_color || FALLBACK_ROUTE_COLOR} size="row" />
                         <MinutesUntil timestamp={next.timestamp} />
                     </span>
                 )}
-                {distanceInfo && <WalkDistance info={distanceInfo} className="text-body-sm leading-4.5" />}
+                {distanceInfo && <WalkDistance info={distanceInfo} className="type-meta" />}
             </ItemActions>
         </Item>
     );

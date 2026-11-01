@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { StatsCard } from './StatsCard';
 import { Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { CityStats } from '@/types';
@@ -22,26 +22,19 @@ export const PunctualityCard = ({ stats }: PunctualityCardProps) => {
     };
 
     return (
-        <Card size="none">
-            <CardHeader className="p-3.5 pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                    <Clock size={16} className="text-emerald-400" />
-                    <span>{t('stats.punctuality')}</span>
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3.5 pt-0">
+        <StatsCard icon={Clock} title={t('stats.punctuality')} iconClassName="text-emerald-400">
                 <div className="flex justify-between items-end mb-2.5">
                     <div>
-                        <div className="text-3xl font-black tracking-tighter leading-none">
+                        <div className="type-title tabular-nums">
                             {formatMinutes(stats.average_delay)}
                         </div>
-                        <div className="text-caption font-medium text-foreground/60 mt-1">{t('stats.averageDelay')}</div>
+                        <div className="type-note text-foreground/60 mt-1">{t('stats.averageDelay')}</div>
                     </div>
                     <div className="text-right">
-                        <div className="text-xl font-bold text-destructive tabular-nums leading-none">
+                        <div className="type-title text-destructive tabular-nums">
                             {stats.delayed_over_5_min_count}
                         </div>
-                        <div className="text-caption font-medium text-foreground/60 mt-1">{t('stats.delayedOver5')}</div>
+                        <div className="type-note text-foreground/60 mt-1">{t('stats.delayedOver5')}</div>
                     </div>
                 </div>
                 
@@ -57,7 +50,6 @@ export const PunctualityCard = ({ stats }: PunctualityCardProps) => {
                         />
                     </div>
                 )}
-            </CardContent>
-        </Card>
+        </StatsCard>
     );
 };

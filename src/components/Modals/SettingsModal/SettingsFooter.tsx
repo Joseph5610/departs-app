@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Download, Clock, Scale, MessageSquareHeart, ShieldCheck, FileText } from 'lucide-react';
+import { ChevronRight, RefreshCw, Download, Clock, Scale, MessageSquareHeart, ShieldCheck, FileText } from 'lucide-react';
 import { version } from '../../../../package.json';
 import { usePWAStore } from '@/state/pwaStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
@@ -9,11 +9,17 @@ import { useStops } from '@/hooks/data/useStops';
 import { toast } from 'sonner';
 import { cn } from '@/lib/cn';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemActions } from '@/components/ui/item';
+import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
+import { RowText } from './SettingsControls';
 import { UI_TIMING_MS } from '@/config/constants';
 import { formatDateTime } from '@/domain/time';
 import { paths } from '@/lib/routes';
+
+const LEGAL_LINKS = [
+    { href: paths.privacy, label: 'legal.links.privacy', icon: ShieldCheck },
+    { href: paths.terms, label: 'legal.links.terms', icon: FileText },
+    { href: paths.licenses, label: 'legal.links.licenses', icon: Scale },
+] as const;
 
 export const SettingsFooter = () => {
     const { t, i18n } = useTranslation();
@@ -73,108 +79,63 @@ export const SettingsFooter = () => {
     };
 
     return (
-        <div className="flex flex-col gap-6">
-            <Card size="none" className="overflow-hidden gap-0">
-                <ItemGroup className="gap-0">
-                    {searchHistory.length > 0 && (
-                        <Item
-                            variant="settings"
-                            size="none"
-                            render={<button onClick={() => { clearHistory(); toast.success(t('settings.clearHistory.success')); }} />}
-                        >
-                            <ItemMedia variant="icon" className="text-destructive">
-                                <Clock size={18} strokeWidth={2} />
-                            </ItemMedia>
-                            <ItemContent>
-                                <ItemTitle className="text-foreground">{t('settings.clearHistory.button')}</ItemTitle>
-                            </ItemContent>
-                        </Item>
-                    )}
+        <>
+            <Card size="none">
+                {searchHistory.length > 0 && (
                     <Item
-                        variant="settings"
+                        variant="row"
                         size="none"
-                        render={<button onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsFeedbackOpen(true), UI_TIMING_MS.MODAL_SWAP_DELAY); }} />}
+                        render={<button onClick={() => { clearHistory(); toast.success(t('settings.clearHistory.success')); }} />}
                     >
-                        <ItemMedia variant="icon" className="text-primary">
-                            <MessageSquareHeart size={18} strokeWidth={2} />
-                        </ItemMedia>
-                        <ItemContent>
-                            <ItemTitle className="text-foreground">{t('feedback.title')}</ItemTitle>
-                        </ItemContent>
+                        <ItemMedia variant="rowIcon" className="text-destructive"><Clock strokeWidth={1.75} /></ItemMedia>
+                        <RowText title={t('settings.clearHistory.button')} />
                     </Item>
-
-                    {canInstall && (
-                        <Item
-                            variant="settings"
-                            size="none"
-                            render={<button onClick={() => { void promptInstall(); }} />}
-                        >
-                            <ItemMedia variant="icon" className="text-primary">
-                                <Download size={18} strokeWidth={2} />
-                            </ItemMedia>
-                            <ItemContent>
-                                <ItemTitle className="text-foreground">{t('settings.install')}</ItemTitle>
-                            </ItemContent>
-                        </Item>
-                    )}
-
-                    <Item
-                        variant="settings"
-                        size="none"
-                        className={cn(isChecking && "opacity-50 pointer-events-none")}
-                        render={<button onClick={handleCheckUpdate} disabled={isChecking} />}
-                    >
-                        <ItemMedia variant="icon" className={cn("text-muted-foreground", isChecking && "animate-spin text-primary")}>
-                            <RefreshCw size={18} strokeWidth={2} />
-                        </ItemMedia>
-                        <ItemContent>
-                            <ItemTitle className="text-foreground">
-                                {isChecking ? t('settings.updates.checking') : t('settings.updates.check')}
-                            </ItemTitle>
-                        </ItemContent>
-                        <ItemActions>
-                            <Badge variant="label">
-                                {t('settings.versionBadge', { version })}
-                            </Badge>
-                        </ItemActions>
+                )}
+                <Item
+                    variant="row"
+                    size="none"
+                    render={<button onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsFeedbackOpen(true), UI_TIMING_MS.MODAL_SWAP_DELAY); }} />}
+                >
+                    <ItemMedia variant="rowIcon" className="text-muted-foreground"><MessageSquareHeart strokeWidth={1.75} /></ItemMedia>
+                    <RowText title={t('feedback.title')} />
+                    <ChevronRight size={17} strokeWidth={1.75} className="shrink-0 text-label-3" aria-hidden="true" />
+                </Item>
+                {canInstall && (
+                    <Item variant="row" size="none" render={<button onClick={() => { void promptInstall(); }} />}>
+                        <ItemMedia variant="rowIcon" className="text-muted-foreground"><Download strokeWidth={1.75} /></ItemMedia>
+                        <RowText title={t('settings.install')} />
                     </Item>
-                </ItemGroup>
+                )}
+                <Item
+                    variant="row"
+                    size="none"
+                    className={cn(isChecking && "opacity-50 pointer-events-none")}
+                    render={<button onClick={handleCheckUpdate} disabled={isChecking} />}
+                >
+                    <ItemMedia variant="rowIcon" className={cn("text-muted-foreground", isChecking && "animate-spin text-tint-mint")}>
+                        <RefreshCw strokeWidth={1.75} />
+                    </ItemMedia>
+                    <RowText title={isChecking ? t('settings.updates.checking') : t('settings.updates.check')} />
+                    <ItemActions className="type-meta text-muted-foreground tabular-nums">
+                        {t('settings.versionBadge', { version })}
+                    </ItemActions>
+                </Item>
             </Card>
 
-            <Card size="none" className="overflow-hidden gap-0">
-                <ItemGroup className="gap-0">
-                    <Item variant="settings" size="none" render={<a href={paths.privacy} target="_blank" rel="noopener" />}>
-                        <ItemMedia variant="icon" className="text-muted-foreground">
-                            <ShieldCheck size={18} strokeWidth={2} />
-                        </ItemMedia>
-                        <ItemContent>
-                            <ItemTitle className="text-foreground">{t('legal.links.privacy')}</ItemTitle>
-                        </ItemContent>
+            <Card size="none">
+                {LEGAL_LINKS.map(({ href, label, icon: Icon }) => (
+                    <Item key={href} variant="row" size="none" render={<a href={href} target="_blank" rel="noopener" />}>
+                        <ItemMedia variant="rowIcon" className="text-muted-foreground"><Icon strokeWidth={1.75} /></ItemMedia>
+                        <RowText title={t(label)} />
                     </Item>
-                    <Item variant="settings" size="none" render={<a href={paths.terms} target="_blank" rel="noopener" />}>
-                        <ItemMedia variant="icon" className="text-muted-foreground">
-                            <FileText size={18} strokeWidth={2} />
-                        </ItemMedia>
-                        <ItemContent>
-                            <ItemTitle className="text-foreground">{t('legal.links.terms')}</ItemTitle>
-                        </ItemContent>
-                    </Item>
-                    <Item variant="settings" size="none" render={<a href={paths.licenses} target="_blank" rel="noopener" />}>
-                        <ItemMedia variant="icon" className="text-muted-foreground">
-                            <Scale size={18} strokeWidth={2} />
-                        </ItemMedia>
-                        <ItemContent>
-                            <ItemTitle className="text-foreground">{t('legal.links.licenses')}</ItemTitle>
-                        </ItemContent>
-                    </Item>
-                </ItemGroup>
+                ))}
             </Card>
 
             {updatedAt && (
-                <div className="text-label text-muted-foreground/30 font-medium text-center pb-2 px-6">
+                <p className="-mt-2 text-center type-note text-muted-foreground">
                     {t('settings.lastStopUpdate', { date: formatDateTime(updatedAt, i18n.resolvedLanguage) })}
-                </div>
+                </p>
             )}
-        </div>
+        </>
     );
 };

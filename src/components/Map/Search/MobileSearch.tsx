@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Globe, Search as SearchIcon, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { Button } from '@/components/ui/button';
 import { useSearch } from '@/hooks/features/useSearch';
 import { useGeolocationStore } from '@/state/geolocationStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
@@ -63,57 +64,55 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                         className="flex h-full flex-1 min-w-0 items-center gap-2.25 pl-3.5 pr-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
                         data-testid="search-trigger"
                     >
-                        <SearchIcon size={18} strokeWidth={1.75} className={activeLabel ? "shrink-0 text-primary" : "shrink-0 text-muted-foreground"} />
+                        <SearchIcon size={18} strokeWidth={1.75} className={activeLabel ? "shrink-0 text-tint-mint" : "shrink-0 text-muted-foreground"} />
                         {s.activeFilterBadges ? (
                             <LineFilterLabel lines={s.activeFilterBadges} />
                         ) : (
-                            <span className={cn("truncate text-title", activeLabel ? "font-medium text-foreground" : "text-muted-foreground")}>
+                            <span className={cn("truncate type-field", activeLabel ? "font-medium text-foreground" : "text-muted-foreground")}>
                                 {activeLabel ?? t('search.placeholder')}
                             </span>
                         )}
                     </button>
                     {activeLabel && (
-                        <button
+                        <Button variant="ghost" size="icon-sm" className="mr-1 shrink-0"
                             type="button"
                             onClick={s.clearSelection}
                             aria-label={t('search.clearFilter')}
-                            className="mr-1 grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground outline-none active:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring/50"
                             data-testid="search-clear-selection"
                         >
                             <X size={17} strokeWidth={2} />
-                        </button>
+                        </Button>
                     )}
                 </div>
                 {cities.length > 1 && (
-                    <button
+                    <Button variant="secondary" size="icon" className="shrink-0"
                         type="button"
                         onClick={() => setIsCityPickerOpen(true)}
                         aria-label={t('map.controls.switchCity')}
-                        className="grid size-11 shrink-0 place-items-center rounded-full bg-field text-foreground outline-none active:bg-fill-2 focus-visible:ring-2 focus-visible:ring-ring/50"
                         data-testid="city-picker-btn"
                     >
-                        <Globe size={21} strokeWidth={1.75} />
-                    </button>
+                        <Globe strokeWidth={1.75} className="size-5.25" />
+                    </Button>
                 )}
             </div>
 
             {createPortal(
                 <div
-                    className={cn("fixed inset-0 z-600 transition-opacity duration-200 ease-out", isOpen ? "opacity-100" : "pointer-events-none opacity-0")}
+                    className={cn("fixed inset-0 z-600 [--panel-gutter:1rem] transition-opacity duration-200 ease-out", isOpen ? "opacity-100" : "pointer-events-none opacity-0")}
                     aria-hidden={!isOpen}
                     data-testid="search-overlay"
                 >
-                    <div aria-hidden="true" className="absolute inset-0 bg-black/40" onClick={close} />
+                    <div aria-hidden="true" className="absolute inset-0 bg-black/25" onClick={close} />
                     <div
                         className={cn(
-                            "absolute inset-x-0 bottom-0 flex flex-col rounded-t-sheet border-t border-border/40 bg-background pt-7 shadow-2xl transition-transform duration-200 ease-out",
+                            "glassy-thick glassy-edge-top absolute! inset-x-0 bottom-0 flex flex-col rounded-t-sheet pt-4 transition-transform duration-200 ease-out [--glass-material:var(--mat-solid)]",
                             isOpen ? "translate-y-0" : "translate-y-6"
                         )}
                         style={SEARCH_SHEET_STYLE}
                     >
-                    <div className="flex shrink-0 items-center gap-3 px-6 pb-3">
-                        <label className="flex h-11 flex-1 min-w-0 items-center gap-2.5 rounded-2xl bg-foreground/5 pl-4 pr-1 focus-within:ring-2 focus-within:ring-primary/30">
-                            <SearchIcon size={18} strokeWidth={2} className="shrink-0 text-muted-foreground" />
+                    <div className="flex shrink-0 items-center gap-2 px-(--panel-gutter) pb-3">
+                        <label className="flex h-11 flex-1 min-w-0 items-center gap-2.25 rounded-full bg-field pl-3.5 pr-1">
+                            <SearchIcon size={18} strokeWidth={1.75} className="shrink-0 text-muted-foreground" />
                             <input
                                 ref={inputRef}
                                 type="search"
@@ -135,23 +134,22 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                                 onBlur={() => window.scrollTo(0, 0)}
                                 placeholder={t('search.placeholder')}
                                 aria-label={t('search.placeholder')}
-                                className="h-full min-w-0 flex-1 bg-transparent text-title text-foreground outline-none focus-visible:ring-0 placeholder:text-muted-foreground/60 [&::-webkit-search-cancel-button]:hidden"
+                                className="h-full min-w-0 flex-1 bg-transparent type-field text-foreground outline-none focus-visible:ring-0 placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden"
                                 data-testid="search-input"
                             />
                             {s.query && (
-                                <button
+                                <Button variant="ghost" size="icon-sm" className="shrink-0"
                                     type="button"
                                     onClick={() => { s.setQuery(''); inputRef.current?.focus(); }}
                                     aria-label={t('search.clearFilter')}
-                                    className="grid size-9 shrink-0 place-items-center rounded-full text-muted-foreground outline-none active:bg-foreground/10"
                                 >
                                     <X size={16} strokeWidth={2} />
-                                </button>
+                                </Button>
                             )}
                         </label>
-                        <button type="button" onClick={close} className="shrink-0 py-2 text-title font-medium text-primary outline-none active:opacity-60 focus-visible:underline" data-testid="search-cancel">
-                            {t('common.cancel')}
-                        </button>
+                        <Button variant="secondary" size="icon" onClick={close} aria-label={t('common.cancel')} className="shrink-0 text-muted-foreground" data-testid="search-cancel">
+                            <X size={16} strokeWidth={2.5} />
+                        </Button>
                     </div>
                     <MobileSearchResults
                         query={s.query}

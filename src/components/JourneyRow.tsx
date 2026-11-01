@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronRight, LogIn, LogOut } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { Item } from '@/components/ui/item';
 
 /** Which alert of a journey a row is about: boarding (before the trip leaves the user's stop) or exit. */
 export type JourneyLeg = 'board' | 'exit';
@@ -25,32 +26,23 @@ export const JourneyRow = ({ leg, title, summary, onClick, kind, isOpen = false,
     const isCompact = density === 'compact';
     return (
         <div className="flex items-center">
-            <button
-                type="button"
-                onClick={onClick}
-                aria-expanded={kind === 'toggle' ? isOpen : undefined}
-                className={cn(
-                    "flex min-w-0 flex-1 cursor-pointer items-center text-left outline-none hover:bg-foreground/5 focus-visible:bg-foreground/5",
-                    isCompact ? "min-h-11 gap-2.5 px-4 py-2" : "min-h-16 gap-3 px-4 py-3"
-                )}
+            <Item
+                variant="row"
+                size="none"
+                render={<button type="button" onClick={onClick} aria-expanded={kind === 'toggle' ? isOpen : undefined} />}
+                className={cn("min-w-0 flex-1", !isCompact && "min-h-14")}
             >
-                {isCompact ? (
-                    <Icon size={16} strokeWidth={2} className="shrink-0 text-primary" />
-                ) : (
-                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-                        <Icon size={16} strokeWidth={2} />
-                    </span>
-                )}
+                <Icon size={20} strokeWidth={1.75} className="shrink-0 text-tint-mint" />
                 <span className="flex min-w-0 flex-1 flex-col">
-                    <span className={cn("truncate text-sm font-semibold", isCompact ? "leading-tight" : "leading-snug")}>{title}</span>
-                    <span className={cn("truncate text-muted-foreground", isCompact ? "text-caption leading-tight" : "text-xs leading-snug")}>{summary}</span>
+                    <span className={cn("truncate type-row")}>{title}</span>
+                    <span className={cn("truncate type-note text-muted-foreground")}>{summary}</span>
                 </span>
                 {kind === 'toggle' ? (
-                    <ChevronDown size={16} strokeWidth={2} className={cn("shrink-0 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
+                    <ChevronDown size={17} strokeWidth={1.75} className={cn("shrink-0 text-label-3 transition-transform", isOpen && "rotate-180")} />
                 ) : (
-                    <ChevronRight size={16} strokeWidth={2} className="shrink-0 text-muted-foreground" />
+                    <ChevronRight size={17} strokeWidth={1.75} className="shrink-0 text-label-3" />
                 )}
-            </button>
+            </Item>
         </div>
     );
 };

@@ -1,0 +1,232 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-30T23:50:00Z"
+  },
+  "title": "departs native-like návrh",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "PeekToday.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Dnes: peek"
+    },
+    "Main.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Návrh: peek, potiahni handle",
+      "is_interactive": true
+    },
+    "Half.dc.html": {
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Návrh: half"
+    },
+    "Full.dc.html": {
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Návrh: full"
+    },
+    "LightPeek.dc.html": {
+      "x": 0,
+      "y": 1200,
+      "w": 390,
+      "h": 844,
+      "title": "Návrh light: peek"
+    },
+    "LightHalf.dc.html": {
+      "x": 470,
+      "y": 1200,
+      "w": 390,
+      "h": 844,
+      "title": "Návrh light: half"
+    },
+    "BoardToday.dc.html": {
+      "x": 940,
+      "y": 1200,
+      "w": 390,
+      "h": 844,
+      "title": "Dnes: odchody"
+    },
+    "Board.dc.html": {
+      "x": 1410,
+      "y": 1200,
+      "w": 390,
+      "h": 844,
+      "title": "Návrh: odchody, scrolluj",
+      "is_interactive": true
+    },
+    "BoardScrolled.dc.html": {
+      "x": 1880,
+      "y": 1200,
+      "w": 390,
+      "h": 844,
+      "title": "Návrh: lišta pri scrollovaní"
+    },
+    "SwipeReveal.dc.html": {
+      "x": 2350,
+      "y": 1200,
+      "w": 390,
+      "h": 844,
+      "title": "Swipe: odhalenie"
+    },
+    "SwipeArmed.dc.html": {
+      "x": 2820,
+      "y": 1200,
+      "w": 390,
+      "h": 844,
+      "title": "Swipe: potvrdenie"
+    },
+    "Foundations.dc.html": {
+      "x": 0,
+      "y": 2400,
+      "w": 1800,
+      "h": 1680,
+      "title": "Rádiusy, hrany, paleta, typografia, materiály"
+    },
+    "ContrastHome.dc.html": {
+      "x": 0,
+      "y": 4500,
+      "w": 390,
+      "h": 844,
+      "title": "Vyšší kontrast: home"
+    },
+    "ContrastBoard.dc.html": {
+      "x": 470,
+      "y": 4500,
+      "w": 390,
+      "h": 844,
+      "title": "Vyšší kontrast: odchody"
+    },
+    "HitAreas.dc.html": {
+      "x": 940,
+      "y": 4500,
+      "w": 390,
+      "h": 844,
+      "title": "Dotykové plochy 44 × 44"
+    },
+    "MoreScreens.dc.html": {
+      "x": 0,
+      "y": 5900,
+      "w": 2852,
+      "h": 1956,
+      "title": "Ďalšie obrazovky"
+    },
+    "SettingsFull.dc.html": {
+      "x": 0,
+      "y": 8200,
+      "w": 390,
+      "h": 2273,
+      "title": "Nastavenia: celý obsah"
+    },
+    "TripFull.dc.html": {
+      "x": 470,
+      "y": 8200,
+      "w": 390,
+      "h": 1072,
+      "title": "Detail spoja: celý obsah"
+    },
+    "ScreenSettings.dc.html": {
+      "x": 940,
+      "y": 8200,
+      "w": 390,
+      "h": 844,
+      "title": "Komponent: nastavenia"
+    },
+    "ScreenTrip.dc.html": {
+      "x": 1410,
+      "y": 8200,
+      "w": 390,
+      "h": 844,
+      "title": "Detail spoja: rozbaľ prejdené",
+      "is_interactive": true
+    }
+  },
+  "order": [
+    "PeekToday.dc.html",
+    "Main.dc.html",
+    "Half.dc.html",
+    "Full.dc.html",
+    "LightPeek.dc.html",
+    "LightHalf.dc.html",
+    "BoardToday.dc.html",
+    "Board.dc.html",
+    "BoardScrolled.dc.html",
+    "SwipeReveal.dc.html",
+    "SwipeArmed.dc.html",
+    "Foundations.dc.html",
+    "ContrastHome.dc.html",
+    "ContrastBoard.dc.html",
+    "HitAreas.dc.html",
+    "MoreScreens.dc.html",
+    "SettingsFull.dc.html",
+    "TripFull.dc.html",
+    "ScreenSettings.dc.html",
+    "ScreenTrip.dc.html"
+  ],
+  "notes": {
+    "row1": {
+      "x": 0,
+      "y": -300,
+      "text": "Sheet: dnes a návrh",
+      "kind": "title1",
+      "maxW": 1800
+    },
+    "row2": {
+      "x": 0,
+      "y": 900,
+      "text": "Light mód a odchody",
+      "kind": "title1",
+      "maxW": 1800
+    },
+    "row3": {
+      "x": 0,
+      "y": 2100,
+      "text": "Základy systému",
+      "kind": "title1",
+      "maxW": 1800
+    },
+    "row4": {
+      "x": 0,
+      "y": 4200,
+      "text": "Prístupnosť",
+      "kind": "title1",
+      "maxW": 1800
+    },
+    "row5": {
+      "x": 0,
+      "y": 5600,
+      "text": "Ďalšie obrazovky",
+      "kind": "title1",
+      "maxW": 1800
+    },
+    "row6": {
+      "x": 0,
+      "y": 7950,
+      "text": "Celý obsah bez orezania",
+      "kind": "title1",
+      "maxW": 1800
+    }
+  },
+  "designSystems": [
+    {
+      "title": "departs.app",
+      "namespace": "departsui",
+      "artifact": "https://claude.ai/artifact/X4EVDxbss6CjVkdBUR9MLp",
+      "version": "1793400685-c9da",
+      "copiedAt": "2026-10-30T23:50:00Z"
+    }
+  ]
+}

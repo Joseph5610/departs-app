@@ -34,9 +34,12 @@
   --field: rgb(0 0 0 / 0.06);
   --sep: rgb(0 0 0 / 0.09);
   --segment-selected: rgb(255 255 255 / 0.9);
-  --mat: oklch(0.97 0.004 250 / 0.62);
-  --mat-thick: oklch(0.97 0.004 250 / 0.85);
-  --mat-solid: oklch(0.97 0.004 250 / 0.92);
+  --on-segment-selected: var(--foreground);
+  --selected: color-mix(in oklch, var(--primary) 22%, transparent);
+  --glass-backdrop: blur(22px) saturate(190%);
+  --mat: oklch(0.97 0.006 250 / 0.42);
+  --mat-thick: oklch(0.97 0.006 250 / 0.66);
+  --mat-solid: oklch(0.97 0.006 250 / 0.84);
   --edge-top: rgb(255 255 255 / 0.8);
   --edge-bottom: rgb(255 255 255 / 0.3);
   --shadow-float: 0 10px 34px rgb(0 0 0 / 0.16), 0 2px 6px rgb(0 0 0 / 0.08), 0 0 0 0.5px rgb(0 0 0 / 0.06);
@@ -92,32 +95,35 @@
 }
 
 .dark {
-  --background: oklch(0.21 0.01 260);
+  --background: oklch(0.17 0.014 255);
   --foreground: oklch(0.985 0 0);
-  --label-2: rgb(255 255 255 / 0.64);
-  --label-3: rgb(255 255 255 / 0.56);
+  --label-2: oklch(0.75 0.01 260);
+  --label-3: rgb(255 255 255 / 0.62);
   --handle: rgb(255 255 255 / 0.34);
-  --fill: rgb(255 255 255 / 0.075);
-  --fill-2: rgb(255 255 255 / 0.13);
-  --field: rgb(255 255 255 / 0.12);
-  --sep: rgb(255 255 255 / 0.09);
-  --segment-selected: rgb(255 255 255 / 0.2);
-  --mat: oklch(0.3 0.005 260 / 0.58);
-  --mat-thick: oklch(0.25 0.005 260 / 0.84);
-  --mat-solid: oklch(0.22 0.005 260 / 0.9);
+  --fill: rgb(255 255 255 / 0.1);
+  --fill-2: rgb(255 255 255 / 0.17);
+  --field: rgb(255 255 255 / 0.15);
+  --sep: rgb(255 255 255 / 0.13);
+  --segment-selected: var(--primary);
+  --on-segment-selected: var(--primary-foreground);
+  --selected: oklch(0.42 0.105 162);
+  --glass-backdrop: blur(22px) saturate(140%);
+  --mat: oklch(0.27 0.014 255 / 0.62);
+  --mat-thick: oklch(0.2 0.014 255 / 0.88);
+  --mat-solid: oklch(0.18 0.014 255 / 0.94);
   --edge-top: rgb(255 255 255 / 0.22);
   --edge-bottom: rgb(255 255 255 / 0.05);
   --shadow-float: 0 8px 28px rgb(0 0 0 / 0.38);
-  --tint-mint: oklch(0.6959 0.1491 162.48);
-  --tint-amber: oklch(0.769 0.188 70.08);
+  --tint-mint: oklch(0.8 0.17 162);
+  --tint-amber: oklch(0.82 0.17 75);
   --on-favorite: #2b1a00;
-  --tint-red: oklch(0.6368 0.2078 25.33);
-  --card: oklch(0.25 0.01 260);
+  --tint-red: oklch(0.7 0.2 25);
+  --card: oklch(0.23 0.014 255);
   --card-foreground: oklch(0.9851 0 0);
   --hero-base: oklch(0.14 0.01 260);
-  --popover: oklch(0.21 0.01 260);
+  --popover: oklch(0.2 0.014 255);
   --popover-foreground: oklch(0.9851 0 0);
-  --primary: oklch(0.6959 0.1491 162.4796);
+  --primary: oklch(0.78 0.17 162);
   --primary-foreground: oklch(0.22 0.04 165);
   --secondary: oklch(0.30 0.01 260);
   --secondary-foreground: oklch(0.9851 0 0);
@@ -128,7 +134,7 @@
   --destructive: var(--tint-red);
   --border: var(--sep);
   --input: oklch(0.30 0.01 260);
-  --ring: oklch(0.6959 0.1491 162.4796);
+  --ring: oklch(0.78 0.17 162);
   --glass-fallback: oklch(0.21 0.01 260 / 0.96);
   --destructive-foreground: oklch(0.9851 0 0);
   --chart-1: oklch(0.6959 0.1491 162.4796);
@@ -163,6 +169,33 @@
   }
 }
 
+@media (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-backdrop: none;
+    --mat: oklch(0.97 0.004 250);
+    --mat-thick: oklch(0.97 0.004 250);
+    --mat-solid: oklch(0.97 0.004 250);
+  }
+
+  .dark {
+    --mat: oklch(0.2 0 0);
+    --mat-thick: oklch(0.17 0 0);
+    --mat-solid: oklch(0.17 0 0);
+  }
+}
+
+@media (prefers-contrast: more) {
+  .dark {
+    --label-2: rgb(255 255 255 / 0.84);
+    --label-3: rgb(255 255 255 / 0.74);
+    --fill: rgb(255 255 255 / 0.13);
+    --field: rgb(255 255 255 / 0.2);
+    --sep: rgb(255 255 255 / 0.3);
+    --edge-top: rgb(255 255 255 / 0.5);
+    --edge-bottom: rgb(255 255 255 / 0.32);
+  }
+}
+
 @theme inline {
   /* Type scale for the sizes between Tailwind's steps (xs 12, sm 14, base 16, lg 18). Only the size: line
      height inherits unless a leading-* class sets it. Use these, never text-[13px]. */
@@ -174,7 +207,6 @@
   --text-body-sm: 0.8125rem;  /* 13px  secondary text: departure times, chips, notes */
   --text-title: 0.9375rem;    /* 15px  row and item titles, e.g. a headsign */
   --text-heading: 1.0625rem;  /* 17px  section headings, the live countdown */
-  --text-sheet-title: 1.25rem;  /* 20px  the title of a sheet or panel */
 
   /* Favourite stops and lines: stars and pins. */
   --color-favorite: var(--tint-amber);
@@ -214,18 +246,15 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
-  --radius-3xl: 1.25rem;
-  --radius-4xl: 1.5rem;
-  --radius: 0.5rem;
-  /* `surface` is `sheet` minus the sheet's 16px padding, so nested corners stay concentric. */
+  /* `surface` is `sheet` minus the sheet's 16px padding and `nested` is `surface` minus a menu's 6px, so nested corners stay concentric. */
+  /* The only control heights: compact chips, small capsules, and fields, segments and primary buttons. */
+  --spacing-control-sm: 1.75rem;
+  --spacing-control-md: 2rem;
+  --spacing-control-lg: 2.25rem;
   --radius-sheet: 38px;
   --radius-peek: 34px;
   --radius-surface: 22px;
+  --radius-nested: 1rem;
   --radius-badge: 6px;
   --color-label-3: var(--label-3);
   --color-handle: var(--handle);
@@ -235,7 +264,10 @@
   --color-field: var(--field);
   --color-sep: var(--sep);
   --color-segment-selected: var(--segment-selected);
+  --color-on-segment-selected: var(--on-segment-selected);
+  --color-selected: var(--selected);
   --color-tint-mint: var(--tint-mint);
+  --color-tint-amber: var(--tint-amber);
   --color-tint-red: var(--tint-red);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -330,19 +362,23 @@
 }
 
 
-@utility micro-label {
-  font-size: var(--text-label);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
+/* The app's only text styles; line badges and platform circles alone size their own codes. */
+@utility type-title { font-size: 1.25rem; line-height: 1.75rem; font-weight: 700; letter-spacing: -0.04em; }
+@utility type-note { font-size: 0.75rem; line-height: 1rem; font-weight: 400; }
+@utility type-control { font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
+@utility type-micro { font-size: var(--text-micro); line-height: 1rem; font-weight: 700; }
+@utility type-section { font-size: 1.0625rem; line-height: 1.5rem; font-weight: 700; letter-spacing: -0.04em; }
+@utility type-row { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
+@utility type-field { font-size: 1rem; line-height: 1.5rem; font-weight: 400;
 
-@utility micro-label-widest {
-  font-size: var(--text-label);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  @media (width >= 48rem) { font-size: 0.875rem; line-height: 1.25rem; }
 }
+@utility type-headsign { font-size: 0.9375rem; line-height: 1.25rem; font-weight: 600; }
+@utility type-meta { font-size: 0.8125rem; line-height: 1.125rem; font-weight: 400; }
+@utility type-group { font-size: 0.8125rem; line-height: 1.125rem; font-weight: 600; }
+@utility type-pill { font-size: var(--text-micro); line-height: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: calc(var(--tracking-normal) + 0.05em); }
+@utility type-badge { font-size: var(--text-label); line-height: 1rem; font-weight: 700; }
+@utility type-label { font-size: var(--text-label); line-height: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
 
 /* The material of controls; `glassy-thick` is the denser one of sheets and panels. */
 @utility glassy {
@@ -396,6 +432,106 @@
   }
 }
 
+/* What dims and blurs the page behind a modal. */
+@utility modal-scrim {
+  background: color-mix(in oklch, var(--background) 40%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* A toast is sonner's own positioned element, so it takes the sheet's glass without `glassy`'s layout. */
+@utility toast-glass {
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  backdrop-filter: var(--glass-backdrop);
+  border-radius: theme(--radius-surface) !important;
+  box-shadow: var(--glass-edge-full), var(--shadow-float) !important;
+}
+
+/* The hairline under a row of a grouped list, starting at its text. */
+@utility row-separator {
+  position: relative;
+
+  /* A virtualised list wraps each row alone, so its wrapper is what has a next sibling. */
+  &:not(:last-child)::after,
+  [data-item-index]:not(:last-child) > &::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: var(--row-sep, 2.875rem);
+    height: 0.5px;
+    background: var(--sep);
+  }
+}
+
+/* The one hover, press and focus of a list row, on a backdrop so it never shifts the row; `--row-hover-x/y` set its inset, `--row-hover-radius` its corner. */
+@utility row-hover {
+  position: relative;
+  isolation: isolate;
+  cursor: pointer;
+  outline: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: var(--row-hover-y, 0) var(--row-hover-x, 0) var(--row-hover-y, 0) var(--row-hover-left, var(--row-hover-x, 0));
+    z-index: -1;
+    border-radius: var(--row-hover-radius, theme(--radius-nested));
+    background: var(--row-rest, transparent);
+    transition: background-color 150ms;
+  }
+
+  @media (hover: hover) {
+    &:hover::before {
+      background: var(--row-hover-fill, var(--fill));
+    }
+  }
+
+  &:focus-visible::before,
+  &[data-highlighted]::before {
+    background: var(--row-hover-fill, var(--fill));
+  }
+
+  &:active::before {
+    background: var(--row-hover-fill, var(--fill-2));
+  }
+}
+
+/* A row in a grouped list: the group's own corners clip it. */
+@utility row-hover-group {
+  @apply row-hover;
+  --row-hover-radius: 0;
+}
+
+/* A departure's lead row: over its text column, leaving the line badge out. */
+@utility row-hover-board {
+  @apply row-hover;
+  --row-hover-x: -0.5rem;
+  --row-hover-y: -0.375rem;
+  --row-hover-left: calc(var(--badge-col) + 0.25rem);
+}
+
+/* A row under a lead row, in its text column. */
+@utility row-hover-nested {
+  @apply row-hover;
+  --row-hover-x: -0.5rem;
+}
+
+/* A touch target of at least 44×44 around a smaller control. */
+@utility hit-target {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}
+
 /* Keeps a sheet's top row 12px inside the peek capsule and on the panel gutter once the sheet is full width. */
 @utility sheet-row-gutter {
   padding-inline: calc(1.5rem - 0.5rem * var(--sheet-morph, 1));
@@ -405,6 +541,11 @@
 @utility scroll-edge {
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 92px - var(--sheet-hidden, 0px)), rgb(0 0 0 / 0.1) calc(100% - 28px - var(--sheet-hidden, 0px)));
   mask-image: linear-gradient(to bottom, #000 calc(100% - 92px - var(--sheet-hidden, 0px)), rgb(0 0 0 / 0.1) calc(100% - 28px - var(--sheet-hidden, 0px)));
+
+  @media (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
 }
 
 /* For a surface running off the screen's sides, where a full edge would stop at nothing. */
@@ -487,6 +628,25 @@
     color: var(--label-2);
     font-size: var(--text-caption);
     font-weight: 600;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: var(--glass-edge-full), var(--shadow-float);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--ring);
   }
 }
 

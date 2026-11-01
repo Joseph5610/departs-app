@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search as SearchIcon, MapPin, Star, Building2, Ticket, BusFront } from 'lucide-react';
+import { useHistoryLines } from '@/hooks/derived/useHistoryLines';
+import { Search as SearchIcon, Star, Building2, Ticket, BusFront } from 'lucide-react';
 import { SearchItem } from './SearchItem';
 import { HistoryItemIcon } from './HistoryItemIcon';
 import { historyItemSubtitle, historyItemTitle, posResultSubtitle, stopResultSubtitle, vehicleResultLines } from './searchItemText';
@@ -8,6 +9,8 @@ import type { LineBadgeData } from '@/domain/routes';
 import { searchHistoryKey } from '@/lib/searchHistory';
 import { Autocomplete } from '@base-ui/react/autocomplete';
 import { cn } from '@/lib/cn';
+import { SectionHeading } from '@/components/SectionHeading';
+import { StopModeIcon } from '@/components/StopModeIcon';
 
 import type { Stop, ShownHistoryItem, VehicleFeature } from '@/types';
 import { vehicleDisplayNumber } from '@/domain/vehicles';
@@ -34,22 +37,13 @@ interface SearchDropdownProps {
     onVehicleSelect: (vehicle: VehicleFeature) => void;
 }
 
-const SearchGroup = ({ heading, className, children }: { heading?: React.ReactNode; className?: string; children: React.ReactNode }) => (
+const SearchGroup = ({ heading, count, className, children }: { heading?: React.ReactNode; count?: number; className?: string; children: React.ReactNode }) => (
     <Autocomplete.Group className={cn('overflow-hidden text-foreground p-0', className)}>
         {heading && (
-            <Autocomplete.GroupLabel className="block px-3.5 pt-3 pb-2 micro-label-widest text-muted-foreground">
-                {heading}
-            </Autocomplete.GroupLabel>
+            <Autocomplete.GroupLabel render={<SectionHeading count={count} className="px-3.5 pt-3 pb-2">{heading}</SectionHeading>} />
         )}
         {children}
     </Autocomplete.Group>
-);
-
-const GroupHeading = ({ label, count }: { label: string; count: number }) => (
-    <div className="flex items-center justify-between w-full">
-        <span>{label}</span>
-        <span className="text-body-sm font-medium tabular-nums normal-case tracking-normal">{count}</span>
-    </div>
 );
 
 /**
@@ -77,6 +71,7 @@ export const SearchDropdown = ({
     onVehicleSelect,
 }: SearchDropdownProps) => {
     const { t } = useTranslation();
+    const historyLines = useHistoryLines(searchHistory);
 
     const showHistory = query === '' && !activeFilter && searchHistory.length > 0;
 
@@ -85,7 +80,7 @@ export const SearchDropdown = ({
         return (
             <SearchItem
                 key={stop.id}
-                icon={isFavorite ? <Star size={20} fill="currentColor" strokeWidth={1.5} /> : <MapPin size={20} strokeWidth={1.5} />}
+                icon={isFavorite ? <Star size={20} fill="currentColor" strokeWidth={1.5} /> : <StopModeIcon lines={stop.lines} size={20} />}
                 title={stop.name}
                 subtitle={stopResultSubtitle(stop, t)}
                 lines={stop.lines}
@@ -101,15 +96,16 @@ export const SearchDropdown = ({
             <Autocomplete.List className="max-h-[60vh] overflow-y-auto custom-scrollbar space-y-1">
                 {showHistory && (
                     <SearchGroup
-                        heading={<GroupHeading label={t('search.recent')} count={searchHistory.length} />}
+                        heading={t('search.recent')}
+                        count={searchHistory.length}
                     >
                         {searchHistory.map((item) => (
                             <SearchItem
                                 key={searchHistoryKey(item)}
                                 icon={<HistoryItemIcon type={item.type} />}
-                                title={historyItemTitle(item, t)}
+                                title={historyItemTitle(item)}
                                 subtitle={historyItemSubtitle(item, t)}
-                                lines={item.type === 'stop' ? item.stop?.lines : undefined}
+                                lines={historyLines(item)}
                                 testId={`search-item-hist-${searchHistoryKey(item)}`}
                                 onClick={() => onHistorySelect(item)}
                             />
@@ -119,7 +115,8 @@ export const SearchDropdown = ({
 
                 {query === '' && results.length > 0 && (
                     <SearchGroup
-                        heading={<GroupHeading label={t('search.favorites')} count={results.length} />}
+                        heading={t('search.favorites')}
+                        count={results.length}
                     >
                         {renderStopResults('fav')}
                     </SearchGroup>
@@ -127,7 +124,8 @@ export const SearchDropdown = ({
 
                 {vehicleResults.length > 0 && (
                     <SearchGroup
-                        heading={<GroupHeading label={t('search.vehicles')} count={vehicleResults.length} />}
+                        heading={t('search.vehicles')}
+                        count={vehicleResults.length}
                     >
                         {vehicleResults.map((vehicle) => {
                             const p = vehicle.properties;
@@ -168,7 +166,8 @@ export const SearchDropdown = ({
 
                 {posResults.length > 0 && (
                     <SearchGroup
-                        heading={<GroupHeading label={t('search.pointsOfSale')} count={posResults.length} />}
+                        heading={t('search.pointsOfSale')}
+                        count={posResults.length}
                     >
                         {posResults.map((result) => (
                             <SearchItem
@@ -185,7 +184,8 @@ export const SearchDropdown = ({
 
                 {geocodingResults.length > 0 && (
                     <SearchGroup
-                        heading={<GroupHeading label={t('search.places')} count={geocodingResults.length} />}
+                        heading={t('search.places')}
+                        count={geocodingResults.length}
                     >
                         {geocodingResults.map((place) => (
                             <SearchItem

@@ -29,6 +29,16 @@ const openPhone = async (context: BrowserContext, favoriteStops: string[] = []) 
 };
 
 test.describe('Mobile home sheet', () => {
+    test('drops the glass under increased contrast', async ({ browser }) => {
+        const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, contrast: 'more' });
+        const page = await openPhone(context);
+
+        const glass = page.locator('[data-slot="drawer-glass"]');
+        await expect(glass).toBeAttached({ timeout: 30000 });
+        await expect(glass).toHaveCSS('backdrop-filter', 'none');
+        await context.close();
+    });
+
     // Like Apple's minimizing bars: down folds it, a run back up restores it, and a new height starts open.
     test('folds the board toolbar while scrolling down and restores it', async ({ browser }) => {
         const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });

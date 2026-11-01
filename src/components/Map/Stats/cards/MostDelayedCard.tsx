@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { FilterChip } from '@/components/FilterChip';
+import { StatsCard } from './StatsCard';
 import { AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getRouteTypeI18nKey } from '@/domain/routes';
@@ -55,32 +55,13 @@ export const MostDelayedCard = ({ stats }: MostDelayedCardProps) => {
     const displayedItems = (isDelayedExpanded ? filteredDelayed : filteredDelayed.slice(0, STATS_AGGREGATION.MOST_DELAYED_PREVIEW)).map(toRowItem);
 
     return (
-        <Card size="none">
-            <CardHeader className="p-3.5 pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                    <AlertTriangle size={16} className="text-destructive" />
-                    <span>{t('stats.biggestDelays')}</span>
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3.5 pt-0 flex flex-col gap-3">
+        <StatsCard icon={AlertTriangle} title={t('stats.biggestDelays')} iconClassName="text-destructive">
+            <div className="flex flex-col gap-3">
                 {delayTypes.length > 1 && (
-                    <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1">
-                        <Badge
-                            variant={delayFilterType === 'all' ? 'default' : 'secondary'}
-                            className="cursor-pointer whitespace-nowrap text-label h-5 px-2"
-                            onClick={() => setDelayFilterType('all')}
-                        >
-                            {t('common.all')}
-                        </Badge>
+                    <div className="-my-2 flex gap-1.5 overflow-x-auto py-2 no-scrollbar">
+                        <FilterChip label={t('common.all')} isActive={delayFilterType === 'all'} onClick={() => setDelayFilterType('all')} />
                         {delayTypes.map(tType => (
-                            <Badge
-                                key={tType}
-                                variant={delayFilterType === tType ? 'default' : 'secondary'}
-                                className="cursor-pointer whitespace-nowrap text-label h-5 px-2"
-                                onClick={() => setDelayFilterType(tType)}
-                            >
-                                {t(getRouteTypeI18nKey(tType))}
-                            </Badge>
+                            <FilterChip key={tType} label={t(getRouteTypeI18nKey(tType))} isActive={delayFilterType === tType} onClick={() => setDelayFilterType(tType)} />
                         ))}
                     </div>
                 )}
@@ -91,16 +72,17 @@ export const MostDelayedCard = ({ stats }: MostDelayedCardProps) => {
 
                 {filteredDelayed.length > STATS_AGGREGATION.MOST_DELAYED_PREVIEW && (
                     <Button
-                        variant="ghost"
+                        variant="pill"
+                        size="sm"
                         onClick={() => setIsDelayedExpanded(!isDelayedExpanded)}
-                        className="w-full mt-2 h-7 text-caption font-medium text-foreground/60 hover:text-foreground hover:bg-muted/50 bg-muted/50 border border-border/50 rounded-lg"
+                        className="mt-2 w-full"
                     >
                         {isDelayedExpanded
                             ? t('stats.showLess')
                             : t('stats.showMore', { count: filteredDelayed.length - STATS_AGGREGATION.MOST_DELAYED_PREVIEW })}
                     </Button>
                 )}
-            </CardContent>
-        </Card>
+            </div>
+        </StatsCard>
     );
 };

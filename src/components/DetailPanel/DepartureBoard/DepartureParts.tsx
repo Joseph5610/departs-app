@@ -29,7 +29,7 @@ const TRIP_MARK_LABEL: Record<TripMark, string | null> = {
 export const MARKED_ROW = 'bg-primary/10 hover:bg-primary/15';
 
 /** MARKED_ROW for a row whose background is its `before` backdrop. */
-export const MARKED_BACKDROP = 'before:bg-primary/10 hover:before:bg-primary/15';
+export const MARKED_BACKDROP = '[--row-rest:color-mix(in_oklch,var(--primary)_10%,transparent)] [--row-hover-fill:color-mix(in_oklch,var(--primary)_15%,transparent)]';
 
 /** A departure's timetable time, struck through with the expected time beside it once live data moves it. */
 export const ExpectedTime = ({ departure: dep, timeZone }: { departure: Departure; timeZone: string }) => {
@@ -50,7 +50,7 @@ export const LiveCountdown = ({ departure: dep, size }: { departure: Departure; 
     const showsChange = useFlash(trend ? dep.lastDelayUpdate : undefined, DEPARTURES_CONFIG.DELAY_DELTA_FLASH_MS);
     const statusLabel = useLiveStatusLabel(dep);
     if (dep.isCanceled) {
-        return <span className="justify-self-end text-sm font-semibold text-destructive">{t('map.departures.canceled')}</span>;
+        return <span className="justify-self-end type-row text-destructive">{t('map.departures.canceled')}</span>;
     }
     return (
         // A fixed minimum width keeps the headsign column steady as the countdown ticks or rolls to a change.
@@ -60,7 +60,7 @@ export const LiveCountdown = ({ departure: dep, size }: { departure: Departure; 
             ) : <LiveIndicator status={liveStatus(dep)} trend={trend} />}
             <span className={cn(
                 "grid overflow-hidden text-right font-bold tracking-tight tabular-nums transition-colors duration-700",
-                size === 'lg' ? "h-6 text-heading leading-6" : "h-5 text-title leading-5",
+                size === 'lg' ? "h-6 type-section tabular-nums" : "h-5 type-headsign font-bold",
                 trend === 'up' ? "text-destructive" : trend === 'down' ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
             )}>
                 <AnimatePresence initial={false}>
@@ -92,7 +92,7 @@ export const TripNotes = ({ departure: dep, mark, className }: { departure: Depa
     const markLabel = mark ? TRIP_MARK_LABEL[mark] : null;
     if (!notice && !dep.continues_as && !markLabel) return null;
     return (
-        <span className={cn("flex min-w-0 flex-col gap-1 text-xs leading-tight text-muted-foreground", className)}>
+        <span className={cn("flex min-w-0 flex-col gap-1 type-note text-muted-foreground", className)}>
             {notice && <FeederNoticeText notice={notice} />}
             {dep.continues_as && (
                 <span className="flex min-w-0 items-start gap-1.5">
@@ -106,7 +106,7 @@ export const TripNotes = ({ departure: dep, mark, className }: { departure: Depa
                     </span>
                 </span>
             )}
-            {markLabel && <span className="micro-label text-primary">{t(markLabel)}</span>}
+            {markLabel && <span className="type-label text-tint-mint">{t(markLabel)}</span>}
         </span>
     );
 };
@@ -122,7 +122,7 @@ const NOTE_TEXT = "min-w-0 leading-5";
 /** A line named inside a note, as its badge, so "waits for 910" never reads as a count. */
 const NoteBadge = ({ name, color }: { name: string; color: string }) => (
     <span className="mx-0.5 inline-flex align-middle">
-        <LineBadge name={name} routeColor={color || FALLBACK_ROUTE_COLOR} size="md" />
+        <LineBadge name={name} routeColor={color || FALLBACK_ROUTE_COLOR} size="row" />
     </span>
 );
 

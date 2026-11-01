@@ -45,6 +45,23 @@ export default defineConfig([
     },
   },
 
+  // Corners and glass come from the design tokens, so no component can drift from the others.
+  {
+    files: ['src/components/**/*.tsx'],
+    ignores: ['src/components/ui/**', 'src/components/PlatformCircle.tsx', 'src/components/LineBadge.tsx', 'src/components/Map/LiveStatus.tsx'],
+    rules: {
+      'no-restricted-syntax': ['error',
+        ...['Literal[value', 'TemplateElement[value.raw'].flatMap(node => [
+          { selector: `${node}=/\\brounded(-[tblr]{1,2})?-(xs|sm|md|lg|xl|2xl|3xl|4xl|\\[)(?!inherit)/]`, message: 'Use rounded-full, rounded-surface, rounded-nested, rounded-badge or rounded-sheet.' },
+          { selector: `${node}=/\\bbackdrop-(blur|saturate)/]`, message: 'Glass comes from the glassy utilities.' },
+          { selector: `${node}=/\\b(hover|active|focus-visible|data-highlighted):(before:)?bg-(fill|muted|foreground)/]`, message: 'A row takes its hover from Item or row-hover; a control from its Button variant.' },
+          { selector: `${node}=/--row-hover-(x|y|left|radius)/]`, message: 'A row hover shape is a row-hover-* utility in index.css.' },
+          { selector: `${node}=/(^|\\s)(text-(xs|sm|base|lg|xl|2xl|3xl|title|heading|body-sm|caption|label|badge|micro|nano)|micro-label\\S*)(\\s|$)/]`, message: 'Text uses the type-* styles.' },
+        ]),
+      ],
+    },
+  },
+
   // Rules shared by the app and the backend: plain TypeScript that imports nothing, so both builds compile it.
   {
     files: ['shared/**/*.ts'],

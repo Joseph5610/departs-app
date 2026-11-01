@@ -21,15 +21,14 @@ export const MetroNightMessage = () => {
         <Empty className="flex-none justify-start py-12 animate-in fade-in duration-500">
             <EmptyHeader>
                 <EmptyMedia
-                    variant="icon"
-                    className="size-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shadow-[0_0_20px_rgba(99,102,241,0.1)] [&_svg:not([class*='size-'])]:size-7"
+                    variant="tile" className="bg-fill text-muted-foreground"
                 >
                     <MoonStar strokeWidth={1.5} />
                 </EmptyMedia>
-                <EmptyTitle className="text-base font-bold text-foreground/90">
+                <EmptyTitle className="type-headsign text-foreground/90">
                     {t('map.departures.metroNight.title')}
                 </EmptyTitle>
-                <EmptyDescription className="text-body-sm max-w-70">
+                <EmptyDescription className="type-meta max-w-70">
                     {t('map.departures.metroNight.description')}
                 </EmptyDescription>
             </EmptyHeader>

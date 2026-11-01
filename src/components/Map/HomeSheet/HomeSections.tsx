@@ -69,8 +69,8 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
                 >
                     <ItemMedia variant="rowIcon" className="text-destructive"><AlertTriangle size={20} strokeWidth={1.75} /></ItemMedia>
                     <ItemContent className="min-w-0 gap-0.5">
-                        <ItemTitle className="text-title font-medium text-foreground">{t('home.disruptionsOnYourLines', { count: myIncidents.length })}</ItemTitle>
-                        <ItemDescription className="text-body-sm line-clamp-1">{myIncidents[0].title}</ItemDescription>
+                        <ItemTitle className="type-row text-foreground">{t('home.disruptionsOnYourLines', { count: myIncidents.length })}</ItemTitle>
+                        <ItemDescription className="type-meta line-clamp-1">{myIncidents[0].title}</ItemDescription>
                     </ItemContent>
                     <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
                 </Item>
@@ -79,10 +79,10 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
             {!hasFavorites && (
                 <HomeSection title={t('favorites.title')}>
                     <Card size="none">
-                        <Item variant="row" size="none" className="flex-nowrap">
-                            <ItemMedia variant="rowIcon" className="self-center! translate-y-0! text-favorite"><Star size={20} strokeWidth={1.75} /></ItemMedia>
+                        <Item variant="row" size="none" >
+                            <ItemMedia variant="rowIcon" className="text-favorite"><Star size={20} strokeWidth={1.75} /></ItemMedia>
                             <ItemContent className="min-w-0">
-                                <ItemDescription className="text-body-sm leading-snug">{t('favorites.emptySub')}</ItemDescription>
+                                <ItemDescription className="type-meta">{t('favorites.emptySub')}</ItemDescription>
                             </ItemContent>
                         </Item>
                     </Card>
@@ -116,10 +116,10 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
             <HomeSection title={t('home.nearby')}>
                 {!hasLocation ? (
                     <Card size="none">
-                        <Item variant="row" size="none" className="flex-nowrap">
-                            <ItemMedia variant="rowIcon" className="self-center! translate-y-0! text-muted-foreground"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
+                        <Item variant="row" size="none" >
+                            <ItemMedia variant="rowIcon" className="text-muted-foreground"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
                             <ItemContent className="min-w-0">
-                                <ItemDescription className="text-body-sm leading-snug">{t('home.locationNeeded')}</ItemDescription>
+                                <ItemDescription className="type-meta">{t('home.locationNeeded')}</ItemDescription>
                             </ItemContent>
                             <ItemActions>
                                 <Button variant="secondary" size="sm" onClick={(e) => onLocate(e)}>
@@ -131,10 +131,10 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
                     </Card>
                 ) : nearby.length === 0 ? (
                     <Card size="none">
-                        <Item variant="row" size="none" className="flex-nowrap">
-                            <ItemMedia variant="rowIcon" className="self-center! translate-y-0! text-muted-foreground"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
+                        <Item variant="row" size="none" >
+                            <ItemMedia variant="rowIcon" className="text-muted-foreground"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
                             <ItemContent className="min-w-0">
-                                <ItemDescription className="text-body-sm leading-snug">{t('home.noNearby')}</ItemDescription>
+                                <ItemDescription className="type-meta">{t('home.noNearby')}</ItemDescription>
                             </ItemContent>
                         </Item>
                     </Card>
@@ -155,25 +155,25 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
             <HomeSection title={t('home.network')}>
                 <Card size="none" className="overflow-hidden">
                     {hasAlerts && (
-                        <Item variant="row" size="none" className="flex-nowrap text-left" render={<button type="button" onClick={() => setIsAlertsOpen(true)} data-testid="home-alerts-row" />}>
+                        <Item variant="row" size="none" render={<button type="button" onClick={() => setIsAlertsOpen(true)} data-testid="home-alerts-row" />}>
                             <ItemMedia variant="rowIcon" className={incidentsCount > 0 ? "text-destructive" : "text-muted-foreground"}><AlertTriangle size={20} strokeWidth={1.75} /></ItemMedia>
-                            <ItemContent><ItemTitle className="text-title font-normal text-foreground">{t('alerts.title')}</ItemTitle></ItemContent>
+                            <ItemContent><ItemTitle className="type-row text-foreground">{t('alerts.title')}</ItemTitle></ItemContent>
                             <ItemActions>
                                 {incidentsCount > 0 && (
-                                    <span className="min-w-5 rounded-full bg-destructive px-1.5 text-center text-xs font-bold leading-5 text-destructive-foreground">{incidentsCount}</span>
+                                    <span className="min-w-5 rounded-full bg-destructive px-1.5 text-center type-control text-destructive-foreground">{incidentsCount}</span>
                                 )}
                                 <ChevronRight size={17} strokeWidth={1.75} className="text-label-3" />
                             </ItemActions>
                         </Item>
                     )}
-                    <Item variant="row" size="none" className="flex-nowrap text-left" render={<button type="button" onClick={() => navigate(paths.stats(selectedCity))} />}>
+                    <Item variant="row" size="none" render={<button type="button" onClick={() => navigate(paths.stats(selectedCity))} />}>
                         <ItemMedia variant="rowIcon" className="text-muted-foreground"><BarChart3 size={20} strokeWidth={1.75} /></ItemMedia>
-                        <ItemContent><ItemTitle className="text-title font-normal text-foreground">{t('stats.title')}</ItemTitle></ItemContent>
+                        <ItemContent><ItemTitle className="type-row text-foreground">{t('stats.title')}</ItemTitle></ItemContent>
                         <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
                     </Item>
-                    <Item variant="row" size="none" className="flex-nowrap text-left" render={<button type="button" onClick={() => setIsFeedbackOpen(true)} />}>
+                    <Item variant="row" size="none" render={<button type="button" onClick={() => setIsFeedbackOpen(true)} />}>
                         <ItemMedia variant="rowIcon" className="text-muted-foreground"><MessageSquare size={20} strokeWidth={1.75} /></ItemMedia>
-                        <ItemContent><ItemTitle className="text-title font-normal text-foreground">{t('feedback.title')}</ItemTitle></ItemContent>
+                        <ItemContent><ItemTitle className="type-row text-foreground">{t('feedback.title')}</ItemTitle></ItemContent>
                         <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
                     </Item>
                 </Card>

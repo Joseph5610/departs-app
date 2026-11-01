@@ -10,6 +10,7 @@ import { IconTooltip } from '@/components/IconTooltip';
 import { ButtonTooltip } from '@/components/ButtonTooltip';
 import { SignalMark } from '@/components/SignalMark';
 import type { VehicleHeroProps } from './types';
+import { HeroNotice } from './HeroNotice';
 import { TripEndedNotice } from './TripEndedNotice';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { getDelayStatus } from '@/domain/delay';
@@ -35,8 +36,8 @@ export const VehicleHero = ({
 
     const bgColor = safeHexColor(displayVehicle.route_color) ?? FALLBACK_ROUTE_COLOR;
     const notice = vehicleNotice(displayVehicle.state_position, displayVehicle.isStaticFallback, hasEnded);
-    const noticeIconColor = notice === 'canceled' ? 'text-destructive' : 'text-amber-500';
-    const noticeTextColor = notice === 'canceled' ? 'text-destructive/80' : 'text-amber-500/80';
+    const noticeIconColor = notice === 'canceled' ? 'text-destructive' : 'text-tint-amber';
+    const noticeTextColor = notice === 'canceled' ? 'text-destructive/80' : 'text-tint-amber';
 
     return (
         <Card 
@@ -46,19 +47,19 @@ export const VehicleHero = ({
                 backgroundImage: `linear-gradient(160deg, color-mix(in srgb, ${bgColor} 18%, var(--hero-base)), color-mix(in srgb, ${bgColor} 11%, var(--hero-base)))`
             }}
         >
-            <div className="relative z-10 flex flex-col p-4 pb-3">
+            <div className="relative z-10 flex flex-col p-3.5 pb-2.5">
                 <div className="flex justify-between items-start gap-3">
                     <div className="flex flex-col gap-0.5 min-w-0">
-                        <span className="micro-label-widest text-muted-foreground">
+                        <span className="type-label text-muted-foreground">
                             {t('map.vehicleDetails.directionLabel')}
                         </span>
-                        <h2 data-testid="vehicle-headsign" className="text-2xl font-bold tracking-tight leading-tight text-foreground/90">
+                        <h2 data-testid="vehicle-headsign" className="type-title text-foreground">
                             {displayVehicle.trip_headsign ? (
                                 <span className="animate-in fade-in duration-500">
                                     {displayVehicle.trip_headsign}
                                 </span>
                             ) : isDetailLoading ? (
-                                <Skeleton className="h-7 w-3/4 max-w-80 rounded-md bg-muted opacity-40" />
+                                <Skeleton className="h-7 w-3/4 max-w-80 rounded-badge bg-muted opacity-40" />
                             ) : (
                                 t('map.vehicleDetails.headingToDestination')
                             )}
@@ -66,23 +67,18 @@ export const VehicleHero = ({
                     </div>
                     <div className="flex gap-2 shrink-0">
                         {isDetailLoading && (
-                            <Skeleton className="w-8 h-8 rounded-full bg-neutral-800/50" />
+                            <Skeleton className="size-8 rounded-full" />
                         )}
                         {!displayVehicle.isStaticFallback && (
                             <Button
-                                variant="ghost"
-                                size="icon"
+                                variant={isFollowing ? 'selected' : 'pill'}
+                                size="icon-xs"
                                 onClick={onToggleFollow}
-                                className={cn(
-                                    "rounded-full w-8 h-8 shrink-0 transition-colors cursor-pointer",
-                                    isFollowing 
-                                        ? "bg-primary/20 text-primary hover:bg-primary/30 border border-primary/30" 
-                                        : "text-muted-foreground hover:text-foreground bg-foreground/5 hover:bg-foreground/10 border border-border/40"
-                                )}
+                                className="shrink-0"
                                 aria-label={t('map.vehicleDetails.track')}
                             >
                                 {isFollowing ? (
-                                    <MapPin size={16} strokeWidth={2.5} />
+                                    <MapPin size={16} strokeWidth={2.5} className="text-tint-mint" />
                                 ) : (
                                     <MapPinOff size={16} strokeWidth={2} />
                                 )}
@@ -92,7 +88,7 @@ export const VehicleHero = ({
                 </div>
             </div>
             
-            <div className="relative z-10 flex flex-col gap-3 px-4 pb-4">
+            <div className="relative z-10 flex flex-col gap-3 px-3.5 pb-3.5">
 
                 {!displayVehicle.isStaticFallback && (
                     <div className="flex gap-2 flex-wrap items-center">
@@ -108,32 +104,28 @@ export const VehicleHero = ({
                 )}
 
                 {notice && (
-                    <div className="mt-1 flex items-start gap-2.5">
-                        <Info size={16} className={cn("mt-0.5 shrink-0", noticeIconColor)} strokeWidth={2} />
-                        <div className="flex flex-col gap-1">
-                            <span className={cn("micro-label leading-none", noticeIconColor)}>
-                                {t(`map.vehicleDetails.${notice}`)}
-                            </span>
-                            <span className={cn("text-caption leading-snug font-medium", noticeTextColor)}>
-                                {t(`map.vehicleDetails.${notice}Description`)}
-                            </span>
-                        </div>
-                    </div>
+                    <HeroNotice
+                        icon={Info}
+                        title={t(`map.vehicleDetails.${notice}`)}
+                        description={t(`map.vehicleDetails.${notice}Description`)}
+                        tone={noticeIconColor}
+                        descriptionTone={noticeTextColor}
+                    />
                 )}
 
                 <TripEndedNotice vehicle={displayVehicle} hasEnded={hasEnded} />
             </div>
 
             {displayVehicle.vehicle_descriptor && (
-                <div className="relative z-10 flex gap-3 p-3 px-4 bg-foreground/3 border-t border-border/50 justify-between items-center mt-auto">
+                <div className="relative z-10 mt-auto flex items-center justify-between gap-3 bg-foreground/3 px-3.5 py-3 border-t border-foreground/6">
                     <div className="flex flex-col gap-1 min-w-0 flex-1">
                         {displayVehicle.vehicle_descriptor?.operator && (
-                            <span className="micro-label text-muted-foreground/80 line-clamp-1">
+                            <span className="type-label text-muted-foreground line-clamp-1">
                                 {displayVehicle.vehicle_descriptor.operator}
                             </span>
                         )}
                         <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-xs font-semibold truncate text-foreground/90">
+                            <span className="type-control truncate text-foreground">
                                 {displayVehicle.vehicle_descriptor?.vehicle_type || (() => {
                                     const typeKey = getRouteTypeI18nKey(displayVehicle.route_type);
                                     return typeKey ? t(typeKey) : '---';
@@ -149,12 +141,12 @@ export const VehicleHero = ({
                         {(displayVehicle.run_number || (displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor?.vehicle_registration_number))) && (
                             <div className="flex items-center gap-2 mt-0.5 min-w-0">
                                 {displayVehicle.run_number && (
-                                    <span className="micro-label text-muted-foreground shrink-0">
+                                    <span className="type-label text-muted-foreground shrink-0">
                                         {t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}
                                     </span>
                                 )}
                                 {displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor?.vehicle_registration_number) && (
-                                    <span className="text-muted-foreground/50 text-micro font-mono uppercase tracking-widest truncate">
+                                    <span className="truncate font-mono type-micro font-normal tracking-widest text-muted-foreground uppercase">
                                         {displayVehicle.vehicle_id}
                                     </span>
                                 )}
@@ -165,20 +157,20 @@ export const VehicleHero = ({
                     {(displayVehicle.vehicle_descriptor?.is_air_conditioned || 
                       displayVehicle.vehicle_descriptor?.has_usb_chargers || 
                       displayVehicle.vehicle_descriptor?.is_wheelchair_accessible) && (
-                        <div className="flex gap-2 shrink-0 bg-foreground/5 p-2 rounded-lg items-center h-fit">
+                        <div className="flex h-fit shrink-0 items-center gap-2 rounded-nested bg-fill p-2">
                             {displayVehicle.vehicle_descriptor?.is_air_conditioned && (
                                 <IconTooltip label={t('amenities.airConditioned')}>
-                                    <Snowflake size={14} className="text-sky-400" strokeWidth={2} aria-hidden="true" />
+                                    <Snowflake size={14} strokeWidth={2} className="text-sky-400" aria-hidden="true" />
                                 </IconTooltip>
                             )}
                             {displayVehicle.vehicle_descriptor?.has_usb_chargers && (
                                 <IconTooltip label={t('amenities.usbChargers')}>
-                                    <Zap size={14} className="text-amber-400" strokeWidth={2} aria-hidden="true" />
+                                    <Zap size={14} strokeWidth={2} className="text-amber-400" aria-hidden="true" />
                                 </IconTooltip>
                             )}
                             {(displayVehicle.vehicle_descriptor?.is_wheelchair_accessible) && (
                                 <IconTooltip label={t('amenities.wheelchairAccessible')}>
-                                    <Accessibility size={14} className="text-emerald-400" strokeWidth={2} aria-hidden="true" />
+                                    <Accessibility size={14} strokeWidth={2} className="text-emerald-400" aria-hidden="true" />
                                 </IconTooltip>
                             )}
                         </div>
@@ -194,7 +186,7 @@ const VehicleNumber = ({ number, operator }: { number: string | number; operator
     const { t } = useTranslation();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const url = fleetRegisterUrl(selectedCity, operator, number);
-    const className = 'text-muted-foreground text-xs font-medium shrink-0';
+    const className = 'text-muted-foreground type-note shrink-0';
     if (!url) return <span className={className}>#{number}</span>;
     return (
         <ButtonTooltip label={t('map.vehicleDetails.fleetRegisterLink')}>
@@ -215,10 +207,7 @@ const DelayBadge = ({ delay, delaySource }: { delay: number | null; delaySource:
     const { t } = useTranslation();
     if (delay === null) {
         return (
-            <Badge
-                variant="outline"
-                className="h-6 px-2.5 rounded-md text-micro font-bold uppercase tracking-wider border-transparent bg-muted/40 text-muted-foreground"
-            >
+            <Badge variant="hero" className="text-muted-foreground">
                 {t('map.vehicleDetails.unknownDelay')}
             </Badge>
         );
@@ -263,7 +252,7 @@ const LiveDataAgeBadge = ({ originTimestamp, delaySource }: { originTimestamp: s
                 </Badge>
             </PopoverTrigger>
             <PopoverContent side="bottom" align="center" className="w-auto p-3 max-w-62.5">
-                <span className="text-body-sm font-medium text-foreground/90 leading-tight block">
+                <span className="type-meta text-foreground/90 block">
                     {t(`map.vehicleDetails.delaySource.${delaySource}`)}
                 </span>
             </PopoverContent>
