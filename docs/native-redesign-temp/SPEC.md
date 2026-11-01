@@ -20,40 +20,40 @@ Desktop gets tokens and shared components only; the bottom toolbar, capsule peek
 
 ## Tokens (`src/index.css`)
 
-Radii, the only allowed values: `sheet` 38 (34 for the peek capsule), `surface` 22, `badge` 6, and capsule = half the height.
-`surface` is 38 − 16, so everything inside a sheet shares one corner: cards, groups, hero, alerts, menus, swipe blocks. Full-width controls are 44px high, so field, segmented control and primary button land on 22 as well. Stacked full-width blocks must always show the same corner. Compact controls (32px chips, 28px pills) are capsules. A selected segment is 20, the track minus its 2px padding.
+Radii, the only allowed values: `sheet` 38 (34 for the peek capsule), `surface` 22, `nested` 16, `badge` 6, and capsule = half the height.
+`surface` is 38 − 16, so everything inside a sheet shares one corner: cards, groups, hero, alerts, menus, swipe blocks. Field, segmented control and primary button are capsules. Stacked full-width blocks must always show the same corner. Compact controls (32px chips, 28px pills) are capsules. A selected segment is 20, the track minus its 2px padding.
 Rule: a nested corner radius equals parent radius minus padding, and margins must share the corner's centre.
 
 | Token | Dark | Light |
 | --- | --- | --- |
 | label | `oklch(0.985 0 0)` | `oklch(0.22 0.01 260)` |
-| label-2 | `rgb(255 255 255 / .64)` | `rgb(50 50 58 / .78)` |
-| label-3 | `rgb(255 255 255 / .56)` | `rgb(50 50 58 / .72)` |
-| fill | `rgb(255 255 255 / .075)` | `rgb(0 0 0 / .05)` |
-| fill-2 | `rgb(255 255 255 / .13)` | `rgb(0 0 0 / .09)` |
-| field | `rgb(255 255 255 / .12)` | `rgb(0 0 0 / .06)` |
-| sep | `rgb(255 255 255 / .09)` | `rgb(0 0 0 / .09)` |
-| mat (controls) | `oklch(0.3 0.005 260 / .58)` | `oklch(0.97 0.004 250 / .62)` |
-| mat-thick (sheet) | `oklch(0.25 0.005 260 / .84)` | `oklch(0.97 0.004 250 / .85)` |
-| mat-solid (full) | `oklch(0.22 0.005 260 / .9)` | `oklch(0.97 0.004 250 / .92)` |
+| label-2 | `oklch(0.75 0.01 260)` | `rgb(50 50 58 / .78)` |
+| label-3 | `rgb(255 255 255 / .62)` | `rgb(50 50 58 / .72)` |
+| fill | `rgb(255 255 255 / .1)` | `rgb(0 0 0 / .05)` |
+| fill-2 | `rgb(255 255 255 / .17)` | `rgb(0 0 0 / .09)` |
+| field | `rgb(255 255 255 / .15)` | `rgb(0 0 0 / .06)` |
+| sep | `rgb(255 255 255 / .13)` | `rgb(0 0 0 / .09)` |
+| mat (controls) | `oklch(0.27 0.014 255 / .62)` | `oklch(0.97 0.006 250 / .42)` |
+| mat-thick (sheet) | `oklch(0.2 0.014 255 / .88)` | `oklch(0.97 0.006 250 / .66)` |
+| mat-solid (full) | `oklch(0.18 0.014 255 / .94)` | `oklch(0.97 0.006 250 / .84)` |
 | edge-top | `rgb(255 255 255 / .22)` | `rgb(255 255 255 / .8)` |
 | edge-bottom | `rgb(255 255 255 / .05)` | `rgb(255 255 255 / .3)` |
 | float shadow | `0 8px 28px rgb(0 0 0 / .38)` | `0 10px 34px rgb(0 0 0 / .16), 0 2px 6px rgb(0 0 0 / .08)` |
 
-| tint-mint | `oklch(0.6959 0.1491 162.48)` | `oklch(0.52 0.12 162.48)` |
-| tint-amber | `oklch(0.769 0.188 70.08)` | `oklch(0.55 0.13 60)` |
-| tint-red | `oklch(0.6368 0.2078 25.33)` | `oklch(0.58 0.21 25.33)` |
+| tint-mint | `oklch(0.8 0.17 162)` | `oklch(0.52 0.12 162.48)` |
+| tint-amber | `oklch(0.82 0.17 75)` | `oklch(0.55 0.13 60)` |
+| tint-red | `oklch(0.7 0.2 25)` | `oklch(0.58 0.21 25.33)` |
 | tint-sky | `oklch(0.685 0.169 237.32)` | `oklch(0.52 0.15 240)` |
 
 Delay signal icon in dark: `oklch(0.74 0.17 22)`, as `tint-red` is too dark for a small icon. Light adds an outer hairline `0 0 0 .5px rgb(0 0 0 / .06)`.
 Meaning: mint live data, red delay and incidents, amber closures and favourites, sky information. Row icons are monochrome; colour only for status.
 
-Material: `backdrop-filter: blur(22px) saturate(140%)` on every surface, one flat colour with no gradient, never a blue tint.
+Material: `backdrop-filter: blur(22px) saturate(140%)` on every surface in dark and `saturate(190%)` in light, one flat colour with no gradient, never a blue tint.
 Edge: `inset 0 .5px 0 edge-top, inset 0 0 0 .5px edge-bottom`; at half and full, where the sheet runs off the screen sides, only the top line (`glassy-edge-top`). A surface floating free on all sides, such as the desktop panel, a centred modal or the search dropdown, keeps the full edge. No outlined rectangles, no border on cards or fields.
 Text on mint: `oklch(0.22 0.04 165)` (6.74:1); white on mint is 2.54:1 and is forbidden.
 Colour on glass is only for live state, delay, alerts and primary actions. Separators are 0.5px and inset to the text.
 Keep the app's default text smoothing; do not add `antialiased` to text, it thins Geist.
-Type comes only from the `type-*` utilities, enforced by ESLint: title 20/600, section 17/600, count 17/700, row 14/500, meta 12/400, control 12/600, label 10/700 caps. Only line badges and platform circles size their own codes.
+Type comes only from the `type-*` utilities and follows production sizes, not the mockup's: title 20/700, section 17/700, headsign 15/600, row 14/500, group 13/600, meta 13/400, note 12/400, control 12/600, label 10/700 caps with .1em tracking, badge 10/700, micro 9/700. Only line badges and platform circles size their own codes.
 Detents: the home sheet and every card share one half height, 56% (`SHEET.HALF`), and full; a modal sheet may use its own height and scrim .4.
 A screen's rows reuse one row: favourites use the board row, with the same struck time, signal, amenities and `Moja cesta` chip.
 
@@ -82,14 +82,14 @@ These bind every screen, including ones not in the mockup. Source: HIG and WWDC2
 
 ## Elements
 
-Rows are 10/14px padded, minimum 48px, separators start at the text. Vertical rhythm: 20 between groups and sections, 8 from a header to its group. Icons: rows 20, fields 18, toolbar 21, chevrons 17.
+Rows are 8/14px padded, minimum 44px, separators start at the text. Vertical rhythm: 20 between groups and sections, 8 from a header to its group. Icons: rows 20, fields 18, toolbar 21, chevrons 17.
 Compare with the mockup board "Rádiusy, hrany, paleta, typografia, materiály".
 
-- Primary button: capsule, 44px high, 20px side padding, 15/600, mint with the text colour above.
-- Selected chip and `Moja cesta`: mint 22% fill, `label` text, mint icon; mint text on that fill is only 3.3:1.
+- Primary button: capsule, 36px high, 20px side padding, 13/600, mint with the text colour above.
+- Selected filter chip: solid mint with `on-mint` text, or solid in its delay colour. `Moja cesta` and tinted surfaces use `--selected`, solid `oklch(0.42 0.105 162)` in dark.
 - Secondary capsule (`Otvoriť Mapy`): 32px high, radius 16, `field` fill, 13/600, no border.
 - Switch: 46×26, thumb 22, no border.
-- Segmented control: 40px, capsule, thumb sliding and draggable, `fill-2` track, 2px padding, items radius 20, 13/600, selected item `rgb(255 255 255 / .2)`. Inside a row: 32px, radius 16, items 14.
+- Segmented control: 36px, capsule, thumb sliding and draggable, `fill-2` track, 2px padding, items radius 20, 13/600, selected item solid mint with `on-mint` text. Inside a row: 28px.
 - Menu: `mat`, edge and float shadow, radius 22, rows 40px high, 14px text, a deliberate step below the 44px target to keep the menu compact.
 - Departure pill: 28px high, radius 14, `fill`, 13/600, tabular numbers.
 - Cards: `fill`, radius 22, no border or shadow. A card is brighter than the sheet behind it.
@@ -126,19 +126,34 @@ Add `prefers-contrast: more` and reduced transparency variants (mockup rows "Vy�
 ### 7. Other screens
 Reference: mockup board "Ďalšie obrazovky", file `MoreScreens.dc.html` with `screens.css`, today and proposal side by side. Dark only so far.
 Content inside scroll views never shrinks; a group is never clipped by its own layout.
-Caps is for labels and subheaders only, such as `SMER`, `DP PRAHA`, `OBEH 16` and section subheaders, 11/700, tracking .1em. Never on anything interactive or stateful: segments, chips, capsules, buttons, tabs. Those use normal case, 13/600. `NAŽIVO` is the one exception and stays as today.
-Subheaders are the small caps level: 11/700, uppercase, tracking .1em, `label-2`, on Settings, Alerts, Trip, Search and filter groups. The 20/600 section title is for the home sheet only. Row text is short; explanations move to a footnote under the group.
+Caps is for labels and subheaders only, such as `SMER`, `DP PRAHA`, `OBEH 16` and section subheaders, 10/700, tracking .1em. Never on anything interactive or stateful: segments, chips, capsules, buttons, tabs. Those use normal case, 13/600. `NAŽIVO` is the one exception and stays as today.
+Subheaders are the small caps level: 10/700, uppercase, tracking .1em, `label-2`, on Settings, Alerts, Trip, Search and filter groups. The 20/600 section title is for the home sheet only. Row text is short; explanations move to a footnote under the group.
 - Favourites: stops become section headers (platform circle, 17/600 name, chevron, amber star), rows live in a group. `Usporiadať` is a 32px capsule next to close.
 - Settings: reference `ScreenSettings.dc.html`, full length in `SettingsFull.dc.html`. Keep every control and description of today's screen: push toggle, theme, refresh, vehicle switch with type filter chips and delay filter chips, delay colours, stops with labels and stop type filter, network lines, alerts on map, points of sale, base map, language, AI integrations, clear history, feedback, install, update check with version, legal links, last stop update. Chips: 32px capsules, selected mint tint, delay chips with a coloured dot. Nested filters appear only while their switch is on.
 - Alerts: search field first, the segmented control under it as its scope; both 44px, radius 22. Sentence-case headers with a count, grouped rows. The disruption push toggle stays in Settings and must remain reachable from here; decide its place before implementing.
-- Trip: reference `ScreenTrip.dc.html`, full length in `TripFull.dc.html`. The vehicle hero stays one line-tinted card, with no border: direction, follow button, delay and data age capsules, notices, operator, vehicle, linked number, run, vehicle id, amenities. Alerts stay a separate titled section; never merge them into the vehicle card. `Idem týmto spojom` is the primary capsule without a subtitle, an active trip keeps today's My trip card. Past stops are a disclosure row at the top of the route, on the rail: `6 prejdených zastávok` with a chevron, 44px high, 13/500, expanding in place; no button in the section header. The route keeps zones, interchange badges, past stops and the next-stop marker. Connections stay a collapsible part of the stop, only where data exists: a quiet row without fill, icon, `Prestupy`, waiting lines, chevron; expanded it keeps line, headsign, wait or risk note and time; share and more go to the bottom toolbar.
-- My trip: replaces the sheet content at 330px, back button, two capsule buttons in one row.
+- Trip: reference `ScreenTrip.dc.html`, full length in `TripFull.dc.html`. The vehicle hero stays one line-tinted card, with no border: direction, follow button, delay and data age capsules, notices, operator, vehicle, linked number, run, vehicle id, amenities. Alerts stay a separate titled section; never merge them into the vehicle card. `Idem týmto spojom` is the primary capsule without a subtitle, an active trip keeps today's My trip card. Past stops are a disclosure row at the top of the route, on the rail: `6 prejdených zastávok` with a chevron, 44px high, 13/500, expanding in place; no button in the section header. The route keeps zones, interchange badges, past stops and the next-stop marker. Connections stay a collapsible part of the stop, only where data exists: a card with an icon, `Prestupy` in caps, waiting lines and a chevron; expanded it keeps line, headsign, wait or risk note and time; share and more go to the bottom toolbar.
+- My trip: replaces the sheet content at the half detent, whatever height the sheet stood at, back button, two capsule buttons in one row directly under the card; alert times are `FilterChip`s.
 - Search: capsule field with a round close button instead of the text `Zrušiť`, recent items in a group.
-- Desktop search dropdown: `glassy-thick`, radius 22, padding 6, rows radius 16 (22 − 6), 12/14 padded, minimum 52, bare 20px icons without a tile, amber only for favourites; group subheaders as above with a plain 13/500 count, no icon and no pill.
+- Desktop search dropdown: `glassy-thick`, radius 22, padding 6, rows radius 16 (22 − 6), 8/14 padded, minimum 44, bare 20px icons without a tile, amber only for favourites; group subheaders as above with the count in a pill next to the title.
+
+## Decisions after implementation
+
+Made with the owner during the screen review; they replace the original values above.
+
+- Sizes follow production because the mockup's type felt too large. Tags stay readable through colour and weight, not size.
+- Dark surfaces are cooler and darker and mint, red and amber brighter, as the original palette lacked contrast. This changes the brand mint.
+- Selected is solid, never a grey or a thin tint.
+- Colour beyond status is allowed on section heading icons, stats card icons, amenity icons and copy actions. Icons in plain rows stay monochrome.
+- Inline text actions in mint are allowed, such as `Viac informácií`, `Všetko` and `Iná zastávka`.
+- Hover has three shapes, all in `index.css`: `row-hover-group` edge to edge, clipped by the card; `row-hover-board` over the text column, leaving the badge out; `row-hover-nested` for rows under a lead row. Search rows use plain `row-hover`.
+- The stop timeline follows the line colour: rail and ring in the line's colour, white dots, grey past section. Past stops are a row on the rail, the terminus has a ring.
+- The vehicle hero keeps production's gradient, its lighter lower section with a full-width divider, a tile for amenities in colour and a mono vehicle id, 9px caps with wide tracking.
+- Status pills in the hero stay as in production: 24px, 9px caps.
+- Alerts keep `Virtuoso`; the section heading is pinned over a masked list with no backing colour, since none matches the glass.
 
 ## Shared components
 
-Corners and glass are enforced by ESLint in `src/components`, `pages/board` and `pages/legal`: only `rounded-full`, `rounded-surface`, `rounded-nested` (16), `rounded-badge` and `rounded-sheet`, and no `backdrop-blur`. Switches between options are `SegmentedControl`, filters `FilterChip`, grouped rows `Item variant="row"`, empty and error tiles `EmptyMedia variant="tile"`.
+Corners and glass are enforced by ESLint in `src/components`, `pages/board` and `pages/legal`: only `rounded-full`, `rounded-surface`, `rounded-nested` (16), `rounded-badge` and `rounded-sheet`, no `backdrop-blur`, no custom row hover fills and no `--row-hover-*` outside `index.css`. Switches between options are `SegmentedControl`, filters and single choices `FilterChip`, grouped rows `Item variant="row"`, section titles `SectionTitle`, small caps headings `SectionHeading`, read-only facts `Badge variant="info"`, counts `Badge variant="count"`, stats cards `StatsCard`, hero notes `HeroNotice`, search rows `SearchRowBody`, empty and error tiles `EmptyMedia variant="tile"`.
 
 Control heights are the `control-sm/md/lg` spacing tokens: 28, 32 and 36. Line badges are `row` (18) and `lg` (24), plus `xl` on the full-screen board.
 

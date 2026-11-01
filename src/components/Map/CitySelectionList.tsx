@@ -90,7 +90,7 @@ export const CitySelectionList = ({
                 <div className="relative flex flex-col items-start z-10">
                     <div className="flex items-center gap-2">
                         <span className={cn(
-                            "font-semibold tracking-tight text-foreground",
+                            "text-foreground",
                             compact ? "type-section" : "type-title"
                         )}>
                             {city.name}
