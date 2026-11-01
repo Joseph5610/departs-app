@@ -18,21 +18,15 @@ Redesign to a native iOS feel, keeping Geist, the CARTO map, the mint brand and 
 - **My trip on phones:** opens exactly at half height, alert times use `FilterChip`.
 - **Search:** mobile and desktop share `SearchRowBody`, and history reads line colours from each entry's own city.
 
-## Deviations from SPEC.md, to record there
+## Deviations from the original spec
 
-- Font sizes follow production, not the mockup. Caps labels are 10/700 with .1em tracking.
-- Rows are 8/14 and at least 44px. The desktop search dropdown uses the same, not 12/14 and 52px.
-- Selected segments are solid mint, not grey.
-- Mint, red and amber changed in dark mode, although the spec kept the brand colour fixed.
-- Section heading icons and copy buttons carry colour, not only status.
-- Transfers sit in a card, not a quiet row.
-- My trip opens at half, not at a 330px detent.
+Recorded in `SPEC.md`: updated values in place, reasons under "Decisions after implementation".
 
 ## To do
 
 - Replace the remaining raw `<button>` elements and add a lint rule for them.
 - Move the 15 direct `type-label` uses to `SectionHeading` where they are headings.
-- Update `SPEC.md` and the mockup with the deviations above.
+- Update the mockup to the decisions in `SPEC.md`.
 - Review light mode on all screens: only home, My trip and the hero were looked at.
 - Check on an iPhone as an installed PWA: home, board, swipe, sheet controls while dragging, blur performance.
 - Review the undone screens with the owner: stats, vehicle list, ride bar, feedback, MCP.
