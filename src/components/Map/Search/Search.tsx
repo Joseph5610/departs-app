@@ -60,7 +60,7 @@ export const Search = memo(() => {
         <div
             className={cn(
                 // Narrows only when the visible map cannot fit it between the side controls.
-                "pointer-events-auto absolute top-0 left-0 w-[calc(100%-56px)] md:w-[min(26.25rem,calc(100%-9rem))] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-5 z-1000"
+                "pointer-events-auto absolute top-0 left-0 w-[calc(100%-56px)] md:w-[min(26.25rem,calc(100%-9rem))] md:left-1/2 md:-translate-x-1/2 safe-top p-4 md:p-0 md:top-(--chrome-top) z-1000"
             )}
         >
             <Autocomplete.Root

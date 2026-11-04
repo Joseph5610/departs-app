@@ -187,7 +187,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
     }
 
     return (
-        <div className="fixed top-0 md:top-5 right-0 safe-top safe-right p-4 md:p-0 md:right-5 z-40 pointer-events-none" data-testid="map-controls">
+        <div className="fixed top-0 md:top-(--chrome-top) right-0 safe-top safe-right p-4 md:p-0 md:right-5 z-40 pointer-events-none" data-testid="map-controls">
             <div className="flex flex-col gap-2 items-end pointer-events-auto">
                 <ControlButton
                     onClick={(e) => onLocate(e)}

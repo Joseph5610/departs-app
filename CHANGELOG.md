@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.94.1] - 2026-11-04
+
+### Fixed
+
+- On tablets, the installed app keeps the search bar, map controls and detail panel below the blurred status bar.
+
 ## [0.94.0] - 2026-10-29
 
 ### Added

@@ -56,7 +56,7 @@ export const LiveStatus = () => {
             data-testid="live-status"
             className={cn(
                 "absolute z-50 pointer-events-none -translate-x-1/2 left-1/2 top-0",
-                "pt-[calc(var(--top-controls-gap)+env(safe-area-inset-top,0))] transition-all duration-300 ease-in-out md:p-0 md:top-[calc(5.25rem+env(safe-area-inset-top,0))]"
+                "pt-[calc(var(--top-controls-gap)+env(safe-area-inset-top,0))] transition-all duration-300 ease-in-out md:p-0 md:top-[calc(var(--chrome-top)+4rem)]"
             )}
         >
             <div className="pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-300">

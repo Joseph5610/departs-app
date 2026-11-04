@@ -17,6 +17,8 @@
   --app-height: 100dvh;
   /* Gap between the desktop sidebar and the viewport edges; the map camera reads both values. */
   --sidebar-inset: 20px;
+  /* Top edge of the desktop chrome (search, map controls, panel); an installed app drops it below the status bar blur. */
+  --chrome-top: var(--sidebar-inset);
   --background: oklch(0.96 0 0);
   --foreground: oklch(0.22 0.01 260);
   --card: oklch(1.0000 0 0);
@@ -116,6 +118,7 @@
   --app-height: 100vh;
   /* iOS 27 blurs the top edge of installed apps and no CSS turns it off; the map may blur there, the top controls must clear it. */
   --top-controls-gap: 1.5rem;
+  --chrome-top: max(var(--sidebar-inset), calc(env(safe-area-inset-top, 0px) + 2rem));
 }
 
 @media (display-mode: standalone) {
