@@ -142,7 +142,7 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
                 variant="glassy"
                 showCloseButton={false}
                 hideOverlay={true}
-                className="data-[side=left]:w-(--sidebar-width) data-[side=left]:sm:max-w-(--sidebar-width) top-(--sidebar-inset)! left-(--sidebar-inset)! bottom-(--sidebar-inset)! h-[calc(100dvh-2*var(--sidebar-inset))]! p-0 gap-2 flex flex-col outline-none rounded-3xl text-foreground"
+                className="data-[side=left]:w-(--sidebar-width) data-[side=left]:sm:max-w-(--sidebar-width) top-(--chrome-top)! left-(--sidebar-inset)! bottom-(--sidebar-inset)! h-[calc(100dvh-var(--chrome-top)-var(--sidebar-inset))]! p-0 gap-2 flex flex-col outline-none rounded-3xl text-foreground"
                 aria-describedby={undefined}
                 // The panel sits beside the map, not over it: focusing its first button would also pop that button's tooltip.
                 initialFocus={false}
