@@ -11,8 +11,6 @@ import {
 } from '@/components/ui/dialog';
 import { Virtuoso } from 'react-virtuoso';
 import { CondensedAlertItem } from '@/components/Alerts/CondensedAlertItem';
-import { DisruptionPushToggle } from '@/components/Alerts/DisruptionPushToggle';
-import { usePreferencesStore } from '@/state/preferencesStore';
 import { cn } from '@/lib/cn';
 import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
 import { ALERTS_LIST } from '@/config/constants';
@@ -69,8 +67,6 @@ export const AlertsContent = () => {
     }
 
     const { alerts, isLoading: loadingRSS } = useAlerts();
-    // Offered only while off, but kept for the visit so switching it on doesn't yank it away.
-    const [isPushOffered] = useState(() => !usePreferencesStore.getState().disruptionPush);
 
     const sections = useMemo(() => alertSections(alerts ?? [], filterMode, searchQuery), [alerts, filterMode, searchQuery]);
 
@@ -135,7 +131,6 @@ export const AlertsContent = () => {
                     ]}
                 />
 
-                {isPushOffered && <DisruptionPushToggle />}
             </div>
 
             <div className="flex-1 min-h-0 px-(--panel-gutter)">

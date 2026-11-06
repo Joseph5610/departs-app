@@ -70,15 +70,12 @@ test.describe('Disruption push', () => {
         await expect(settings.disruptionPushRow).toHaveCount(0);
     });
 
-    test('is offered in the alerts view while it is off', async ({ page }) => {
-        const bodies = await recordBodies(page);
+    // The switch lives in settings alone, so the alerts view stays a plain list.
+    test('is not offered in the alerts view', async ({ page }) => {
         await (await open(page, 'prague')).openAlerts();
         const alerts = new AlertsPage(page);
-
-        await alerts.disruptionPushRow.click();
-        await expect(alerts.disruptionPushRow.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
-        await expect.poll(() => bodies.length).toBeGreaterThan(0);
-        expect(bodies[0]).toMatchObject({ action: 'add', lines: [{ name: '17', keys: ['17', 'L17'] }] });
+        await expect(alerts.container).toBeVisible();
+        await expect(alerts.disruptionPushRow).toHaveCount(0);
     });
 
     test('opens the alert a notification names', async ({ page }) => {
