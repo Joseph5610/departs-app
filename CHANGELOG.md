@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Vehicle-type filters look the same in settings, stats and the vehicle list: All first, each type with its icon.
 - Search fields, incident counts and empty states are one shared element each, alike in search, alerts, stats and the board.
 - The disruption push switch lives in Settings only; the alerts view is a plain list.
+- Settings drop the descriptions that only repeated a row's title.
 - Network stats list vehicle types, busiest lines and fleet amenities as rows, with the total delay under punctuality.
 - Feedback has one send button, and a disabled primary button turns grey instead of faded mint.
 

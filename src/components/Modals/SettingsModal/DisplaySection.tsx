@@ -102,7 +102,6 @@ export const DisplaySection = () => {
                     <Card size="none">
                         <ToggleSection
                             title={t('settings.liveVehicles.title')}
-                            description={t('settings.liveVehicles.description')}
                             icon={showVehicles ? Eye : EyeOff}
                             isChecked={showVehicles}
                             onToggle={setShowVehicles}
@@ -142,14 +141,12 @@ export const DisplaySection = () => {
                     <Card size="none">
                         <ToggleSection
                             title={t('settings.showStops.title')}
-                            description={t('settings.showStops.description')}
                             icon={MapPin}
                             isChecked={showStops}
                             onToggle={setShowStops}
                         >
                             <ToggleSection
                                 title={t('settings.showStops.labels')}
-                                description={t('settings.showStops.labelsDescription')}
                                 icon={Type}
                                 isChecked={showStopLabels}
                                 onToggle={setShowStopLabels}
@@ -181,7 +178,6 @@ export const DisplaySection = () => {
                         {cityConfig.hasNetworkLines && (
                             <ToggleSection
                                 title={t('settings.showNetworkLines.title')}
-                                description={t('settings.showNetworkLines.description')}
                                 icon={Waypoints}
                                 isChecked={showNetworkLines}
                                 onToggle={setShowNetworkLines}
@@ -190,7 +186,6 @@ export const DisplaySection = () => {
                         {cityConfig.hasAlertLocations && (
                             <ToggleSection
                                 title={t('settings.showAlertsOnMap.title')}
-                                description={t('settings.showAlertsOnMap.description')}
                                 icon={Construction}
                                 isChecked={showAlertsOnMap}
                                 onToggle={setShowAlertsOnMap}
@@ -199,7 +194,6 @@ export const DisplaySection = () => {
                         {cityConfig.hasPointsOfSale && (
                             <ToggleSection
                                 title={t('settings.showPointsOfSale.title')}
-                                description={t('settings.showPointsOfSale.description')}
                                 icon={Ticket}
                                 isChecked={showPointsOfSale}
                                 onToggle={setShowPointsOfSale}

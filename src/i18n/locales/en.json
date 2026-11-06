@@ -54,8 +54,7 @@
       "dark": "Dark"
     },
     "liveVehicles": {
-      "title": "Live vehicle locations",
-      "description": "Show buses, trams, and metro"
+      "title": "Live vehicle locations"
     },
     "colorVehiclesByDelay": {
       "title": "Vehicle colors by delay",
@@ -69,21 +68,16 @@
     },
     "showStops": {
       "title": "Show stops",
-      "description": "Show transport stops and stations",
-      "labels": "Show labels",
-      "labelsDescription": "Show stop name labels on the map"
+      "labels": "Stop names"
     },
     "showNetworkLines": {
-      "title": "Transit lines",
-      "description": "Show the main lines on the map"
+      "title": "Transit lines"
     },
     "showAlertsOnMap": {
-      "title": "Disruptions on Map",
-      "description": "Show closures and moved stops on map"
+      "title": "Disruptions on Map"
     },
     "showPointsOfSale": {
-      "title": "Points of Sale",
-      "description": "Show ticket machines, info centers, and offices on map"
+      "title": "Points of Sale"
     },
     "vehicleTypes": {
       "metro": "Metro",

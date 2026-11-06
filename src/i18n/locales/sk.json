@@ -57,8 +57,7 @@
       "dark": "Tmavý"
     },
     "liveVehicles": {
-      "title": "Poloha vozidiel v reálnom čase",
-      "description": "Zobraziť autobusy, električky a metro"
+      "title": "Poloha vozidiel v reálnom čase"
     },
     "colorVehiclesByDelay": {
       "title": "Farby vozidiel podľa meškania",
@@ -72,21 +71,16 @@
     },
     "showStops": {
       "title": "Zobraziť zastávky",
-      "description": "Zobraziť zastávky a stanice",
-      "labels": "Zobraziť popisy",
-      "labelsDescription": "Zobraziť názvy zastávok na mape"
+      "labels": "Názvy zastávok"
     },
     "showNetworkLines": {
-      "title": "Linky MHD",
-      "description": "Zobraziť hlavné linky na mape"
+      "title": "Linky MHD"
     },
     "showAlertsOnMap": {
-      "title": "Výluky na mape",
-      "description": "Zobraziť výluky a presunuté zastávky na mape"
+      "title": "Výluky na mape"
     },
     "showPointsOfSale": {
-      "title": "Predajné miesta",
-      "description": "Zobraziť automaty, infocentrá a pokladne na mape"
+      "title": "Predajné miesta"
     },
     "vehicleTypes": {
       "metro": "Metro",

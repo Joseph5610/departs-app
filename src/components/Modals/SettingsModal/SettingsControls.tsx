@@ -37,7 +37,8 @@ export const RowDetails = ({ children }: { children: React.ReactNode }) => (
 
 interface ToggleSectionProps {
     title: string;
-    description: string;
+    /** Only where the title alone leaves the setting unclear. */
+    description?: string;
     icon: React.ElementType;
     isChecked: boolean;
     onToggle: (val: boolean) => void;
