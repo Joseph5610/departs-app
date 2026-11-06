@@ -63,6 +63,9 @@ export const BoardRow = ({ action, tripAction, ...props }: BoardRowProps) => {
     );
 };
 
+// A swiped row moves without the press fill, as iOS does; the fill's corners would not match the action block's.
+const SWIPING_NO_PRESS = 'group-data-swiping/row:[--row-hover-fill:var(--row-rest,transparent)]';
+
 const SWIPE_ICON = 'shrink-0 transition-transform duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] group-data-armed/row:scale-115';
 
 /** The action a swipe reveals beside the row, growing with it: tinted, then solid once letting go runs it. */
@@ -92,7 +95,7 @@ const RowBody = ({ action, tripAction, below, className, children, outer, ...lea
                 </SwipeBlock>
             )}
             <div ref={contentRef} className="grid grid-cols-[var(--badge-col)_minmax(0,1fr)_auto] gap-x-3 py-2.5">
-                <div {...lead} className={cn("relative isolate col-span-3 col-start-1 row-span-3 row-start-1 grid grid-cols-subgrid grid-rows-subgrid items-start text-left", className)}>
+                <div {...lead} className={cn("relative isolate col-span-3 col-start-1 row-span-3 row-start-1 grid grid-cols-subgrid grid-rows-subgrid items-start text-left", className, SWIPING_NO_PRESS)}>
                     {children}
                 </div>
                 {below && <div className="col-span-2 col-start-2 row-start-4 mt-2.5 flex min-w-0 flex-col gap-2">{below}</div>}

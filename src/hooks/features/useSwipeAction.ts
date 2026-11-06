@@ -38,6 +38,7 @@ export const useSwipeAction = (onLeft: (() => void) | undefined, onRight?: () =>
         host.style.setProperty('--swipe-left', offset < 0 ? blockWidth : '0px');
         host.style.setProperty('--swipe-right', offset > 0 ? blockWidth : '0px');
         host.style.setProperty('--swipe-block-transition', animate ? `width ${DEPARTURES_CONFIG.SWIPE_SETTLE}` : 'width 0s');
+        host.toggleAttribute('data-swiping', offset !== 0);
         host.toggleAttribute('data-armed', Math.abs(offset) >= DEPARTURES_CONFIG.SWIPE_ACTION_PX);
         host.toggleAttribute('data-swipe-label', Math.abs(offset) - DEPARTURES_CONFIG.SWIPE_BLOCK_GAP_PX >= DEPARTURES_CONFIG.SWIPE_LABEL_PX);
     };
