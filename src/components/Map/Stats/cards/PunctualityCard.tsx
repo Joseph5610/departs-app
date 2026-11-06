@@ -3,6 +3,8 @@ import { Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { CityStats } from '@/types';
 import { DistributionBar } from '@/components/Map/Stats/DistributionBar';
+import { StatRow } from '@/components/Map/Stats/StatRow';
+import { Separator } from '@/components/ui/separator';
 
 interface PunctualityCardProps {
     stats: CityStats;
@@ -22,7 +24,8 @@ export const PunctualityCard = ({ stats }: PunctualityCardProps) => {
     };
 
     return (
-        <StatsCard icon={Clock} title={t('stats.punctuality')} iconClassName="text-emerald-400">
+        <StatsCard icon={Clock} title={t('stats.punctuality')} iconClassName="text-emerald-400" flush>
+            <div className="px-3.5 pb-3.5">
                 <div className="flex justify-between items-end mb-2.5">
                     <div>
                         <div className="type-title tabular-nums">
@@ -50,6 +53,16 @@ export const PunctualityCard = ({ stats }: PunctualityCardProps) => {
                         />
                     </div>
                 )}
+            </div>
+            {stats.total_delay_seconds > 0 && (
+                <>
+                    <Separator className="bg-sep data-horizontal:h-[0.5px]" />
+                    <StatRow
+                        label={t('stats.totalDelay')}
+                        value={<span className="text-destructive">{t('stats.hoursValue', { value: Math.round(stats.total_delay_seconds / 3600) })}</span>}
+                    />
+                </>
+            )}
         </StatsCard>
     );
 };

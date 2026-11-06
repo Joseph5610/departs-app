@@ -27,9 +27,7 @@ Recorded in `SPEC.md`: updated values in place, reasons under "Decisions after i
 - Update the mockup to the decisions in `SPEC.md`.
 - Light mode, open with the owner (audit contact sheets of every screen, mobile and desktop):
   - Thin light glass shows the map as pastel blotches behind empty parts of a sheet; kept for now, as iOS glass does the same.
-  - The disabled primary button (feedback `Odoslať`) reads as washed out mint in light.
 - Check on an iPhone as an installed PWA: home, board, swipe, sheet controls while dragging, blur performance.
-- Review the undone screens with the owner: stats, vehicle list, ride bar, feedback, MCP.
 
 Done: raw `<button>`s are `Pressable` (a tap target without a look) or `Button`, enforced by lint; headings among the direct `type-label` uses are `SectionHeading`, the rest are labels, kickers and meta. Narrow phones (320 and 360) checked: chips, pills and the hero wrap or truncate cleanly; light off switches have their own darker track.
 

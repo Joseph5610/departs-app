@@ -72,10 +72,10 @@ export const MostDelayedCard = ({ stats }: MostDelayedCardProps) => {
 
                 {filteredDelayed.length > STATS_AGGREGATION.MOST_DELAYED_PREVIEW && (
                     <Button
-                        variant="pill"
-                        size="sm"
+                        variant="link"
+                        size="inline"
                         onClick={() => setIsDelayedExpanded(!isDelayedExpanded)}
-                        className="mt-2 w-full"
+                        className="-mt-1 self-start"
                     >
                         {isDelayedExpanded
                             ? t('stats.showLess')

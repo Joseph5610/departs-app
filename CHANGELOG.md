@@ -11,6 +11,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - My trip on phones opens as tall as its content, titled My trip, with the trip under the title and one prominent action.
 - The selected option of a segmented control is mint in light mode too.
 - Switches that are off stay visible on light glass.
+- Network stats list vehicle types, busiest lines and fleet amenities as rows, with the total delay under punctuality.
+- Feedback has one send button, and a disabled primary button turns grey instead of faded mint.
 
 ### Fixed
 

@@ -236,15 +236,13 @@ export const FeedbackModal = memo(() => {
                     </form>
                 </ScrollArea>
                 
-                <div className="flex shrink-0 gap-2 px-(--panel-gutter) pt-2 pb-4">
-                    <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
-                        {t('common.cancel')}
-                    </Button>
-                    <Button 
-                        type="submit" 
-                        form="feedback-form" 
-                        disabled={!form.formState.isValid || !turnstileToken || submitMutation.isPending} 
-                        className="flex-1"
+                <div className="flex shrink-0 px-(--panel-gutter) pt-2 pb-4">
+                    <Button
+                        type="submit"
+                        form="feedback-form"
+                        size="lg"
+                        disabled={!form.formState.isValid || !turnstileToken || submitMutation.isPending}
+                        className="w-full"
                     >
                         {submitMutation.isPending ? (
                             <Loader2 className="size-4 animate-spin" />

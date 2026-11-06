@@ -17,7 +17,6 @@ import { MovementStateCard } from './cards/MovementStateCard';
 import { MostDelayedCard } from './cards/MostDelayedCard';
 import { VehicleMixCard } from './cards/VehicleMixCard';
 import { BusiestLinesCard } from './cards/BusiestLinesCard';
-import { OtherDataCard } from './cards/OtherDataCard';
 
 export const StatsPanel = memo(() => {
     const cityConfig = useCityConfig();
@@ -106,9 +105,8 @@ export const StatsPanel = memo(() => {
                     )}
 
                     <MovementStateCard stats={activeStats} />
-                    <VehicleMixCard stats={activeStats} />
+                    <VehicleMixCard stats={activeStats} networkStats={enrichedNetworkStats} />
                     <BusiestLinesCard stats={activeStats} />
-                    <OtherDataCard activeStats={activeStats} networkStats={enrichedNetworkStats} />
                 </div>
             ) : (
                 <div className="flex-1 flex items-center justify-center py-12 text-muted-foreground type-row">
