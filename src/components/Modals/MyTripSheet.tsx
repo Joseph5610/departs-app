@@ -46,7 +46,7 @@ export const MyTripCardContent = () => {
     const { closeMyTrip } = useUiStore(s => s.actions);
     if (!target) return null;
     return (
-        <div className="flex min-h-0 flex-1 flex-col gap-3 px-(--panel-gutter) pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] [--stop-list-max:24dvh]">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 px-(--panel-gutter) pt-1.5 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] [--stop-list-max:24dvh]">
             <MyTripSheetBody key={target.tripId} target={target} onClose={closeMyTrip} inCard />
         </div>
     );
