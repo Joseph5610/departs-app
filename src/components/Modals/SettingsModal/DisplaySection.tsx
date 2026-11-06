@@ -4,7 +4,7 @@ import {
     Eye,
     EyeOff,
     MapPin,
-    CircleSlash,
+    
     Type,
     Map as MapIcon,
     Palette,
@@ -109,6 +109,11 @@ export const DisplaySection = () => {
                         >
                             <RowDetails>
                                 <FilterGroup title={t('settings.sections.filters')}>
+                                    <FilterChip
+                                        label={t('common.all')}
+                                        isActive={routeTypeFilter.length === 0}
+                                        onClick={() => setRouteTypeFilter([])}
+                                    />
                                     {vehicleTypes
                                         .filter(({ id }) => allowedVehicles.includes(id))
                                         .map(({ id, icon }) => (
@@ -121,12 +126,6 @@ export const DisplaySection = () => {
                                                 testId={`vehicle-type-${id}`}
                                             />
                                         ))}
-                                    <FilterChip
-                                        icon={CircleSlash}
-                                        label={t('common.all')}
-                                        isActive={routeTypeFilter.length === 0}
-                                        onClick={() => setRouteTypeFilter([])}
-                                    />
                                 </FilterGroup>
                                 <DelayFilter />
                             </RowDetails>
@@ -158,6 +157,11 @@ export const DisplaySection = () => {
                             {isStopsFilterEnabled && (
                                 <RowDetails>
                                     <FilterGroup title={t('settings.sections.filters')}>
+                                        <FilterChip
+                                            label={t('common.all')}
+                                            isActive={stopTypeFilter.length === 0}
+                                            onClick={() => setStopTypeFilter([])}
+                                        />
                                         {STOP_FILTER_TYPES.filter(type => allowedStops.includes(type)).map(type => (
                                             <FilterChip
                                                 key={type}
@@ -167,12 +171,6 @@ export const DisplaySection = () => {
                                                 onClick={() => setStopTypeFilter(toggled(stopTypeFilter, type))}
                                             />
                                         ))}
-                                        <FilterChip
-                                            icon={CircleSlash}
-                                            label={t('common.all')}
-                                            isActive={stopTypeFilter.length === 0}
-                                            onClick={() => setStopTypeFilter([])}
-                                        />
                                     </FilterGroup>
                                 </RowDetails>
                             )}

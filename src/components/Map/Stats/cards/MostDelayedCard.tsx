@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FilterChip } from '@/components/FilterChip';
+import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
 import { StatsCard } from './StatsCard';
 import { AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -61,7 +62,7 @@ export const MostDelayedCard = ({ stats }: MostDelayedCardProps) => {
                     <div className="-my-2 flex gap-1.5 overflow-x-auto py-2 no-scrollbar">
                         <FilterChip label={t('common.all')} isActive={delayFilterType === 'all'} onClick={() => setDelayFilterType('all')} />
                         {delayTypes.map(tType => (
-                            <FilterChip key={tType} label={t(getRouteTypeI18nKey(tType))} isActive={delayFilterType === tType} onClick={() => setDelayFilterType(tType)} />
+                            <FilterChip key={tType} icon={ROUTE_TYPE_ICONS[tType as keyof typeof ROUTE_TYPE_ICONS]} label={t(getRouteTypeI18nKey(tType))} isActive={delayFilterType === tType} onClick={() => setDelayFilterType(tType)} />
                         ))}
                     </div>
                 )}
