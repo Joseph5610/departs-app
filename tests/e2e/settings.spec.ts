@@ -23,6 +23,23 @@ test.describe('Settings tests', () => {
         await expect(system).toHaveAttribute('aria-pressed', 'true');
     });
 
+    // A window narrowed to a phone's width shows settings once, as the sheet's card, even after the desktop dialog was open.
+    test('shows settings only as the sheet card after the window narrows', async ({ page }) => {
+        const mapPage = new MapPage(page);
+        const settingsPage = new SettingsPage(page);
+        await mapPage.goto();
+        await expect(mapPage.mapControls).toBeVisible({ timeout: 15000 });
+        await mapPage.openSettings();
+        await expect(settingsPage.container).toBeVisible();
+        await settingsPage.closeButton.click();
+        await expect(settingsPage.container).toHaveCount(0);
+
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.getByTestId('map-settings-btn').first().click();
+        await expect(page.getByTestId('detail-panel').getByText(/^Settings$|^Nastavení$/)).toBeVisible();
+        await expect(settingsPage.container).toHaveCount(0);
+    });
+
     test('uses the redesign tokens for cards and switches', async ({ page }) => {
         const mapPage = new MapPage(page);
         const settingsPage = new SettingsPage(page);

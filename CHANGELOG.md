@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - My trip on phones no longer opens as an empty sheet while it loads.
 - A disruption push opens the alerts scrolled to its alert, even before the alerts have loaded.
+- A window narrowed to a phone's width (iPad Split View) opens settings and alerts once, as the sheet's card, not also as a dialog.
 - Switching disruption push off while it is still turning on keeps it off.
 - The daily sweep of disruption subscriptions reads them page by page, so a full city no longer runs out of memory.
 

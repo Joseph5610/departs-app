@@ -19,6 +19,7 @@ import { RowText } from './SettingsControls';
 import { SettingsFooter } from './SettingsFooter';
 import { SUPPORTED_LANGUAGES } from '@/i18n/config';
 import { UI_TIMING_MS } from '@/config/constants';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 /** The settings themselves: the body of the settings dialog and of the mobile settings card. */
 export const SettingsContent = () => {
@@ -65,7 +66,9 @@ export const SettingsContent = () => {
 export const SettingsModal = memo(() => {
     const { t } = useTranslation();
 
-    const isOpen = useUiStore(s => s.isSettingsOpen);
+    // Stays mounted once opened, so a window narrowed to a phone's width must not reopen it beside the sheet's card.
+    const isMobile = useIsMobile();
+    const isOpen = useUiStore(s => s.isSettingsOpen) && !isMobile;
     const { setIsSettingsOpen } = useUiStore(s => s.actions);
 
     const onClose = useCallback(() => {

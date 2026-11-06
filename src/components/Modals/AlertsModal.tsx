@@ -22,6 +22,7 @@ import { alertSections, type AlertFilterMode } from '@/domain/alerts';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import {
     Empty,
     EmptyHeader,
@@ -230,9 +231,11 @@ export const AlertsModal = memo(() => {
     const isAlertsOpen = useUiStore(s => s.isAlertsOpen);
     const { setIsAlertsOpen } = useUiStore(s => s.actions);
     const { hasAlerts } = useAlerts();
+    // Stays mounted once opened, so a window narrowed to a phone's width must not reopen it beside the sheet's card.
+    const isMobile = useIsMobile();
 
     return (
-        <Dialog open={isAlertsOpen && hasAlerts} onOpenChange={setIsAlertsOpen}>
+        <Dialog open={isAlertsOpen && hasAlerts && !isMobile} onOpenChange={setIsAlertsOpen}>
             <DialogContent aria-describedby={undefined} className="max-w-xl flex flex-col h-[calc(85dvh)] p-0 overflow-hidden gap-0" data-testid="alerts-modal-content">
                 <DialogHeader className="px-(--panel-gutter) pt-6 pb-2 shrink-0">
                     <DialogTitle>
