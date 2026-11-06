@@ -111,9 +111,9 @@
   --sep: rgb(255 255 255 / 0.13);
   --selected: oklch(0.42 0.105 162);
   --glass-backdrop: blur(22px) saturate(140%);
-  --mat: oklch(0.27 0.014 255 / 0.62);
-  --mat-thick: oklch(0.2 0.014 255 / 0.88);
-  --mat-solid: oklch(0.18 0.014 255 / 0.94);
+  --mat: oklch(0.23 0.014 255 / 0.74);
+  --mat-thick: oklch(0.23 0.014 255 / 0.88);
+  --mat-solid: oklch(0.23 0.014 255 / 0.94);
   --edge-top: rgb(255 255 255 / 0.22);
   --edge-bottom: rgb(255 255 255 / 0.05);
   --shadow-float: 0 8px 28px rgb(0 0 0 / 0.38);
@@ -182,9 +182,9 @@
   }
 
   .dark {
-    --mat: oklch(0.2 0 0);
-    --mat-thick: oklch(0.17 0 0);
-    --mat-solid: oklch(0.17 0 0);
+    --mat: oklch(0.18 0 0);
+    --mat-thick: oklch(0.18 0 0);
+    --mat-solid: oklch(0.18 0 0);
   }
 }
 
