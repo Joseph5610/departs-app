@@ -35,8 +35,8 @@
   --fill-2: rgb(0 0 0 / 0.09);
   --field: rgb(0 0 0 / 0.06);
   --sep: rgb(0 0 0 / 0.09);
-  --segment-selected: rgb(255 255 255 / 0.9);
-  --on-segment-selected: var(--foreground);
+  --segment-selected: var(--primary);
+  --on-segment-selected: var(--primary-foreground);
   --selected: color-mix(in oklch, var(--primary) 22%, transparent);
   --glass-backdrop: blur(22px) saturate(190%);
   --mat: oklch(0.97 0.006 250 / 0.42);
@@ -106,8 +106,6 @@
   --fill-2: rgb(255 255 255 / 0.17);
   --field: rgb(255 255 255 / 0.15);
   --sep: rgb(255 255 255 / 0.13);
-  --segment-selected: var(--primary);
-  --on-segment-selected: var(--primary-foreground);
   --selected: oklch(0.42 0.105 162);
   --glass-backdrop: blur(22px) saturate(140%);
   --mat: oklch(0.27 0.014 255 / 0.62);
