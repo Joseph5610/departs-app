@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The selected option of a segmented control is mint in light mode too.
 - Switches that are off stay visible on light glass.
 - In dark mode the panel, sheet, search bar and map controls share one glass tint, differing only in opacity.
+- The backdrop behind a modal only dims and lightly blurs the map, so the modal's glass shows it through.
 - Network stats list vehicle types, busiest lines and fleet amenities as rows, with the total delay under punctuality.
 - Feedback has one send button, and a disabled primary button turns grey instead of faded mint.
 
