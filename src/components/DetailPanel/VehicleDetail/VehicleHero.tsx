@@ -37,6 +37,7 @@ export const VehicleHero = ({
     const bgColor = safeHexColor(displayVehicle.route_color) ?? FALLBACK_ROUTE_COLOR;
     const notice = vehicleNotice(displayVehicle.state_position, displayVehicle.isStaticFallback, hasEnded);
     const noticeIconColor = notice === 'canceled' ? 'text-destructive' : 'text-tint-amber';
+    const noticeTextColor = notice === 'canceled' ? 'text-destructive/80' : 'text-tint-amber';
 
     return (
         <Card 
@@ -52,7 +53,7 @@ export const VehicleHero = ({
                         <span className="type-label text-muted-foreground">
                             {t('map.vehicleDetails.directionLabel')}
                         </span>
-                        <h2 data-testid="vehicle-headsign" className="type-hero text-foreground">
+                        <h2 data-testid="vehicle-headsign" className="type-title text-foreground">
                             {displayVehicle.trip_headsign ? (
                                 <span className="animate-in fade-in duration-500">
                                     {displayVehicle.trip_headsign}
@@ -108,6 +109,7 @@ export const VehicleHero = ({
                         title={t(`map.vehicleDetails.${notice}`)}
                         description={t(`map.vehicleDetails.${notice}Description`)}
                         tone={noticeIconColor}
+                        descriptionTone={noticeTextColor}
                     />
                 )}
 

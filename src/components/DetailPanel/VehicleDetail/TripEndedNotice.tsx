@@ -44,6 +44,7 @@ export const TripEndedNotice = ({ vehicle, hasEnded }: { vehicle: DisplayVehicle
                 ? t('map.vehicleDetails.ended.body', { stop: lastStop?.properties.stop_name, time: formatClock(arrival) })
                 : t('map.vehicleDetails.ended.bodyNoTime', { stop: lastStop?.properties.stop_name })}
             tone="text-foreground/90"
+            descriptionTone="text-muted-foreground"
         >
             {next && (
                 <Button

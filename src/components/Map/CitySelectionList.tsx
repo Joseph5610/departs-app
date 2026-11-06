@@ -46,16 +46,17 @@ export const CitySelectionList = ({
                 key={city.slug}
                 onClick={() => onSelect(city)}
                 aria-pressed={isSelected}
-                variant={isSelected ? 'selected' : 'pill'}
+                variant="pill"
                 className={cn(
                     "group relative h-auto w-full justify-start overflow-hidden rounded-surface whitespace-normal text-foreground focus-visible:ring-2 focus-visible:ring-primary/60",
+                    isSelected && "ring-[1.5px] ring-inset ring-primary/70",
                     compact ? "h-17 gap-3 px-4 py-3" : "h-20 gap-4 p-4",
                 )}
             >
                 <div
                     className={cn(
                         "absolute inset-y-0 right-0 w-1/2 pointer-events-none bg-linear-to-l to-transparent transition-opacity duration-500",
-                        isSelected ? "from-primary/20 opacity-100" : "from-primary/10 opacity-0 group-hover:opacity-100"
+                        isSelected ? "opacity-0" : "from-primary/10 opacity-0 group-hover:opacity-100"
                     )}
                 />
                 <div

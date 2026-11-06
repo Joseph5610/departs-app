@@ -14,7 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - In dark mode the panel, sheet, search bar and map controls share one glass tint, differing only in opacity.
 - The backdrop behind a modal only dims and lightly blurs the map, so the modal's glass shows it through.
 - Cards, fields and fills in dark mode take the glass's blue tint instead of a flat grey.
-- Search fields match the text around them, the trip's headsign leads its hero, and trip notices read as a title and a plain note.
+- Search fields match the text around them, and a trip notice's title is no longer in small caps.
+- The selected city is marked by its check, skyline and outline instead of a green fill.
 - Network stats list vehicle types, busiest lines and fleet amenities as rows, with the total delay under punctuality.
 - Feedback has one send button, and a disabled primary button turns grey instead of faded mint.
 
