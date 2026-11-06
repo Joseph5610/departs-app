@@ -5,6 +5,7 @@ import { PosRow, PosSection } from './PointOfSaleRows';
 import type { PointOfSale } from '@/types';
 import { cn } from '@/lib/cn';
 import { PointOfSaleHero } from '@/components/DetailPanel/PointOfSaleHero';
+import { FactRow } from '@/components/FactRow';
 import { usePointOfSaleStatus } from '@/hooks/derived/usePointOfSaleStatus';
 import { coversDay } from '@/domain/pointsOfSale';
 import { weekdayShortNames } from '@/domain/time';
@@ -42,10 +43,11 @@ export const PointOfSaleDetail = ({ pos }: PointOfSaleDetailProps) => {
                     {pos.openingHours.map((oh) => {
                         const isToday = coversDay(oh, today);
                         return (
-                            <div key={`${oh.from}-${oh.to}-${oh.hours}`} className="flex items-center justify-between gap-3 px-3 py-2.5 type-meta border-b border-border/40 last:border-b-0">
-                                <span className={cn("font-medium", isToday ? "text-foreground" : "text-muted-foreground")}>{formatDayRange(oh.from, oh.to, weekdayNames)}</span>
-                                <span className={cn("tabular-nums text-right", isToday ? "font-medium text-foreground" : "text-muted-foreground")}>{oh.hours.replace(/,/g, ', ')}</span>
-                            </div>
+                            <FactRow
+                                key={`${oh.from}-${oh.to}-${oh.hours}`}
+                                label={<span className={cn(isToday && "text-foreground")}>{formatDayRange(oh.from, oh.to, weekdayNames)}</span>}
+                                value={<span className={cn("text-right", !isToday && "font-normal text-muted-foreground")}>{oh.hours.replace(/,/g, ', ')}</span>}
+                            />
                         );
                     })}
                 </PosSection>

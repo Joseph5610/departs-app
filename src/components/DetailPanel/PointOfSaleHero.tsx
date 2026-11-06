@@ -4,6 +4,7 @@ import { Banknote, CreditCard, MapPin, Smartphone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
+import { HeroFooter } from '@/components/DetailPanel/HeroFooter';
 import { weekdayShortNames } from '@/domain/time';
 import type { OpeningStatus } from '@/domain/pointsOfSale';
 import type { PointOfSale } from '@/types';
@@ -17,15 +18,15 @@ const PAY_ICONS: Record<PointOfSale['payMethods'][number], React.ElementType> = 
 type Tone = 'open' | 'soon' | 'closed';
 
 const TONE_TEXT: Record<Tone, string> = {
-    open: 'text-emerald-500',
+    open: 'text-tint-mint',
     soon: 'text-tint-amber',
-    closed: 'text-destructive',
+    closed: 'text-tint-red',
 };
 
 const TONE_TINT: Record<Tone, string> = {
-    open: 'var(--color-emerald-500)',
-    soon: 'var(--color-amber-500)',
-    closed: 'var(--destructive)',
+    open: 'var(--tint-mint)',
+    soon: 'var(--tint-amber)',
+    closed: 'var(--tint-red)',
 };
 
 const toneOf = (status: OpeningStatus): Tone =>
@@ -51,7 +52,7 @@ export const PointOfSaleHero = ({ pos, status }: PointOfSaleHeroProps) => {
             } : { backgroundColor: 'var(--hero-base)' }}
         >
             {hasBody && (
-                <div className="flex flex-col gap-3 p-4">
+                <div className="flex flex-col gap-3 p-3.5">
                     {status && tone && <OpeningState status={status} tone={tone} />}
                     {pos.payMethods.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
@@ -70,10 +71,10 @@ export const PointOfSaleHero = ({ pos, status }: PointOfSaleHeroProps) => {
             )}
 
             {pos.address && (
-                <div className={cn("flex items-start gap-2 px-4 py-3 bg-foreground/3 type-meta text-foreground/80", hasBody && "border-t border-border/50")}>
+                <HeroFooter className={cn("flex items-start gap-2 type-meta text-foreground/80", !hasBody && "border-t-0")}>
                     <MapPin size={14} strokeWidth={1.5} className="mt-0.5 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 wrap-break-word">{pos.address}</span>
-                </div>
+                </HeroFooter>
             )}
         </Card>
     );

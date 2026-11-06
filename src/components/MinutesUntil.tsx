@@ -22,13 +22,13 @@ export const MinutesUntil = ({ timestamp }: MinutesUntilProps) => {
     const countdown = minutesCountdown(timestamp, now, DEPARTURES_CONFIG.COUNTDOWN_MINUTES_LIMIT);
 
     if (countdown.kind === 'now') {
-        return <span className="text-emerald-400">{t('map.departures.now')}</span>;
+        return <span className="text-tint-mint">{t('map.departures.now')}</span>;
     }
     if (countdown.kind === 'clock') {
         return <span className="text-foreground">{formatTimetableClock(timestamp, timezone)}</span>;
     }
     return (
-        <span className={cn(countdown.minutes * 60 < WALKING.CATCH_BUFFER_S ? 'text-emerald-400' : 'text-foreground')}>
+        <span className={cn(countdown.minutes * 60 < WALKING.CATCH_BUFFER_S ? 'text-tint-mint' : 'text-foreground')}>
             {t('map.departures.minutes', { count: countdown.minutes })}
         </span>
     );

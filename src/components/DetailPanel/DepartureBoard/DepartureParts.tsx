@@ -61,7 +61,7 @@ export const LiveCountdown = ({ departure: dep, size }: { departure: Departure; 
             <span className={cn(
                 "grid overflow-hidden text-right font-bold tracking-tight tabular-nums transition-colors duration-700",
                 size === 'lg' ? "h-6 type-section tabular-nums" : "h-5 type-headsign font-bold",
-                trend === 'up' ? "text-destructive" : trend === 'down' ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
+                trend === 'up' ? "text-destructive" : trend === 'down' ? "text-tint-mint" : "text-foreground"
             )}>
                 <AnimatePresence initial={false}>
                     <motion.span

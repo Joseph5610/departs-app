@@ -61,7 +61,7 @@ export const VehicleMonitorRow = memo(({ item }: VehicleMonitorRowProps) => {
                 ) : (
                     <Badge
                         variant="muted"
-                        className={cn("type-badge tabular-nums", isLate ? "bg-destructive/10 text-destructive" : isEarly ? "bg-sky-500/10 text-sky-400" : "bg-emerald-500/10 text-emerald-400")}
+                        className={cn("type-badge tabular-nums", isLate ? "bg-destructive/10 text-destructive" : isEarly ? "bg-tint-sky/10 text-tint-sky" : "bg-tint-mint/10 text-tint-mint")}
                     >
                         {isLate
                             ? `+${t('map.departures.minutes', { count: delayMinutes || 1 })}`

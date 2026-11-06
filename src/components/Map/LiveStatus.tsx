@@ -31,9 +31,9 @@ export const LiveStatus = () => {
     if (!bounds || yieldsToRides) return null;
 
     const getConfig = () => {
-        if (status.type === 'offline') return { text: t('liveStatus.offline'), color: 'text-neutral-500', icon: <WifiOff className="size-3 shrink-0" /> };
+        if (status.type === 'offline') return { text: t('liveStatus.offline'), color: 'text-muted-foreground', icon: <WifiOff className="size-3 shrink-0" /> };
         if (status.type === 'app_error') return { text: t('liveStatus.appError'), color: 'text-destructive', icon: <AlertTriangle className="size-3 shrink-0" /> };
-        if (status.type === 'upstream_offline') return { text: t('liveStatus.upstreamError'), color: 'text-orange-500', icon: <AlertTriangle className="size-3 shrink-0" /> };
+        if (status.type === 'upstream_offline') return { text: t('liveStatus.upstreamError'), color: 'text-tint-amber', icon: <AlertTriangle className="size-3 shrink-0" /> };
         if (status.type === 'stale') return { text: t('liveStatus.stale'), color: 'text-tint-amber', icon: <SignalMark /> };
         if (status.type === 'refreshing') return { text: t('liveStatus.refreshing'), color: 'text-tint-amber', icon: <SignalMark className="animate-pulse" /> };
         if (isFiltered) return {

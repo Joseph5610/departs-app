@@ -3,7 +3,7 @@ import { Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { CityStats } from '@/types';
 import { DistributionBar } from '@/components/Map/Stats/DistributionBar';
-import { StatRow } from '@/components/Map/Stats/StatRow';
+import { FactRow } from '@/components/FactRow';
 import { Separator } from '@/components/ui/separator';
 
 interface PunctualityCardProps {
@@ -24,7 +24,7 @@ export const PunctualityCard = ({ stats }: PunctualityCardProps) => {
     };
 
     return (
-        <StatsCard icon={Clock} title={t('stats.punctuality')} iconClassName="text-emerald-400" flush>
+        <StatsCard icon={Clock} title={t('stats.punctuality')} iconClassName="text-tint-mint" flush>
             <div className="px-3.5 pb-3.5">
                 <div className="flex justify-between items-end mb-2.5">
                     <div>
@@ -46,9 +46,9 @@ export const PunctualityCard = ({ stats }: PunctualityCardProps) => {
                         <DistributionBar
                             total={withDelay}
                             segments={[
-                                { key: 'onTime', label: t('stats.onTime'), count: on_time, barClass: 'bg-emerald-500', textClass: 'text-emerald-400' },
-                                { key: 'delayed1to5', label: t('stats.delayed1to5'), count: delayed_1_to_5, barClass: 'bg-amber-400', textClass: 'text-amber-400' },
-                                { key: 'delayed5plus', label: t('stats.delayedOver5Plus'), count: delayed_5_plus, barClass: 'bg-rose-400', textClass: 'text-rose-400' },
+                                { key: 'onTime', label: t('stats.onTime'), count: on_time, barClass: 'bg-tint-mint', textClass: 'text-tint-mint' },
+                                { key: 'delayed1to5', label: t('stats.delayed1to5'), count: delayed_1_to_5, barClass: 'bg-tint-amber', textClass: 'text-tint-amber' },
+                                { key: 'delayed5plus', label: t('stats.delayedOver5Plus'), count: delayed_5_plus, barClass: 'bg-tint-red', textClass: 'text-tint-red' },
                             ]}
                         />
                     </div>
@@ -57,7 +57,7 @@ export const PunctualityCard = ({ stats }: PunctualityCardProps) => {
             {stats.total_delay_seconds > 0 && (
                 <>
                     <Separator className="bg-sep data-horizontal:h-[0.5px]" />
-                    <StatRow
+                    <FactRow
                         label={t('stats.totalDelay')}
                         value={<span className="text-destructive">{t('stats.hoursValue', { value: Math.round(stats.total_delay_seconds / 3600) })}</span>}
                     />

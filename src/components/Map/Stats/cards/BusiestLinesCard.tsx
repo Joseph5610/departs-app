@@ -4,7 +4,7 @@ import { LineBadge } from '@/components/LineBadge';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import type { CityStats } from '@/types';
 import { StatsCard } from './StatsCard';
-import { StatRow } from '@/components/Map/Stats/StatRow';
+import { FactRow } from '@/components/FactRow';
 
 interface BusiestLinesCardProps {
     stats: CityStats;
@@ -18,7 +18,7 @@ export const BusiestLinesCard = ({ stats }: BusiestLinesCardProps) => {
         <StatsCard icon={Hash} title={t('stats.busiestLines')} iconClassName="text-fuchsia-400" flush>
             <div className="flex flex-col">
                 {stats.busiest_lines.map(item => (
-                    <StatRow
+                    <FactRow
                         key={item.line}
                         label={<LineBadge name={item.line} routeColor={item.route_color || FALLBACK_ROUTE_COLOR} size="row" />}
                         value={`${item.count} ${t('stats.cars')}`}

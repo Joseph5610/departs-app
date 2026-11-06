@@ -19,6 +19,7 @@ import { getRouteTypeI18nKey } from '@/domain/routes';
 import { delaySourceOf, fleetRegisterUrl, vehicleNotice, type DelaySource } from '@/domain/vehicles';
 import { useNow } from '@/hooks/useNow';
 import { usePreferencesStore } from '@/state/preferencesStore';
+import { HeroFooter } from '@/components/DetailPanel/HeroFooter';
 
 export const VehicleHero = ({
     displayVehicle,
@@ -117,7 +118,7 @@ export const VehicleHero = ({
             </div>
 
             {displayVehicle.vehicle_descriptor && (
-                <div className="relative z-10 mt-auto flex items-center justify-between gap-3 bg-foreground/3 px-3.5 py-3 border-t border-foreground/6">
+                <HeroFooter className="mt-auto flex items-center justify-between gap-3">
                     <div className="flex flex-col gap-1 min-w-0 flex-1">
                         {displayVehicle.vehicle_descriptor?.operator && (
                             <span className="type-label text-muted-foreground line-clamp-1">
@@ -175,7 +176,7 @@ export const VehicleHero = ({
                             )}
                         </div>
                     )}
-                </div>
+                </HeroFooter>
             )}
         </Card>
     );
@@ -222,7 +223,7 @@ const DelayBadge = ({ delay, delaySource }: { delay: number | null; delaySource:
             variant="hero"
             className={cn(
                 "gap-1.5",
-                isLate ? "text-destructive" : isEarly ? "text-sky-500" : "text-emerald-500"
+                isLate ? "text-destructive" : isEarly ? "text-tint-sky" : "text-tint-mint"
             )}
         >
             <SignalMark />

@@ -51,7 +51,7 @@ const RideBarItem = ({ ride, kind, status }: { ride: Ride; kind: RideKind; statu
         : isArrived ? t(isFollowed ? 'share.kickerArrived' : 'ride.kickerArrived')
         : t(isFollowed ? 'share.kickerRiding' : 'ride.kickerRiding');
     const arrivalClass = delayTone === 'late' ? (isAccent ? "" : "text-destructive")
-        : delayTone === 'early' ? (isAccent ? "rounded-badge px-1 bg-background/90 text-sky-500" : "text-sky-500")
+        : delayTone === 'early' ? (isAccent ? "rounded-badge px-1 bg-background/90 text-tint-sky" : "text-tint-sky")
         : "";
     const tripPath = paths.trip(ride.city, ride.tripId, ride.vehicleId) + (isFollowed ? `?exit=${ride.exitSequence}` : '');
     const subtle = isAccent ? "text-primary-foreground/75" : "text-muted-foreground";

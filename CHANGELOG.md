@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Search fields match the text around them, and a trip notice's title is no longer in small caps.
 - The selected city is marked by its check, skyline and outline instead of a green fill.
 - My trip offers Show trip only from a board, not on the trip already open, where it would only close the sheet.
+- Points of sale use the app's shared rows and hero, and status colours (on time, early, late) come from one set of tokens across the app.
 - Network stats list vehicle types, busiest lines and fleet amenities as rows, with the total delay under punctuality.
 - Feedback has one send button, and a disabled primary button turns grey instead of faded mint.
 

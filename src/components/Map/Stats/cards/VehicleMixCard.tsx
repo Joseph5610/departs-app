@@ -4,7 +4,7 @@ import { getRouteTypeI18nKey } from '@/domain/routes';
 import { fleetAmenityRows, vehicleTypesByCount } from '@/domain/vehicles';
 import type { CityStats } from '@/types';
 import { StatsCard } from './StatsCard';
-import { StatRow } from '@/components/Map/Stats/StatRow';
+import { FactRow } from '@/components/FactRow';
 
 interface VehicleMixCardProps {
     stats: CityStats;
@@ -27,9 +27,9 @@ export const VehicleMixCard = ({ stats, networkStats }: VehicleMixCardProps) => 
     return (
         <StatsCard icon={Activity} title={t('stats.vehicleMix')} iconClassName="text-tint-mint" flush>
             <div className="flex flex-col">
-                {types.map(([type, count]) => <StatRow key={type} label={t(getRouteTypeI18nKey(type))} value={count} />)}
-                {amenities.lowFloor && <StatRow label={t('stats.lowFloor')} value={share(stats.low_floor_count)} />}
-                {amenities.airConditioned && <StatRow label={t('stats.airConditioned')} value={share(stats.air_conditioned_count)} />}
+                {types.map(([type, count]) => <FactRow key={type} label={t(getRouteTypeI18nKey(type))} value={count} />)}
+                {amenities.lowFloor && <FactRow label={t('stats.lowFloor')} value={share(stats.low_floor_count)} />}
+                {amenities.airConditioned && <FactRow label={t('stats.airConditioned')} value={share(stats.air_conditioned_count)} />}
             </div>
         </StatsCard>
     );

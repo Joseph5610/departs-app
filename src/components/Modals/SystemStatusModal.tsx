@@ -62,35 +62,35 @@ const SystemStatusDetails = () => {
                 return {
                     label: t('liveStatus.offline'),
                     description: t('liveStatus.offlineDesc'),
-                    color: 'text-neutral-500 bg-neutral-500/10 border-neutral-500/20',
-                    icon: <WifiOff className="w-5 h-5 text-neutral-500" strokeWidth={1.5} />
+                    color: 'text-muted-foreground bg-fill',
+                    icon: <WifiOff className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
                 };
             case 'app_error':
                 return {
                     label: t('liveStatus.appError'),
                     description: t('liveStatus.statusErrorDesc'),
-                    color: 'text-destructive bg-destructive/10 border-destructive/20',
+                    color: 'text-destructive bg-destructive/10',
                     icon: <XCircle className="w-5 h-5 text-destructive" strokeWidth={1.5} />
                 };
             case 'upstream_offline':
                 return {
                     label: t('liveStatus.upstreamError'),
                     description: t('liveStatus.upstreamErrorDesc'),
-                    color: 'text-orange-500 bg-orange-500/10 border-orange-500/20',
-                    icon: <AlertTriangle className="w-5 h-5 text-orange-500" strokeWidth={1.5} />
+                    color: 'text-tint-amber bg-tint-amber/10',
+                    icon: <AlertTriangle className="w-5 h-5 text-tint-amber" strokeWidth={1.5} />
                 };
             case 'stale':
                 return {
                     label: t('liveStatus.stale'),
                     description: t('liveStatus.statusStaleDesc'),
-                    color: 'text-tint-amber bg-amber-500/10 border-amber-500/20',
+                    color: 'text-tint-amber bg-tint-amber/10',
                     icon: <AlertTriangle className="w-5 h-5 text-tint-amber" strokeWidth={1.5} />
                 };
             case 'refreshing':
                 return {
                     label: t('liveStatus.refreshing'),
                     description: t('liveStatus.refreshingDesc'),
-                    color: 'text-tint-amber bg-amber-500/10 border-amber-500/20',
+                    color: 'text-tint-amber bg-tint-amber/10',
                     icon: <RefreshCw className="w-5 h-5 text-tint-amber animate-spin" strokeWidth={1.5} />
                 };
             case 'healthy':
@@ -98,7 +98,7 @@ const SystemStatusDetails = () => {
                 return {
                     label: t('liveStatus.statusOk'),
                     description: t('liveStatus.statusOkDesc'),
-                    color: 'text-tint-mint bg-primary/10 border-primary/20',
+                    color: 'text-tint-mint bg-tint-mint/10',
                     icon: <CheckCircle2 className="w-5 h-5 text-tint-mint" strokeWidth={1.5} />
                 };
         }

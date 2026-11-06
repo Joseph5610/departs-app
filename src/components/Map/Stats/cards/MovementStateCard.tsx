@@ -19,14 +19,14 @@ export const MovementStateCard = ({ stats }: MovementStateCardProps) => {
     const { in_transit, at_stop, off_track, other } = stats.state_distribution;
 
     return (
-        <StatsCard icon={Navigation2} title={t('stats.movementState')} iconClassName="text-sky-400">
+        <StatsCard icon={Navigation2} title={t('stats.movementState')} iconClassName="text-tint-sky">
                 <div className="mt-1">
                     <DistributionBar
                         total={total}
                         segments={[
-                            { key: 'inTransit', label: t('stats.inTransit'), count: in_transit, barClass: 'bg-sky-400', textClass: 'text-sky-400' },
+                            { key: 'inTransit', label: t('stats.inTransit'), count: in_transit, barClass: 'bg-tint-sky', textClass: 'text-tint-sky' },
                             { key: 'atStop', label: t('stats.atStop'), count: at_stop, barClass: 'bg-indigo-400', textClass: 'text-indigo-400' },
-                            { key: 'offTrack', label: t('stats.offTrack'), count: off_track, barClass: 'bg-amber-500', textClass: 'text-tint-amber' },
+                            { key: 'offTrack', label: t('stats.offTrack'), count: off_track, barClass: 'bg-tint-amber', textClass: 'text-tint-amber' },
                             { key: 'other', label: t('stats.unknownState'), count: other, barClass: 'bg-foreground/20', textClass: '', hideInLegend: true },
                         ]}
                     />
