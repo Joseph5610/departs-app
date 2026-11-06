@@ -369,13 +369,15 @@
 
 
 /* The app's only text styles; line badges and platform circles alone size their own codes. */
+@utility type-hero { font-size: 1.5rem; line-height: 1.875rem; font-weight: 700; letter-spacing: -0.04em; }
 @utility type-title { font-size: 1.25rem; line-height: 1.75rem; font-weight: 700; letter-spacing: -0.04em; }
 @utility type-note { font-size: 0.75rem; line-height: 1rem; font-weight: 400; }
 @utility type-control { font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
 @utility type-micro { font-size: var(--text-micro); line-height: 1rem; font-weight: 700; }
 @utility type-section { font-size: 1.0625rem; line-height: 1.5rem; font-weight: 700; letter-spacing: -0.04em; }
 @utility type-row { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
-@utility type-field { font-size: 1rem; line-height: 1.5rem; font-weight: 400;
+/* Below 16px is safe only because the viewport sets maximum-scale=1, which stops iOS zooming into a focused field. */
+@utility type-field { font-size: 0.9375rem; line-height: 1.25rem; font-weight: 400;
 
   @media (width >= 48rem) { font-size: 0.875rem; line-height: 1.25rem; }
 }

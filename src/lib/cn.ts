@@ -11,7 +11,7 @@ export const cn = createCn({
             spacing: ['control-sm', 'control-md', 'control-lg'],
         },
         classGroups: {
-            'type-style': [{ type: ['title', 'section', 'headsign', 'row', 'field', 'group', 'meta', 'note', 'control', 'label', 'badge', 'micro', 'pill'] }],
+            'type-style': [{ type: ['hero', 'title', 'section', 'headsign', 'row', 'field', 'group', 'meta', 'note', 'control', 'label', 'badge', 'micro', 'pill'] }],
             'font-size': [{ text: ['nano', 'micro', 'label', 'badge', 'caption', 'body-sm', 'title', 'heading'] }],
         },
     },
