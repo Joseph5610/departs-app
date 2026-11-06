@@ -180,7 +180,8 @@ export const AlertsContent = () => {
                             </EmptyHeader>
                         </Empty>
                     </div>
-                ) : (
+                ) : sections.length === 0 ? null : (
+                    // Mounted once alerts are in: Virtuoso reads the focused alert's index only when it mounts.
                     <div className="relative h-full">
                         {shownSection && (
                             <div className="pointer-events-none absolute inset-x-0 top-0 z-10" style={{ transform: `translateY(${top.offset}px)` }}>

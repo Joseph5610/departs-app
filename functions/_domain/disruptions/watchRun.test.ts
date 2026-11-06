@@ -21,9 +21,11 @@ class MemoryStorage implements DisruptionStorage {
         return keys.filter(key => this.data.delete(key)).length;
     }
     lists = 0;
+    largestList = 0;
     async list<T>({ prefix, startAfter, limit = Infinity }: { prefix: string; startAfter?: string; limit?: number }) {
         this.lists++;
         const entries = [...this.data].filter(([key]) => key.startsWith(prefix) && (startAfter === undefined || key > startAfter)).sort(([a], [b]) => (a < b ? -1 : 1)).slice(0, limit);
+        this.largestList = Math.max(this.largestList, entries.length);
         return new Map(entries.map(([key, value]) => [key, structuredClone(value) as T]));
     }
     async deleteAll() { this.data.clear(); this.alarm = null; }
@@ -206,6 +208,19 @@ describe('disruption watch', () => {
         await subscribe(storage, 'd1', [LINE_9]);
         await runAlarm(storage, ports, NOW + DISRUPTION_PUSH.SUBSCRIBER_MAX_AGE_MS + 1);
         expect(storage.data.size).toBe(0);
+    });
+
+    // A full city's subscriptions together outgrow the object's memory, so the sweep reads them a page at a time.
+    it('sweeps lapsed subscriptions page by page', async () => {
+        const storage = new MemoryStorage();
+        const { ports } = world({ current: [] });
+        const devices = DISRUPTION_PUSH.FANOUT_PAGE + 3;
+        for (let i = 0; i < devices; i++) await subscribe(storage, `d${i}`, [LINE_9]);
+        await subscribe(storage, 'fresh', [LINE_9], NOW + DISRUPTION_PUSH.SUBSCRIBER_MAX_AGE_MS);
+        storage.largestList = 0;
+        await runAlarm(storage, ports, NOW + DISRUPTION_PUSH.SUBSCRIBER_MAX_AGE_MS + 1);
+        expect([...(await storage.list({ prefix: 'sub:' })).keys()]).toHaveLength(1);
+        expect(storage.largestList).toBeLessThanOrEqual(DISRUPTION_PUSH.FANOUT_PAGE + 1);
     });
 
     // Anyone may subscribe: a flood filling the city must churn itself, not lock out or push out established devices.

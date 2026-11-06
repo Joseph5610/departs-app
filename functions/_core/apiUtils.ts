@@ -48,20 +48,13 @@ export function handleError(error: unknown): Response {
     return createErrorResponse(ERROR_MESSAGES.GENERIC_INTERNAL, 500);
 }
 
-/**
- * Creates a standardized JSON success response with appropriate Cache-Control headers.
- *
- * @param data Data to return in the response body
- * @param maxAge Cache max-age in seconds (default: 10)
- * @returns Response object
- */
 /** A request's JSON body (null when it isn't JSON), or a 413 response when it is larger than `maxBytes`. */
 export async function readJsonBody(request: Request, maxBytes: number): Promise<unknown> {
     if (Number(request.headers.get('Content-Length') ?? 0) > maxBytes) return createErrorResponse('Payload too large.', 413);
-    const raw = await request.text();
-    if (raw.length > maxBytes) return createErrorResponse('Payload too large.', 413);
+    const bytes = await request.arrayBuffer();
+    if (bytes.byteLength > maxBytes) return createErrorResponse('Payload too large.', 413);
     try {
-        return JSON.parse(raw);
+        return JSON.parse(new TextDecoder().decode(bytes));
     } catch {
         return null;
     }
@@ -74,6 +67,13 @@ export async function forwardToWatch(namespace: DurableObjectNamespace, name: st
     return response.ok ? createSuccessResponse({ ok: true }, 0) : createErrorResponse(failed, 502);
 }
 
+/**
+ * Creates a standardized JSON success response with appropriate Cache-Control headers.
+ *
+ * @param data Data to return in the response body
+ * @param maxAge Cache max-age in seconds (default: 10)
+ * @returns Response object
+ */
 export function createSuccessResponse(data: unknown, maxAge: number = 10): Response {
     return createJsonBodyResponse(JSON.stringify(data), maxAge);
 }

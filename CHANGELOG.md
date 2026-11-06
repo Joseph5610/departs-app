@@ -17,6 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - My trip on phones no longer opens as an empty sheet while it loads.
+- A disruption push opens the alerts scrolled to its alert, even before the alerts have loaded.
+- Switching disruption push off while it is still turning on keeps it off.
+- The daily sweep of disruption subscriptions reads them page by page, so a full city no longer runs out of memory.
 
 - Keyboard focus shows the same ring on every tappable badge, row and card.
 

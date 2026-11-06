@@ -161,7 +161,8 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, fitsContent = false, col
     const fitHeight = useFitHeight(fitsContent && isOpen, headerRef, fitRef, cardKey);
     const points = useMemo<Record<Detent, SnapPoint>>(() => ({
         peek: heights.peek,
-        half: fitHeight === null ? SHEET.HALF : `${Math.min(fitHeight, heightOf(heights.full))}px`,
+        // A card as tall as the full height keeps the usual half, as two equal detents would make full unreachable.
+        half: fitHeight === null || fitHeight >= heightOf(heights.full) ? SHEET.HALF : `${fitHeight}px`,
         full: heights.full,
     }), [heights, fitHeight]);
     const snapPoints = useMemo(() => DETENTS.map(d => points[d]), [points]);

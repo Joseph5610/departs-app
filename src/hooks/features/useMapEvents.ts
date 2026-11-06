@@ -82,6 +82,7 @@ export const useMapEvents = () => {
         const foldAttribution = () => map.getContainer().querySelector('.maplibregl-compact-show')?.classList.remove('maplibregl-compact-show');
         foldAttribution();
         map.on('resize', foldAttribution);
+        map.once('remove', () => map.off('resize', foldAttribution));
         const style = map.getStyle();
         const layers = style?.layers;
         if (layers) {

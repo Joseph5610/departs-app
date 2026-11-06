@@ -8,6 +8,7 @@ import { DISRUPTION_PROTOCOL, type WatchedLine } from '@shared/alerts';
 import { alertKeysOfLines, disruptionSyncKey, disruptionSyncSteps, incidentsOnLines, type CityWatch } from '@/domain/alerts';
 import { pinnedLineNames } from '@/domain/departures';
 import { useAlerts } from '@/hooks/data/useAlerts';
+import { useCityConfig } from '@/hooks/data/useCities';
 import { useRouteMetadata, useRouteMetadataOf } from '@/hooks/data/useRouteMetadata';
 import { backgroundEndpoint, pushEndpoint, setAppBadge, startDisruptionPush, stopDisruptionPush, subscribePush } from '@/lib/push';
 import { paths } from '@/lib/routes';
@@ -98,7 +99,9 @@ export const useDisruptionPush = () => {
         };
     }, [watches, syncedCities, t]);
 
-    const badge = useMemo(() => (alerts ? incidentsOnLines(alerts, new Set(pinnedLineNames(favoriteLines, city))).length : null), [alerts, favoriteLines, city]);
+    const hasAlerts = Boolean(useCityConfig().hasAlerts);
+    // A city without an alerts feed clears the icon rather than keep another city's count.
+    const badge = useMemo(() => (alerts ? incidentsOnLines(alerts, new Set(pinnedLineNames(favoriteLines, city))).length : hasAlerts ? null : 0), [alerts, hasAlerts, favoriteLines, city]);
     useEffect(() => {
         if (badge === null) return;
         const apply = () => {
@@ -137,17 +140,20 @@ export const useDisruptionPushToggle = () => {
     const { byId, byName } = useRouteMetadata();
     const lines = useMemo<WatchedLine[] | null>(() => (byId.size > 0 ? alertKeysOfLines(pinnedLineNames(favoriteLines, city), byId, byName) : null), [favoriteLines, city, byId, byName]);
     const isBusy = useRef(false);
+    const isCancelled = useRef(false);
 
     return useCallback(async (on: boolean) => {
+        if (!on) {
+            // Also cancels a switch-on still waiting; `useDisruptionPushOff` withdraws the server's copies, and retries those that fail.
+            isCancelled.current = true;
+            setDisruptionPush(false);
+            return;
+        }
         // The switch sits inside its row's button, so one tap can arrive twice.
         if (isBusy.current) return;
         isBusy.current = true;
+        isCancelled.current = false;
         try {
-            if (!on) {
-                // `useDisruptionPushOff` withdraws the server's copies, and retries those that fail.
-                setDisruptionPush(false);
-                return;
-            }
             const title = pushTitle(t);
             const path = paths.city(city);
             const result = lines?.length
@@ -157,9 +163,10 @@ export const useDisruptionPushToggle = () => {
                 toast(t('disruptionPush.failed'), { description: failureText(result.reason, t) });
                 return;
             }
-            setDisruptionPush(true);
+            // Marked synced even when cancelled meanwhile, so the switch-off withdraws what this just registered.
             const endpoint = await pushEndpoint();
             if (endpoint && lines?.length) markDisruptionPushSynced(city, { key: disruptionSyncKey(endpoint, lines, title, path), at: Date.now() });
+            if (!isCancelled.current) setDisruptionPush(true);
         } finally {
             isBusy.current = false;
         }

@@ -83,7 +83,7 @@ const RowBody = ({ action, tripAction, below, className, children, outer, ...lea
         <div {...outer} {...handlers} className="group/row relative touch-pan-y">
             {action && (
                 <SwipeBlock label={action.swipeLabel} className="right-0 w-(--swipe-left,0px) bg-favorite/22 text-favorite group-data-armed/row:bg-favorite group-data-armed/row:text-on-favorite">
-                    <Star size={20} strokeWidth={2} fill="currentColor" className={SWIPE_ICON} />
+                    <Star size={20} strokeWidth={2} fill={action.isActive ? "currentColor" : "none"} className={SWIPE_ICON} />
                 </SwipeBlock>
             )}
             {tripAction && (

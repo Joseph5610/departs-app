@@ -160,7 +160,15 @@ export const handleRequest = async (storage: DisruptionStorage, command: Disrupt
 
 /** Once a day: drops lapsed subscriptions and the quota keys (and salts) of earlier days. */
 const sweep = async (storage: DisruptionStorage, now: number) => {
-    const lapsed = [...await storage.list<Subscriber>({ prefix: SUB_PREFIX })].filter(([, subscriber]) => subscriber.expiresAt < now).map(([key]) => key);
+    // Read a page at a time: a full city's subscriptions together outgrow the object's memory.
+    const lapsed: string[] = [];
+    let after: string | undefined;
+    for (;;) {
+        const page = await storage.list<Subscriber>({ prefix: SUB_PREFIX, startAfter: after, limit: DISRUPTION_PUSH.FANOUT_PAGE });
+        for (const [key, subscriber] of page) if (subscriber.expiresAt < now) lapsed.push(key);
+        if (page.size < DISRUPTION_PUSH.FANOUT_PAGE) break;
+        after = [...page.keys()].pop();
+    }
     for (let i = 0; i < lapsed.length; i += DISRUPTION_PUSH.DELETE_BATCH) await dropSubscribers(storage, lapsed.slice(i, i + DISRUPTION_PUSH.DELETE_BATCH));
     const today = String(dayOf(now));
     const stale = [...(await storage.list({ prefix: QUOTA_PREFIX })).keys()].filter(key => key.split(':')[1] !== today);
@@ -235,10 +243,13 @@ const nextBatch = async (storage: DisruptionStorage, fanout: Fanout, budget: num
     for (const [key, subscriber] of page) {
         const owed: Push[] = [];
         if (subscriber.expiresAt >= now) {
+            let badge: number | null = null;
             for (const { incident, named } of fresh) {
                 if (owed.length === DISRUPTION_PUSH.MAX_PUSHES_PER_SUBSCRIBER) break;
                 const lineNames = matchedLines(subscriber.lines, named);
-                if (lineNames.length > 0) owed.push({ key, subscription: subscriber.subscription, payload: disruptionPayload(subscriber, incident, lineNames, badgeCount(subscriber.lines, current)) });
+                if (lineNames.length === 0) continue;
+                badge ??= badgeCount(subscriber.lines, current);
+                owed.push({ key, subscription: subscriber.subscription, payload: disruptionPayload(subscriber, incident, lineNames, badge) });
             }
         }
         if (pushes.length + owed.length > budget) return { pushes, after: last };
