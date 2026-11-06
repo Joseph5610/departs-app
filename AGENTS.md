@@ -72,6 +72,7 @@ Map MUST run at 60fps. React renders too slow for high-frequency updates.
 - **Branding Authority**: Line colours come from each city's `routes.json` on the static data CDN, falling back to `routeTypeColors` in `src/config/cities.ts`; map icons from `src/lib/map/icons.ts`.
 - **Time Zones**: Times are shown and compared in the city's own `timezone` (`shared/cities.ts`, which both the app and `functions/` read), never the device's or a hard-coded zone: a board must agree with its trips' timetable times.
 - **Safe Areas**: Use `env(safe-area-inset-*)` for all layouts.
+- **UI Primitives**: options are a `SegmentedControl`, filters a `FilterChip`, grouped rows `Item variant="row"`, titles `SectionTitle`, small caps headings `SectionHeading`, read-only facts a row or `Badge variant="info"`, a tapped badge, row or card a `Pressable`, a styled control a `Button`. Corners are `rounded-full|surface|nested|badge|sheet` and glass comes from the `glassy*` utilities (ESLint enforces both).
 - **i18n**: Czech (`cs`), Slovak (`sk`) and English (`en`) locales via `react-i18next`; every key goes into all three. Translation files in `src/i18n/locales/`.
 - **Backend Layout**: `functions/api/` endpoints -> `_cities/<city>.ts` (city config + use-case wiring) -> `_domain/<network>/` services -> `_feeds/<network>/` upstream clients and config -> `_core/` shared infra (cache, time, decoding).
 - **Normalization**: Backend handlers in `functions/` MUST follow: Validate -> Fetch -> Normalize -> Cache.
