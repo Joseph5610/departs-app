@@ -1,6 +1,6 @@
 import { useRef, useState, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Search as SearchIcon, X, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useUiStore } from '@/state/uiStore';
 import { useAlerts } from '@/hooks/data/useAlerts';
 import {
@@ -19,17 +19,10 @@ import { ALERTS_LIST } from '@/config/constants';
 import { SectionHeading } from '@/components/SectionHeading';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { alertSections, type AlertFilterMode } from '@/domain/alerts';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import {
-    Empty,
-    EmptyHeader,
-    EmptyMedia,
-    EmptyTitle,
-    EmptyDescription,
-} from '@/components/ui/empty';
+import { SearchField } from '@/components/SearchField';
+import { EmptyState } from '@/components/EmptyState';
 
 type AlertSection = ReturnType<typeof alertSections>[number];
 type ListRow =
@@ -123,27 +116,13 @@ export const AlertsContent = () => {
     return (
         <div className="flex-1 flex flex-col min-h-0">
             <div className="flex shrink-0 flex-col gap-2.5 px-(--panel-gutter) pb-1">
-                <div className="group relative">
-                    <Input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder={t('alerts.searchPlaceholder')}
-                        className="pr-10 pl-10"
-                    />
-                    <SearchIcon className="absolute top-1/2 left-3.5 -translate-y-1/2 text-muted-foreground" size={18} strokeWidth={1.75} />
-                    {searchQuery && (
-                        <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            onClick={() => setSearchQuery('')}
-                            aria-label={t('search.clearFilter')}
-                            className="absolute top-1/2 right-1 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        >
-                            <X size={16} strokeWidth={1.75} />
-                        </Button>
-                    )}
-                </div>
+                <SearchField
+                    value={searchQuery}
+                    onValueChange={setSearchQuery}
+                    placeholder={t('alerts.searchPlaceholder')}
+                    aria-label={t('alerts.searchPlaceholder')}
+                    clearLabel={t('search.clearFilter')}
+                />
 
                 <SegmentedControl
                     fill
@@ -162,24 +141,12 @@ export const AlertsContent = () => {
             <div className="flex-1 min-h-0 px-(--panel-gutter)">
                 {sections.length === 0 && !loadingRSS ? (
                     <div className="flex flex-1 items-center justify-center py-12 h-full">
-                        <Empty className="animate-in fade-in zoom-in-95 duration-300">
-                            <EmptyHeader>
-                                <EmptyMedia
-                                    variant="tile" className="bg-selected text-tint-mint"
-                                >
-                                    <CheckCircle2 strokeWidth={1.5} />
-                                </EmptyMedia>
-                                <EmptyTitle className="type-headsign text-foreground/90">
-                                    {t('alerts.noAlerts')}
-                                </EmptyTitle>
-                                <EmptyDescription className="type-row max-w-64">
-                                    {searchQuery.trim()
-                                        ? t('alerts.noAlertsSearchDescription')
-                                        : t('alerts.noAlertsDescription')
-                                    }
-                                </EmptyDescription>
-                            </EmptyHeader>
-                        </Empty>
+                        <EmptyState
+                            icon={CheckCircle2}
+                            tone="positive"
+                            title={t('alerts.noAlerts')}
+                            description={searchQuery.trim() ? t('alerts.noAlertsSearchDescription') : t('alerts.noAlertsDescription')}
+                        />
                     </div>
                 ) : sections.length === 0 ? null : (
                     // Mounted once alerts are in: Virtuoso reads the focused alert's index only when it mounts.

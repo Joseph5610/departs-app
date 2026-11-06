@@ -1,16 +1,9 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, RefreshCw, WifiOff, CloudOff, MapPinOff } from 'lucide-react';
-import {
-    Empty,
-    EmptyHeader,
-    EmptyMedia,
-    EmptyTitle,
-    EmptyDescription,
-    EmptyContent,
-} from '@/components/ui/empty';
 import { Button } from '@/components/ui/button';
 import { AppErrorCode, type AppError } from '@/types';
+import { EmptyState } from '@/components/EmptyState';
 
 interface ErrorStateProps {
     error: AppError | null;
@@ -47,35 +40,14 @@ export const ErrorState = memo(({ error, onRetry, title }: ErrorStateProps) => {
     const displayTitle = title || (isNotFound ? defaultTitle : t('errors.generic'));
 
     return (
-        <Empty className="py-16 animate-in fade-in zoom-in-95 duration-500">
-            <EmptyHeader>
-                <EmptyMedia
-                    variant="tile" className={isNotFound ? "bg-selected text-tint-mint" : "bg-tint-red/16 text-destructive"}
-                >
-                    <Icon strokeWidth={1.5} />
-                </EmptyMedia>
-                <EmptyTitle className="type-headsign text-foreground/90">
-                    {displayTitle}
-                </EmptyTitle>
-                <EmptyDescription className="type-meta max-w-55">
-                    {message}
-                </EmptyDescription>
-            </EmptyHeader>
-
+        <EmptyState icon={Icon} tone={isNotFound ? 'positive' : 'error'} title={displayTitle} description={message} className="py-16">
             {onRetry && !isNotFound && (
-                <EmptyContent>
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={onRetry}
-                        className="gap-2 type-group rounded-full px-5 py-4"
-                    >
-                        <RefreshCw size={14} strokeWidth={1.5} />
-                        {t('common.retry')}
-                    </Button>
-                </EmptyContent>
+                <Button variant="secondary" size="sm" onClick={onRetry}>
+                    <RefreshCw size={14} strokeWidth={1.5} />
+                    {t('common.retry')}
+                </Button>
             )}
-        </Empty>
+        </EmptyState>
     );
 });
 

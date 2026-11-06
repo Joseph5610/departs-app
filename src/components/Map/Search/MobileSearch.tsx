@@ -13,6 +13,7 @@ import { MobileSearchResults } from './MobileSearchResults';
 import { SHEET } from '@/config/constants';
 import { LineFilterLabel } from './LineFilterLabel';
 import { Pressable } from '@/components/Pressable';
+import { SearchField } from '@/components/SearchField';
 
 /** Opens at the sheet's full height, just below the status bar. */
 const SEARCH_SHEET_STYLE = { top: `calc(max(env(safe-area-inset-top, 0px), ${SHEET.FULL_TOP_MIN_INSET_PX}px) + ${SHEET.FULL_TOP_GAP_PX}px)` };
@@ -111,42 +112,28 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                         style={SEARCH_SHEET_STYLE}
                     >
                     <div className="flex shrink-0 items-center gap-2 px-(--panel-gutter) pb-3">
-                        <label className="flex h-11 flex-1 min-w-0 items-center gap-2.25 rounded-full bg-field pl-3.5 pr-1">
-                            <SearchIcon size={18} strokeWidth={1.75} className="shrink-0 text-muted-foreground" />
-                            <input
-                                ref={inputRef}
-                                type="search"
-                                enterKeyHint="search"
-                                autoComplete="off"
-                                autoCorrect="off"
-                                spellCheck={false}
-                                value={s.query}
-                                onChange={(e) => s.setQuery(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        s.selectTopResult();
-                                    } else if (e.key === 'Escape') {
-                                        close();
-                                    }
-                                }}
-                                // iOS can leave the page shifted after its keyboard closes.
-                                onBlur={() => window.scrollTo(0, 0)}
-                                placeholder={t('search.placeholder')}
-                                aria-label={t('search.placeholder')}
-                                className="h-full min-w-0 flex-1 bg-transparent type-field text-foreground outline-none focus-visible:ring-0 placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden"
-                                data-testid="search-input"
-                            />
-                            {s.query && (
-                                <Button variant="ghost" size="icon-sm" className="shrink-0"
-                                    type="button"
-                                    onClick={() => { s.setQuery(''); inputRef.current?.focus(); }}
-                                    aria-label={t('search.clearFilter')}
-                                >
-                                    <X size={16} strokeWidth={2} />
-                                </Button>
-                            )}
-                        </label>
+                        <SearchField
+                            ref={inputRef}
+                            className="flex-1"
+                            value={s.query}
+                            onValueChange={s.setQuery}
+                            onClear={() => { s.setQuery(''); inputRef.current?.focus(); }}
+                            clearLabel={t('search.clearFilter')}
+                            enterKeyHint="search"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    s.selectTopResult();
+                                } else if (e.key === 'Escape') {
+                                    close();
+                                }
+                            }}
+                            // iOS can leave the page shifted after its keyboard closes.
+                            onBlur={() => window.scrollTo(0, 0)}
+                            placeholder={t('search.placeholder')}
+                            aria-label={t('search.placeholder')}
+                            data-testid="search-input"
+                        />
                         <Button variant="secondary" size="icon" onClick={close} aria-label={t('common.cancel')} className="shrink-0 text-muted-foreground" data-testid="search-cancel">
                             <X size={16} strokeWidth={2.5} />
                         </Button>

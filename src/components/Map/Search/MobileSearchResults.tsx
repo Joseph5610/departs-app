@@ -14,12 +14,12 @@ import { StopModeIcon } from '@/components/StopModeIcon';
 import type { ShownHistoryItem, Stop, VehicleFeature } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
 import { HistoryItemIcon } from './HistoryItemIcon';
 import { historyItemSubtitle, historyItemTitle, posResultSubtitle, stopResultSubtitle, vehicleResultLines } from './searchItemText';
 import { LineBadges, SearchRowBody } from './SearchItem';
 import { SheetSection as Section } from '@/components/Map/HomeSheet/SheetSection';
+import { EmptyState } from '@/components/EmptyState';
 
 interface MobileSearchResultsProps {
     query: string;
@@ -221,13 +221,7 @@ export const MobileSearchResults = ({
             )}
 
             {query.length >= STOP_SEARCH.MIN_QUERY_LENGTH && !hasResults && (
-                <Empty className="py-12">
-                    <EmptyHeader>
-                        <EmptyMedia variant="icon"><SearchIcon strokeWidth={1.5} /></EmptyMedia>
-                        <EmptyTitle>{t('search.noResults')}</EmptyTitle>
-                        <EmptyDescription>{t('search.noResultsHint')}</EmptyDescription>
-                    </EmptyHeader>
-                </Empty>
+                <EmptyState icon={SearchIcon} title={t('search.noResults')} description={t('search.noResultsHint')} />
             )}
         </div>
     );

@@ -17,6 +17,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { MAP_CAMERA } from '@/config/constants';
+import { Badge } from '@/components/ui/badge';
 
 // The fade stays on the glass itself: on a parent it would cut the glass off from the map behind it.
 const SHEET_PILL = 'glassy rounded-full overflow-hidden opacity-(--sheet-controls-opacity,1)';
@@ -144,9 +145,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
             >
                 <AlertTriangle size={20} strokeWidth={1.5} className={cn(incidentsCount > 0 ? "text-destructive" : "transition-transform hover:scale-110")} />
                 {incidentsCount > 0 && (
-                    <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground type-micro px-1 py-0 rounded-full min-w-4 text-center shadow-sm pointer-events-none">
-                        {incidentsCount}
-                    </span>
+                    <Badge variant="alert" className="pointer-events-none absolute top-1 right-1 shadow-sm">{incidentsCount}</Badge>
                 )}
             </ControlButton>
         </>

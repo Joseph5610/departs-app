@@ -1,18 +1,18 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
-import { Search, X, Activity } from 'lucide-react';
+import { Activity, Bus } from 'lucide-react';
 import { Virtuoso } from 'react-virtuoso';
 import { useVehicles } from '@/hooks/data/useVehicles';
 import { useVehicleMonitor } from '@/hooks/derived/useVehicleMonitor';
-import type { SearchField } from '@/domain/vehicles';
+import type { SearchField as VehicleSearchField } from '@/domain/vehicles';
 import { VehicleMonitorRow } from './VehicleMonitorRow';
 import { FilterChip } from '@/components/FilterChip';
 import { SegmentedControl } from '@/components/SegmentedControl';
-import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { routeTypeRank } from '@/domain/routes';
 import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
+import { SearchField } from '@/components/SearchField';
+import { EmptyState } from '@/components/EmptyState';
 
 
 export const VehicleMonitorList = () => {
@@ -29,7 +29,7 @@ export const VehicleMonitorList = () => {
     );
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchField, setSearchField] = useState<SearchField>('line');
+    const [searchField, setSearchField] = useState<VehicleSearchField>('line');
     const [modeFilter, setModeFilter] = useState<string>('all');
 
     const { networkVehicles: activeCollection, isFetching: isNetworkFetching } = useVehicles();
@@ -46,36 +46,24 @@ export const VehicleMonitorList = () => {
 
     return (
         <div className="flex flex-col gap-2.5 pt-1 pb-2">
-            <div className="flex h-control-lg items-center gap-2 rounded-full bg-field pr-1 pl-3">
-                <Search size={16} strokeWidth={1.75} className="text-muted-foreground shrink-0" />
-
-                <SegmentedControl
-                    size="sm"
-                    value={searchField}
-                    onChange={setSearchField}
-                    options={[
-                        { value: 'line', label: t('stats.monitor.fieldLine') },
-                        { value: 'vehicle', label: t('stats.monitor.fieldVehicle') },
-                    ]}
-                />
-
-                <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={
-                        searchField === 'vehicle' ? t('stats.monitor.searchByVehicle')
-                        : t('stats.monitor.searchByLine')
-                    }
-                    className="flex-1 min-w-0 bg-transparent type-row outline-none ring-0 border-0 focus:outline-none focus:ring-0 placeholder:text-muted-foreground"
-                />
-
-                {searchQuery && (
-                    <Button variant="ghost" size="icon-2xs" className="mr-1 shrink-0" onClick={() => setSearchQuery('')} aria-label={t('search.clearFilter')}>
-                        <X size={14} strokeWidth={2} />
-                    </Button>
-                )}
-            </div>
+            <SearchField
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+                placeholder={searchField === 'vehicle' ? t('stats.monitor.searchByVehicle') : t('stats.monitor.searchByLine')}
+                aria-label={searchField === 'vehicle' ? t('stats.monitor.searchByVehicle') : t('stats.monitor.searchByLine')}
+                clearLabel={t('search.clearFilter')}
+                lead={
+                    <SegmentedControl
+                        size="sm"
+                        value={searchField}
+                        onChange={setSearchField}
+                        options={[
+                            { value: 'line', label: t('stats.monitor.fieldLine') },
+                            { value: 'vehicle', label: t('stats.monitor.fieldVehicle') },
+                        ]}
+                    />
+                }
+            />
 
             <div className="-my-2 flex items-center gap-1.5 overflow-x-auto py-2.5 no-scrollbar">
                 <FilterChip label={t('common.all')} count={totalCount} isActive={modeFilter === 'all'} onClick={() => setModeFilter('all')} />
@@ -119,13 +107,7 @@ export const VehicleMonitorList = () => {
                     )}
                 </div>
             ) : (
-                <Empty className="py-10">
-                    <EmptyHeader>
-                        <EmptyTitle className="type-note text-muted-foreground">
-                            {t('stats.monitor.noVehiclesFound')}
-                        </EmptyTitle>
-                    </EmptyHeader>
-                </Empty>
+                <EmptyState icon={Bus} title={t('stats.monitor.noVehiclesFound')} />
             )}
         </div>
     );

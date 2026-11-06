@@ -1,6 +1,6 @@
 import { SectionHeading } from '@/components/SectionHeading';
 import { useMemo, memo } from 'react';
-import { Activity, AlertTriangle } from 'lucide-react';
+import { Activity, AlertTriangle, BarChart3 } from 'lucide-react';
 import { useVehicles } from '@/hooks/data/useVehicles';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import { MovementStateCard } from './cards/MovementStateCard';
 import { MostDelayedCard } from './cards/MostDelayedCard';
 import { VehicleMixCard } from './cards/VehicleMixCard';
 import { BusiestLinesCard } from './cards/BusiestLinesCard';
+import { EmptyState } from '@/components/EmptyState';
 
 export const StatsPanel = memo(() => {
     const cityConfig = useCityConfig();
@@ -67,10 +68,7 @@ export const StatsPanel = memo(() => {
             </div>
 
             {isFetching ? (
-                <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground opacity-60">
-                    <Activity className="animate-pulse" size={24} />
-                    <span className="type-row">{t('common.loading')}</span>
-                </div>
+                <EmptyState icon={Activity} title={t('common.loading')} className="[&_svg]:animate-pulse" />
             ) : activeStats && activeStats.total_vehicles > 0 ? (
                 <div className="flex flex-col gap-3 pt-2 pb-2">
                     <div className="grid grid-cols-2 gap-3">
@@ -109,9 +107,7 @@ export const StatsPanel = memo(() => {
                     <BusiestLinesCard stats={activeStats} />
                 </div>
             ) : (
-                <div className="flex-1 flex items-center justify-center py-12 text-muted-foreground type-row">
-                    {t('stats.noData')}
-                </div>
+                <EmptyState icon={BarChart3} title={t('stats.noData')} />
             )}
         </div>
     );

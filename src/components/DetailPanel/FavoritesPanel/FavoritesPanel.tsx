@@ -21,9 +21,9 @@ import { FavoritesSkeleton } from './FavoritesSkeleton';
 import { SortableFavorite } from './SortableFavorite';
 import { FavoriteReorderRow } from './FavoriteReorderRow';
 import { StopLead } from './StopLead';
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import type { TFunction } from 'i18next';
 import type { BoardStop, FavoriteLine, PinnedStop } from '@/types';
+import { EmptyState } from '@/components/EmptyState';
 
 export const FavoritesPanel = () => {
     const { t } = useTranslation();
@@ -66,21 +66,7 @@ export const FavoritesPanel = () => {
     // Pinned stops resolve with the stop list, so they count as pinned until it has loaded.
     if (favoriteLines.length === 0 && (pinnedStopCount === 0 || (!isLoading && favoriteStops.length === 0))) {
         return (
-            <Empty className="py-16 animate-in fade-in duration-500">
-                <EmptyHeader>
-                    <EmptyMedia
-                        variant="tile" className="bg-selected text-tint-mint"
-                    >
-                        <Star strokeWidth={1.5} />
-                    </EmptyMedia>
-                    <EmptyTitle className="type-headsign text-foreground/90">
-                        {t('favorites.empty')}
-                    </EmptyTitle>
-                    <EmptyDescription className="type-meta max-w-64 text-balance">
-                        {t('favorites.emptySub')}
-                    </EmptyDescription>
-                </EmptyHeader>
-            </Empty>
+            <EmptyState icon={Star} tone="positive" title={t('favorites.empty')} description={t('favorites.emptySub')} className="py-16" />
         );
     }
 

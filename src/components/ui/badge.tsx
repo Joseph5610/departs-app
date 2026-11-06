@@ -23,11 +23,13 @@ const badgeVariants = cva(
         soft: "border-transparent bg-selected text-foreground",
         /** Status chips on a detail hero card, such as the delay and live-data age. */
         hero: "h-6 px-2.5 rounded-full type-pill border-transparent bg-card",
-        /** Beta marker next to a product or city name. */
         /** A fact on a card that does nothing when tapped: a validity, a count, a payment method. */
         info: "h-7 gap-1.5 px-2.75 rounded-full border-transparent bg-fill type-note tabular-nums text-muted-foreground",
         /** How many items a heading stands for. */
         count: "h-5 px-2 rounded-full border-transparent bg-fill type-badge tabular-nums tracking-normal text-muted-foreground",
+        /** How many items need attention, such as current incidents: on a row or the corner of an icon. */
+        alert: "h-4.5 min-w-4.5 px-1 rounded-full border-transparent bg-destructive type-badge tabular-nums tracking-normal text-destructive-foreground",
+        /** Beta marker next to a product or city name. */
         beta: "h-4 px-1.5 rounded-badge border-transparent bg-amber-500/15 type-badge text-amber-600 dark:text-amber-400",
         label: "border-transparent bg-fill type-group text-muted-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
       },

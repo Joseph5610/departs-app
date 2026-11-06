@@ -20,6 +20,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle }
 import { NearbyStopRow } from './NearbyStopRow';
 import { HomeSection } from './HomeSection';
 import { CompactLineCard, CompactStopCard } from './CompactFavoriteCard';
+import { Badge } from '@/components/ui/badge';
 
 interface HomeSectionsProps {
     /** The list scrolls only at full height, so at the lower heights a drag anywhere moves the sheet. */
@@ -160,7 +161,7 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
                             <ItemContent><ItemTitle className="type-row text-foreground">{t('alerts.title')}</ItemTitle></ItemContent>
                             <ItemActions>
                                 {incidentsCount > 0 && (
-                                    <span className="min-w-5 rounded-full bg-destructive px-1.5 text-center type-control text-destructive-foreground">{incidentsCount}</span>
+                                    <Badge variant="alert">{incidentsCount}</Badge>
                                 )}
                                 <ChevronRight size={17} strokeWidth={1.75} className="text-label-3" />
                             </ItemActions>

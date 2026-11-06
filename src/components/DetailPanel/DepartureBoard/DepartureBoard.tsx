@@ -2,7 +2,6 @@ import { memo, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, ChevronDown, Train } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import type { DepartureClickHandler, Platform, SelectedStop, AppError } from '@/types';
 import { useDepartures } from '@/hooks/data/useDepartures';
 import { InfoTexts } from './InfoTexts';
@@ -26,6 +25,7 @@ import { useSelectionStore } from '@/state/selectionStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useRideStore } from '@/state/rideStore';
 import { useNowEvery } from '@/hooks/useNow';
+import { EmptyState } from '@/components/EmptyState';
 
 const NO_PLATFORMS: Platform[] = [];
 
@@ -137,23 +137,11 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
             
             {groupedDepartures.length === 0 ? (
                 <MetroClosedOr show={!isFiltered && !!board && servesMode(board, 'metro')} timeZone={timezone} closedHours={lineRules.metroClosedHours}>
-                    <Empty className="py-12">
-                        <EmptyHeader>
-                            <EmptyMedia
-                                variant="tile" className="bg-fill text-muted-foreground"
-                            >
-                                <Train strokeWidth={1.5} className="opacity-50" />
-                            </EmptyMedia>
-                            <EmptyTitle className="type-headsign text-foreground/80">
-                                {selectedLine
-                                    ? t('map.departures.noUpcomingForLine', { line: selectedLine })
-                                    : t('map.departures.noUpcoming')}
-                            </EmptyTitle>
-                            <EmptyDescription className="type-row">
-                                {t('map.departures.noUpcomingDescription')}
-                            </EmptyDescription>
-                        </EmptyHeader>
-                    </Empty>
+                    <EmptyState
+                        icon={Train}
+                        title={selectedLine ? t('map.departures.noUpcomingForLine', { line: selectedLine }) : t('map.departures.noUpcoming')}
+                        description={t('map.departures.noUpcomingDescription')}
+                    />
                 </MetroClosedOr>
             ) : (
                 sections ? (
