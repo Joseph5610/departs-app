@@ -33,6 +33,8 @@
   --handle: rgb(0 0 0 / 0.22);
   --fill: rgb(0 0 0 / 0.05);
   --fill-2: rgb(0 0 0 / 0.09);
+  /* An off switch on light glass needs a track darker than the fills around it. */
+  --switch-off: rgb(120 120 128 / 0.28);
   --field: rgb(0 0 0 / 0.06);
   --sep: rgb(0 0 0 / 0.09);
   --segment-selected: var(--primary);
@@ -104,6 +106,7 @@
   --handle: rgb(255 255 255 / 0.34);
   --fill: rgb(255 255 255 / 0.1);
   --fill-2: rgb(255 255 255 / 0.17);
+  --switch-off: var(--fill-2);
   --field: rgb(255 255 255 / 0.15);
   --sep: rgb(255 255 255 / 0.13);
   --selected: oklch(0.42 0.105 162);
@@ -262,6 +265,7 @@
   --color-thumb: var(--thumb);
   --color-fill: var(--fill);
   --color-fill-2: var(--fill-2);
+  --color-switch-off: var(--switch-off);
   --color-field: var(--field);
   --color-sep: var(--sep);
   --color-segment-selected: var(--segment-selected);

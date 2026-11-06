@@ -26,14 +26,12 @@ Recorded in `SPEC.md`: updated values in place, reasons under "Decisions after i
 
 - Update the mockup to the decisions in `SPEC.md`.
 - Light mode, open with the owner (audit contact sheets of every screen, mobile and desktop):
-  - Off switches nearly vanish on light glass (disruption push in Settings and Alerts).
   - Thin light glass shows the map as pastel blotches behind empty parts of a sheet; kept for now, as iOS glass does the same.
   - The disabled primary button (feedback `Odoslať`) reads as washed out mint in light.
 - Check on an iPhone as an installed PWA: home, board, swipe, sheet controls while dragging, blur performance.
 - Review the undone screens with the owner: stats, vehicle list, ride bar, feedback, MCP.
-- Check the delay chips and long validity pills on narrow phones.
 
-Done: raw `<button>`s are `Pressable` (a tap target without a look) or `Button`, enforced by lint; headings among the direct `type-label` uses are `SectionHeading`, the rest are labels, kickers and meta.
+Done: raw `<button>`s are `Pressable` (a tap target without a look) or `Button`, enforced by lint; headings among the direct `type-label` uses are `SectionHeading`, the rest are labels, kickers and meta. Narrow phones (320 and 360) checked: chips, pills and the hero wrap or truncate cleanly; light off switches have their own darker track.
 
 ## Files here
 
@@ -41,6 +39,7 @@ Done: raw `<button>`s are `Pressable` (a tap target without a look) or `Button`,
 - `scripts/`: Playwright helpers. Copy them to `scratch/native-redesign/` to run them, with the dev server on 8788.
   - `audit.mjs`: measures text, radii and tap heights on all screens, mobile and desktop.
   - `auditBrno.mjs`: the same on Brno, which needs no Golemio key; `SCHEME=light` or `dark`, output in `scratch/audit-<scheme>/`.
+  - `auditNarrow.mjs`: the mobile screens at `W=320` or `W=360`, output in `scratch/audit-w<width>/`.
   - `pairs.mjs <dir>`: contact sheets with dark and light side by side, per screen.
   - `canon.mjs`: lists non-canonical Tailwind classes; `fix` rewrites them.
   - `undef.mjs`: lists classes Tailwind cannot resolve.
