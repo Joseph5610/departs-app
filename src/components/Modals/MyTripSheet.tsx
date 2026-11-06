@@ -21,6 +21,7 @@ import { useSelectionStore } from '@/state/selectionStore';
 import { useUiStore } from '@/state/uiStore';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import type { MyTripTarget } from '@/types';
+import { useRouteParams } from '@/hooks/useRouteParams';
 
 /** My trip on desktop: "I'm taking this trip", from a stop (with an alert before it leaves) and/or to an exit (with an alert before it). Phones show it as a card in the sheet. */
 export const MyTripSheet = memo(() => {
@@ -62,6 +63,8 @@ const MyTripSheetBody = ({ target, onClose, inCard = false }: { target: MyTripTa
     const { detail, isLoading, boardings, openedAt, exits, isRunning, lastStop, existing } = useMyTripSheet(target);
     const { save, end } = useMyTripActions();
     const { setBoardingStop } = useSelectionStore(s => s.actions);
+    // Showing the trip that is already open would only close the sheet, which its close button does.
+    const isTripShown = useRouteParams().tripId === target.tripId;
     const [open, setOpen] = useState<Section>(target.section ?? null);
     const [draft, setDraft] = useState<TripDraft>({});
     const [isChoosingBoard, setIsChoosingBoard] = useState(false);
@@ -190,7 +193,7 @@ const MyTripSheetBody = ({ target, onClose, inCard = false }: { target: MyTripTa
                 <Button size="lg" onClick={saveTrip} disabled={!lastStop} className="w-full" data-testid="my-trip-save">{existing ? t('myTrip.save') : t('myTrip.take')}</Button>
                 {existing
                     ? <Button variant="link" size="inline" onClick={endTrip} className="h-control-lg text-tint-red">{t('myTrip.end')}</Button>
-                    : <Button variant="link" size="inline" onClick={openTrip} className="h-control-lg">{t('myTrip.showTrip')}</Button>}
+                    : !isTripShown && <Button variant="link" size="inline" onClick={openTrip} className="h-control-lg">{t('myTrip.showTrip')}</Button>}
             </div>
         </>
     );

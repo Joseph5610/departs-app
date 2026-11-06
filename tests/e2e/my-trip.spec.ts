@@ -127,6 +127,21 @@ test.describe('My trip', () => {
         await expect(page.getByTestId('my-trip-save')).toBeVisible();
     });
 
+    // Showing the trip already open would only close the sheet, so the link is offered from a board alone.
+    test('offers to show the trip only when it is not the one open', async ({ page }) => {
+        await mockTrip(page);
+        await page.goto('/prague/stop/U1111Z1P');
+        await page.getByTestId('departure-item-trip-1').click({ button: 'right' });
+        await page.getByRole('menuitem', { name: /taking this trip|Jedu tímto spojem/ }).click();
+        const showTrip = page.getByRole('button', { name: /^(Show trip|Zobrazit spoj)$/ });
+        await expect(showTrip).toBeVisible();
+
+        await page.goto('/prague/trip/trip-1/veh-1');
+        await page.getByRole('button', { name: /taking this trip|Jedu tímto spojem/ }).first().click();
+        await expect(page.getByTestId('my-trip-save')).toBeVisible();
+        await expect(showTrip).toHaveCount(0);
+    });
+
     // Already aboard and riding to the end is a valid trip: tracked in the bar, with no alerts.
     test('saves a trip taken already aboard to its end', async ({ page }) => {
         await mockTrip(page, { running: true });
