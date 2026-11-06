@@ -1,5 +1,6 @@
 import type React from 'react';
 import { ChevronRight } from 'lucide-react';
+import { Pressable } from '@/components/Pressable';
 
 interface SectionTitleProps {
     /** A badge, platform circle or icon before the title. */
@@ -15,10 +16,10 @@ export const SectionTitle = ({ lead, onOpen, children }: SectionTitleProps) => {
     return (
         <h2 className="type-section min-w-0 text-foreground">
             {onOpen ? (
-                <button type="button" onClick={onOpen} className="hit-target flex max-w-full cursor-pointer items-center gap-2 text-left outline-none focus-visible:underline">
+                <Pressable onClick={onOpen} className="hit-target flex max-w-full items-center gap-2 text-left focus-visible:ring-0 focus-visible:underline">
                     {title}
                     <ChevronRight size={17} strokeWidth={2.5} className="-ml-1 shrink-0 text-label-3" aria-hidden="true" />
-                </button>
+                </Pressable>
             ) : <span className="flex min-w-0 items-center gap-2">{title}</span>}
         </h2>
     );

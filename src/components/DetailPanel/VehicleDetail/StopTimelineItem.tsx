@@ -10,6 +10,7 @@ import { TimelineTime } from './TimelineTime';
 import { StopConnections, StopContinuation } from './StopTransfers';
 import type { TimelineStop } from './types';
 import type { JourneyMark } from '@/types';
+import { Pressable } from '@/components/Pressable';
 
 export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequence, nextStopSequence, delay, isFirstTransfer, isLastStop, exitKind, isOnJourney = false, onOpenStop }: {
     stop: TimelineStop,
@@ -87,17 +88,16 @@ export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequen
                     ) : <span />}
                     <div className="flex items-center gap-1.5 min-w-0">
                         {rawStopId ? (
-                            <button
-                                type="button"
+                            <Pressable
                                 onClick={() => onOpenStop(stop)}
                                 aria-label={t('map.vehicleDetails.viewStopDepartures', { stopName: stop.properties.stop_name })}
                                 className={cn(
-                                    "type-row truncate min-w-0 text-left cursor-pointer transition-colors duration-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-badge hover:underline active:opacity-80",
+                                    "type-row truncate min-w-0 text-left transition-colors duration-700 focus-visible:ring-1 focus-visible:ring-ring rounded-badge hover:underline active:opacity-80",
                                     nameClass
                                 )}
                             >
                                 {stop.properties.stop_name}
-                            </button>
+                            </Pressable>
                         ) : (
                             <span className={cn("type-row truncate min-w-0 transition-colors duration-700", nameClass)}>
                                 {stop.properties.stop_name}

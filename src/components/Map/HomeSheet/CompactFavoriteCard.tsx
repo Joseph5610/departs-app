@@ -15,6 +15,7 @@ import { LineBadge } from '@/components/LineBadge';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR, MAP_CAMERA } from '@/config/constants';
 import type { BoardStop, Departure, FavoriteLine } from '@/types';
 import { MinutesUntil } from '@/components/MinutesUntil';
+import { Pressable } from '@/components/Pressable';
 
 interface CardShellProps {
     onOpen: () => void;
@@ -24,14 +25,13 @@ interface CardShellProps {
 
 /** The tappable frame every favourite on the home sheet shares. */
 const CardShell = ({ onOpen, testId, children }: CardShellProps) => (
-    <button
-        type="button"
+    <Pressable
         onClick={onOpen}
-        className="min-w-0 flex-[1_0_10.25rem] snap-start rounded-surface text-left outline-none transition-transform active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-ring/50"
+        className="min-w-0 flex-[1_0_10.25rem] snap-start rounded-surface text-left transition-transform active:scale-[0.98]"
         data-testid={testId}
     >
         <Card size="none" className="h-full gap-2.25 p-3.5">{children}</Card>
-    </button>
+    </Pressable>
 );
 
 const RowsPlaceholder = () => (

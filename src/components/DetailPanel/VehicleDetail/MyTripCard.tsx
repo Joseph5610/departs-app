@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { JourneyRow, type JourneyLeg } from '@/components/JourneyRow';
 import type { MyTrip } from '@/types';
+import { SectionHeading } from '@/components/SectionHeading';
 
 interface MyTripCardProps {
     /** The user's trip on this trip, if they take it. */
@@ -35,7 +36,7 @@ export const MyTripCard = ({ trip, exit, lastStopName, onOpen, onEnd }: MyTripCa
     return (
         <Card size="none" className="overflow-hidden" data-testid="my-trip-card">
             <div className="flex h-10 items-center justify-between gap-2 pl-4 pr-2.5">
-                <span className="type-label text-muted-foreground">{t('myTrip.title')}</span>
+                <SectionHeading className="px-0">{t('myTrip.title')}</SectionHeading>
                 <Button variant="ghost" size="icon-xs" onClick={onEnd} aria-label={t('myTrip.end')} title={t('myTrip.end')} className="size-7 text-muted-foreground hover:text-foreground">
                     <X size={16} strokeWidth={2} />
                 </Button>

@@ -12,6 +12,7 @@ import { boardStopIds, isStationBoard, platformCodes, platformIdByCode } from '@
 import { useOpenStop } from '@/hooks/features/useOpenStop';
 import { noticeIconTone } from '@/components/Alerts/noticeTone';
 import { PlatformCircle } from '@/components/PlatformCircle';
+import { Pressable } from '@/components/Pressable';
 
 interface InfoTextsProps {
     selectedStop: SelectedStop;
@@ -87,14 +88,13 @@ const PlatformNoticeCode = ({ code, platformId, onOpen }: { code: string; platfo
     const circle = <PlatformCircle code={code} size="md" />;
     if (!platformId) return <span className="flex" aria-label={t('map.departures.platformCode', { code })}>{circle}</span>;
     return (
-        <button
-            type="button"
+        <Pressable
             onClick={() => onOpen(platformId)}
             aria-label={t('map.departures.platformCode', { code })}
             className="flex rounded-full transition-transform active:scale-95 hover:brightness-110"
         >
             {circle}
-        </button>
+        </Pressable>
     );
 };
 

@@ -21,6 +21,7 @@ import { useStopTwin } from '@/hooks/derived/useStopTwin';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
+import { Pressable } from '@/components/Pressable';
 
 /** Sticky subheader of a stop's board: distance and delay, stop actions and filters, then the line chips. */
 export const DepartureBoardHeader = memo(() => {
@@ -86,15 +87,14 @@ export const DepartureBoardHeader = memo(() => {
 
                     {twin && twinLabel && (
                         <ButtonTooltip label={t('map.departures.otherNetworkBoard', { network: twinLabel })}>
-                        <button
-                            type="button"
+                        <Pressable
                             onClick={() => navigate(paths.stop(twin.city, twin.stopId))}
                             aria-label={t('map.departures.otherNetworkBoard', { network: twinLabel })}
-                            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-badge font-medium text-foreground outline-none transition-colors hover:text-tint-mint focus-visible:ring-2 focus-visible:ring-ring/50"
+                            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-badge font-medium text-foreground transition-colors hover:text-tint-mint"
                         >
                             <ArrowLeftRight size={14} strokeWidth={1.5} className="text-muted-foreground" />
                             {twinLabel}
-                        </button>
+                        </Pressable>
                         </ButtonTooltip>
                     )}
                 </div>
@@ -138,17 +138,17 @@ export const DepartureBoardHeader = memo(() => {
                                     const isActive = selectedLine === name;
                                     const isDimmed = !!selectedLine && !isActive;
                                     return (
-                                        <button
+                                        <Pressable
                                             key={name}
                                             onClick={() => toggleLineFilter(name)}
                                             className={cn(
-                                                "hit-target flex transition-[transform,opacity] active:scale-95 select-none cursor-pointer hover:brightness-110 rounded-badge",
+                                                "hit-target flex transition-[transform,opacity] active:scale-95 select-none hover:brightness-110 rounded-badge",
                                                 isDimmed ? "opacity-30" : "opacity-100",
                                                 isActive && "z-10 ring-2 ring-primary/40"
                                             )}
                                         >
                                             <LineBadge name={name} routeColor={line.route_color || FALLBACK_ROUTE_COLOR} size="lg" />
-                                        </button>
+                                        </Pressable>
                                     );
                                 })}
                             </div>
@@ -187,18 +187,17 @@ const PropertyToggle = ({ isActive, onToggle, activeClassName, label, testId, ch
     children: React.ReactNode;
 }) => (
     <ButtonTooltip label={label}>
-    <button
-        type="button"
+    <Pressable
         onClick={onToggle}
         aria-pressed={isActive}
         aria-label={label}
         data-testid={testId}
         className={cn(
-            "hit-target flex size-6 shrink-0 items-center justify-center rounded-full transition-[transform,colors] active:scale-95 select-none cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+            "hit-target flex size-6 shrink-0 items-center justify-center rounded-full transition-[transform,colors] active:scale-95 select-none focus-visible:ring-primary/50",
             isActive ? activeClassName : "bg-field text-muted-foreground hover:text-foreground"
         )}
     >
         {children}
-    </button>
+    </Pressable>
     </ButtonTooltip>
 );

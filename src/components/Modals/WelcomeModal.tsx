@@ -13,6 +13,7 @@ import { paths } from '@/lib/routes';
 import { DEFAULT_CITY_SLUG } from '@/config/cities';
 import { CitySelectionList } from '@/components/Map/CitySelectionList';
 import { cityOverviewCamera } from '@/lib/map/view';
+import { SectionHeading } from '@/components/SectionHeading';
 
 /**
  * WelcomeModal
@@ -108,9 +109,9 @@ export const WelcomeModal = memo(() => {
                 <div className="flex min-h-0 flex-1 flex-col gap-2">
                     <div className="flex shrink-0 items-center gap-4 px-2">
                         <div className="h-px flex-1 bg-linear-to-r from-transparent to-border"></div>
-                        <span className="type-label text-muted-foreground/60">
+                        <SectionHeading className="px-0 text-muted-foreground/60">
                             {t('welcome.chooseCity')}
-                        </span>
+                        </SectionHeading>
                         <div className="h-px flex-1 bg-linear-to-l from-transparent to-border"></div>
                     </div>
                     <div className="min-h-0 flex-1 -mx-2 px-2 py-0.5 overflow-y-auto overflow-x-hidden overscroll-contain">

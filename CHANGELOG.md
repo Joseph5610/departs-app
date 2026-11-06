@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.97.1] - 2026-11-06
+
+### Fixed
+
+- Keyboard focus shows the same ring on every tappable badge, row and card.
+
 ## [0.97.0] - 2026-11-01
 
 ### Changed

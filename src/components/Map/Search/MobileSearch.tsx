@@ -12,6 +12,7 @@ import { useVisibleCities } from '@/hooks/data/useCities';
 import { MobileSearchResults } from './MobileSearchResults';
 import { SHEET } from '@/config/constants';
 import { LineFilterLabel } from './LineFilterLabel';
+import { Pressable } from '@/components/Pressable';
 
 /** Opens at the sheet's full height, just below the status bar. */
 const SEARCH_SHEET_STYLE = { top: `calc(max(env(safe-area-inset-top, 0px), ${SHEET.FULL_TOP_MIN_INSET_PX}px) + ${SHEET.FULL_TOP_GAP_PX}px)` };
@@ -58,10 +59,9 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
         <>
             <div className="flex shrink-0 gap-2 sheet-row-gutter pb-3">
                 <div className="flex h-11 flex-1 min-w-0 items-center overflow-hidden rounded-full bg-field">
-                    <button
-                        type="button"
+                    <Pressable
                         onClick={open}
-                        className="flex h-full flex-1 min-w-0 items-center gap-2.25 pl-3.5 pr-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                        className="flex h-full flex-1 min-w-0 items-center gap-2.25 pl-3.5 pr-2 text-left"
                         data-testid="search-trigger"
                     >
                         <SearchIcon size={18} strokeWidth={1.75} className={activeLabel ? "shrink-0 text-tint-mint" : "shrink-0 text-muted-foreground"} />
@@ -72,7 +72,7 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                                 {activeLabel ?? t('search.placeholder')}
                             </span>
                         )}
-                    </button>
+                    </Pressable>
                     {activeLabel && (
                         <Button variant="ghost" size="icon-sm" className="mr-1 shrink-0"
                             type="button"

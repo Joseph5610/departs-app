@@ -15,6 +15,7 @@ import { NextDepartureRow } from './NextDepartureRow';
 import { Amenities, ExpectedTime, LiveCountdown, MARKED_BACKDROP, TripNotes } from './DepartureParts';
 import { RowSeparator } from './RowSeparator';
 import { BoardSection } from './BoardRow';
+import { Pressable } from '@/components/Pressable';
 
 const NO_BOARDING_PLACE = { track: null, platform: null };
 
@@ -141,8 +142,7 @@ const TripRow = memo(({ departure: dep, timeZone, isHighlighted, onDepartureClic
     const tap = useDepartureTap(dep, onDepartureClick);
 
     return (
-        <button
-            type="button"
+        <Pressable
             {...tap}
             data-testid={`departure-item-${dep.tripId}`}
             className={cn(
@@ -158,7 +158,7 @@ const TripRow = memo(({ departure: dep, timeZone, isHighlighted, onDepartureClic
             </span>
             <LiveCountdown departure={dep} size="md" />
             <TripNotes departure={dep} mark={mark} className="col-span-2" />
-        </button>
+        </Pressable>
     );
 });
 

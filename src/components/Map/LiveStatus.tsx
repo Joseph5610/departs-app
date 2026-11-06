@@ -8,6 +8,7 @@ import { SystemStatusModal } from '@/components/Modals/SystemStatusModal';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { AlertTriangle, Filter, WifiOff } from 'lucide-react';
 import { SignalMark } from '@/components/SignalMark';
+import { Pressable } from '@/components/Pressable';
 
 /**
  * Displays the real-time system connection status pill.
@@ -60,9 +61,9 @@ export const LiveStatus = () => {
             )}
         >
             <div className="pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-300">
-                <button
+                <Pressable
                     onClick={() => setIsModalOpen(true)}
-                    className="glassy hit-target px-3 py-1.5 rounded-full cursor-pointer hover:bg-white/10 active:bg-white/15 transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 flex items-center"
+                    className="glassy hit-target px-3 py-1.5 rounded-full hover:bg-white/10 active:bg-white/15 transition-colors focus-visible:ring-primary/50 flex items-center"
                 >
                     <div className={cn("flex items-center gap-1.5 h-3", config.color)}>
                         {config.icon}
@@ -78,7 +79,7 @@ export const LiveStatus = () => {
                             )}
                         </div>
                     </div>
-                </button>
+                </Pressable>
             </div>
 
             <SystemStatusModal isOpen={isModalOpen} onClose={closeModal} />

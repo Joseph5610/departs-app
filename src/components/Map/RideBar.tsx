@@ -21,6 +21,7 @@ import { useLiveStatusYieldsToRides } from '@/hooks/derived/useSystemStatus';
 import { LineBadge } from '@/components/LineBadge';
 import { toast } from 'sonner';
 import { notificationPermission, requestNotificationPermission } from '@/lib/notifications';
+import { Pressable } from '@/components/Pressable';
 
 
 
@@ -164,14 +165,13 @@ const BarFrame = ({ testId, isAccent, children }: { testId: string; isAccent: bo
 
 /** A bar's main tap target: badge, texts and the minutes at its end. */
 const BarMain = ({ onClick, label, children }: { onClick: () => void; label: string; children: React.ReactNode }) => (
-    <button
-        type="button"
+    <Pressable
         onClick={onClick}
         aria-label={label}
-        className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer rounded-surface text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        className="flex items-center gap-2.5 min-w-0 flex-1 rounded-surface text-left focus-visible:ring-primary/50"
     >
         {children}
-    </button>
+    </Pressable>
 );
 
 const BarDivider = ({ isAccent }: { isAccent: boolean }) => (
@@ -344,8 +344,7 @@ export const RideBar = () => {
                             <div className="flex min-h-0 flex-col items-center gap-1.5 overflow-hidden">{back}</div>
                         </div>
                         {/* Folded, the bars behind peek out as a tab under the front one: tap (or hover) to fan them out. */}
-                        <button
-                            type="button"
+                        <Pressable
                             onClick={() => {
                                 window.clearTimeout(foldTimer.current);
                                 setIsExpanded(openedByHover.current || !isExpanded);
@@ -354,7 +353,7 @@ export const RideBar = () => {
                             aria-label={t(isExpanded ? 'ride.collapseRides' : 'ride.expandRides')}
                             aria-expanded={isExpanded}
                             className={cn(
-                                "flex cursor-pointer items-center justify-center gap-1 text-muted-foreground outline-none transition-all duration-300 ease-out hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/50",
+                                "flex items-center justify-center gap-1 text-muted-foreground transition-all duration-300 ease-out hover:text-foreground focus-visible:ring-primary/50",
                                 isExpanded
                                     ? "mt-1.5 h-5 w-12 rounded-full glassy"
                                     : "glassy-thick absolute! inset-x-5 bottom-0 z-0 h-9 items-end rounded-b-surface pb-1"
@@ -366,7 +365,7 @@ export const RideBar = () => {
                                     <ChevronDown size={12} strokeWidth={2.5} />
                                 </>
                             )}
-                        </button>
+                        </Pressable>
                     </>
                 )}
             </div>

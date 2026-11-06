@@ -4,6 +4,7 @@ import { Route } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useMyTripEntry } from '@/hooks/features/useMyTripEntry';
 import type { Departure } from '@/types';
+import { Pressable } from '@/components/Pressable';
 
 // Only the tap is the chip's: a press stays the row's, so a swipe that starts on it still swipes.
 const stop = (e: React.SyntheticEvent) => e.stopPropagation();
@@ -26,16 +27,15 @@ export const MyTripChip = ({ departure, markOnly = false }: { departure: Departu
     );
     if (markOnly) return <span className={CHIP} data-testid="my-trip-chip">{content}</span>;
     return (
-        <button
-            type="button"
+        <Pressable
             onClick={(e) => { stop(e); entry.open(); }}
             onKeyDown={stop}
             aria-label={entry.label}
             title={entry.label}
             data-testid="my-trip-chip"
-            className={cn(CHIP, "hit-target cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50")}
+            className={cn(CHIP, "hit-target focus-visible:ring-primary/50")}
         >
             {content}
-        </button>
+        </Pressable>
     );
 };
