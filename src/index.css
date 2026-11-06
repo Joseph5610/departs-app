@@ -104,10 +104,11 @@
   --label-2: oklch(0.75 0.01 260);
   --label-3: rgb(255 255 255 / 0.62);
   --handle: rgb(255 255 255 / 0.34);
-  --fill: rgb(255 255 255 / 0.1);
-  --fill-2: rgb(255 255 255 / 0.17);
-  --switch-off: var(--fill-2);
-  --field: rgb(255 255 255 / 0.15);
+  /* Fills take the glass's own blue tint: a white overlay turns the dark glass flat grey. */
+  --fill: oklch(0.3 0.016 255 / 0.55);
+  --fill-2: oklch(0.35 0.016 255 / 0.6);
+  --switch-off: oklch(0.45 0.014 255 / 0.75);
+  --field: oklch(0.32 0.016 255 / 0.6);
   --sep: rgb(255 255 255 / 0.13);
   --selected: oklch(0.42 0.105 162);
   --glass-backdrop: blur(22px) saturate(140%);
