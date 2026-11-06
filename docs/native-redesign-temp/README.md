@@ -26,9 +26,8 @@ Recorded in `SPEC.md`: updated values in place, reasons under "Decisions after i
 
 - Update the mockup to the decisions in `SPEC.md`.
 - Light mode, open with the owner (audit contact sheets of every screen, mobile and desktop):
-  - Selected segment is mint in dark but white in light (stats scope, favourites, settings theme, feedback type); decide one.
   - Off switches nearly vanish on light glass (disruption push in Settings and Alerts).
-  - Thin light glass shows the map as pastel blotches behind empty parts of a sheet (favourites, search, My trip on desktop).
+  - Thin light glass shows the map as pastel blotches behind empty parts of a sheet; kept for now, as iOS glass does the same.
   - The disabled primary button (feedback `Odoslať`) reads as washed out mint in light.
 - Check on an iPhone as an installed PWA: home, board, swipe, sheet controls while dragging, blur performance.
 - Review the undone screens with the owner: stats, vehicle list, ride bar, feedback, MCP.

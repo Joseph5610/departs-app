@@ -30,6 +30,21 @@ const sheetStyle = (full: SnapPoint, peek: SnapPoint, startsAtPeek: boolean, hei
     '--panel-gutter': '1rem',
 }) as React.CSSProperties;
 
+/** The header's and the card's natural height together while `active`, null otherwise; follows the card as it grows. */
+const useFitHeight = (active: boolean, header: React.RefObject<HTMLDivElement | null>, card: React.RefObject<HTMLDivElement | null>, cardKey: string | null) => {
+    const [height, setHeight] = useState<number | null>(null);
+    useLayoutEffect(() => {
+        const headerEl = header.current, cardEl = card.current;
+        if (!active || !headerEl || !cardEl) return;
+        // A ResizeObserver reports each element once on observe, which takes the first measure.
+        const observer = new ResizeObserver(() => setHeight(Math.ceil(headerEl.offsetHeight + cardEl.scrollHeight)));
+        observer.observe(headerEl);
+        observer.observe(cardEl);
+        return () => observer.disconnect();
+    }, [active, header, card, cardKey]);
+    return active ? height : null;
+};
+
 /** Each card, and the home, eases in when it replaces what the sheet showed. */
 const CARD_ENTER = 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-200';
 
@@ -77,8 +92,8 @@ interface MobileSheetProps {
     cardKey: string | null;
     /** The height a newly opened card needs at least. */
     minSnap: 'half' | 'full';
-    /** The card opens exactly at half, however high the sheet stood, as its content is short. */
-    opensAtHalf?: boolean;
+    /** The card's middle height is its content's own, and it opens there however high the sheet stood. */
+    fitsContent?: boolean;
     /** Each change collapses the sheet to its peek. */
     collapseRequest?: number;
     header: React.ReactNode;
@@ -104,7 +119,7 @@ interface MobileSheetProps {
  * Content scrolls only at full height, so at the lower heights every vertical drag moves the sheet
  * and scrolling down with a wheel raises it to full.
  */
-export const MobileSheet = ({ isOpen, cardKey, minSnap, opensAtHalf = false, collapseRequest, header, subHeader, selfScrolling, homeHeader, toolbar, home, floating, onDismiss, children }: MobileSheetProps) => {
+export const MobileSheet = ({ isOpen, cardKey, minSnap, fitsContent = false, collapseRequest, header, subHeader, selfScrolling, homeHeader, toolbar, home, floating, onDismiss, children }: MobileSheetProps) => {
     const { t } = useTranslation();
 
     // The heights by name, so they can follow the screen while the sheet keeps its place.
@@ -141,7 +156,14 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, opensAtHalf = false, col
     useEffect(() => {
         document.documentElement.style.setProperty('--sheet-peek', String(heights.peek));
     }, [heights.peek]);
-    const points = useMemo<Record<Detent, SnapPoint>>(() => ({ peek: heights.peek, half: SHEET.HALF, full: heights.full }), [heights]);
+    const headerRef = useRef<HTMLDivElement>(null);
+    const fitRef = useRef<HTMLDivElement>(null);
+    const fitHeight = useFitHeight(fitsContent && isOpen, headerRef, fitRef, cardKey);
+    const points = useMemo<Record<Detent, SnapPoint>>(() => ({
+        peek: heights.peek,
+        half: fitHeight === null ? SHEET.HALF : `${Math.min(fitHeight, heightOf(heights.full))}px`,
+        full: heights.full,
+    }), [heights, fitHeight]);
     const snapPoints = useMemo(() => DETENTS.map(d => points[d]), [points]);
     const [startsAtPeek] = useState(cardKey === null);
 
@@ -173,7 +195,7 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, opensAtHalf = false, col
             setDetent(homeDetent);
         } else {
             if (prevCardKey === null) setHomeDetent(current);
-            setDetent(opensAtHalf ? 'half' : atLeast(current, minSnap));
+            setDetent(fitsContent ? 'half' : atLeast(current, minSnap));
         }
     }
 
@@ -188,7 +210,6 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, opensAtHalf = false, col
     const restingHeight = detent ? heightOf(points[detent]) : null;
     const style = useMemo(() => sheetStyle(heights.full, heights.peek, startsAtPeek, restingHeight), [heights.full, heights.peek, startsAtPeek, restingHeight]);
 
-    const headerRef = useRef<HTMLDivElement>(null);
     const scrimRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
     const toolbarRef = useRef<HTMLDivElement>(null);
@@ -305,7 +326,7 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, opensAtHalf = false, col
                         {!isOpen ? (
                             <div key="home" className={cn("flex flex-1 min-h-0 flex-col", CARD_ENTER)}>{home?.(isFull, detent === 'peek')}</div>
                         ) : selfScrolling ? (
-                            <div key={cardKey} className={cn("flex flex-1 min-h-0 flex-col", CARD_ENTER)}>{children}</div>
+                            <div key={cardKey} ref={fitRef} className={cn("flex min-h-0 flex-col", fitsContent ? "shrink" : "flex-1", CARD_ENTER)}>{children}</div>
                         ) : (
                             <div
                                 key={cardKey}

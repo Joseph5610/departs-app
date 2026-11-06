@@ -6,7 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.97.1] - 2026-11-06
 
+### Changed
+
+- My trip on phones opens as tall as its content, titled My trip, with the trip under the title and one prominent action.
+- The selected option of a segmented control is mint in light mode too.
+
 ### Fixed
+
+- My trip on phones no longer opens as an empty sheet while it loads.
 
 - Keyboard focus shows the same ring on every tappable badge, row and card.
 

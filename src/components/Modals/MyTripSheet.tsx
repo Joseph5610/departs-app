@@ -10,8 +10,9 @@ import { Separator } from '@/components/ui/separator';
 import { FilterChip } from '@/components/FilterChip';
 import { JourneyRow } from '@/components/JourneyRow';
 import { LineBadge } from '@/components/LineBadge';
+import { MinutesUntil } from '@/components/MinutesUntil';
 import { MY_TRIP_CONFIG } from '@/config/constants';
-import { sheetSelection, tripFromSheet, type TripDraft } from '@/domain/rides';
+import { expectedDepartureMs, sheetSelection, tripFromSheet, type TripDraft } from '@/domain/rides';
 import { useMyTripSheet } from '@/hooks/derived/useMyTripSheet';
 import { useMyTripActions } from '@/hooks/features/useMyTripActions';
 import { navigate } from '@/lib/history';
@@ -39,29 +40,13 @@ export const MyTripSheet = memo(() => {
     );
 });
 
-/** The trip My trip edits, as the title of the phone's sheet card. */
-export const MyTripCardTitle = () => {
-    const target = useUiStore(s => s.myTripTarget);
-    return target ? <TripTitle target={target} /> : null;
-};
-
-const TripTitle = ({ target }: { target: MyTripTarget }) => {
-    const { detail } = useMyTripSheet(target);
-    return (
-        <span className="flex min-w-0 items-center gap-2.5">
-            {detail?.route_short_name && <LineBadge name={detail.route_short_name} routeColor={detail.route_color ?? ''} size="lg" />}
-            <span className="truncate">{detail?.trip_headsign ?? ''}</span>
-        </span>
-    );
-};
-
 /** My trip as the phone's sheet card, replacing what the sheet showed. */
 export const MyTripCardContent = () => {
     const target = useUiStore(s => s.myTripTarget);
     const { closeMyTrip } = useUiStore(s => s.actions);
     if (!target) return null;
     return (
-        <div className="flex min-h-0 flex-1 flex-col gap-3 px-(--panel-gutter) pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] [--stop-list-max:18dvh]">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 px-(--panel-gutter) pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] [--stop-list-max:24dvh]">
             <MyTripSheetBody key={target.tripId} target={target} onClose={closeMyTrip} inCard />
         </div>
     );
@@ -121,6 +106,7 @@ const MyTripSheetBody = ({ target, onClose, inCard = false }: { target: MyTripTa
     const boardSummary = boarding
         ? (lead !== null ? t('myTrip.boardLead', { stop: boarding.stopName, count: lead }) : t('myTrip.boardAt', { stop: boarding.stopName, time: boarding.time }))
         : isLoading ? t('myTrip.loading') : t('myTrip.aboard');
+    const boardMs = boarding ? expectedDepartureMs(boarding.scheduledMs, boarding.delaySecs) : null;
     const exitSummary = exit ? t('myTrip.exitAt', { stop: exit.stopName, time: exit.time }) : t('myTrip.toEnd', { stop: lastStop?.stopName ?? '' });
 
     return (
@@ -133,6 +119,18 @@ const MyTripSheetBody = ({ target, onClose, inCard = false }: { target: MyTripTa
                         <DialogDescription className="type-meta">{existing ? t('myTrip.title') : t('myTrip.take')}</DialogDescription>
                     </div>
                 </DialogHeader>
+            )}
+            {inCard && (
+                <div className="flex shrink-0 items-start gap-3 px-1">
+                    {line && <LineBadge name={line} routeColor={detail?.route_color ?? ''} size="lg" />}
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="type-headsign text-foreground">{detail?.trip_headsign ?? ''}</span>
+                        <span className="type-meta text-muted-foreground">
+                            {boarding ? t('myTrip.fromStop', { stop: boarding.stopName, time: boarding.time ?? '' }) : isLoading ? t('myTrip.loading') : t('myTrip.onBoard')}
+                        </span>
+                    </div>
+                    {boardMs !== null && <span className="shrink-0 type-headsign tabular-nums"><MinutesUntil timestamp={new Date(boardMs).toISOString()} /></span>}
+                </div>
             )}
 
             <Card size="none" className="min-h-0 shrink overflow-y-auto overscroll-contain">
@@ -188,11 +186,11 @@ const MyTripSheetBody = ({ target, onClose, inCard = false }: { target: MyTripTa
                 )}
             </Card>
 
-            <div className="grid shrink-0 grid-cols-2 gap-2">
+            <div className="flex shrink-0 flex-col items-center gap-1 pt-1">
+                <Button size="lg" onClick={saveTrip} disabled={!lastStop} className="w-full" data-testid="my-trip-save">{existing ? t('myTrip.save') : t('myTrip.take')}</Button>
                 {existing
-                    ? <Button variant="secondary" onClick={endTrip}>{t('myTrip.end')}</Button>
-                    : <Button variant="secondary" onClick={openTrip}>{t('myTrip.showTrip')}</Button>}
-                <Button onClick={saveTrip} disabled={!lastStop} data-testid="my-trip-save">{existing ? t('myTrip.save') : t('myTrip.take')}</Button>
+                    ? <Button variant="link" size="inline" onClick={endTrip} className="h-control-lg text-tint-red">{t('myTrip.end')}</Button>
+                    : <Button variant="link" size="inline" onClick={openTrip} className="h-control-lg">{t('myTrip.showTrip')}</Button>}
             </div>
         </>
     );

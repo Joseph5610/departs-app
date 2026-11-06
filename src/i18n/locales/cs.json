@@ -326,6 +326,8 @@
     "save": "Uložit",
     "saved": "Cesta uložena",
     "updated": "Cesta upravena",
+    "fromStop": "z {{stop}} · odjezd {{time}}",
+    "onBoard": "Už jste ve voze",
     "showTrip": "Zobrazit spoj",
     "take": "Jedu tímto spojem",
     "title": "Moje cesta",

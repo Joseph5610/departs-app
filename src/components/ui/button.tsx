@@ -28,6 +28,8 @@ const buttonVariants = cva(
       },
       size: {
         default: "hit-target h-control-lg px-5 type-group",
+        /** The one prominent action at the end of a sheet. */
+        lg: "h-12 px-6 type-group",
         sm: "hit-target h-control-md px-3 type-group",
         /** A link beside text or a pill: no box, only its 44px target. */
         inline: "hit-target gap-1.5 type-group",

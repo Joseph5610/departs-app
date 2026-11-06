@@ -318,6 +318,8 @@
     "save": "Save",
     "saved": "Trip saved",
     "updated": "Trip updated",
+    "fromStop": "from {{stop}} · departs {{time}}",
+    "onBoard": "Already on board",
     "showTrip": "Show trip",
     "take": "I'm taking this trip",
     "title": "My trip",

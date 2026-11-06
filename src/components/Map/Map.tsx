@@ -56,7 +56,6 @@ const StatsPanel = lazy(() => import('./Stats/StatsPanel').then(m => ({ default:
 const SettingsCardContent = lazy(() => import('@/components/Modals/SettingsModal/SettingsModal').then(m => ({ default: m.SettingsContent })));
 const CityPickerCard = lazy(() => import('./CityPickerCard').then(m => ({ default: m.CityPickerCard })));
 const AlertsCardContent = lazy(() => import('@/components/Modals/AlertsModal').then(m => ({ default: m.AlertsContent })));
-const MyTripCardTitle = lazy(() => import('@/components/Modals/MyTripSheet').then(m => ({ default: m.MyTripCardTitle })));
 const MyTripCardContent = lazy(() => import('@/components/Modals/MyTripSheet').then(m => ({ default: m.MyTripCardContent })));
 const MyTripSheet = lazy(() => import('@/components/Modals/MyTripSheet').then(m => ({ default: m.MyTripSheet })));
 const McpModal = lazy(() => import('@/components/Modals/McpModal/McpModal').then(m => ({ default: m.McpModal })));
@@ -119,6 +118,8 @@ const MapInner = () => {
     const closePanel = useCallback(() => closeDetail(paths.city(selectedCity)), [selectedCity]);
 
     const hasActiveDetailPanel = Boolean(selectedVehicle || selectedStop || selectedPos);
+    // A board or trip can open My trip; loaded on the tap, its card would first show an empty sheet.
+    useEffect(() => { if (hasActiveDetailPanel) void import('@/components/Modals/MyTripSheet'); }, [hasActiveDetailPanel]);
     const shouldShowBackButton = hasActiveDetailPanel && backTarget !== null;
 
     const panelTitle = useMemo(() => {
@@ -167,7 +168,7 @@ const MapInner = () => {
         else setIsCityPickerOpen(false);
     }, [sheetCard, closeMyTrip, setIsSettingsOpen, setIsAlertsOpen, setIsCityPickerOpen]);
     const showsStopBoard = !sheetCard && !isStatsRoute && !isFavoritesRoute && !selectedVehicle;
-    const sheetCardTitle = sheetCard === 'myTrip' ? <Suspense fallback={null}><MyTripCardTitle /></Suspense> : sheetCard === 'settings' ? t('settings.title') : sheetCard === 'alerts' ? t('alerts.title') : t('map.controls.switchCity');
+    const sheetCardTitle = sheetCard === 'myTrip' ? t('myTrip.title') : sheetCard === 'settings' ? t('settings.title') : sheetCard === 'alerts' ? t('alerts.title') : t('map.controls.switchCity');
     const sheetCardContent = useMemo(() => (
         <Suspense fallback={null}>
             {sheetCard === 'myTrip' ? <MyTripCardContent /> : sheetCard === 'settings' ? <SettingsCardContent /> : sheetCard === 'alerts' ? <AlertsCardContent /> : <CityPickerCard />}
@@ -347,7 +348,7 @@ const MapInner = () => {
                 isOpen={!!sheetCard || isFavoritesRoute || isStatsRoute || !!selectedStop || !!selectedVehicle || !!selectedPos}
                 id={sheetCard ?? (isStatsRoute ? 'stats' : isFavoritesRoute ? 'favorites' : (selectedId || selectedStopId || posId || undefined))}
                 onClose={sheetCard ? closeSheetCard : closePanel}
-                onBack={sheetCard === 'myTrip' ? closeSheetCard : !sheetCard && shouldShowBackButton ? handleBack : undefined}
+                onBack={!sheetCard && shouldShowBackButton ? handleBack : undefined}
                 title={sheetCard ? sheetCardTitle : detailTitle}
                 platformCode={showsStopBoard ? selectedStop?.board?.code : undefined}
                 subHeader={sheetCard ? undefined : detailSubHeader}
@@ -359,7 +360,7 @@ const MapInner = () => {
                 home={renderMobileHome}
                 minSnap={sheetCard === 'settings' || sheetCard === 'alerts' ? 'full' : 'half'}
                 selfScrolling={sheetCard === 'alerts' || sheetCard === 'myTrip'}
-                opensAtHalf={sheetCard === 'myTrip'}
+                fitsContent={sheetCard === 'myTrip'}
             >
                 {sheetCard ? sheetCardContent : detailContent}
             </DetailPanel>

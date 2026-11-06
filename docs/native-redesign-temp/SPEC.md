@@ -149,6 +149,8 @@ Made with the owner during the screen review; they replace the original values a
 - The stop timeline follows the line colour: rail and ring in the line's colour, white dots, grey past section. Past stops are a row on the rail, the terminus has a ring.
 - The vehicle hero keeps production's gradient, its lighter lower section with a full-width divider, a tile for amenities in colour and a mono vehicle id, 9px caps with wide tracking.
 - Status pills in the hero stay as in production: 24px, 9px caps.
+- My trip on phones fits its content instead of the half detent, like a Maps place card: title `Moja cesta` with close only, the line, headsign, boarding stop and countdown under it, the Nástup and Výstup group, one 48px primary action and the secondary one as a mint text link.
+- The selected segment is solid mint in light mode too; light glass stays as thin as it is.
 - Alerts keep `Virtuoso`; the section heading is pinned over a masked list with no backing colour, since none matches the glass.
 
 ## Shared components

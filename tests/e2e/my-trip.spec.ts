@@ -182,7 +182,7 @@ test.describe('My trip', () => {
         expect(shared).toContain('Florenc');
     });
 
-    // One sheet at a time: on a phone My trip replaces the sheet's content, and going back restores it.
+    // One sheet at a time: on a phone My trip replaces the sheet's content, and closing it restores it.
     test('opens as a card in the phone sheet', async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 });
         await mockTrip(page);
@@ -193,7 +193,10 @@ test.describe('My trip', () => {
         const panel = page.getByTestId('detail-panel');
         await expect(panel.getByTestId('my-trip-save')).toBeVisible();
         await expect(page.locator('[data-slot="dialog-content"]')).toHaveCount(0);
-        await panel.getByRole('button', { name: /Back|Zpět|Späť/ }).click();
+        // The card is as tall as its content: the sheet's top stands below the usual half height.
+        await expect.poll(() => panel.evaluate(el => el.getBoundingClientRect().top)).toBeGreaterThan(844 * 0.44 + 1);
+        await expect(panel.getByRole('button', { name: /End trip|Ukončit cestu/ })).toBeInViewport();
+        await panel.getByTestId('detail-panel-close').click();
         await expect(page.getByTestId('departure-item-trip-1')).toBeVisible();
     });
 

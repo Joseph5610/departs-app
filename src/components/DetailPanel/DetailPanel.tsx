@@ -39,8 +39,8 @@ interface DetailPanelProps {
     home?: (isFull: boolean, isPeek: boolean) => React.ReactNode;
     /** Mobile only: the height the panel opens at least at. */
     minSnap?: 'half' | 'full';
-    /** The phone's card opens exactly at half, as its content is short. */
-    opensAtHalf?: boolean;
+    /** Mobile only: the card's middle height is its content's own. */
+    fitsContent?: boolean;
     /** Mobile only: the content brings its own scroll container. */
     selfScrolling?: boolean;
     children: React.ReactNode;
@@ -52,7 +52,7 @@ interface DetailPanelProps {
  * Responsive panel for displaying stop and vehicle details.
  * Uses a sidebar (Sheet) on desktop; on mobile, the one bottom sheet that also holds the home content.
  */
-export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, actions, opensAtHalf, collapseRequest, floating, homeHeader, toolbar, home, minSnap = 'half', selfScrolling, children }: DetailPanelProps) => {
+export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, actions, fitsContent, collapseRequest, floating, homeHeader, toolbar, home, minSnap = 'half', selfScrolling, children }: DetailPanelProps) => {
     const isMobile = useIsMobile();
     const { t } = useTranslation();
 
@@ -115,7 +115,7 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
                 isOpen={isOpen}
                 cardKey={isOpen ? id ?? 'panel' : null}
                 minSnap={minSnap}
-                opensAtHalf={opensAtHalf}
+                fitsContent={fitsContent}
                 collapseRequest={collapseRequest}
                 header={headerContent}
                 subHeader={subHeader}
