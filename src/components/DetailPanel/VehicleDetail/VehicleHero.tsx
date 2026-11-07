@@ -1,3 +1,4 @@
+import { Children, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Info, MapPin, MapPinOff, Snowflake, Accessibility, Zap, History } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -39,6 +40,9 @@ export const VehicleHero = ({
     const notice = vehicleNotice(displayVehicle.state_position, displayVehicle.isStaticFallback, hasEnded);
     const noticeIconColor = notice === 'canceled' ? 'text-destructive' : 'text-tint-amber';
     const noticeTextColor = notice === 'canceled' ? 'text-destructive/80' : 'text-tint-amber';
+
+    const typeKey = getRouteTypeI18nKey(displayVehicle.route_type);
+    const vehicleTypeLabel = displayVehicle.vehicle_descriptor?.vehicle_type || (typeKey ? t(typeKey) : '---');
 
     return (
         <Card 
@@ -119,40 +123,23 @@ export const VehicleHero = ({
 
             {displayVehicle.vehicle_descriptor && (
                 <HeroFooter className="mt-auto flex items-center justify-between gap-3">
-                    <div className="flex flex-col gap-1 min-w-0 flex-1">
-                        {displayVehicle.vehicle_descriptor?.operator && (
-                            <span className="type-label text-muted-foreground line-clamp-1">
-                                {displayVehicle.vehicle_descriptor.operator}
-                            </span>
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="type-row text-foreground">{vehicleTypeLabel}</span>
+                        {displayVehicle.vehicle_descriptor.operator && (
+                            <span className="line-clamp-1 type-meta text-muted-foreground">{displayVehicle.vehicle_descriptor.operator}</span>
                         )}
-                        <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="type-row truncate text-foreground">
-                                {displayVehicle.vehicle_descriptor?.vehicle_type || (() => {
-                                    const typeKey = getRouteTypeI18nKey(displayVehicle.route_type);
-                                    return typeKey ? t(typeKey) : '---';
-                                })()}
-                            </span>
+                        <IdLine>
                             {displayVehicle.vehicle_descriptor.vehicle_registration_number && (
                                 <VehicleNumber
                                     number={displayVehicle.vehicle_descriptor.vehicle_registration_number}
                                     operator={displayVehicle.vehicle_descriptor.operator}
                                 />
                             )}
-                        </div>
-                        {(displayVehicle.run_number || (displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor?.vehicle_registration_number))) && (
-                            <div className="flex items-center gap-2 mt-0.5 min-w-0">
-                                {displayVehicle.run_number && (
-                                    <span className="type-label text-muted-foreground shrink-0">
-                                        {t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}
-                                    </span>
-                                )}
-                                {displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor?.vehicle_registration_number) && (
-                                    <span className="truncate font-mono type-micro font-normal tracking-widest text-muted-foreground uppercase">
-                                        {displayVehicle.vehicle_id}
-                                    </span>
-                                )}
-                            </div>
-                        )}
+                            {displayVehicle.run_number && <span>{t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}</span>}
+                            {displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor.vehicle_registration_number) && (
+                                <span className="min-w-0 truncate font-mono">{displayVehicle.vehicle_id}</span>
+                            )}
+                        </IdLine>
                     </div>
 
                     {(displayVehicle.vehicle_descriptor?.is_air_conditioned || 
@@ -183,11 +170,22 @@ export const VehicleHero = ({
 };
 
 /** The vehicle's number, linked to its seznam-autobusu.cz page when the number pins down one vehicle. */
+/** A vehicle's identifiers in one muted line, a dot between each that is present. */
+const IdLine = ({ children }: { children: React.ReactNode }) => {
+    const ids = Children.toArray(children);
+    if (ids.length === 0) return null;
+    return (
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 type-meta text-muted-foreground">
+            {ids.map((id, i) => <Fragment key={i}>{i > 0 && <span aria-hidden="true">·</span>}{id}</Fragment>)}
+        </div>
+    );
+};
+
 const VehicleNumber = ({ number, operator }: { number: string | number; operator?: string }) => {
     const { t } = useTranslation();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const url = fleetRegisterUrl(selectedCity, operator, number);
-    const className = 'text-muted-foreground type-note shrink-0';
+    const className = 'text-muted-foreground shrink-0';
     if (!url) return <span className={className}>#{number}</span>;
     return (
         <ButtonTooltip label={t('map.vehicleDetails.fleetRegisterLink')}>
