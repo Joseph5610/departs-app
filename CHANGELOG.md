@@ -76,6 +76,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The alerts badge and the home sheet no longer count upcoming incidents or incidents left open-ended for over a week.
 
+## [0.94.2] - 2026-11-07
+
+### Fixed
+
+- Brno vehicles match their trips again when the KORDIS realtime feed lags more than one timetable export behind.
+
 ## [0.94.1] - 2026-11-04
 
 ### Fixed
