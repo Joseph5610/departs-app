@@ -19,7 +19,7 @@ export const Countdown = ({ timestamp }: CountdownProps) => {
     const secondsLeft = Math.trunc((Date.parse(timestamp) - now) / 1000);
 
     if (secondsLeft <= 0) {
-        return <span className="animate-pulse text-tint-mint">{t('map.departures.now')}</span>;
+        return <span className="animate-pulse text-tint-mint [animation-iteration-count:3] motion-reduce:animate-none">{t('map.departures.now')}</span>;
     }
 
     if (secondsLeft >= 3600) {
