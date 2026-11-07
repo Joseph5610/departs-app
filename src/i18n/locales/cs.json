@@ -529,8 +529,7 @@
     "network": "Síť",
     "locationNeeded": "Povolte polohu a uvidíte zastávky kolem sebe.",
     "noNearby": "V docházkové vzdálenosti nejsou žádné zastávky.",
-    "resizeSheet": "Rozbalit nebo sbalit panel",
-    "allFavorites": "Všechny oblíbené"
+    "resizeSheet": "Rozbalit nebo sbalit panel"
   },
   "feedback": {
     "title": "Odeslat zpětnou vazbu",

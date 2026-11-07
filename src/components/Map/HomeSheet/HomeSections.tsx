@@ -57,7 +57,6 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
         [alerts, allLines, allStops],
     );
     const hasFavorites = allStops.length > 0 || allLines.length > 0;
-    const favoriteCount = allLines.length + allStops.length;
     const homeFavorites = useMemo(() => [
         ...allLines.map(line => ({ kind: 'line' as const, line })),
         ...allStops.map(pin => ({ kind: 'stop' as const, stop: pin.stop })),
@@ -115,15 +114,6 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
                                 isLoading={isLoading}
                             />
                         ))}
-                        {favoriteCount > homeFavorites.length && (
-                            <Item variant="row" size="none" render={<button type="button" onClick={() => navigate(paths.favorites(selectedCity))} data-testid="home-all-favorites" />}>
-                                <ItemContent><ItemTitle className="type-row text-tint-mint">{t('home.allFavorites')}</ItemTitle></ItemContent>
-                                <ItemActions className="gap-2">
-                                    <Badge variant="count">{favoriteCount}</Badge>
-                                    <ChevronRight size={17} strokeWidth={1.75} className="text-label-3" />
-                                </ItemActions>
-                            </Item>
-                        )}
                     </Card>
                 </HomeSection>
             )}

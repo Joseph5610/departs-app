@@ -513,8 +513,7 @@
     "network": "Network",
     "locationNeeded": "Share your location to see the stops around you.",
     "noNearby": "No stops within walking distance.",
-    "resizeSheet": "Expand or collapse the panel",
-    "allFavorites": "All favourites"
+    "resizeSheet": "Expand or collapse the panel"
   },
   "feedback": {
     "title": "Send Feedback",
