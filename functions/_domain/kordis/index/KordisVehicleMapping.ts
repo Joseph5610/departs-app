@@ -36,31 +36,37 @@ export class KordisVehicleMapping implements VehicleMapping {
      * valid at once and the choice is left to `assignAll`. An alias of null marks a dropped trip.
      */
     tripCandidates(entity: GtfsRt.IFeedEntity, mappingSchedule: MappingSchedule): string[] {
-        return this.readings(entity, mappingSchedule).map((candidate) => candidate.tripId);
+        const candidates: string[] = [];
+        this.forEachReading(entity, mappingSchedule, (tripId) => candidates.push(tripId));
+        return candidates;
     }
 
-    /** Each trip within its match window that a reading of the entity's raw id names, with those readings as bits. */
-    private readings(entity: GtfsRt.IFeedEntity, { schedule, tripAliases, clock }: MappingSchedule): Array<{ tripId: string; readings: number }> {
+    /**
+     * Visits each trip within its match window that a reading of the entity's raw id names, once, with
+     * the readings naming it as bits (bit 0 the id itself, bit k the k-th older export).
+     */
+    private forEachReading(entity: GtfsRt.IFeedEntity, { schedule, tripAliases, clock }: MappingSchedule, visit: (tripId: string, readings: number) => void): void {
         const rawTripId = entity.vehicle?.trip?.tripId;
-        if (!rawTripId) return [];
+        if (!rawTripId) return;
 
         const named: Array<string | undefined> = [rawTripId];
         for (const aliases of tripAliases) {
             const alias = aliases.get(rawTripId);
-            if (alias === null) return [];
+            if (alias === null) return;
             named.push(alias);
         }
-        const candidates: Array<{ tripId: string; readings: number }> = [];
         for (let reading = 0; reading < named.length; reading++) {
             const tripId = named[reading];
-            if (!tripId) continue;
+            if (!tripId || named.indexOf(tripId) < reading) continue;
             const trip = schedule.trips[tripId];
             if (!trip || !isWithinMatchWindow(trip, clock.mins)) continue;
-            const known = candidates.find((candidate) => candidate.tripId === tripId);
-            if (known) known.readings |= 1 << reading;
-            else candidates.push({ tripId, readings: 1 << reading });
+
+            let readings = 1 << reading;
+            for (let later = reading + 1; later < named.length; later++) {
+                if (named[later] === tripId) readings |= 1 << later;
+            }
+            visit(tripId, readings);
         }
-        return candidates;
     }
 
     /** KORDIS pads its stop ids ("U01611Z01"); the timetable writes them unpadded ("U1611Z1"). */
@@ -117,15 +123,13 @@ export class KordisVehicleMapping implements VehicleMapping {
         const claims: TripClaim[] = [];
         for (const [label, group] of sortedByLabel(byVehicle)) {
             for (const index of group) {
-                for (const { tripId, readings } of this.readings(entities[index], mappingSchedule)) {
-                    claims.push({
-                        label,
-                        index,
-                        tripId,
-                        readings,
-                        gapMins: this.windowGap(schedule.trips[tripId], todayBit, currentMins),
-                    });
-                }
+                this.forEachReading(entities[index], mappingSchedule, (tripId, readings) => claims.push({
+                    label,
+                    index,
+                    tripId,
+                    readings,
+                    gapMins: this.windowGap(schedule.trips[tripId], todayBit, currentMins),
+                }));
             }
         }
 
