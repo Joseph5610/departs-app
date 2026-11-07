@@ -70,7 +70,7 @@ export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequen
 
                 {isCurrent && (
                     <div className="absolute -left-5.75 top-1/2 size-3.5 -translate-y-1/2 rounded-full z-10 bg-white ring-3 ring-(--line) inset-ring inset-ring-black/40">
-                        <div className="absolute inset-0 rounded-full bg-white/60 animate-ping" style={{ animationDuration: '2s' }} />
+                        <div className="absolute inset-0 rounded-full bg-white/60 animate-ping motion-reduce:hidden" style={{ animationDuration: '2s', animationIterationCount: 3 }} />
                     </div>
                 )}
 

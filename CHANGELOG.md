@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The appearance switch shows a sun, moon and both for Light, Dark and System.
 - Notices on a board read like disruptions in the alerts list: the same text size, with their dates as a plain calendar line instead of a pill.
 - The vehicle part of a trip's hero leads with the vehicle type, then the operator and one line of its number, run and id, so long names fit.
+- Less battery use: the selected vehicle's ring pulses briefly instead of redrawing the map every frame, vehicle slides draw at 30 fps, the glass blurs less, and near-opaque surfaces skip the blur.
 - Settings toggles read as actions (Zobrazit názvy zastávek, Barvit vozidla podle zpoždění), and their filters are titled by what they filter.
 - Network stats list vehicle types, busiest lines and fleet amenities as rows, with the total delay under punctuality.
 - Feedback has one send button, and a disabled primary button turns grey instead of faded mint.

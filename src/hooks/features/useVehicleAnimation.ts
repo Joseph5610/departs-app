@@ -173,9 +173,15 @@ const useAnimatedSource = (
         trackRef.current = advanceTrack(trackRef.current, features, parseTime(collection?.last_updated), performance.now());
 
         let isFirstFrame = true;
+        let lastDrawn = 0;
 
         const animate = (time: number) => {
             const track = trackRef.current;
+            if (!isFirstFrame && track.targets.size > 0 && time - lastDrawn < VEHICLE_ANIMATION.FRAME_MS) {
+                animationFrameRef.current = requestAnimationFrame(animate);
+                return;
+            }
+            lastDrawn = time;
             const moved = stepTrack(track, time);
             const source = map.getSource(sourceId) as GeoJSONSource | undefined;
 

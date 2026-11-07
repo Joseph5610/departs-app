@@ -127,40 +127,61 @@ export const useMapInterface = () => {
 
     // Selected vehicle pulse, animated on the map layer directly to stay off React renders.
     const selectedCoordsRef = useRef(selectedVehicle?.geometry?.coordinates);
+    const restartPulseRef = useRef<(() => void) | null>(null);
+    const [lng, lat] = selectedVehicle?.geometry?.coordinates ?? [];
     useEffect(() => {
         selectedCoordsRef.current = selectedVehicle?.geometry?.coordinates;
     }, [selectedVehicle?.geometry?.coordinates]);
+    // Keyed on the values, not the array, which is new on every render.
+    useEffect(() => {
+        restartPulseRef.current?.();
+    }, [lng, lat]);
     const hasSelectedVehicle = !!selectedVehicle;
 
     useEffect(() => {
-        let frame: number;
+        let frame = 0;
+        let pulseUntil = 0;
         const currentMapRef = mapRef.current;
+        const reducesMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const paint = (radius: number, opacity: number) => {
+            const map = mapRef.current?.getMap();
+            if (!map || !hasPosition(selectedCoordsRef.current)) return;
+            try {
+                if (map.getLayer(MAP_LAYERS.SELECTED_VEHICLE_PULSE)) {
+                    map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-radius', radius);
+                    map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-opacity', Math.max(0.1, opacity));
+                }
+            } catch {
+                /* Silent fail */
+            }
+        };
+        const opacityAt = (radius: number) => SELECTED_VEHICLE_PULSE.BASE_OPACITY - ((radius - 5) / SELECTED_VEHICLE_PULSE.OPACITY_DIVISOR);
 
         const animate = () => {
-            const map = mapRef.current?.getMap();
-            const coords = selectedCoordsRef.current;
-            if (map && hasPosition(coords)) {
-                const time = Date.now() / SELECTED_VEHICLE_PULSE.SPEED_DIVISOR;
-                const radius = SELECTED_VEHICLE_PULSE.BASE_RADIUS + Math.sin(time) * SELECTED_VEHICLE_PULSE.RADIUS_AMPLITUDE;
-                const opacity = SELECTED_VEHICLE_PULSE.BASE_OPACITY - ((radius - 5) / SELECTED_VEHICLE_PULSE.OPACITY_DIVISOR);
-
-                try {
-                    if (map.getLayer(MAP_LAYERS.SELECTED_VEHICLE_PULSE)) {
-                        map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-radius', radius);
-                        map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-opacity', Math.max(0.1, opacity));
-                    }
-                } catch {
-                    /* Silent fail */
-                }
+            frame = 0;
+            const now = Date.now();
+            if (reducesMotion || now >= pulseUntil) {
+                paint(SELECTED_VEHICLE_PULSE.BASE_RADIUS, opacityAt(SELECTED_VEHICLE_PULSE.BASE_RADIUS));
+                return;
             }
+            const radius = SELECTED_VEHICLE_PULSE.BASE_RADIUS + Math.sin(now / SELECTED_VEHICLE_PULSE.SPEED_DIVISOR) * SELECTED_VEHICLE_PULSE.RADIUS_AMPLITUDE;
+            paint(radius, opacityAt(radius));
             frame = requestAnimationFrame(animate);
         };
 
+        const start = () => {
+            pulseUntil = Date.now() + SELECTED_VEHICLE_PULSE.PULSE_MS;
+            if (!frame) frame = requestAnimationFrame(animate);
+        };
+
         if (hasSelectedVehicle) {
-            frame = requestAnimationFrame(animate);
+            restartPulseRef.current = start;
+            start();
         }
 
         return () => {
+            restartPulseRef.current = null;
             if (frame) {
                 cancelAnimationFrame(frame);
             }
