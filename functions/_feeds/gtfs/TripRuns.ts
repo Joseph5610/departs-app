@@ -1,5 +1,5 @@
 /**
- * Trip id -> trip id as departs-data writes it (`trip_alias_runs.json`): consecutive numeric ids that
+ * Trip id -> trip id as departs-data writes it (`trip_alias_generations.json`, `trip_alias_runs.json`): consecutive numeric ids that
  * map to consecutive ids collapse into one run, so a fresh isolate parses a few thousand numbers
  * instead of a record of tens of thousands of keys.
  */
@@ -34,5 +34,3 @@ export class TripRuns {
         return undefined;
     }
 }
-
-export const EMPTY_TRIP_RUNS = new TripRuns({ runs: [] });

@@ -60,9 +60,13 @@ export function routeIdOf(schedule: Schedule, tripId: string): string | undefine
  * the one rule every network matches by, so a vehicle reporting a trip hours from its timetable is not shown.
  */
 export function isWithinMatchWindow(trip: readonly number[], mins: number, offsetMins?: number): boolean {
+    if (offsetMins !== undefined) return fitsMatchWindow(trip, mins - offsetMins);
+    return fitsMatchWindow(trip, mins) || fitsMatchWindow(trip, mins + DAY_MINS);
+}
+
+function fitsMatchWindow(trip: readonly number[], mins: number): boolean {
     const { BEFORE_MINS, AFTER_MINS } = GTFS_CONFIG.SCHEDULE_MATCH_WINDOW;
-    const fits = (offset: number) => mins >= trip[0] + offset - BEFORE_MINS && mins <= trip[1] + offset + AFTER_MINS;
-    return offsetMins !== undefined ? fits(offsetMins) : fits(0) || fits(-DAY_MINS);
+    return mins >= trip[0] - BEFORE_MINS && mins <= trip[1] + AFTER_MINS;
 }
 
 /**
