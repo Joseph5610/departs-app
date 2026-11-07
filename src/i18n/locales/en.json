@@ -43,7 +43,6 @@
       "data": "Live data",
       "display": "Display",
       "language": "Language",
-      "filters": "Filters",
       "ai": "AI Integrations",
       "notifications": "Notifications"
     },
@@ -54,30 +53,32 @@
       "dark": "Dark"
     },
     "liveVehicles": {
-      "title": "Live vehicle locations"
+      "title": "Show vehicles",
+      "filterTitle": "Vehicle types"
     },
     "colorVehiclesByDelay": {
-      "title": "Vehicle colors by delay",
-      "description": "Color map vehicle markers based on current delay instead of line color",
+      "title": "Color vehicles by delay",
+      "description": "Instead of the line color",
       "filterTitle": "Filter by delay",
-      "aheadOfTime": "Ahead of time (≥1m)",
-      "onTime": "On time (-1–2m)",
+      "aheadOfTime": "Early (1+ min)",
+      "onTime": "On time (−1 to 2 min)",
       "moderate": "2–5 min",
       "high": "5–10 min",
-      "severe": ">10 min"
+      "severe": "10+ min"
     },
     "showStops": {
       "title": "Show stops",
-      "labels": "Stop names"
+      "labels": "Show stop names",
+      "filterTitle": "Stop types"
     },
     "showNetworkLines": {
-      "title": "Transit lines"
+      "title": "Show transit lines"
     },
     "showAlertsOnMap": {
-      "title": "Disruptions on Map"
+      "title": "Show disruptions on map"
     },
     "showPointsOfSale": {
-      "title": "Points of Sale"
+      "title": "Show points of sale"
     },
     "vehicleTypes": {
       "metro": "Metro",
@@ -89,8 +90,8 @@
       "funicular": "Funicular"
     },
     "mapStyle": {
-      "title": "Base Map",
-      "description": "Show streets, places, and landmarks labels"
+      "title": "Show map labels",
+      "description": "Streets, places and landmarks"
     },
     "language": {
       "title": "Language",

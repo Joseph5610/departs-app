@@ -46,7 +46,6 @@
       "data": "Živá data",
       "display": "Zobrazení",
       "language": "Jazyk",
-      "filters": "Filtry",
       "ai": "AI integrace",
       "notifications": "Upozornění"
     },
@@ -57,30 +56,32 @@
       "dark": "Tmavý"
     },
     "liveVehicles": {
-      "title": "Poloha vozidel v reálném čase"
+      "title": "Zobrazit vozidla",
+      "filterTitle": "Typy vozidel"
     },
     "colorVehiclesByDelay": {
-      "title": "Barvy vozidel dle zpoždění",
-      "description": "Zobrazit barvu vozidel podle jejich aktuálního zpoždění místo barvy linky",
+      "title": "Barvit vozidla podle zpoždění",
+      "description": "Místo barvy linky",
       "filterTitle": "Filtrovat podle zpoždění",
-      "aheadOfTime": "Napřed (≥1m)",
-      "onTime": "Na čas (-1–2m)",
+      "aheadOfTime": "Napřed (1+ min)",
+      "onTime": "Včas (−1 až 2 min)",
       "moderate": "2–5 min",
       "high": "5–10 min",
-      "severe": ">10 min"
+      "severe": "10+ min"
     },
     "showStops": {
       "title": "Zobrazit zastávky",
-      "labels": "Názvy zastávek"
+      "labels": "Zobrazit názvy zastávek",
+      "filterTitle": "Typy zastávek"
     },
     "showNetworkLines": {
-      "title": "Linky MHD"
+      "title": "Zobrazit linky MHD"
     },
     "showAlertsOnMap": {
-      "title": "Výluky na mapě"
+      "title": "Zobrazit výluky na mapě"
     },
     "showPointsOfSale": {
-      "title": "Prodejní místa"
+      "title": "Zobrazit prodejní místa"
     },
     "vehicleTypes": {
       "metro": "Metro",
@@ -92,8 +93,8 @@
       "funicular": "Lanovka"
     },
     "mapStyle": {
-      "title": "Podkladová mapa",
-      "description": "Zobrazit popisky ulic, měst a zajímavých míst"
+      "title": "Zobrazit popisky mapy",
+      "description": "Ulice, města a zajímavá místa"
     },
     "language": {
       "title": "Jazyk",

@@ -107,7 +107,7 @@ export const DisplaySection = () => {
                             onToggle={setShowVehicles}
                         >
                             <RowDetails>
-                                <FilterGroup title={t('settings.sections.filters')}>
+                                <FilterGroup title={t('settings.liveVehicles.filterTitle')}>
                                     <FilterChip
                                         label={t('common.all')}
                                         isActive={routeTypeFilter.length === 0}
@@ -153,7 +153,7 @@ export const DisplaySection = () => {
                             />
                             {isStopsFilterEnabled && (
                                 <RowDetails>
-                                    <FilterGroup title={t('settings.sections.filters')}>
+                                    <FilterGroup title={t('settings.showStops.filterTitle')}>
                                         <FilterChip
                                             label={t('common.all')}
                                             isActive={stopTypeFilter.length === 0}
