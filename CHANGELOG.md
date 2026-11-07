@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The disruption push switch lives in Settings only; the alerts view is a plain list.
 - Settings drop the descriptions that only repeated a row's title.
 - The appearance switch shows a sun, moon and both for Light, Dark and System.
+- Favourites on the home sheet are a list instead of cards: a pinned line shows where it goes, from where and its next two departures; a pinned stop its next three; the first five, then All favourites.
 - Notices on a board read like disruptions in the alerts list: the same text size, with their dates as a plain calendar line instead of a pill.
 - The vehicle part of a trip's hero leads with the vehicle type, then the operator and one line of its number, run and id, so long names fit.
 - Less battery use: the selected vehicle's ring pulses briefly instead of redrawing the map every frame, the glass blurs less, near-opaque surfaces skip the blur, and Now on a departure blinks three times instead of forever.

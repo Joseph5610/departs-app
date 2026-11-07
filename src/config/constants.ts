@@ -459,8 +459,12 @@ export const DEPARTURES_CONFIG = {
     DELAY_DELTA_MAX_AGE_REFRESHES: 2,
     /** Next departures listed in a shared stop's message. */
     SHARE_SUMMARY_COUNT: 3,
-    /** Upcoming departures shown on each favourites card. */
+    /** Upcoming departures of a pinned line on the home sheet: the next one and the one after. */
     FAVORITE_CARD_COUNT: 2,
+    /** Next departures of a pinned stop on its home row, side by side. */
+    FAVORITE_STOP_ROW_COUNT: 3,
+    /** Pinned lines and stops the home sheet lists before linking to all of them. */
+    HOME_FAVORITES_LIMIT: 5,
     /** Departures shown per direction before the board offers to expand it. */
     VISIBLE_PER_GROUP: 3,
     /** Favourites and nearby cards fetch only this many departures per line and direction: the rows they show, plus one just leaving. */

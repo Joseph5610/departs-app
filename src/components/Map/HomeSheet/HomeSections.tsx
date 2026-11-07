@@ -19,8 +19,9 @@ import { Card } from '@/components/ui/card';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { NearbyStopRow } from './NearbyStopRow';
 import { HomeSection } from './HomeSection';
-import { CompactLineCard, CompactStopCard } from './CompactFavoriteCard';
+import { FavoriteLineRow, FavoriteStopRow } from './FavoriteRows';
 import { Badge } from '@/components/ui/badge';
+import { DEPARTURES_CONFIG } from '@/config/constants';
 
 interface HomeSectionsProps {
     /** The list scrolls only at full height, so at the lower heights a drag anywhere moves the sheet. */
@@ -56,6 +57,11 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
         [alerts, allLines, allStops],
     );
     const hasFavorites = allStops.length > 0 || allLines.length > 0;
+    const favoriteCount = allLines.length + allStops.length;
+    const homeFavorites = useMemo(() => [
+        ...allLines.map(line => ({ kind: 'line' as const, line })),
+        ...allStops.map(pin => ({ kind: 'stop' as const, stop: pin.stop })),
+    ].slice(0, DEPARTURES_CONFIG.HOME_FAVORITES_LIMIT), [allLines, allStops]);
 
     return (
         <div
@@ -92,25 +98,33 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
 
             {hasFavorites && (
                 <HomeSection title={t('favorites.title')} onOpen={() => navigate(paths.favorites(selectedCity))}>
-                    <div className="-mx-(--panel-gutter) flex gap-2.5 overflow-x-auto px-(--panel-gutter) pb-1 snap-x snap-mandatory scroll-px-(--panel-gutter)">
-                        {allLines.map(fav => (
-                            <CompactLineCard
-                                key={`${fav.stopId}|${fav.line}|${fav.headsign}`}
-                                favorite={fav}
-                                stop={lineStops.get(fav.stopId)}
-                                departures={departuresByStop.get(fav.stopId) ?? []}
+                    <Card size="none">
+                        {homeFavorites.map(fav => fav.kind === 'line' ? (
+                            <FavoriteLineRow
+                                key={`${fav.line.stopId}|${fav.line.line}|${fav.line.headsign}`}
+                                favorite={fav.line}
+                                stop={lineStops.get(fav.line.stopId)}
+                                departures={departuresByStop.get(fav.line.stopId) ?? []}
+                                isLoading={isLoading}
+                            />
+                        ) : (
+                            <FavoriteStopRow
+                                key={fav.stop.id}
+                                stop={fav.stop}
+                                departures={departuresByStop.get(fav.stop.id) ?? []}
                                 isLoading={isLoading}
                             />
                         ))}
-                        {allStops.map(pin => (
-                            <CompactStopCard
-                                key={pin.stop.id}
-                                stop={pin.stop}
-                                departures={departuresByStop.get(pin.stop.id) ?? []}
-                                isLoading={isLoading}
-                            />
-                        ))}
-                    </div>
+                        {favoriteCount > homeFavorites.length && (
+                            <Item variant="row" size="none" render={<button type="button" onClick={() => navigate(paths.favorites(selectedCity))} data-testid="home-all-favorites" />}>
+                                <ItemContent><ItemTitle className="type-row text-tint-mint">{t('home.allFavorites')}</ItemTitle></ItemContent>
+                                <ItemActions className="gap-2">
+                                    <Badge variant="count">{favoriteCount}</Badge>
+                                    <ChevronRight size={17} strokeWidth={1.75} className="text-label-3" />
+                                </ItemActions>
+                            </Item>
+                        )}
+                    </Card>
                 </HomeSection>
             )}
 
