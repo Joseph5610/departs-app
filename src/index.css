@@ -684,5 +684,5 @@
 }
 
 @utility animate-slide-down-fade {
-  animation: slide-down-fade 2s 3;
+  animation: slide-down-fade 2s infinite;
 }

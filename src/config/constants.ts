@@ -204,8 +204,6 @@ export const SHARED_GROUND = {
 export const VEHICLE_ANIMATION = {
     /** How long a vehicle slides from its previous to its new position. */
     DURATION_MS: 1000,
-    /** A slide redraws the vehicles at most this often; each redraw makes the map re-tile every vehicle. */
-    FRAME_MS: 33,
     /** Squared degree distance (~1.5 km) beyond which a vehicle snaps instead of sliding. */
     MAX_SLIDE_DISTANCE_SQ: 0.0002,
     /** How long an off-screen vehicle's last shown position and time are remembered; must exceed QUERY_TIMING_MS.LIVE_GC. */
