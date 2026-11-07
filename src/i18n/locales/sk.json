@@ -543,7 +543,7 @@
     "email": "E-mail (voliteľné)",
     "emailPlaceholder": "meno@domena.sk",
     "diagnostics": "Priložiť technické údaje",
-    "diagnosticsDesc": "Pomôže mi to rýchlejšie nájsť chybu (verzia prehliadača, otvorená zastávka atď.)",
+    "diagnosticsDesc": "Pomôže nám rýchlejšie odhaliť problém: verzia prehliadača, otvorená zastávka a podobne.",
     "submit": "Odoslať",
     "success": "Ďakujeme za spätnú väzbu!",
     "errorTurnstile": "Prosím, overte, že ste človek.",

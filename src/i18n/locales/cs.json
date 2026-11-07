@@ -543,7 +543,7 @@
     "email": "E-mail (volitelné)",
     "emailPlaceholder": "jmeno@domena.cz",
     "diagnostics": "Přiložit technická data",
-    "diagnosticsDesc": "Pomůže mi to rychleji najít chybu (verze prohlížeče, otevřená zastávka atd.)",
+    "diagnosticsDesc": "Pomůže nám rychleji odhalit problém: verze prohlížeče, otevřená zastávka a podobně.",
     "submit": "Odeslat",
     "success": "Děkujeme za zpětnou vazbu!",
     "errorTurnstile": "Prosím, ověřte, že jste člověk.",

@@ -527,7 +527,7 @@
     "email": "Email (optional)",
     "emailPlaceholder": "name@example.com",
     "diagnostics": "Include diagnostic data",
-    "diagnosticsDesc": "This helps me find the bug faster (browser version, active stop, etc.)",
+    "diagnosticsDesc": "Helps us diagnose the issue faster: browser version, open stop and similar details.",
     "submit": "Submit",
     "success": "Thank you for your feedback!",
     "errorTurnstile": "Please verify that you are human.",
