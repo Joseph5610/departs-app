@@ -221,6 +221,8 @@ export const SELECTED_VEHICLE_PULSE = {
     OPACITY_DIVISOR: 65,
     /** The ring pulses this long after the vehicle is picked or moves, then rests: a pulse repaints the whole map every frame. */
     PULSE_MS: 3000,
+    /** ...and then fades out over this long, leaving no ring. */
+    FADE_MS: 600,
 };
 
 /**

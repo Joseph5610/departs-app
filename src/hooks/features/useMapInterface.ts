@@ -150,7 +150,7 @@ export const useMapInterface = () => {
             try {
                 if (map.getLayer(MAP_LAYERS.SELECTED_VEHICLE_PULSE)) {
                     map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-radius', radius);
-                    map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-opacity', Math.max(0.1, opacity));
+                    map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-opacity', Math.max(0, opacity));
                 }
             } catch {
                 /* Silent fail */
@@ -161,12 +161,13 @@ export const useMapInterface = () => {
         const animate = () => {
             frame = 0;
             const now = Date.now();
-            if (reducesMotion || now >= pulseUntil) {
-                paint(SELECTED_VEHICLE_PULSE.BASE_RADIUS, opacityAt(SELECTED_VEHICLE_PULSE.BASE_RADIUS));
+            const fade = reducesMotion ? 0 : 1 - Math.max(0, now - pulseUntil) / SELECTED_VEHICLE_PULSE.FADE_MS;
+            if (fade <= 0) {
+                paint(0, 0);
                 return;
             }
             const radius = SELECTED_VEHICLE_PULSE.BASE_RADIUS + Math.sin(now / SELECTED_VEHICLE_PULSE.SPEED_DIVISOR) * SELECTED_VEHICLE_PULSE.RADIUS_AMPLITUDE;
-            paint(radius, opacityAt(radius));
+            paint(radius, opacityAt(radius) * Math.min(1, fade));
             frame = requestAnimationFrame(animate);
         };
 
