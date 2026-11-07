@@ -126,7 +126,7 @@ export const VehicleHero = ({
                             </span>
                         )}
                         <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="type-control truncate text-foreground">
+                            <span className="type-row truncate text-foreground">
                                 {displayVehicle.vehicle_descriptor?.vehicle_type || (() => {
                                     const typeKey = getRouteTypeI18nKey(displayVehicle.route_type);
                                     return typeKey ? t(typeKey) : '---';

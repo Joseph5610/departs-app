@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ExternalLink, ChevronDown, Maximize2, CalendarClock } from 'lucide-react';
+import { ExternalLink, ChevronDown, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { RSSItem } from '@/types';
 import { LineBadge } from '@/components/LineBadge';
@@ -11,6 +10,7 @@ import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { isHighPriorityAlert } from '@/domain/alerts';
 import { formatDateTime, formatStartDate } from '@/domain/time';
 import { useCityConfig } from '@/hooks/data/useCities';
+import { AlertText, ValidityLine } from './AlertTexts';
 import {
     Collapsible,
     CollapsibleContent,
@@ -80,18 +80,10 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
                         </div>
                     )}
 
-                    <div className={cn(
-                        "type-row font-semibold leading-tight text-foreground/95 whitespace-pre-line",
-                        !isExpanded && "line-clamp-2"
-                    )}>
-                        {item.title}
-                    </div>
+                    <AlertText className={cn(!isExpanded && "line-clamp-2")}>{item.title}</AlertText>
 
                     {isFuture && item.valid_from && (
-                        <div className="flex items-center gap-1.5 type-note text-muted-foreground">
-                            <CalendarClock size={12} strokeWidth={2} className="shrink-0" />
-                            <span>{t('alerts.startsAt', { date: formatStartDate(item.valid_from, i18n.resolvedLanguage, timezone) })}</span>
-                        </div>
+                        <ValidityLine>{t('alerts.startsAt', { date: formatStartDate(item.valid_from, i18n.resolvedLanguage, timezone) })}</ValidityLine>
                     )}
                 </div>
 
@@ -127,9 +119,9 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
 
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                             {item.valid_from && (
-                                <Badge variant="info">
+                                <ValidityLine>
                                     {validToText ? `${validFromText} – ${validToText}` : t('alerts.validFrom', { date: validFromText })}
-                                </Badge>
+                                </ValidityLine>
                             )}
                             {onOpenFull ? (
                                 <Button variant="link" size="inline" onClick={onOpenFull}>

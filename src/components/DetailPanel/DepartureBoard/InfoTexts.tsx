@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/cn';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertIcon } from '@/components/Alerts/AlertIcon';
 import { useInfotexts } from '@/hooks/data/useInfotexts';
@@ -13,6 +12,7 @@ import { useOpenStop } from '@/hooks/features/useOpenStop';
 import { noticeIconTone } from '@/components/Alerts/noticeTone';
 import { PlatformCircle } from '@/components/PlatformCircle';
 import { Pressable } from '@/components/Pressable';
+import { AlertText, ValidityLine } from '@/components/Alerts/AlertTexts';
 
 interface InfoTextsProps {
     selectedStop: SelectedStop;
@@ -108,18 +108,16 @@ const InfoTextCard = ({ info }: { info: Infotext }) => {
                     >
             <AlertIcon className={cn("h-4 w-4 mt-0.5 shrink-0", noticeIconTone(info.priority))} />
 
-            <AlertTitle className="flex flex-col gap-1 mb-2">
-                <span className="whitespace-pre-line">
-                    {text}
-                </span>
+            <AlertTitle className="mb-1.5">
+                <AlertText>{text}</AlertText>
             </AlertTitle>
 
-            <AlertDescription className="grid gap-2">
-                <Badge variant="info">
+            <AlertDescription>
+                <ValidityLine>
                     {info.valid_to
                         ? `${formatDateTime(info.valid_from, i18n.resolvedLanguage)} – ${formatDateTime(info.valid_to, i18n.resolvedLanguage)}`
                         : t('alerts.validFrom', { date: formatDateTime(info.valid_from, i18n.resolvedLanguage) })}
-                </Badge>
+                </ValidityLine>
             </AlertDescription>
         </Alert>
     );
