@@ -22,3 +22,11 @@ class_name = "RideWatch"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["RideWatch"]
+
+[[durable_objects.bindings]]
+name = "DISRUPTION_WATCH"
+class_name = "DisruptionWatch"
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["DisruptionWatch"]

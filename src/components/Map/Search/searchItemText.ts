@@ -3,16 +3,17 @@ import type { LineBadgeData } from '@/domain/routes';
 import type { PosSearchResult } from '@/domain/pointsOfSale';
 import type { ShownHistoryItem, Stop, VehicleFeature } from '@/types';
 
-/** The name a recent search is listed under. */
-export const historyItemTitle = (item: ShownHistoryItem, t: TFunction): string =>
+/** The name a recent search is listed under; a line filter has its badges instead. */
+export const historyItemTitle = (item: ShownHistoryItem): string | undefined =>
     item.type === 'stop' ? item.stop?.name ?? item.stop_name :
     item.type === 'place' || item.type === 'pos' ? item.name :
-    t('search.lineFilter', { line: item.lines.join(', '), count: item.lines.length });
+    undefined;
 
-/** The second line under a recent search: a stop's platform or a place's address. */
+/** The text under a recent search: a stop's platform, a place's address, or "on the map" after a filter's badges. */
 export const historyItemSubtitle = (item: ShownHistoryItem, t: TFunction): string | undefined =>
     item.type === 'stop' && item.stop?.code ? t('search.platform', { code: item.stop.code }) :
     item.type === 'place' || item.type === 'pos' ? item.subtitle :
+    item.type === 'line' ? t('search.lineOnMap', { count: item.lines.length }) :
     undefined;
 
 /** The second line under a stop result: its platform, when it has one. */

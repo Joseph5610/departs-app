@@ -12,6 +12,8 @@ interface UiState {
     isCityPickerOpen: boolean;
     /** The trip the My trip sheet is open for. */
     myTripTarget: MyTripTarget | null;
+    /** The favourites panel is being reordered; its header holds the toggle. */
+    isReorderingFavorites: boolean;
 }
 
 interface UiActions {
@@ -23,6 +25,7 @@ interface UiActions {
     setIsCityPickerOpen: (open: boolean) => void;
     openMyTrip: (target: MyTripTarget) => void;
     closeMyTrip: () => void;
+    setIsReorderingFavorites: (on: boolean) => void;
 }
 
 export interface UiStore extends UiState {
@@ -38,6 +41,7 @@ export const useUiStore = create<UiStore>()((set) => ({
     isMcpModalOpen: false,
     isCityPickerOpen: false,
     myTripTarget: null,
+    isReorderingFavorites: false,
 
     actions: {
         setIsSettingsOpen: (open) => set({ isSettingsOpen: open }),
@@ -47,6 +51,7 @@ export const useUiStore = create<UiStore>()((set) => ({
         setIsMcpModalOpen: (open) => set({ isMcpModalOpen: open }),
         setIsCityPickerOpen: (open) => set({ isCityPickerOpen: open }),
         openMyTrip: (target) => set({ myTripTarget: target }),
+        setIsReorderingFavorites: (isReorderingFavorites) => set({ isReorderingFavorites }),
         closeMyTrip: () => set({ myTripTarget: null }),
     },
 }));

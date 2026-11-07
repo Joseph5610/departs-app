@@ -8,8 +8,6 @@ export const FALLBACK_ROUTE_COLOR = '#5A5A5A';
 export const LAYOUT = {
     /** Must equal Tailwind's `md` breakpoint (48rem), which switches the CSS layout at the same width. */
     MOBILE_BREAKPOINT_PX: 768,
-    /** The map camera pads the bottom by the viewport height divided by this, clearing the mobile sheet. */
-    BOTTOM_SHEET_RATIO: 2.2,
 };
 
 /** The desktop detail panel's width: its default, and the limits the user drags it within. */
@@ -53,13 +51,33 @@ export const UI_TIMING_MS = {
 
 /** The mobile sheet's three heights: the peek shows only the search row or a card's header, half, and full, which stops just below the status bar. */
 export const SHEET = {
-    /** The peek's grabber and search row, above the bottom inset. */
-    PEEK_CONTENT_PX: 72,
-    /** The bottom inset assumed where the device has no home indicator. */
-    PEEK_MIN_BOTTOM_INSET_PX: 12,
-    /** How far the peek's search row reaches into the home indicator's inset, like the Maps app. */
-    PEEK_HOME_INDICATOR_OVERLAP_PX: 11,
-    HALF: 0.5,
+    /** The peek capsule's height: its grabber and search row. */
+    PEEK_CONTENT_PX: 68,
+    /** The peek capsule floats at least this far above the screen's bottom edge. */
+    PEEK_BOTTOM_PX: 12,
+    /** The home indicator's inset assumed in an installed app, as iOS reports 0 while one launches. */
+    STANDALONE_BOTTOM_INSET_PX: 34,
+    /** How far the capsule reaches into the home indicator's inset. */
+    PEEK_HOME_INDICATOR_OVERLAP_PX: 4,
+    HALF: 0.56,
+    /** Dragged below the peek, the sheet follows the finger at this rate... */
+    OVERDRAG_RATE: 0.2,
+    /** ...and no further than this. */
+    OVERDRAG_MAX_PX: 14,
+    /** The sheet turns to its densest material from this share of the way between half and full. */
+    SOLID_FROM_RISE: 0.6,
+    /** The morph loop stops after this many frames without movement. */
+    MORPH_IDLE_FRAMES: 30,
+    /** The content starts fading in at this share of the morph from peek to half... */
+    CONTENT_FADE_FROM_MORPH: 0.2,
+    /** ...and takes this share of it. */
+    CONTENT_FADE_SPAN_MORPH: 0.6,
+    /** The controls above the sheet are gone at this share of the way from half to full. */
+    CONTROLS_GONE_AT_RISE: 1 / 3,
+    /** The toolbar stays open over this first stretch of the list. */
+    TOOLBAR_SCROLL_START_PX: 24,
+    /** A scroll run in one direction at least this long folds or restores the toolbar. */
+    TOOLBAR_SCROLL_RUN_PX: 24,
     /** Gap between the status bar and a fully open sheet, through which the dimmed map shows. */
     FULL_TOP_GAP_PX: 28,
     /** The status bar height assumed where the browser reports no safe area (desktop previews, older phones). */
@@ -199,6 +217,10 @@ export const SELECTED_VEHICLE_PULSE = {
     RADIUS_AMPLITUDE: 20,
     BASE_OPACITY: 0.85,
     OPACITY_DIVISOR: 65,
+    /** The ring pulses this long after the vehicle is picked or moves, then rests: a pulse repaints the whole map every frame. */
+    PULSE_MS: 3000,
+    /** ...and then fades out over this long, leaving no ring. */
+    FADE_MS: 600,
 };
 
 /**
@@ -360,6 +382,8 @@ export const BOARD_CONFIG = {
 
 /** A trip whose last stop is this far in the past is shown as ended. */
 export const TRIP_CONFIG = {
+    /** Line badges a collapsed transfers row shows before a "+n". */
+    TRANSFER_PREVIEW_LINES: 5,
     ENDED_GRACE_S: 120,
     /** How often views re-check whether a trip has ended. */
     ENDED_CHECK_MS: 15_000,
@@ -406,6 +430,14 @@ export const RIDE_PUSH_CONFIG = {
     VAPID_PUBLIC_KEY: 'BOg0cjMBsc0ZcGSg1MglKtCPV2ZCuGl1yQulhaknouJAs0T2kJVPrTn4f7odTc173XYIVP-f4oLTdN_JR0qJL2Q',
 };
 
+/** Pushes of new disruptions on pinned lines, through the same Worker. */
+export const DISRUPTION_PUSH_CONFIG = {
+    /** Pinned lines are sent to the server this long after the last change, so pinning several sends once. */
+    SYNC_DEBOUNCE_MS: 3000,
+    /** Unchanged lines are sent again this often, renewing the server's copy well within its 60-day expiry. */
+    RENEW_AFTER_MS: 7 * 24 * 3600_000,
+};
+
 export const DEPARTURES_CONFIG = {
     /** How often an empty metro board re-checks the metro's closed hours. */
     METRO_CLOSED_CHECK_MS: 60_000,
@@ -427,8 +459,12 @@ export const DEPARTURES_CONFIG = {
     DELAY_DELTA_MAX_AGE_REFRESHES: 2,
     /** Next departures listed in a shared stop's message. */
     SHARE_SUMMARY_COUNT: 3,
-    /** Upcoming departures shown on each favourites card. */
+    /** Upcoming departures of a pinned line on the home sheet: the next one and the one after. */
     FAVORITE_CARD_COUNT: 2,
+    /** Next departures of a pinned stop on its home row, side by side. */
+    FAVORITE_STOP_ROW_COUNT: 3,
+    /** Pinned lines and stops the home sheet lists; its Favourites heading opens all of them. */
+    HOME_FAVORITES_LIMIT: 5,
     /** Departures shown per direction before the board offers to expand it. */
     VISIBLE_PER_GROUP: 3,
     /** Favourites and nearby cards fetch only this many departures per line and direction: the rows they show, plus one just leaving. */
@@ -441,6 +477,12 @@ export const DEPARTURES_CONFIG = {
     SWIPE_ACTION_PX: 72,
     /** The furthest a swiped row follows the finger. */
     SWIPE_MAX_PX: 96,
+    /** The revealed action block stops this short of the row, leaving a gap. */
+    SWIPE_BLOCK_GAP_PX: 8,
+    /** The action block is wide enough to show its label from here. */
+    SWIPE_LABEL_PX: 56,
+    /** How the row and its action block spring back. */
+    SWIPE_SETTLE: '320ms cubic-bezier(.32,.72,0,1)',
     /** Departures described in the page's structured data. */
     STRUCTURED_DATA_LIMIT: 15,
 };
@@ -505,3 +547,8 @@ export const ENRICHMENT_CONFIG = {
     RECONNECT_BASE_MS: 1000,
     RECONNECT_MAX_MS: 30_000,
 };
+
+/** The alerts list: the height of a section heading, pinned over the list's top. */
+export const ALERTS_LIST = {
+    HEADING_PX: 40,
+} as const;

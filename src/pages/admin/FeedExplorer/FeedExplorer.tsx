@@ -132,7 +132,7 @@ export const FeedExplorer = () => {
                         <AlertDescription className="text-sm opacity-90 font-mono wrap-break-word">
                             {error instanceof Error ? error.message : 'Unknown error occurred'}
                         </AlertDescription>
-                        <Button variant="outline" onClick={handleRefresh} className="mt-4 border-destructive/40 hover:bg-destructive/10 text-destructive">
+                        <Button variant="secondary" onClick={handleRefresh} className="mt-4 hover:bg-destructive/10 text-destructive">
                             Try Again
                         </Button>
                     </Alert>
@@ -150,17 +150,17 @@ export const FeedExplorer = () => {
                                 {getItemsCount()} {feedType === 'vehicles' ? 'vehicles' : 'alerts'}
                             </Badge>
                             <Button
-                                variant="outline" size="sm"
+                                variant="secondary" size="sm"
                                 onClick={() => setIsExpandedAll(!isExpandedAll)}
-                                className="h-7 text-xs font-semibold gap-1.5 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-all cursor-pointer"
+                                className="h-7 text-xs font-semibold gap-1.5 text-foreground transition-all cursor-pointer"
                             >
                                 {isExpandedAll ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
                                 <span className="hidden sm:inline">{isExpandedAll ? 'Collapse All' : 'Expand All'}</span>
                             </Button>
                             <Button
-                                variant="outline" size="sm"
+                                variant="secondary" size="sm"
                                 onClick={handleCopy}
-                                className="h-7 text-xs font-semibold gap-1.5 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-all cursor-pointer"
+                                className="h-7 text-xs font-semibold gap-1.5 text-foreground transition-all cursor-pointer"
                             >
                                 {isCopied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
                                 <span className="hidden sm:inline">{isCopied ? 'Copied' : 'Copy JSON'}</span>

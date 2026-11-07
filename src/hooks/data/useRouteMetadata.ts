@@ -1,10 +1,12 @@
 import '@/lib/zodConfig';
 import { z } from 'zod/mini';
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { queryOptions, useQueries, useQuery } from '@tanstack/react-query';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useCityConfig } from './useCities';
 import { apiFetch } from '@/lib/apiClient';
 import { DEVICE_CACHE, EXTERNAL_URLS, QUERY_TIMING_MS } from '@/config/constants';
+import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { ROUTE_TYPE_ORDER } from '@/config/transit';
 import { EMPTY_ROUTE_METADATA, indexRouteMetadata, NO_TYPE_COLORS, type RouteMetadata, type RouteTypeColors } from '@/domain/routes';
 import type { RouteInfo } from '@/types';
@@ -53,4 +55,20 @@ export function useRouteMetadata(city?: string | null): RouteMetadata {
     const { data } = useQuery({ ...routesQueryOptions(selectedCity ?? ''), enabled: !!selectedCity });
 
     return data ? buildRouteMetadata(data, typeColors) : EMPTY_ROUTE_METADATA;
+}
+
+/** Route metadata of several cities at once; a city still loading is missing from the map. Pass a stable `cities`. */
+export function useRouteMetadataOf(cities: readonly string[]): ReadonlyMap<string, RouteMetadata> {
+    const files = useQueries({
+        queries: cities.map(city => routesQueryOptions(city)),
+        combine: results => results.map(result => result.data),
+    });
+    return useMemo(() => {
+        const metadata = new Map<string, RouteMetadata>();
+        cities.forEach((city, index) => {
+            const file = files[index];
+            if (file) metadata.set(city, buildRouteMetadata(file, FRONTEND_CITIES_CONFIG[city]?.routeTypeColors ?? NO_TYPE_COLORS));
+        });
+        return metadata;
+    }, [cities, files]);
 }

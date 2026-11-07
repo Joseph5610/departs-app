@@ -1,8 +1,8 @@
 import type React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useHistoryLines } from '@/hooks/derived/useHistoryLines';
 import { Building2, BusFront, Search as SearchIcon, Star, Ticket } from 'lucide-react';
 import { searchHistoryKey } from '@/lib/searchHistory';
-import { cn } from '@/lib/cn';
 import { STOP_SEARCH } from '@/config/constants';
 import type { LineBadgeData } from '@/domain/routes';
 import { getStopDistanceInfo } from '@/domain/stops';
@@ -14,12 +14,12 @@ import { StopModeIcon } from '@/components/StopModeIcon';
 import type { ShownHistoryItem, Stop, VehicleFeature } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
-import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
+import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
 import { HistoryItemIcon } from './HistoryItemIcon';
 import { historyItemSubtitle, historyItemTitle, posResultSubtitle, stopResultSubtitle, vehicleResultLines } from './searchItemText';
-import { LineBadges } from './SearchItem';
+import { LineBadges, SearchRowBody } from './SearchItem';
 import { SheetSection as Section } from '@/components/Map/HomeSheet/SheetSection';
+import { EmptyState } from '@/components/EmptyState';
 
 interface MobileSearchResultsProps {
     query: string;
@@ -43,25 +43,19 @@ interface MobileSearchResultsProps {
 
 interface ResultRowProps {
     icon: React.ReactNode;
-    title: string;
+    title?: string;
     subtitle?: string;
     /** Shown on the right, such as the walking distance. */
     meta?: React.ReactNode;
     onClick: () => void;
     testId: string;
-    /** Tints the icon like the home sheet's stop rows. */
-    isStop?: boolean;
-    children?: React.ReactNode;
+    lines?: LineBadgeData[];
 }
 
-const ResultRow = ({ icon, title, subtitle, meta, onClick, testId, isStop = false, children }: ResultRowProps) => (
-    <Item variant="settings" size="none" className="flex-nowrap text-left" render={<button type="button" onClick={onClick} data-testid={testId} />}>
-        <ItemMedia variant="icon" className={cn("size-9 rounded-full", isStop ? "bg-primary/10 text-primary" : "bg-foreground/5 text-muted-foreground")}>{icon}</ItemMedia>
-        <ItemContent className="min-w-0 gap-1.5">
-            <ItemTitle className="w-full text-title font-semibold text-foreground"><span className="truncate">{title}</span></ItemTitle>
-            {children}
-            {subtitle && <ItemDescription className="text-xs line-clamp-1">{subtitle}</ItemDescription>}
-        </ItemContent>
+const ResultRow = ({ icon, title, subtitle, lines, meta, onClick, testId }: ResultRowProps) => (
+    <Item variant="row" size="none" render={<button type="button" onClick={onClick} data-testid={testId} />}>
+        <ItemMedia variant="rowIcon" className="text-muted-foreground">{icon}</ItemMedia>
+        <SearchRowBody title={title} subtitle={subtitle} lines={lines} />
         {meta && <ItemActions className="shrink-0">{meta}</ItemActions>}
     </Item>
 );
@@ -75,69 +69,69 @@ export const MobileSearchResults = ({
     onStopSelect, onHistorySelect, onClearHistory, onLineSelect, onPlaceSelect, onPosSelect, onVehicleSelect,
 }: MobileSearchResultsProps) => {
     const { t } = useTranslation();
+    const historyLines = useHistoryLines(searchHistory);
     const isEmptyQuery = query === '';
     const hasResults = stopResults.length > 0 || vehicleResults.length > 0 || posResults.length > 0 || geocodingResults.length > 0 || !!queryLines;
 
     const distanceTo = (stop: Stop) => {
         const info = getStopDistanceInfo(location, stop.pos);
-        return info ? <WalkDistance info={info} /> : undefined;
+        return info ? <WalkDistance info={info} className="type-meta" /> : undefined;
     };
 
     const stopRow = (stop: Stop) => (
         <ResultRow
             key={stop.id}
             icon={<StopModeIcon lines={stop.lines} />}
-            isStop
             title={stop.name}
             subtitle={stopResultSubtitle(stop, t)}
             meta={distanceTo(stop)}
             onClick={() => onStopSelect(stop)}
             testId={`search-item-res-stop-${stop.id}`}
-        >
-            <div className="flex flex-wrap items-center gap-y-1"><LineBadges lines={stop.lines} /></div>
-        </ResultRow>
+            lines={stop.lines}
+        />
     );
 
     return (
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 pt-1 pb-[45dvh] flex flex-col gap-5" data-testid="search-results">
-            {isEmptyQuery && favoriteStops.length > 0 && (
-                <Section title={t('search.favorites')}>
-                    <div className="-mx-6 flex gap-2 overflow-x-auto px-6">
-                        {favoriteStops.map(stop => (
-                            <Button
-                                key={stop.id}
-                                variant="outline"
-                                size="sm"
-                                className="shrink-0 rounded-full bg-card"
-                                onClick={() => onStopSelect(stop)}
-                                data-testid={`search-item-fav-stop-${stop.id}`}
-                            >
-                                <Star size={13} strokeWidth={1.5} className="fill-favorite text-favorite" />
-                                {stop.name}
-                            </Button>
-                        ))}
-                    </div>
-                </Section>
-            )}
-
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-(--panel-gutter) pt-1 pb-[45dvh] flex flex-col gap-5" data-testid="search-results">
             {isEmptyQuery && searchHistory.length > 0 && (
                 <Section
                     title={t('search.recent')}
+                    count={searchHistory.length}
                     action={
-                        <Button variant="link" size="sm" className="px-0" onClick={onClearHistory} data-testid="search-clear-history">
+                        <Button variant="ghost" size="chip" className="-mr-1" onClick={onClearHistory} data-testid="search-clear-history">
                             {t('search.clearRecent')}
                         </Button>
                     }
                 >
-                    <Card variant="inset" size="none" className="overflow-hidden">
+                    <Card size="none">
                         {searchHistory.map(item => (
                             <ResultRow
                                 key={searchHistoryKey(item)}
                                 icon={<HistoryItemIcon type={item.type} />}
-                                title={historyItemTitle(item, t)}
+                                title={historyItemTitle(item)}
                                 subtitle={historyItemSubtitle(item, t)}
+                                lines={historyLines(item)}
                                 onClick={() => onHistorySelect(item)}
                                 testId={`search-item-hist-${searchHistoryKey(item)}`}
+                            />
+                        ))}
+                    </Card>
+                </Section>
+            )}
+
+            {isEmptyQuery && favoriteStops.length > 0 && (
+                <Section title={t('search.favorites')} count={favoriteStops.length}>
+                    <Card size="none">
+                        {favoriteStops.map(stop => (
+                            <ResultRow
+                                key={stop.id}
+                                icon={<Star size={20} fill="currentColor" strokeWidth={1.5} className="text-favorite" />}
+                                title={stop.name}
+                                subtitle={stopResultSubtitle(stop, t)}
+                                lines={stop.lines}
+                                meta={distanceTo(stop)}
+                                onClick={() => onStopSelect(stop)}
+                                testId={`search-item-fav-stop-${stop.id}`}
                             />
                         ))}
                     </Card>
@@ -147,20 +141,20 @@ export const MobileSearchResults = ({
             {queryLines && (
                 <Section title={t('search.lines')}>
                     <Button
-                        variant="outline"
-                        className="h-12 justify-start gap-2 rounded-2xl bg-card px-4"
+                        variant="secondary"
+                        className="h-12 justify-start gap-2 rounded-surface bg-fill px-3.5"
                         onClick={() => onLineSelect(queryLines)}
                         data-testid={`search-item-line-${queryLines.join('-')}`}
                     >
                         <LineBadges lines={queryLineBadges ?? undefined} />
-                        <span className="text-title text-muted-foreground">{t('search.showOnMap')}</span>
+                        <span className="type-row text-muted-foreground">{t('search.showOnMap')}</span>
                     </Button>
                 </Section>
             )}
 
             {!isEmptyQuery && stopResults.length > 0 && (
                 <Section title={t('search.stops')}>
-                    <Card variant="inset" size="none" className="overflow-hidden">
+                    <Card size="none">
                         {stopResults.map(stopRow)}
                     </Card>
                 </Section>
@@ -168,7 +162,7 @@ export const MobileSearchResults = ({
 
             {vehicleResults.length > 0 && (
                 <Section title={t('search.vehicles')}>
-                    <Card variant="inset" size="none" className="overflow-hidden">
+                    <Card size="none">
                         {vehicleResults.map(vehicle => {
                             const p = vehicle.properties;
                             const vehicleId = p.vehicle_id ?? '';
@@ -180,9 +174,8 @@ export const MobileSearchResults = ({
                                     subtitle={p.trip_headsign}
                                     onClick={() => onVehicleSelect(vehicle)}
                                     testId={`search-item-vehicle-${vehicleId}`}
-                                >
-                                    <div className="flex items-center"><LineBadges lines={vehicleResultLines(vehicle)} /></div>
-                                </ResultRow>
+                                    lines={vehicleResultLines(vehicle)}
+                                />
                             );
                         })}
                     </Card>
@@ -191,7 +184,7 @@ export const MobileSearchResults = ({
 
             {geocodingResults.length > 0 && (
                 <Section title={t('search.places')}>
-                    <Card variant="inset" size="none" className="overflow-hidden">
+                    <Card size="none">
                         {geocodingResults.map(place => (
                             <ResultRow
                                 key={place.id}
@@ -208,7 +201,7 @@ export const MobileSearchResults = ({
 
             {posResults.length > 0 && (
                 <Section title={t('search.pointsOfSale')}>
-                    <Card variant="inset" size="none" className="overflow-hidden">
+                    <Card size="none">
                         {posResults.map(result => (
                             <ResultRow
                                 key={result.pos.id}
@@ -224,17 +217,11 @@ export const MobileSearchResults = ({
             )}
 
             {isEmptyQuery && searchHistory.length === 0 && (
-                <p className="px-1 pt-2 text-body-sm leading-relaxed text-muted-foreground">{t('search.emptyHint')}</p>
+                <p className="px-1 pt-2 type-meta text-muted-foreground">{t('search.emptyHint')}</p>
             )}
 
             {query.length >= STOP_SEARCH.MIN_QUERY_LENGTH && !hasResults && (
-                <Empty className="py-12">
-                    <EmptyHeader>
-                        <EmptyMedia variant="icon"><SearchIcon strokeWidth={1.5} /></EmptyMedia>
-                        <EmptyTitle>{t('search.noResults')}</EmptyTitle>
-                        <EmptyDescription>{t('search.noResultsHint')}</EmptyDescription>
-                    </EmptyHeader>
-                </Empty>
+                <EmptyState icon={SearchIcon} title={t('search.noResults')} description={t('search.noResultsHint')} />
             )}
         </div>
     );

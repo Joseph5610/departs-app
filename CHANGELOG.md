@@ -4,6 +4,84 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.97.1] - 2026-11-06
+
+### Changed
+
+- My trip on phones opens as tall as its content, titled My trip, with the trip under the title and one prominent action.
+- The selected option of a segmented control is mint in light mode too.
+- Switches that are off stay visible on light glass.
+- In dark mode the panel, sheet, search bar and map controls share one glass tint, differing only in opacity.
+- The backdrop behind a modal only dims and lightly blurs the map, so the modal's glass shows it through.
+- Cards, fields and fills in dark mode take the glass's blue tint instead of a flat grey.
+- Search fields match the text around them, and a trip notice's title is no longer in small caps.
+- The selected city is marked by its check, skyline and outline instead of a green fill.
+- My trip offers Show trip only from a board, not on the trip already open, where it would only close the sheet.
+- Points of sale use the app's shared rows and hero, and status colours (on time, early, late) come from one set of tokens across the app.
+- A swiped departure row no longer shows the press fill, whose corners clashed with the action block.
+- Vehicle-type filters look the same in settings, stats and the vehicle list: All first, each type with its icon.
+- Search fields, incident counts and empty states are one shared element each, alike in search, alerts, stats and the board.
+- The disruption push switch lives in Settings only; the alerts view is a plain list.
+- Settings drop the descriptions that only repeated a row's title.
+- The appearance switch shows a sun, moon and both for Light, Dark and System.
+- Favourites on the home sheet are a list instead of cards: a pinned line shows where it goes, from where and its next two departures; a pinned stop its next three; the first five, with the heading opening all of them.
+- Notices on a board read like disruptions in the alerts list: the same text size, with their dates as a plain calendar line instead of a pill.
+- The vehicle part of a trip's hero leads with the vehicle type, then the operator and one line of its number, run and id, so long names fit.
+- Less battery use: the selected vehicle's ring pulses briefly instead of redrawing the map every frame, the glass blurs less, near-opaque surfaces skip the blur, and Now on a departure blinks three times instead of forever.
+- Settings toggles read as actions (Zobrazit názvy zastávek, Barvit vozidla podle zpoždění), and their filters are titled by what they filter.
+- Network stats list vehicle types, busiest lines and fleet amenities as rows, with the total delay under punctuality.
+- Feedback has one send button, and a disabled primary button turns grey instead of faded mint.
+
+### Fixed
+
+- My trip on phones no longer opens as an empty sheet while it loads.
+- A disruption push opens the alerts scrolled to its alert, even before the alerts have loaded.
+- A window narrowed to a phone's width (iPad Split View) opens settings and alerts once, as the sheet's card, not also as a dialog.
+- Switching disruption push off while it is still turning on keeps it off.
+- The daily sweep of disruption subscriptions reads them page by page, so a full city no longer runs out of memory.
+
+- Keyboard focus shows the same ring on every tappable badge, row and card.
+
+## [0.97.0] - 2026-11-01
+
+### Changed
+
+- All screens share one type scale, one list row with one hover, section titles and info pills.
+- A higher-contrast dark palette, solid mint for selected segments and chips, and clearer glass in light mode.
+- Taking a trip opens at half height on phones, and its alert times use the app's filter chips.
+- The trip timeline follows the line's colour, and alerts show their count and mode icon in section headings.
+
+### Fixed
+
+- Alert section headings no longer overlap at the end of the list, and filter labels no longer jump when picked.
+- Recent line filters show their badges in the colours of their own city.
+
+## [0.96.0] - 2026-10-31
+
+### Changed
+
+- New iOS-style foundations: three glass materials, one corner system, softer separators and borderless cards, capsule buttons, larger switches and segmented controls.
+- Settings, alerts, favourites, search and trip details follow the new design, with sliding segmented controls; on phones My trip replaces the sheet's content instead of opening a second sheet.
+- Increased contrast and reduced transparency drop the glass for solid surfaces, and small controls have larger touch targets.
+- Swiping a departure reveals a labelled action block that turns solid once letting go runs it.
+- Departure boards are a flat list with a larger title and a `My trip` mark on taken trips, and on phones favourite, share and more moved to a glass toolbar that folds while scrolling.
+- The phone's home sheet has grouped favourites, nearby stops and network links, and its favourites title opens the full list.
+- On phones the sheet floats as a glass capsule at its lowest height and morphs into the full-width sheet as it rises; its middle height is now 62% of the screen.
+
+### Fixed
+
+- Text on mint surfaces is dark, as white on mint was unreadable.
+
+## [0.95.0] - 2026-10-30
+
+### Added
+
+- Push notifications of a new disruption on the lines you pinned (Prague, Brno), with their count on the installed app's icon; turned on in Settings or the alerts view, and a tap opens that disruption.
+
+### Fixed
+
+- The alerts badge and the home sheet no longer count upcoming incidents or incidents left open-ended for over a week.
+
 ## [0.94.2] - 2026-11-07
 
 ### Fixed

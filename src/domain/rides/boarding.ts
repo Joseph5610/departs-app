@@ -32,9 +32,12 @@ export const walkLeadMinutes = (distance: StopDistanceInfo | null): number | nul
 export const defaultLead = (leads: readonly number[], walkLead: number | null): number | null =>
     walkLead ?? (leads.includes(MY_TRIP_CONFIG.DEFAULT_LEAD_MIN) ? MY_TRIP_CONFIG.DEFAULT_LEAD_MIN : leads.at(-1) ?? null);
 
+/** When a boarding stop's departure is expected: its timetable time plus the delay there, epoch ms. */
+export const expectedDepartureMs = (scheduledMs: number, delaySecs: number | null | undefined): number => scheduledMs + (delaySecs ?? 0) * 1000;
+
 /** When a reminded departure is expected and the whole minutes left until it. */
 export const reminderCountdown = (scheduledMs: number, delaySecs: number | null | undefined, now: number): { expectedMs: number; minutes: number } => {
-    const expectedMs = scheduledMs + (delaySecs ?? 0) * 1000;
+    const expectedMs = expectedDepartureMs(scheduledMs, delaySecs);
     return { expectedMs, minutes: Math.max(0, Math.round((expectedMs - now) / 60_000)) };
 };
 

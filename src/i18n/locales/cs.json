@@ -46,8 +46,8 @@
       "data": "Živá data",
       "display": "Zobrazení",
       "language": "Jazyk",
-      "filters": "Filtry",
-      "ai": "AI integrace"
+      "ai": "AI integrace",
+      "notifications": "Upozornění"
     },
     "theme": {
       "title": "Vzhled",
@@ -56,36 +56,32 @@
       "dark": "Tmavý"
     },
     "liveVehicles": {
-      "title": "Poloha vozidel v reálném čase",
-      "description": "Zobrazit autobusy, tramvaje a metro"
+      "title": "Zobrazit vozidla",
+      "filterTitle": "Typy vozidel"
     },
     "colorVehiclesByDelay": {
-      "title": "Barvy vozidel dle zpoždění",
-      "description": "Zobrazit barvu vozidel podle jejich aktuálního zpoždění místo barvy linky",
+      "title": "Barvit vozidla podle zpoždění",
+      "description": "Místo barvy linky",
       "filterTitle": "Filtrovat podle zpoždění",
-      "aheadOfTime": "Napřed (≥1m)",
-      "onTime": "Na čas (-1–2m)",
+      "aheadOfTime": "Napřed (1+ min)",
+      "onTime": "Včas (−1 až 2 min)",
       "moderate": "2–5 min",
       "high": "5–10 min",
-      "severe": ">10 min"
+      "severe": "10+ min"
     },
     "showStops": {
       "title": "Zobrazit zastávky",
-      "description": "Zobrazit zastávky a stanice",
-      "labels": "Zobrazit popisky",
-      "labelsDescription": "Zobrazit názvy zastávek na mapě"
+      "labels": "Zobrazit názvy zastávek",
+      "filterTitle": "Typy zastávek"
     },
     "showNetworkLines": {
-      "title": "Linky MHD",
-      "description": "Zobrazit hlavní linky na mapě"
+      "title": "Zobrazit linky MHD"
     },
     "showAlertsOnMap": {
-      "title": "Výluky na mapě",
-      "description": "Zobrazit výluky a přesunuté zastávky na mapě"
+      "title": "Zobrazit výluky na mapě"
     },
     "showPointsOfSale": {
-      "title": "Prodejní místa",
-      "description": "Zobrazit automaty, infocentrá a pokladny na mapě"
+      "title": "Zobrazit prodejní místa"
     },
     "vehicleTypes": {
       "metro": "Metro",
@@ -97,8 +93,8 @@
       "funicular": "Lanovka"
     },
     "mapStyle": {
-      "title": "Podkladová mapa",
-      "description": "Zobrazit popisky ulic, měst a zajímavých míst"
+      "title": "Zobrazit popisky mapy",
+      "description": "Ulice, města a zajímavá místa"
     },
     "language": {
       "title": "Jazyk",
@@ -190,8 +186,10 @@
         "standard": "Polohu a zpoždění hlásí dopravce v reálném čase."
       },
       "liveDataAge": "před {{seconds}}s",
-      "showPastStops": "Zobrazit předchozí zastávky",
-      "hidePastStops": "Skrýt předchozí zastávky",
+      "pastStops_one": "{{count}} projetá zastávka",
+      "pastStops_few": "{{count}} projeté zastávky",
+      "pastStops_many": "{{count}} projetých zastávek",
+      "pastStops_other": "{{count}} projetých zastávek",
       "scheduledTime": "plán.",
       "shareTitle": "Spoj linky {{line}}",
       "requestStop": "Zastávka na znamení",
@@ -304,6 +302,8 @@
     "collapseRides": "Sbalit cesty"
   },
   "myTrip": {
+    "swipeTake": "Jedu",
+    "swipeEdit": "Upravit",
     "aboard": "Bez nástupu",
     "boardAt": "{{stop}} · odjezd {{time}}",
     "boardTitle": "Nástup",
@@ -321,9 +321,10 @@
     "save": "Uložit",
     "saved": "Cesta uložena",
     "updated": "Cesta upravena",
+    "fromStop": "z {{stop}} · odjezd {{time}}",
+    "onBoard": "Už jste ve voze",
     "showTrip": "Zobrazit spoj",
     "take": "Jedu tímto spojem",
-    "takeSub": "Upozorníme vás na nástup i výstup",
     "title": "Moje cesta",
     "toEnd": "Až na konečnou {{stop}}",
     "tooLate": "Spoj odjíždí příliš brzy na upozornění",
@@ -501,6 +502,8 @@
     "title": "Oblíbené",
     "empty": "Zatím žádné oblíbené",
     "emptySub": "Označte zastávku hvězdičkou nebo připněte linku z odjezdové tabule a najdete je tady.",
+    "swipePin": "Připnout",
+    "swipeUnpin": "Odebrat",
     "pinLine": "Přidat linku {{line}} směr {{headsign}} do oblíbených",
     "unpinLine": "Odebrat linku {{line}} směr {{headsign}} z oblíbených",
     "linePinned": "Linka {{line}} směr {{headsign}} přidána do oblíbených",
@@ -523,7 +526,6 @@
     "disruptionsOnYourLines_other": "{{count}} mimořádností na vašich linkách",
     "useLocationShort": "Použít polohu",
     "nearby": "Poblíž",
-    "seeAll": "Zobrazit vše",
     "network": "Síť",
     "locationNeeded": "Povolte polohu a uvidíte zastávky kolem sebe.",
     "noNearby": "V docházkové vzdálenosti nejsou žádné zastávky.",
@@ -541,7 +543,7 @@
     "email": "E-mail (volitelné)",
     "emailPlaceholder": "jmeno@domena.cz",
     "diagnostics": "Přiložit technická data",
-    "diagnosticsDesc": "Pomůže mi to rychleji najít chybu (verze prohlížeče, otevřená zastávka atd.)",
+    "diagnosticsDesc": "Pomůže nám rychleji odhalit problém: verze prohlížeče, otevřená zastávka a podobně.",
     "submit": "Odeslat",
     "success": "Děkujeme za zpětnou vazbu!",
     "errorTurnstile": "Prosím, ověřte, že jste člověk.",
@@ -562,7 +564,6 @@
     "unknownState": "Neznámý stav",
     "vehicles": "vozidel",
     "vehicleMix": "Složení dopravy",
-    "otherData": "Další údaje",
     "lowFloor": "Nízkopodlažní",
     "airConditioned": "Klimatizované",
     "totalDelay": "Kumulované zpoždění sítě",
@@ -603,7 +604,7 @@
     "copy": "Kopírovat",
     "copied": "Zkopírováno!",
     "copyUrl": "Kopírovat URL MCP",
-    "endpointLabel": "URL adresa Remote MCP endpointu:",
+    "endpointLabel": "MCP endpoint",
     "claudeCodeTitle": "Claude Code CLI",
     "claudeDesktopTitle": "Claude Desktop",
     "claudeDesktopStep1": "Otevřete Nastavení → Connectors → Add → Add custom connector.",
@@ -702,7 +703,8 @@
           "paragraphs": [
             "Když spustíte jízdu a povolíte upozornění, váš prohlížeč vytvoří pro aplikaci push adresu: odkaz u push služby vašeho prohlížeče (Apple, Google, Mozilla nebo Microsoft) a klíče, kterými zprávy dokáže rozšifrovat jen vaše zařízení. Aplikace ji pošle na náš server spolu se spojem, zastávkou, kde vystupujete, a texty upozornění.",
             "Během jízdy náš server sleduje, kde je vozidlo, a přes tuto push službu pošle upozornění před vaší zastávkou a při příjezdu. Zprávy jsou šifrované, push služba je jen doručí a přečíst je neumí. Když je aplikace otevřená, upozornění může zobrazit i sama.",
-            "Tyto údaje uchováváme jen během jízdy: smažou se, když jízdu ukončíte nebo dorazíte, nejpozději po 4 hodinách. Neobsahují jméno ani účet a nespojujeme je s žádnými jinými údaji."
+            "Tyto údaje uchováváme jen během jízdy: smažou se, když jízdu ukončíte nebo dorazíte, nejpozději po 4 hodinách. Neobsahují jméno ani účet a nespojujeme je s žádnými jinými údaji.",
+            "Když v Nastavení zapnete upozornění na mimořádnosti, aplikace pošle stejnou push adresu na náš server spolu s názvy linek, které máte ve městě připnuté, a textem upozornění. Náš server každých pár minut zkontroluje mimořádnosti města a upozorní vás na novou mimořádnost na těchto linkách, včetně jejich počtu pro ikonu aplikace. Uchováváme to, dokud upozornění nevypnete, nebo to smažeme, když aplikaci 60 dní neotevřete. Při prvním zapnutí na ochranu před zneužitím počítáme přihlášení z jedné IP adresy: adresu neukládáme, jen její jednosměrný otisk s denně novou náhodnou hodnotou, a ten nejpozději po 2 dnech smažeme."
           ]
         },
         {
@@ -794,5 +796,14 @@
       "librariesTitle": "Open-source knihovny",
       "librariesDescription": "Všechny přibalené balíčky s plným zněním licencí"
     }
+  },
+  "disruptionPush": {
+    "title": "Mimořádnost · {{lines}}",
+    "settingTitle": "Mimořádnosti na mých linkách",
+    "settingDescription": "Upozorní na novou mimořádnost na připnutých linkách a ukáže jejich počet na ikoně aplikace",
+    "failed": "Upozornění se nepodařilo zapnout",
+    "denied": "Oznámení jsou v prohlížeči zablokovaná. Povolte je v nastavení webu a zkuste to znovu.",
+    "unsupported": "Tento prohlížeč upozornění nepodporuje. Na iPhonu přidejte aplikaci na plochu.",
+    "tooMany": "Z této sítě dnes přibylo příliš mnoho přihlášení. Zkuste to zítra."
   }
 }

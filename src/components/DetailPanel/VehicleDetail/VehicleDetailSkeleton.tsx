@@ -18,21 +18,21 @@ export const VehicleDetailSkeleton = () => {
 const VehicleHeroSkeleton = () => (
     <Card
         size="none"
-        className="border border-border/50 ring-0 overflow-hidden relative flex flex-col shadow-sm bg-(--hero-base)"
+        className="overflow-hidden relative flex flex-col bg-(--hero-base)"
     >
         <div className="flex flex-col p-4 pb-3">
             <div className="flex justify-between items-start gap-3">
                 <div className="flex flex-col gap-1.5 min-w-0 flex-1 pt-0.5">
                     <Skeleton className="h-2.5 w-16" />
-                    <Skeleton className="h-7 w-3/4 max-w-80 rounded-md" />
+                    <Skeleton className="h-7 w-3/4 max-w-80 rounded-badge" />
                 </div>
                 <Skeleton className="w-8 h-8 rounded-full shrink-0" />
             </div>
         </div>
 
         <div className="flex gap-2 items-center px-4 pb-4">
-            <Skeleton className="h-6 w-20 rounded-md" />
-            <Skeleton className="h-6 w-24 rounded-md" />
+            <Skeleton className="h-6 w-20 rounded-badge" />
+            <Skeleton className="h-6 w-24 rounded-badge" />
         </div>
 
         <div className="flex gap-3 p-3 px-4 bg-muted/20 border-t border-border/50 justify-between items-center">
@@ -43,7 +43,7 @@ const VehicleHeroSkeleton = () => (
                     <Skeleton className="h-3.5 w-10" />
                 </div>
             </div>
-            <div className="flex gap-2 shrink-0 bg-muted/50 p-2 rounded-lg items-center">
+            <div className="flex gap-2 shrink-0 bg-muted/50 p-2 rounded-surface items-center">
                 <Skeleton className="w-3.5 h-3.5 rounded-full" />
                 <Skeleton className="w-3.5 h-3.5 rounded-full" />
                 <Skeleton className="w-3.5 h-3.5 rounded-full" />
@@ -56,7 +56,7 @@ export const StopTimelineSkeleton = () => (
     <div className="flex flex-col gap-3">
         <div className="flex justify-between items-center px-1">
             <Skeleton className="h-2.5 w-28" />
-            <Skeleton className="h-7 w-28 rounded-xl" />
+            <Skeleton className="h-7 w-28 rounded-surface" />
         </div>
         <div className="relative pl-6">
             <div className="absolute left-2.75 top-6 bottom-6 w-0.5 bg-border/40" />

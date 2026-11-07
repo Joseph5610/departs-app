@@ -5,6 +5,7 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import { Switch, Route } from 'wouter';
 import { usePWALifecycle } from './hooks/features/usePWALifecycle';
 import { useEnrichmentChannel } from './hooks/features/useEnrichmentChannel';
+import { DisruptionPushSync } from '@/components/Alerts/DisruptionPushSync';
 import { useCityConfig } from './hooks/data/useCities';
 import { pushChannelOf } from '@/domain/cities';
 import { SITE } from './config/site';
@@ -25,6 +26,7 @@ function App() {
 
   return (
     <>
+      <DisruptionPushSync />
       {/* Visually hidden SEO content */}
       <div className="sr-only">
         <h1>{SITE.TITLE}</h1>

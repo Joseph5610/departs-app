@@ -37,7 +37,7 @@ flowchart LR
 
 - **Static data** (stops, routes, shapes, timetables) is built daily by the [departs-data](https://github.com/Joseph5610/departs-data) repository and served from `data.departs.app`.
 - **The app** is a Vite + React 19 PWA on Cloudflare Pages. Its **Pages Functions** fetch, normalise and cache each network's realtime feed.
-- **Ride notifications** come from a separate Worker with a Durable Object per trip; see [Ride notifications](./ride-notifications.md).
+- **Push notifications** (My trips and disruptions on pinned lines) come from a separate Worker with Durable Objects; see [Push notifications](./ride-notifications.md).
 
 Everything runs on free plans: Cloudflare for the app, GitHub Pages for the data.
 
@@ -55,6 +55,6 @@ Everything runs on free plans: Cloudflare for the app, GitHub Pages for the data
 - [Local development](./local-development.md): run the app on your machine.
 - [Production deployment](./deployment.md): set up the app on Cloudflare, step by step.
 - [Ride push deployment](./ride-push-deployment.md): add Web Push for ride mode.
-- [Ride notifications](./ride-notifications.md): how ride-mode push works inside.
+- [Push notifications](./ride-notifications.md): how My trips and disruption pushes work inside.
 - [Remote MCP server](./mcp-server.md): connect AI assistants to live transit data.
 - [Data sources and licences](./data-sources.md): where the data comes from and on what terms.

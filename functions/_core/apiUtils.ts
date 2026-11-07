@@ -48,6 +48,25 @@ export function handleError(error: unknown): Response {
     return createErrorResponse(ERROR_MESSAGES.GENERIC_INTERNAL, 500);
 }
 
+/** A request's JSON body (null when it isn't JSON), or a 413 response when it is larger than `maxBytes`. */
+export async function readJsonBody(request: Request, maxBytes: number): Promise<unknown> {
+    if (Number(request.headers.get('Content-Length') ?? 0) > maxBytes) return createErrorResponse('Payload too large.', 413);
+    const bytes = await request.arrayBuffer();
+    if (bytes.byteLength > maxBytes) return createErrorResponse('Payload too large.', 413);
+    try {
+        return JSON.parse(new TextDecoder().decode(bytes));
+    } catch {
+        return null;
+    }
+}
+
+/** Hands a validated command to a watch Durable Object and answers the client; `refused` is the message for the watch's 429. */
+export async function forwardToWatch(namespace: DurableObjectNamespace, name: string, command: unknown, { refused, failed }: { refused: string; failed: string }): Promise<Response> {
+    const response = await namespace.get(namespace.idFromName(name)).fetch('https://watch.internal/', { method: 'POST', body: JSON.stringify(command) });
+    if (response.status === 429) return createErrorResponse(refused, 429);
+    return response.ok ? createSuccessResponse({ ok: true }, 0) : createErrorResponse(failed, 502);
+}
+
 /**
  * Creates a standardized JSON success response with appropriate Cache-Control headers.
  *
