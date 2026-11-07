@@ -1,18 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
-import {
-    Eye,
-    EyeOff,
-    MapPin,
-    
-    Type,
-    Map as MapIcon,
-    Palette,
-    Ticket,
-    Construction,
-    Timer,
-    Waypoints,
-} from 'lucide-react';
+import { Eye, EyeOff, MapPin, Type, Map as MapIcon, Palette, Ticket, Construction, Timer, Waypoints, Sun, Moon, SunMoon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
 import { SegmentedControl } from '@/components/SegmentedControl';
@@ -29,7 +17,7 @@ import { DelayFilter } from './DelayFilter';
 
 const vehicleTypes = ROUTE_TYPE_ORDER.map(id => ({ id, icon: ROUTE_TYPE_ICONS[id as keyof typeof ROUTE_TYPE_ICONS] }));
 
-const THEMES = ['light', 'dark', 'system'] as const;
+const THEMES = [{ id: 'light', icon: Sun }, { id: 'dark', icon: Moon }, { id: 'system', icon: SunMoon }] as const;
 
 /** Stop types a city may offer as a stop filter, in display order. */
 const STOP_FILTER_TYPES = ['metro', 'train'] as const;
@@ -77,7 +65,7 @@ export const DisplaySection = () => {
                     fill
                     value={theme ?? 'system'}
                     onChange={setTheme}
-                    options={THEMES.map(id => ({ value: id, label: t(`settings.theme.${id}`), testId: `theme-${id}` }))}
+                    options={THEMES.map(({ id, icon: Icon }) => ({ value: id, label: <><Icon size={15} strokeWidth={1.75} />{t(`settings.theme.${id}`)}</>, testId: `theme-${id}` }))}
                 />
             </section>
 
