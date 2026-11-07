@@ -136,6 +136,10 @@ export const useMapInterface = () => {
     useEffect(() => {
         restartPulseRef.current?.();
     }, [lng, lat]);
+    // Starting to follow shows again which vehicle the camera locks onto.
+    useEffect(() => {
+        if (isFollowing) restartPulseRef.current?.();
+    }, [isFollowing]);
     const hasSelectedVehicle = !!selectedVehicle;
 
     useEffect(() => {
