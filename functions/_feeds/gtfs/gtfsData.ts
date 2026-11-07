@@ -2,7 +2,7 @@ import type { CityConfig } from '../../_core/cityConfig';
 import { appClient } from '../../_core/ApiClient';
 import { UPSTREAM_TTL_S, STATIC_DATA_CONFIG } from '../../_core/config';
 import { MEMORY_CACHE_TTL, getOrFetch } from '../../_core/feed/cacheManager';
-import { EMPTY_TRIP_RUNS, TripRuns, type TripRunsFile } from './TripRuns';
+import { TripRuns, type TripRunsFile } from './TripRuns';
 import type { Schedule } from './schedule';
 
 export interface GtfsRoute {
@@ -72,22 +72,32 @@ export async function getGtfsRoutes(city: CityConfig): Promise<GtfsRoutesData> {
 }
 
 /**
- * Trip ids of older timetable exports -> the current trip (`feed_index/trip_alias_runs.json`), for networks whose
- * realtime feed still uses them (`hasTripAliases`); empty for the rest. Only vehicle matching reads it.
+ * Trip ids of older timetable exports -> the current trip, one table per export, newest first
+ * (`feed_index/trip_alias_generations.json`), for networks whose realtime feed still uses them (`hasTripAliases`);
+ * empty for the rest. Only vehicle matching reads it. Falls back to the single merged `trip_alias_runs.json` that
+ * builds before the per-export tables wrote.
  *
- * Every publish renumbers the trips, so the table is read for the build `schedule` came from (its first service
+ * Every publish renumbers the trips, so the tables are read for the build `schedule` came from (its first service
  * day) and kept no longer than the schedule: one from another publish maps the feed onto unrelated trips.
  */
-export async function getGtfsTripAliases(city: CityConfig, schedule: Schedule): Promise<TripRuns> {
-    if (!city.feed?.hasTripAliases) return EMPTY_TRIP_RUNS;
+export async function getGtfsTripAliases(city: CityConfig, schedule: Schedule): Promise<readonly TripRuns[]> {
+    if (!city.feed?.hasTripAliases) return [];
     const build = schedule.days[0] ?? '';
-    const aliases = await getStaticFile(
+    const generations = await getStaticFile(
+        city,
+        `feed_index/trip_alias_generations.json?build=${build}`,
+        (text) => (JSON.parse(text) as TripRunsFile[]).map((file) => new TripRuns(file)),
+        UPSTREAM_TTL_S.SCHEDULE_DATA,
+    );
+    if (generations) return generations;
+
+    const merged = await getStaticFile(
         city,
         `feed_index/trip_alias_runs.json?build=${build}`,
         (text) => new TripRuns(JSON.parse(text) as TripRunsFile),
         UPSTREAM_TTL_S.SCHEDULE_DATA,
     );
-    return aliases ?? EMPTY_TRIP_RUNS;
+    return merged ? [merged] : [];
 }
 
 /**

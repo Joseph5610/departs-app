@@ -13,8 +13,8 @@ import type { LocalClock } from '../../../_core/utils/time';
 export interface MappingSchedule {
     /** The trips a vehicle may be matched to now. */
     schedule: Schedule;
-    /** Trip ids of older timetable exports -> the current trip, for feeds that still use them. */
-    tripAliases: TripRuns;
+    /** Trip ids of older timetable exports -> the current trip, one table per export, newest first, for feeds that still use them. */
+    tripAliases: readonly TripRuns[];
     clock: LocalClock;
 }
 
