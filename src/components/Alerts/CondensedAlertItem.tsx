@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ExternalLink, ChevronDown, Maximize2 } from 'lucide-react';
+import { ChevronDown, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import type { RSSItem } from '@/types';
@@ -11,6 +11,7 @@ import { isHighPriorityAlert } from '@/domain/alerts';
 import { formatDateTime, formatStartDate } from '@/domain/time';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { AlertText, ValidityLine } from './AlertTexts';
+import { ExternalLinkIcon } from '@/components/ExternalLinkIcon';
 import {
     Collapsible,
     CollapsibleContent,
@@ -134,7 +135,7 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
                                     size="inline"
                                     render={<a href={item.link} target="_blank" rel="noopener noreferrer" />}
                                 >
-                                    <ExternalLink size={12} strokeWidth={2} />
+                                    <ExternalLinkIcon variant="inline" />
                                     {t('alerts.moreInfo')}
                                 </Button>
                             )}

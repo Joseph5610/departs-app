@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The disruption push switch lives in Settings only; the alerts view is a plain list.
 - Settings drop the descriptions that only repeated a row's title.
 - The appearance switch shows a sun, moon and both for Light, Dark and System.
+- Every link that opens a new window shows the same ↗ arrow: in settings, system status, alerts, licences and the board menu.
 - Safari's bars take the sheet's colour in the app's light or dark theme instead of black, and the sheet no longer shows a mint focus outline after a card closes.
 - Favourites on the home sheet are a list instead of cards: a pinned line shows where it goes, from where and its next two departures; a pinned stop its next three; the first five, with the heading opening all of them.
 - Notices on a board read like disruptions in the alerts list: the same text size, with their dates as a plain calendar line instead of a pill.

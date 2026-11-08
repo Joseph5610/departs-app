@@ -10,6 +10,7 @@ import { EXTERNAL_URLS } from '@/config/constants';
 import { SITE } from '@/config/site';
 import { isCityVisible } from '@/domain/cities';
 import { LegalLayout, LegalSection } from './LegalLayout';
+import { ExternalLinkIcon } from '@/components/ExternalLinkIcon';
 
 const attributionGroups = (unlockedCities: string[]): Array<{ labelKey: string; sources: DataAttribution[] }> => [
     ...Object.values(FRONTEND_CITIES_CONFIG)
@@ -63,11 +64,10 @@ const LinkedItem = ({ href, icon, title, description, badge }: LinkedItemProps) 
             <ItemTitle className="text-foreground">{title}</ItemTitle>
             <ItemDescription className="text-xs line-clamp-none">{description}</ItemDescription>
         </ItemContent>
-        {badge && (
-            <ItemActions>
-                <Badge variant="label">{badge}</Badge>
-            </ItemActions>
-        )}
+        <ItemActions>
+            {badge && <Badge variant="label">{badge}</Badge>}
+            <ExternalLinkIcon />
+        </ItemActions>
     </Item>
 );
 

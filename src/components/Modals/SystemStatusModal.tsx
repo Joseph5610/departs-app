@@ -14,6 +14,7 @@ import { useNow } from '@/hooks/useNow';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { RefreshIntervalPicker } from '@/components/RefreshIntervalPicker';
 import { cn } from '@/lib/cn';
+import { ExternalLinkIcon } from '@/components/ExternalLinkIcon';
 import { 
     Wifi, 
     WifiOff, 
@@ -24,7 +25,6 @@ import {
     AlertTriangle, 
     XCircle,
     RefreshCw,
-    ExternalLink,
     Timer
 } from 'lucide-react';
 
@@ -148,7 +148,7 @@ const SystemStatusDetails = () => {
                             </ItemContent>
                             <ItemActions className="flex-1 justify-end type-row min-w-0">
                                 <span className="truncate">{providerName}</span>
-                                <ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground" strokeWidth={1.5} />
+                                <ExternalLinkIcon />
                             </ItemActions>
                         </Item>
 

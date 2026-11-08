@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUpRight, ChevronRight, RefreshCw, Download, Clock, Scale, MessageSquareHeart, ShieldCheck, FileText } from 'lucide-react';
+import { ChevronRight, RefreshCw, Download, Clock, Scale, MessageSquareHeart, ShieldCheck, FileText } from 'lucide-react';
 import { version } from '../../../../package.json';
 import { usePWAStore } from '@/state/pwaStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
@@ -14,6 +14,7 @@ import { RowText } from './SettingsControls';
 import { UI_TIMING_MS } from '@/config/constants';
 import { formatDateTime } from '@/domain/time';
 import { paths } from '@/lib/routes';
+import { ExternalLinkIcon } from '@/components/ExternalLinkIcon';
 
 const LEGAL_LINKS = [
     { href: paths.privacy, label: 'legal.links.privacy', icon: ShieldCheck },
@@ -127,7 +128,7 @@ export const SettingsFooter = () => {
                     <Item key={href} variant="row" size="none" render={<a href={href} target="_blank" rel="noopener" />}>
                         <ItemMedia variant="rowIcon" className="text-muted-foreground"><Icon strokeWidth={1.75} /></ItemMedia>
                         <RowText title={t(label)} />
-                        <ItemActions><ArrowUpRight size={17} strokeWidth={1.75} className="text-label-3" aria-hidden="true" /></ItemActions>
+                        <ItemActions><ExternalLinkIcon /></ItemActions>
                     </Item>
                 ))}
             </Card>

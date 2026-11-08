@@ -34,6 +34,7 @@ import {
 import { useStops } from '@/hooks/data/useStops';
 import { favoriteStopsIn, pinsOf } from '@/domain/stops';
 import { queryKeys } from '@/lib/queryKeys';
+import { ExternalLinkIcon } from '@/components/ExternalLinkIcon';
 
 /**
  * PanelActions
@@ -216,6 +217,7 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
                                             render={<a href={paths.board(boardCity, stopId, mins)} target="_blank" rel="noopener noreferrer" className="cursor-pointer" />}
                                         >
                                             {mins === 0 ? t('board.noWalk') : t('board.withWalk', { count: mins })}
+                                            <ExternalLinkIcon variant="inline" className="ml-auto text-muted-foreground" />
                                         </DropdownMenuItem>
                                     ))}
                                 </DropdownMenuSubContent>
