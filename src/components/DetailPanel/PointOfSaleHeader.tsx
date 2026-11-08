@@ -14,8 +14,8 @@ export const PointOfSaleHeader = ({ pos }: PointOfSaleHeaderProps) => {
     const target = useMemo<[number, number]>(() => [pos.lon, pos.lat], [pos.lon, pos.lat]);
 
     return (
-        <div className="px-6 pb-3 shrink-0 flex flex-col">
-            <div className="flex w-full min-h-8 items-center gap-4 text-body-sm text-muted-foreground">
+        <div className="px-(--panel-gutter) pb-3 shrink-0 flex flex-col">
+            <div className="flex w-full min-h-8 items-center gap-4 type-meta text-muted-foreground">
                 <NavigatePill target={target} />
                 <span className="flex min-w-0 items-center gap-1.5">
                     <PointOfSaleTypeIcon type={pos.type} size={14} strokeWidth={1.5} className="shrink-0" />

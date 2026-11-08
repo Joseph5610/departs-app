@@ -6,15 +6,16 @@ import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { boardingPlace, departureKey, visibleInGroup } from '@/domain/departures';
 import { useTripMark } from '@/hooks/derived/useTripMark';
-import { MyTripBell } from './MyTripBell';
+import { MyTripChip } from './MyTripChip';
 import { useDepartureTap } from '@/hooks/features/useTapClick';
 import { usePinLine } from '@/hooks/features/usePinLine';
 import type { Departure, DepartureClickHandler } from '@/types';
 import { DepartureChip } from './DepartureChip';
 import { NextDepartureRow } from './NextDepartureRow';
-import { Amenities, ExpectedTime, LiveCountdown, MARKED_ROW, TripNotes } from './DepartureParts';
+import { Amenities, ExpectedTime, LiveCountdown, MARKED_BACKDROP, TripNotes } from './DepartureParts';
 import { RowSeparator } from './RowSeparator';
 import { BoardSection } from './BoardRow';
+import { Pressable } from '@/components/Pressable';
 
 const NO_BOARDING_PLACE = { track: null, platform: null };
 
@@ -75,7 +76,7 @@ export const DirectionRow = memo(({
                 isHighlighted={!!next.tripId && next.tripId === highlightedTripId}
                 onDepartureClick={onDepartureClick}
                 hidesBadge={!startsLine}
-                action={{ onTrigger: pin.toggle, isActive: pin.isPinned, label: pin.label }}
+                action={{ onTrigger: pin.toggle, isActive: pin.isPinned, label: pin.label, swipeLabel: pin.swipeLabel }}
             >
                 {(showsChips || showsRows || hasMore || note) && (
                     <>
@@ -141,23 +142,23 @@ const TripRow = memo(({ departure: dep, timeZone, isHighlighted, onDepartureClic
     const tap = useDepartureTap(dep, onDepartureClick);
 
     return (
-        <Button
-            variant="ghost"
+        <Pressable
             {...tap}
             data-testid={`departure-item-${dep.tripId}`}
             className={cn(
-                "-mx-2 grid h-auto w-[calc(100%+1rem)] grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 whitespace-normal rounded-lg px-2 py-2 text-left font-normal hover:bg-foreground/5",
-                mark && MARKED_ROW
+                "grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 py-2 text-left",
+                "row-hover-nested",
+                mark && MARKED_BACKDROP
             )}
         >
-            <span className="flex min-w-0 items-center gap-3 text-body-sm text-muted-foreground">
+            <span className="flex min-w-0 items-center gap-3 type-meta text-muted-foreground">
                 <ExpectedTime departure={dep} timeZone={timeZone} />
-                <MyTripBell departure={dep} onlyWhenSet />
+                <MyTripChip departure={dep} markOnly />
                 <Amenities departure={dep} />
             </span>
             <LiveCountdown departure={dep} size="md" />
             <TripNotes departure={dep} mark={mark} className="col-span-2" />
-        </Button>
+        </Pressable>
     );
 });
 

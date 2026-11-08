@@ -229,10 +229,10 @@ export const AdminFeedback = () => {
                                     </div>
                                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                                         <Button 
-                                            variant="outline" 
+                                            variant="secondary" 
                                             size="sm" 
                                             onClick={handleCopyRawJson} 
-                                            className="h-8 px-3 rounded-lg text-xs font-semibold gap-1.5 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-all cursor-pointer flex-1 sm:flex-none"
+                                            className="h-8 px-3 text-xs font-semibold gap-1.5 text-foreground transition-all cursor-pointer flex-1 sm:flex-none"
                                         >
                                             {copiedKey === 'json' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                                             {copiedKey === 'json' ? 'Copied' : 'Copy Raw JSON'}

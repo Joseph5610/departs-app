@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ExternalLink, ChevronDown, Maximize2, CalendarClock } from 'lucide-react';
+import { ChevronDown, Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { Button } from '@/components/ui/button';
 import type { RSSItem } from '@/types';
 import { LineBadge } from '@/components/LineBadge';
 import { AlertIcon } from './AlertIcon';
@@ -9,6 +10,8 @@ import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { isHighPriorityAlert } from '@/domain/alerts';
 import { formatDateTime, formatStartDate } from '@/domain/time';
 import { useCityConfig } from '@/hooks/data/useCities';
+import { AlertText, ValidityLine } from './AlertTexts';
+import { ExternalLinkIcon } from '@/components/ExternalLinkIcon';
 import {
     Collapsible,
     CollapsibleContent,
@@ -42,7 +45,7 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
     // GTFS-RT UNKNOWN_CAUSE (1) and OTHER_CAUSE (2) carry no information worth a label.
     const cause = item.cause === '1' || item.cause === '2' ? undefined : item.cause;
 
-    const iconColorClass = isHigh ? "text-destructive" : isNormal ? "text-amber-500" : "text-muted-foreground";
+    const iconColorClass = isHigh ? "text-destructive" : isNormal ? "text-tint-amber" : "text-muted-foreground";
 
     const validFromText = item.valid_from ? formatDateTime(item.valid_from, i18n.resolvedLanguage) : null;
     const validToText = item.valid_from && !item.valid_to ? t('alerts.untilFurtherNotice') : item.valid_to && formatDateTime(item.valid_to, i18n.resolvedLanguage);
@@ -52,17 +55,16 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
             open={isExpanded}
             onOpenChange={setIsExpanded}
             className={cn(
-                "group relative transition-colors block",
-                isExpanded ? "bg-primary/5" : "hover:bg-foreground/5",
+                "group relative block",
                 isFuture && "opacity-75 grayscale-[0.3]",
                 className
             )}
         >
             <CollapsibleTrigger
-                className="w-full text-left px-4 py-3 flex items-start gap-3 outline-none cursor-pointer"
+                className="row-hover-group flex w-full items-start gap-3 px-3.5 py-3 text-left data-panel-open:[--row-hover-fill:transparent]"
             >
-                <div className="shrink-0 pt-0.5">
-                    <AlertIcon cause={item.cause} effect={item.effect} type={item.type} size={16} strokeWidth={1.5} className={iconColorClass} />
+                <div className="shrink-0">
+                    <AlertIcon cause={item.cause} effect={item.effect} type={item.type} size={20} strokeWidth={1.75} className={iconColorClass} />
                 </div>
 
                 <div className="flex flex-col gap-1 flex-1 min-w-0">
@@ -73,42 +75,34 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
                                     key={`${line.name}-${idx}`}
                                     name={line.name}
                                     routeColor={line.route_color || FALLBACK_ROUTE_COLOR}
-                                    size="md"
+                                    size="row"
                                 />
                             ))}
                         </div>
                     )}
 
-                    <div className={cn(
-                        "text-sm font-semibold leading-tight text-foreground/95 whitespace-pre-line",
-                        !isExpanded && "line-clamp-2"
-                    )}>
-                        {item.title}
-                    </div>
+                    <AlertText className={cn(!isExpanded && "line-clamp-2")}>{item.title}</AlertText>
 
                     {isFuture && item.valid_from && (
-                        <div className="flex items-center gap-1.5 text-caption font-medium text-muted-foreground">
-                            <CalendarClock size={12} strokeWidth={2} className="shrink-0" />
-                            <span>{t('alerts.startsAt', { date: formatStartDate(item.valid_from, i18n.resolvedLanguage, timezone) })}</span>
-                        </div>
+                        <ValidityLine>{t('alerts.startsAt', { date: formatStartDate(item.valid_from, i18n.resolvedLanguage, timezone) })}</ValidityLine>
                     )}
                 </div>
 
-                <div className="shrink-0 pt-1 text-muted-foreground transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(180deg)' : 'none' }}>
-                    <ChevronDown size={16} strokeWidth={1.5} />
+                <div className="shrink-0 pt-0.5 text-label-3 transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(180deg)' : 'none' }}>
+                    <ChevronDown size={17} strokeWidth={1.75} />
                 </div>
             </CollapsibleTrigger>
 
             <CollapsibleContent>
-                <div className="px-4 pb-4 pt-1 ml-7">
+                <div className="pr-3.5 pb-3.5 pl-11.5">
                     <div className="flex flex-col gap-3">
                         {(cause || item.causeDetail) && (
-                            <div className="text-label font-bold text-foreground/70 uppercase tracking-wider flex items-center flex-wrap gap-y-1">
+                            <div className="type-label text-muted-foreground flex items-center flex-wrap gap-y-1">
                                 {cause && <span>{t(`alerts.causes.${cause}`, cause)}</span>}
                                 {item.causeDetail && (
                                     <span className={cn(
                                         "normal-case font-medium",
-                                        cause ? "text-foreground/50 ml-1.5 border-l border-border/50 pl-1.5" : "text-foreground/80"
+                                        cause ? "ml-1.5" : ""
                                     )}>
                                         {i18n.resolvedLanguage === 'en' && item.causeDetail.en ? item.causeDetail.en : item.causeDetail.cs}
                                     </span>
@@ -117,39 +111,35 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
                         )}
                         {item.description && (
                             <div className={cn(
-                                "text-xs leading-relaxed text-foreground/80 font-medium whitespace-pre-wrap",
+                                "type-note font-medium leading-relaxed text-foreground/80 whitespace-pre-wrap",
                                 compact && "line-clamp-5"
                             )}>
                                 {item.description}
                             </div>
                         )}
 
-                        {onOpenFull ? (
-                            <button
-                                type="button"
-                                onClick={onOpenFull}
-                                className="inline-flex items-center gap-1.5 text-caption font-bold text-primary hover:text-primary/80 transition-colors w-fit mt-1 cursor-pointer outline-none"
-                            >
-                                <Maximize2 size={12} strokeWidth={2} />
-                                {t('alerts.showFull')}
-                            </button>
-                        ) : item.link && (
-                            <a
-                                href={item.link} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-caption font-bold text-primary hover:text-primary/80 transition-colors w-fit mt-1"
-                            >
-                                <ExternalLink size={12} strokeWidth={2} />
-                                {t('alerts.moreInfo')}
-                            </a>
-                        )}
-
-                        {item.valid_from && (
-                            <div className="text-caption font-medium text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-lg border border-border/50 inline-flex w-fit">
-                                {validToText ? `${validFromText} – ${validToText}` : t('alerts.validFrom', { date: validFromText })}
-                            </div>
-                        )}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                            {item.valid_from && (
+                                <ValidityLine>
+                                    {validToText ? `${validFromText} – ${validToText}` : t('alerts.validFrom', { date: validFromText })}
+                                </ValidityLine>
+                            )}
+                            {onOpenFull ? (
+                                <Button variant="link" size="inline" onClick={onOpenFull}>
+                                    <Maximize2 size={12} strokeWidth={2} />
+                                    {t('alerts.showFull')}
+                                </Button>
+                            ) : item.link && (
+                                <Button
+                                    variant="link"
+                                    size="inline"
+                                    render={<a href={item.link} target="_blank" rel="noopener noreferrer" />}
+                                >
+                                    <ExternalLinkIcon variant="inline" />
+                                    {t('alerts.moreInfo')}
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </CollapsibleContent>

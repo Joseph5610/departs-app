@@ -36,7 +36,7 @@ export default withMermaid(defineConfig({
             },
             {
                 text: 'Internals',
-                items: [{ text: 'Ride notifications', link: '/ride-notifications' }],
+                items: [{ text: 'Push notifications', link: '/ride-notifications' }],
             },
             {
                 text: 'Reference',

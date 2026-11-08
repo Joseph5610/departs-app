@@ -10,7 +10,7 @@ import { useDepartureTap } from '@/hooks/features/useTapClick';
 import type { Departure, DepartureClickHandler } from '@/types';
 import { BoardRow, RowHeadsign, RowTimeLine, type RowAction } from './BoardRow';
 import { Amenities, ExpectedTime, LiveCountdown, MARKED_BACKDROP, TripNotes } from './DepartureParts';
-import { MyTripBell } from './MyTripBell';
+import { MyTripChip } from './MyTripChip';
 import { useMyTripEntry } from '@/hooks/features/useMyTripEntry';
 
 interface NextDepartureRowProps {
@@ -52,7 +52,7 @@ export const NextDepartureRow = memo(({
     const { forHeadsign } = useInterchanges();
     const mark = useTripMark(dep.tripId, isHighlighted);
     const tap = useDepartureTap(dep, onDepartureClick);
-    const remind = useMyTripEntry(dep);
+    const trip = useMyTripEntry(dep);
 
     return (
         <BoardRow
@@ -62,14 +62,14 @@ export const NextDepartureRow = memo(({
             onKeyDown={activateOnKey}
             data-testid={testId ?? `departure-item-${dep.tripId}`}
             action={action}
-            remindAction={remind ? { onTrigger: remind.open, label: remind.label, isActive: remind.isSet } : undefined}
+            tripAction={trip ? { onTrigger: trip.open, label: trip.label, swipeLabel: trip.swipeLabel, isActive: trip.isSet } : undefined}
             below={children}
             className={cn(
-                "cursor-pointer outline-none before:absolute before:-inset-y-2 before:-left-1.5 before:-right-2 before:-z-10 before:rounded-xl before:transition-colors hover:before:bg-foreground/5 focus-visible:before:ring-2 focus-visible:before:ring-primary/50",
+                "row-hover-board",
                 mark && MARKED_BACKDROP
             )}
         >
-            {!hidesBadge && <LineBadge name={line} routeColor={routeColor} size="lg" className="justify-self-center" />}
+            {!hidesBadge && <LineBadge name={line} routeColor={routeColor} size="lg" className="justify-self-start" />}
             <RowHeadsign headsign={headsign} isPinned={action?.isActive}><InterchangeBadges codes={forHeadsign(dep.headsign, dep.line)} /></RowHeadsign>
             <LiveCountdown departure={dep} size="lg" />
 
@@ -78,9 +78,9 @@ export const NextDepartureRow = memo(({
                 <ExpectedTime departure={dep} timeZone={timeZone} />
                 {track && <><span aria-hidden="true">·</span><span className="whitespace-nowrap">{t('map.departures.trackCode', { code: track })}</span></>}
                 {platform && <><span aria-hidden="true">·</span><span className="whitespace-nowrap">{t('map.departures.platformCode', { code: platform })}</span></>}
-                <MyTripBell departure={dep} />
+                <MyTripChip departure={dep} />
             </RowTimeLine>
-            <span className="col-start-3 row-start-2 mt-1 flex h-5 items-center justify-self-end"><Amenities departure={dep} /></span>
+            <span className="col-start-3 row-start-2 mt-0.5 flex h-4.5 items-center justify-self-end"><Amenities departure={dep} /></span>
 
             <TripNotes departure={dep} mark={mark} className="col-span-2 col-start-2 row-start-3 mt-1" />
         </BoardRow>

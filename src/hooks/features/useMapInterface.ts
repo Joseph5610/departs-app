@@ -9,7 +9,7 @@ import { MAP_LAYERS } from '@/config/mapLayers';
 import { hasPosition } from '@/lib/geo';
 import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
-import { MAP_CAMERA, LAYOUT, SELECTED_VEHICLE_PULSE } from '@/config/constants';
+import { MAP_CAMERA, SELECTED_VEHICLE_PULSE, SHEET } from '@/config/constants';
 
 /** The panel's inset from the viewport lives in index.css; the camera padding must match it. */
 const readSidebarInsetPx = (): number =>
@@ -17,7 +17,7 @@ const readSidebarInsetPx = (): number =>
 
 /** The map area the mobile sheet or the desktop panel `sidebarWidth` wide covers, kept clear by the camera. */
 const cameraPadding = (isMobile: boolean, sidebarWidth: number) => isMobile
-    ? { bottom: window.innerHeight / LAYOUT.BOTTOM_SHEET_RATIO, top: 0, left: 0, right: 0 }
+    ? { bottom: window.innerHeight * SHEET.HALF, top: 0, left: 0, right: 0 }
     : { bottom: 0, top: 0, left: sidebarWidth + readSidebarInsetPx(), right: 0 };
 
 /**
@@ -127,40 +127,66 @@ export const useMapInterface = () => {
 
     // Selected vehicle pulse, animated on the map layer directly to stay off React renders.
     const selectedCoordsRef = useRef(selectedVehicle?.geometry?.coordinates);
+    const restartPulseRef = useRef<(() => void) | null>(null);
+    const [lng, lat] = selectedVehicle?.geometry?.coordinates ?? [];
     useEffect(() => {
         selectedCoordsRef.current = selectedVehicle?.geometry?.coordinates;
     }, [selectedVehicle?.geometry?.coordinates]);
+    // Keyed on the values, not the array, which is new on every render.
+    useEffect(() => {
+        restartPulseRef.current?.();
+    }, [lng, lat]);
+    // Starting to follow shows again which vehicle the camera locks onto.
+    useEffect(() => {
+        if (isFollowing) restartPulseRef.current?.();
+    }, [isFollowing]);
     const hasSelectedVehicle = !!selectedVehicle;
 
     useEffect(() => {
-        let frame: number;
+        let frame = 0;
+        let pulseUntil = 0;
         const currentMapRef = mapRef.current;
+        const reducesMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const paint = (radius: number, opacity: number) => {
+            const map = mapRef.current?.getMap();
+            if (!map || !hasPosition(selectedCoordsRef.current)) return;
+            try {
+                if (map.getLayer(MAP_LAYERS.SELECTED_VEHICLE_PULSE)) {
+                    map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-radius', radius);
+                    map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-opacity', Math.max(0, opacity));
+                }
+            } catch {
+                /* Silent fail */
+            }
+        };
+        const opacityAt = (radius: number) => SELECTED_VEHICLE_PULSE.BASE_OPACITY - ((radius - 5) / SELECTED_VEHICLE_PULSE.OPACITY_DIVISOR);
 
         const animate = () => {
-            const map = mapRef.current?.getMap();
-            const coords = selectedCoordsRef.current;
-            if (map && hasPosition(coords)) {
-                const time = Date.now() / SELECTED_VEHICLE_PULSE.SPEED_DIVISOR;
-                const radius = SELECTED_VEHICLE_PULSE.BASE_RADIUS + Math.sin(time) * SELECTED_VEHICLE_PULSE.RADIUS_AMPLITUDE;
-                const opacity = SELECTED_VEHICLE_PULSE.BASE_OPACITY - ((radius - 5) / SELECTED_VEHICLE_PULSE.OPACITY_DIVISOR);
-
-                try {
-                    if (map.getLayer(MAP_LAYERS.SELECTED_VEHICLE_PULSE)) {
-                        map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-radius', radius);
-                        map.setPaintProperty(MAP_LAYERS.SELECTED_VEHICLE_PULSE, 'circle-opacity', Math.max(0.1, opacity));
-                    }
-                } catch {
-                    /* Silent fail */
-                }
+            frame = 0;
+            const now = Date.now();
+            const fade = reducesMotion ? 0 : 1 - Math.max(0, now - pulseUntil) / SELECTED_VEHICLE_PULSE.FADE_MS;
+            if (fade <= 0) {
+                paint(0, 0);
+                return;
             }
+            const radius = SELECTED_VEHICLE_PULSE.BASE_RADIUS + Math.sin(now / SELECTED_VEHICLE_PULSE.SPEED_DIVISOR) * SELECTED_VEHICLE_PULSE.RADIUS_AMPLITUDE;
+            paint(radius, opacityAt(radius) * Math.min(1, fade));
             frame = requestAnimationFrame(animate);
         };
 
+        const start = () => {
+            pulseUntil = Date.now() + SELECTED_VEHICLE_PULSE.PULSE_MS;
+            if (!frame) frame = requestAnimationFrame(animate);
+        };
+
         if (hasSelectedVehicle) {
-            frame = requestAnimationFrame(animate);
+            restartPulseRef.current = start;
+            start();
         }
 
         return () => {
+            restartPulseRef.current = null;
             if (frame) {
                 cancelAnimationFrame(frame);
             }

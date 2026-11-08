@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import { Route, X } from 'lucide-react';
+import { Route } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { JourneyRow, type JourneyLeg } from '@/components/JourneyRow';
 import type { MyTrip } from '@/types';
-import { TripControlButton } from './TripControl';
+import { SectionHeading } from '@/components/SectionHeading';
+import { CloseIcon } from '@/components/CloseIcon';
 
 interface MyTripCardProps {
     /** The user's trip on this trip, if they take it. */
@@ -22,18 +23,23 @@ export const MyTripCard = ({ trip, exit, lastStopName, onOpen, onEnd }: MyTripCa
     const { t } = useTranslation();
 
     if (!trip) {
-        return <TripControlButton icon={Route} title={t('myTrip.take')} subtitle={t('myTrip.takeSub')} onClick={() => onOpen()} />;
+        return (
+            <Button className="w-full gap-1.75" onClick={() => onOpen()}>
+                <Route size={16} strokeWidth={2.25} />
+                {t('myTrip.take')}
+            </Button>
+        );
     }
 
     const board = trip.board;
     const exitMeta = exit?.arrivalTime ? `${t('ride.arrivesAtLabel')} ${exit.arrivalTime}` : '';
 
     return (
-        <Card variant="inset" size="none" className="overflow-hidden" data-testid="my-trip-card">
+        <Card size="none" className="overflow-hidden" data-testid="my-trip-card">
             <div className="flex h-10 items-center justify-between gap-2 pl-4 pr-2.5">
-                <span className="micro-label-widest text-muted-foreground">{t('myTrip.title')}</span>
-                <Button variant="ghost" size="icon-xs" onClick={onEnd} aria-label={t('myTrip.end')} title={t('myTrip.end')} className="size-7 text-muted-foreground hover:text-foreground">
-                    <X size={16} strokeWidth={2} />
+                <SectionHeading className="px-0">{t('myTrip.title')}</SectionHeading>
+                <Button variant="secondary" size="icon-xs" onClick={onEnd} aria-label={t('myTrip.end')} title={t('myTrip.end')} className="text-muted-foreground hover:text-foreground">
+                    <CloseIcon />
                 </Button>
             </div>
             <JourneyRow

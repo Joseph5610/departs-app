@@ -1,5 +1,5 @@
 import { test, expect, type BrowserContext } from '@playwright/test';
-import { mockStops, singlePlatformStations } from '../fixtures/stops';
+import { hlavniNadrazi, mockStops, singlePlatformStations } from '../fixtures/stops';
 
 const HERE = { latitude: 50.0995, longitude: 14.4385 };
 
@@ -29,6 +29,101 @@ const openPhone = async (context: BrowserContext, favoriteStops: string[] = []) 
 };
 
 test.describe('Mobile home sheet', () => {
+    test('drops the glass under increased contrast', async ({ browser }) => {
+        const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, contrast: 'more' });
+        const page = await openPhone(context);
+
+        const glass = page.locator('[data-slot="drawer-glass"]');
+        await expect(glass).toBeAttached({ timeout: 30000 });
+        await expect(glass).toHaveCSS('backdrop-filter', 'none');
+        await context.close();
+    });
+
+    // Like Apple's minimizing bars: down folds it, a run back up restores it, and a new height starts open.
+    test('folds the board toolbar while scrolling down and restores it', async ({ browser }) => {
+        const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+        const page = await context.newPage();
+        await page.addInitScript(() => {
+            window.localStorage.setItem('departs-preferences', JSON.stringify({ state: { hasSeenWelcome: true, selectedCity: 'prague' }, version: 0 }));
+        });
+        await mockStops(page, hlavniNadrazi());
+        const at = (minutes: number) => new Date(Date.now() + minutes * 60_000).toISOString();
+        const departures = Array.from({ length: 24 }, (_, i) => ({ tripId: `trip-${i}`, line: String(i + 1), headsign: `Direction ${i}`, type: '3', scheduled: at(i + 1), timestamp: at(i + 1), delay: 0 }));
+        await page.route('**/api/*/departures*', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ departures }) }));
+        await page.goto('/prague/stop/U1111Z1P');
+
+        const toolbar = page.getByTestId('sheet-toolbar');
+        const width = () => toolbar.evaluate(el => Math.round(el.getBoundingClientRect().width));
+        const scrollBy = (top: number) => page.evaluate(by => { document.querySelector('.scroll-edge')!.scrollTop += by; }, top);
+        await expect(toolbar).toBeVisible({ timeout: 30000 });
+        await expect(toolbar.getByTestId('share-btn')).toBeVisible();
+        await expect(toolbar).toHaveCSS('height', '48px');
+        await expect.poll(width).toBe(136);
+
+        await page.getByTestId('home-sheet-grabber').click();
+        await expect(page.locator('[data-slot="drawer-glass"]')).toHaveAttribute('data-solid', '');
+        await scrollBy(300);
+        await expect.poll(width).toBe(48);
+        await expect(toolbar.getByTestId('favorite-btn')).toHaveAttribute('tabindex', '-1');
+
+        await scrollBy(-10);
+        await page.waitForTimeout(200);
+        expect(await width()).toBe(48);
+        await scrollBy(-60);
+        await expect.poll(width).toBe(136);
+
+        // At the peek only the title shows, whatever mounts while the sheet stays there.
+        await page.getByTestId('home-sheet-grabber').click();
+        await expect(toolbar).toBeHidden();
+        await page.evaluate(() => { history.pushState({}, '', '/prague/stop/U1111Z1P?x=1'); dispatchEvent(new PopStateEvent('popstate')); });
+        await expect(toolbar).toBeHidden();
+        await expect(page.getByTestId('board-walk')).toBeHidden();
+        await context.close();
+    });
+
+    // The peek is a capsule floating over the map; every higher detent is the same sheet, edge to edge.
+    test('morphs from the peek capsule to the full-width sheet', async ({ browser }) => {
+        const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+        const page = await openPhone(context);
+
+        const glass = page.locator('[data-slot="drawer-glass"]');
+        const field = page.getByTestId('search-trigger').locator('..');
+        await expect(field).toBeVisible({ timeout: 30000 });
+
+        await expect(glass).toHaveCSS('left', '12px');
+        await expect(glass).toHaveCSS('height', '68px');
+        await expect(glass).toHaveCSS('border-top-left-radius', '34px');
+        await expect(glass).toHaveCSS('border-bottom-left-radius', '34px');
+        await expect(field).toHaveCSS('height', '44px');
+        const peek = await glass.boundingBox();
+        expect(844 - (peek!.y + peek!.height)).toBe(12);
+        const fieldBox = await field.boundingBox();
+        expect(fieldBox!.x - peek!.x).toBe(12);
+        expect(fieldBox!.y - peek!.y).toBe(12);
+
+        // Dragged down at the peek it gives a little and comes back, rather than leaving the screen.
+        const grabber = (await page.getByTestId('home-sheet-grabber').boundingBox())!;
+        await page.mouse.move(grabber.x + grabber.width / 2, grabber.y + grabber.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(grabber.x + grabber.width / 2, grabber.y + 200, { steps: 8 });
+        const dragged = (await glass.boundingBox())!;
+        expect(dragged.y - peek!.y).toBeGreaterThan(0);
+        expect(dragged.y - peek!.y).toBeLessThanOrEqual(14);
+        expect(dragged.height).toBe(68);
+        await page.mouse.up();
+        await expect.poll(async () => (await glass.boundingBox())!.y).toBe(peek!.y);
+
+        await page.getByTestId('home-sheet-grabber').click();
+        await expect(glass).toHaveCSS('left', '0px');
+        await expect(glass).toHaveCSS('border-top-left-radius', '38px');
+        await expect(glass).toHaveCSS('border-bottom-left-radius', '0px');
+        await expect(page.getByTestId('home-sheet-grabber')).toHaveCSS('height', '16px');
+
+        await page.getByTestId('home-sheet-grabber').click();
+        await expect(glass).toHaveAttribute('data-solid', '');
+        await context.close();
+    });
+
     test('peeks with the search field and the map controls, and gives way to a stop board', async ({ browser }) => {
         const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
         const page = await openPhone(context, ['S2']);

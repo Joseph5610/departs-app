@@ -16,6 +16,7 @@ export const useMyTripEntry = (dep: Departure) => {
     return {
         isSet,
         label: isSet ? t('myTrip.edit') : t('myTrip.take'),
+        swipeLabel: isSet ? t('myTrip.swipeEdit') : t('myTrip.swipeTake'),
         open: () => openMyTrip({ city, tripId, vehicleId: dep.vehicleId ?? null, stopId }),
     };
 };

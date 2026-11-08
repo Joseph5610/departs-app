@@ -109,7 +109,7 @@ export default defineConfig({
         name: SITE.INSTALL_NAME,
         short_name: SITE.INSTALL_SHORT_NAME,
         description: 'Real-time Public Transport Visualization',
-        theme_color: '#000000',
+        theme_color: '#191d24',
         background_color: '#000000',
         display: 'standalone',
       },

@@ -13,6 +13,7 @@ import { paths } from '@/lib/routes';
 import { DEFAULT_CITY_SLUG } from '@/config/cities';
 import { CitySelectionList } from '@/components/Map/CitySelectionList';
 import { cityOverviewCamera } from '@/lib/map/view';
+import { SectionHeading } from '@/components/SectionHeading';
 
 /**
  * WelcomeModal
@@ -87,30 +88,30 @@ export const WelcomeModal = memo(() => {
         <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
             <DialogContent
                 aria-describedby={undefined}
-                variant="default"
+               
                 showCloseButton={false}
                 initialFocus={ctaRef}
                 className="h-fit max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] max-w-md gap-3 p-5 short:max-w-2xl short:flex-row short:gap-5"
             >
                 <DialogHeader className="shrink-0 items-center gap-2 text-center short:w-5/12 short:justify-center short:border-r short:border-border/60 short:pr-5">
-                    <div className="size-11 mb-1 bg-black rounded-xl flex items-center justify-center p-0 border border-border/50 shadow-2xl overflow-hidden relative">
+                    <div className="size-11 mb-1 bg-black rounded-surface flex items-center justify-center p-0 shadow-2xl overflow-hidden relative">
                         <div className="absolute inset-0 bg-primary/20 blur-xl"></div>
-                        <img src="/pwa-192x192.png" alt="" className="w-full h-full object-cover rounded-xl relative z-10" />
+                        <img src="/pwa-192x192.png" alt="" className="w-full h-full object-cover rounded-surface relative z-10" />
                     </div>
-                    <DialogTitle className="flex flex-wrap items-center justify-center gap-2 text-xl font-semibold">
+                    <DialogTitle className="flex flex-wrap items-center justify-center gap-2 type-title">
                         {t('welcome.title')}
                         <Badge variant="beta">{t('common.beta')}</Badge>
                     </DialogTitle>
-                    <p className="text-sm text-muted-foreground leading-snug max-w-80 text-balance">
+                    <p className="type-row text-muted-foreground max-w-80 text-balance">
                         {t('welcome.description')}
                     </p>
                 </DialogHeader>
                 <div className="flex min-h-0 flex-1 flex-col gap-2">
                     <div className="flex shrink-0 items-center gap-4 px-2">
                         <div className="h-px flex-1 bg-linear-to-r from-transparent to-border"></div>
-                        <span className="micro-label-widest text-muted-foreground/60">
+                        <SectionHeading className="px-0 text-muted-foreground/60">
                             {t('welcome.chooseCity')}
-                        </span>
+                        </SectionHeading>
                         <div className="h-px flex-1 bg-linear-to-l from-transparent to-border"></div>
                     </div>
                     <div className="min-h-0 flex-1 -mx-2 px-2 py-0.5 overflow-y-auto overflow-x-hidden overscroll-contain">
@@ -123,7 +124,6 @@ export const WelcomeModal = memo(() => {
                     </div>
                     <Button
                         ref={ctaRef}
-                        size="xl"
                         onClick={handleClose}
                         data-testid="welcome-cta"
                         className="w-full shrink-0 mt-1 h-11 transition-colors flex items-center justify-center gap-2 group font-semibold"

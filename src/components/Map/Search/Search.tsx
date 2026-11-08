@@ -88,10 +88,10 @@ export const Search = memo(() => {
             >
                 <div ref={containerRef}>
                     <div
-                        className="flex h-11 glassy rounded-2xl overflow-hidden transition-colors items-center focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+                        className="flex h-11 glassy rounded-full overflow-hidden transition-colors items-center focus-within:ring-2 focus-within:ring-primary/20"
                         data-testid="search-container"
                     >
-                        <CitySwitcher variant="ghost" className="w-12 pl-1 rounded-l-2xl rounded-r-none border-r border-border/40 hover:bg-muted/50" />
+                        <CitySwitcher variant="ghost" className="w-12 pl-1 rounded-l-full rounded-r-none border-r border-sep" />
 
                         <div className="relative flex-1 group h-full" onClick={() => inputRef.current?.focus()}>
                             <Autocomplete.Input
@@ -100,7 +100,7 @@ export const Search = memo(() => {
                                 aria-label={s.lineFilterLabel ?? t('search.placeholder')}
                                 onFocus={() => setIsOpen(true)}
                                 placeholder={activeFilter ? undefined : t('search.placeholder')}
-                                className="h-full w-full bg-transparent border-0! pl-10 text-title truncate placeholder:text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0! focus-visible:border-transparent! shadow-none! rounded-none outline-none"
+                                className="h-full w-full bg-transparent border-0! pl-10 type-field truncate placeholder:text-sm placeholder:text-muted-foreground focus-visible:ring-0! focus-visible:border-transparent! shadow-none! rounded-none outline-none"
                                 data-testid="search-input"
                                 readOnly={!!activeFilter}
                             />
@@ -109,8 +109,8 @@ export const Search = memo(() => {
                                     <LineFilterLabel lines={s.activeFilterBadges} />
                                 </div>
                             )}
-                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors pointer-events-none">
-                                <SearchIcon size={18} strokeWidth={2} className={cn(activeFilter && "text-primary")}  />
+                            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-tint-mint transition-colors pointer-events-none">
+                                <SearchIcon size={18} strokeWidth={2} className={cn(activeFilter && "text-tint-mint")}  />
                             </div>
                             {(query || activeFilter) && (
                                 <div className="absolute right-0 top-0 h-full flex items-center pr-1">
@@ -121,7 +121,7 @@ export const Search = memo(() => {
                                             s.clearSelection();
                                             inputRef.current?.focus();
                                         }}
-                                        className="h-9 w-9 text-muted-foreground hover:bg-muted/50"
+                                        className="h-9 w-9 text-muted-foreground"
                                         aria-label={t('search.clearFilter')}
                                     >
                                         <X size={18} strokeWidth={2}  />

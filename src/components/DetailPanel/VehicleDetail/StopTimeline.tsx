@@ -1,8 +1,10 @@
+import type React from 'react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronUp, UserRound, X } from 'lucide-react';
+import { ChevronDown, UserRound } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { SectionHeading } from '@/components/SectionHeading';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useSearch } from 'wouter';
@@ -24,9 +26,10 @@ import { useStops } from '@/hooks/data/useStops';
 import { useUiStore } from '@/state/uiStore';
 import { MY_TRIP_CONFIG, SHARED_GROUND } from '@/config/constants';
 import { boardableStopId, indexStops } from '@/domain/stops';
+import { CloseIcon } from '@/components/CloseIcon';
 
 /** The trip's stops on a vertical line, with past stops collapsed behind a toggle. */
-export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, tripId, vehicleId, hasEnded }: StopTimelineProps) => {
+export const StopTimeline = ({ stopTimes, routeName, routeColor, effectiveSequence, delay, tripId, vehicleId, hasEnded }: StopTimelineProps) => {
     const { t } = useTranslation();
     const [showPastStops, setShowPastStops] = useState(false);
     const searchString = useSearch();
@@ -130,28 +133,14 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
                         onEnd={endMyTrip}
                     />
                 )}
-                <div className="flex justify-between items-center gap-2 px-1">
-                    <span className="micro-label-widest text-muted-foreground">{t('map.vehicleDetails.routeSchedule')}</span>
-                    {currentSequence !== null && pastStopsCount > 0 && (
-                        <CollapsibleTrigger render={
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 rounded-xl micro-label bg-foreground/5 border border-border/50 hover:bg-foreground/10 text-muted-foreground hover:text-foreground px-3 gap-1.5"
-                            />
-                        }>
-                            {showPastStops ? t('map.vehicleDetails.hidePastStops') : t('map.vehicleDetails.showPastStops')}
-                            {showPastStops ? <ChevronUp size={14}  strokeWidth={1.5} /> : <ChevronDown size={14}  strokeWidth={1.5} />}
-                        </CollapsibleTrigger>
-                    )}
-                </div>
+                <SectionHeading className="-mb-1">{t('map.vehicleDetails.routeSchedule')}</SectionHeading>
                 {(sharedExit || sharedBoard) && isLinkValid && !myTrip && (
                     <div className={cn(
-                        "flex items-center gap-2 rounded-xl border px-3 py-2 min-h-9 transition-colors",
-                        isFollowingShared ? "border-primary/30 bg-primary/10" : "border-border/50 bg-foreground/5"
+                        "flex min-h-12 items-center gap-2 rounded-surface px-3.5 py-2 transition-colors",
+                        isFollowingShared ? "bg-selected" : "bg-fill"
                     )}>
-                        <UserRound size={16} strokeWidth={1.5} className="text-primary shrink-0" />
-                        <span className="flex-1 min-w-0 text-sm font-medium leading-snug line-clamp-2">
+                        <UserRound size={20} strokeWidth={1.75} className="text-tint-mint shrink-0" />
+                        <span className="flex-1 min-w-0 type-row line-clamp-2">
                             {sharedBoard
                                 ? t(sharedExit ? 'share.friendTrip' : 'share.friendFrom', { from: sharedBoard.stopName, depart: sharedDepart ?? '', stop: sharedExit?.stopName })
                                 : sharedExit?.time
@@ -165,9 +154,9 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
                                 onClick={() => unfollow(true)}
                                 aria-label={t('share.stopWatching')}
                                 title={t('share.stopWatching')}
-                                className="size-7 rounded-full text-muted-foreground hover:text-foreground shrink-0"
+                                className="text-muted-foreground hover:text-foreground shrink-0"
                             >
-                                <X size={14} strokeWidth={2} />
+                                <CloseIcon />
                             </Button>
                         ) : !hasEnded && (
                             <Button
@@ -177,7 +166,7 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
                                     followSharedTrip();
                                     toast(t('share.watchStarted', { stop: sharedExit?.stopName ?? lastStop?.properties.stop_name ?? '' }));
                                 }}
-                                className="h-7 rounded-lg micro-label text-primary hover:bg-primary/15 hover:text-primary shrink-0"
+                                className="text-tint-mint hover:bg-primary/15 hover:text-tint-mint shrink-0"
                             >
                                 {t('share.watch')}
                             </Button>
@@ -185,11 +174,18 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
                     </div>
                 )}
                 <div>
-                    <div className="relative pl-6 overflow-hidden!">
-                        <div className={cn(
-                            "absolute left-2.75 bottom-6 w-0.5 bg-border",
-                            (pastStopsCount === 0 || showPastStops) ? "top-6" : "top-0"
-                        )} />
+                    <div className="relative -mr-2.5 overflow-hidden! pr-2.5 pl-7" style={{ '--line': routeColor } as React.CSSProperties}>
+                        <div className="relative">
+                        {currentSequence !== null && pastStopsCount > 0 && (
+                            <>
+                            <div className="absolute top-5.5 -bottom-5 -left-4.75 w-1.5 bg-fill-2" />
+                            <CollapsibleTrigger className="relative flex h-11 w-full cursor-pointer items-center justify-between type-meta font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:underline">
+                                <span className="absolute -left-5 size-2 rounded-full bg-label-3" />
+                                {t('map.vehicleDetails.pastStops', { count: pastStopsCount })}
+                                <ChevronDown size={17} strokeWidth={1.75} className={cn("shrink-0 transition-transform duration-200", showPastStops && "rotate-180")} />
+                            </CollapsibleTrigger>
+                            </>
+                        )}
 
                         <CollapsibleContent className="animate-in fade-in-0 slide-in-from-top-1 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-1 data-[state=closed]:overflow-hidden data-[state=open]:overflow-visible">
                             {stopTimes
@@ -211,7 +207,10 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
                                 ))
                             }
                         </CollapsibleContent>
+                        </div>
 
+                        <div className="relative">
+                        <div className={cn("absolute top-5 bottom-5 -left-4.75 w-1.5 rounded-full", hasEnded ? "bg-fill-2" : "bg-(--line)")} />
                         {stopTimes
                             .filter(stop => Number(stop.properties.stop_sequence) >= (currentSequence ?? 0))
                             .map((stop, idx: number) => (
@@ -231,11 +230,12 @@ export const StopTimeline = ({ stopTimes, routeName, effectiveSequence, delay, t
                                 />
                             ))
                         }
+                        </div>
                     </div>
 
                     {/* The last stop's own transfers render outside the line's gutter so the line ends at its dot. */}
                     {lastStop && (lastStop.properties.connections || lastStop.properties.continues_as) && (
-                        <div className="pl-6">
+                        <div className="pl-7">
                             {lastStop.properties.connections && (
                                 <StopConnections
                                     connections={lastStop.properties.connections}
