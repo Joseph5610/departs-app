@@ -124,17 +124,21 @@ export const VehicleHero = ({
             {displayVehicle.vehicle_descriptor && (
                 <HeroFooter className="mt-auto flex items-center justify-between gap-3">
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="type-row text-foreground">{vehicleTypeLabel}</span>
+                        <span className="type-row text-foreground">
+                            {vehicleTypeLabel}
+                            {displayVehicle.vehicle_descriptor.vehicle_registration_number && (
+                                <span className="ml-1.5 type-meta">
+                                    <VehicleNumber
+                                        number={displayVehicle.vehicle_descriptor.vehicle_registration_number}
+                                        operator={displayVehicle.vehicle_descriptor.operator}
+                                    />
+                                </span>
+                            )}
+                        </span>
                         {displayVehicle.vehicle_descriptor.operator && (
                             <span className="line-clamp-1 type-meta text-muted-foreground">{displayVehicle.vehicle_descriptor.operator}</span>
                         )}
                         <IdLine>
-                            {displayVehicle.vehicle_descriptor.vehicle_registration_number && (
-                                <VehicleNumber
-                                    number={displayVehicle.vehicle_descriptor.vehicle_registration_number}
-                                    operator={displayVehicle.vehicle_descriptor.operator}
-                                />
-                            )}
                             {displayVehicle.run_number && <span>{t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}</span>}
                             {displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor.vehicle_registration_number) && (
                                 <span className="min-w-0 truncate font-mono">{displayVehicle.vehicle_id}</span>
