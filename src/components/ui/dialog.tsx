@@ -4,7 +4,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
 import { cn } from "@/lib/cn"
 import { Button } from "@/components/ui/button"
-import { X } from "lucide-react"
+import { CloseIcon } from "@/components/CloseIcon"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
@@ -74,7 +74,7 @@ function DialogContent({
               />
             }
           >
-            <X strokeWidth={2.5} className="size-3.5" />
+            <CloseIcon />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}

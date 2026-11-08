@@ -2,7 +2,7 @@ import type React from 'react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, UserRound, X } from 'lucide-react';
+import { ChevronDown, UserRound } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { SectionHeading } from '@/components/SectionHeading';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ import { useStops } from '@/hooks/data/useStops';
 import { useUiStore } from '@/state/uiStore';
 import { MY_TRIP_CONFIG, SHARED_GROUND } from '@/config/constants';
 import { boardableStopId, indexStops } from '@/domain/stops';
+import { CloseIcon } from '@/components/CloseIcon';
 
 /** The trip's stops on a vertical line, with past stops collapsed behind a toggle. */
 export const StopTimeline = ({ stopTimes, routeName, routeColor, effectiveSequence, delay, tripId, vehicleId, hasEnded }: StopTimelineProps) => {
@@ -155,7 +156,7 @@ export const StopTimeline = ({ stopTimes, routeName, routeColor, effectiveSequen
                                 title={t('share.stopWatching')}
                                 className="text-muted-foreground hover:text-foreground shrink-0"
                             >
-                                <X size={14} strokeWidth={2} />
+                                <CloseIcon />
                             </Button>
                         ) : !hasEnded && (
                             <Button

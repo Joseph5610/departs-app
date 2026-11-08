@@ -14,6 +14,7 @@ import { SHEET } from '@/config/constants';
 import { LineFilterLabel } from './LineFilterLabel';
 import { Pressable } from '@/components/Pressable';
 import { SearchField } from '@/components/SearchField';
+import { CloseIcon } from '@/components/CloseIcon';
 
 /** Opens at the sheet's full height, just below the status bar. */
 const SEARCH_SHEET_STYLE = { top: `calc(max(env(safe-area-inset-top, 0px), ${SHEET.FULL_TOP_MIN_INSET_PX}px) + ${SHEET.FULL_TOP_GAP_PX}px)` };
@@ -135,7 +136,7 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                             data-testid="search-input"
                         />
                         <Button variant="secondary" size="icon" onClick={close} aria-label={t('common.cancel')} className="shrink-0 text-muted-foreground" data-testid="search-cancel">
-                            <X size={16} strokeWidth={2.5} />
+                            <CloseIcon large />
                         </Button>
                     </div>
                     <MobileSearchResults

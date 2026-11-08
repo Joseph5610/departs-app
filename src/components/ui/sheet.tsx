@@ -3,7 +3,7 @@ export type { DialogRootChangeEventDetails } from "@base-ui/react/dialog"
 
 import { cn } from "@/lib/cn"
 import { Button } from "@/components/ui/button"
-import { X } from "lucide-react"
+import { CloseIcon } from "@/components/CloseIcon"
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
@@ -77,13 +77,13 @@ function SheetContent({
             data-slot="sheet-close"
             render={
               <Button
-                variant="ghost"
-                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground rounded-full h-9 w-9 p-0"
-                size="icon"
+                variant="secondary"
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+                size="icon-xs"
               />
             }
           >
-            <X size={20} strokeWidth={1.5}  />
+            <CloseIcon />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>
         )}

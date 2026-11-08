@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { ChevronLeft, X } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/cn';
 import { DrawerTitle } from '@/components/ui/drawer';
@@ -16,6 +16,7 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MobileSheet } from './MobileSheet';
 import { SidebarResizeHandle } from './SidebarResizeHandle';
+import { CloseIcon } from '@/components/CloseIcon';
 
 interface DetailPanelProps {
     isOpen: boolean;
@@ -93,7 +94,7 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
             data-testid="detail-panel-close"
             className="shrink-0 text-muted-foreground"
         >
-            <X strokeWidth={2.5} className="size-3.5" />
+            <CloseIcon />
         </Button>
     );
 
