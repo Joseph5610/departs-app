@@ -50,6 +50,12 @@ export const UI_TIMING_MS = {
 };
 
 /** The mobile sheet's three heights: the peek shows only the search row or a card's header, half, and full, which stops just below the status bar. */
+/** The browser's own bars (Safari's toolbar and tab bar) in each theme: the sheet's opaque material, as hex since not every browser reads oklch. */
+export const BROWSER_THEME_COLOR = {
+    dark: '#191d24',
+    light: '#f2f5f9',
+} as const;
+
 export const SHEET = {
     /** The peek capsule's height: its grabber and search row. */
     PEEK_CONTENT_PX: 68,

@@ -62,6 +62,7 @@ const McpModal = lazy(() => import('@/components/Modals/McpModal/McpModal').then
 import { StatsTabs } from './Stats/StatsTabs';
 import { FavoritesTabs } from '@/components/DetailPanel/FavoritesPanel/FavoritesTabs';
 import { FavoritesReorderButton } from '@/components/DetailPanel/FavoritesPanel/FavoritesReorderButton';
+import { useBrowserThemeColor } from '@/hooks/features/useBrowserThemeColor';
 
 const renderSheetControls = (hidden: boolean) => <MapControls placement="sheet" hidden={hidden} />;
 const renderBoardToolbar = (collapsed: boolean) => <PanelActions layout="toolbar" collapsed={collapsed} />;
@@ -100,6 +101,7 @@ const MapInner = () => {
     const isCityPickerOpen = useUiStore(s => s.isCityPickerOpen);
     const { setIsSettingsOpen, setIsAlertsOpen, setIsCityPickerOpen, openAlert } = useUiStore(s => s.actions);
     const { resolvedTheme } = useTheme();
+    useBrowserThemeColor();
 
     const selectedStop = useSelectedStop();
     const selectedVehicle = useSelectedVehicle();

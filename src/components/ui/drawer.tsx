@@ -128,7 +128,7 @@ function DrawerContent({
           data-snap-points={hasSnapPoints ? "" : undefined}
           className={cn(
             // Base.
-            "group/drawer-popup pointer-events-auto fixed z-500 m-(--drawer-inset,0px) flex h-(--drawer-content-height) max-h-(--drawer-content-max-height,none) min-h-0 w-(--drawer-content-width,auto) transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col type-row transition-[transform,height,opacity,filter] duration-450 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none select-none [interpolate-size:allow-keywords] data-[swipe-direction=down]:rounded-t-sheet data-[swipe-direction=left]:rounded-r-surface data-[swipe-direction=right]:rounded-l-surface data-[swipe-direction=up]:rounded-b-surface",
+            "group/drawer-popup pointer-events-auto fixed z-500 m-(--drawer-inset,0px) flex h-(--drawer-content-height) max-h-(--drawer-content-max-height,none) min-h-0 w-(--drawer-content-width,auto) transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col type-row transition-[transform,height,opacity,filter] duration-450 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-0 select-none [interpolate-size:allow-keywords] data-[swipe-direction=down]:rounded-t-sheet data-[swipe-direction=left]:rounded-r-surface data-[swipe-direction=right]:rounded-l-surface data-[swipe-direction=up]:rounded-b-surface",
             // Nested.
             "data-nested-drawer-open:overflow-hidden data-nested-drawer-open:brightness-95",
             // Bleed.
