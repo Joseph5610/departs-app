@@ -10,9 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The trip hero's headsign leads with a larger size, its vehicle facts read as secondary, and small caps labels and status pills are easier to read.
 - Taking a trip shows no "Trip saved" toast; the ride bar confirms it.
+- Secondary actions (copy, follow a shared trip, next trip) share one neutral button style; mint marks only on-states.
+- The live status pill no longer switches to "Filtered"; the settings button's badge alone marks active map filters.
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
 - On a touch tablet the panel's edge has a finger-sized grabber for resizing it.
 - My trip on a phone opens in one move instead of folding into the search capsule and back.
 - The phone sheet's grabber steps to the neighbouring height, and a row swipe no longer leaves the sheet stuck mid-drag.
@@ -53,6 +56,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - My trip on phones no longer opens as an empty sheet while it loads.
 - A disruption push opens the alerts scrolled to its alert, even before the alerts have loaded.
 - A window narrowed to a phone's width (iPad Split View) opens settings and alerts once, as the sheet's card, not also as a dialog.
@@ -72,6 +77,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Alert section headings no longer overlap at the end of the list, and filter labels no longer jump when picked.
 - Recent line filters show their badges in the colours of their own city.
 
@@ -89,6 +96,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Text on mint surfaces is dark, as white on mint was unreadable.
 
 ## [0.95.0] - 2026-10-30
@@ -99,17 +108,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - The alerts badge and the home sheet no longer count upcoming incidents or incidents left open-ended for over a week.
 
 ## [0.94.2] - 2026-11-07
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Brno vehicles match their trips again when the KORDIS realtime feed lags more than one timetable export behind.
 
 ## [0.94.1] - 2026-11-04
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - On tablets, the installed app keeps the search bar, map controls and detail panel below the blurred status bar.
 
@@ -127,6 +142,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Station boards with long direction names no longer overflow the desktop panel.
 
 ## [0.92.0] - 2026-10-29
@@ -143,12 +160,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - The desktop detail panel's default width now grows with the screen instead of staying capped at 384 px.
 - The desktop search box, live pill and ride bars slide together as one when the panel opens or closes.
 
 ## [0.90.0] - 2026-10-27
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Map tiles, fonts and sprites are cached offline again after CARTO moved them under a versioned path.
 - A Prague vehicle sent without a position is left off the map instead of reaching code that assumes one.
@@ -163,6 +184,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.89.0] - 2026-10-26
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - The welcome screen is more compact and fits low screens such as foldables and phones on their side, with the start button always visible.
 
@@ -195,6 +218,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Map stop labels load their font from the app itself, so the basemap provider can no longer change how they look; the common glyphs install with the app and the rest are cached once used.
 - The live fleet is fetched once per refresh, not once per screen that shows it.
 
@@ -223,6 +248,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Brno vehicles no longer show trips from the wrong time after a daily timetable update.
 
 ## [0.87.2] - 2026-10-20
@@ -237,6 +264,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Tapping an arrival-only terminus in a vehicle's timeline opens its station's board.
 - Prague station boards show the full two hours: each platform is asked from Golemio on its own, since it caps every stop group at 24 departures (a big station like Letňany showed only its next quarter hour).
 - Favourite stops belong to the city they were pinned in: another network's stop with the same id is no longer starred or listed, and the limit counts only the current city's pins.
@@ -249,6 +278,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - MCP tools resolve a stop name to its station from departs-data's stop index, and answer with the station ids the app and departures use.
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - A stop pinned under an alias shows as pinned, and unpinning it no longer leaves a duplicate behind.
 - The full-screen board of a platform section shows its name, platform and notices.
@@ -282,6 +313,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - An ended trip's timeline shows its whole run as past, without a current or next stop.
 
 ## [0.85.0] - 2026-10-14
@@ -291,6 +324,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Brno shows delays the app estimates itself from the timetable and live positions wherever the KORDIS stream has none (while it connects, or when it is down), on the map, departure boards, vehicle detail and ride bar.
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Right-clicking a departure board row opens a menu to pin or unpin the line instead of toggling it straight away.
 - Longer platform codes such as Brno's "AN 6" widen their badge into a pill instead of wrapping out of the circle.
@@ -311,6 +346,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.83.6] - 2026-10-12
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Swiping a departure to pin its line no longer drags the mobile sheet up or down.
 - The "Show less" button keeps its gap below an opened or hovered later departure.
@@ -337,6 +374,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Departure board rows keep the badge, pin star, notes and later departures aligned on one grid.
 - Viewed and ridden trips are no longer marked with a bright bar along the row's edge.
 
@@ -351,6 +390,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Swiping home from the installed iPhone app no longer drags the mobile sheet up.
 - Vehicles whose line colour is still loading or unknown show the neutral line colour instead of black.
 - "Continues as" and connection notes on boards wrap word by word instead of pushing the destination onto its own line.
@@ -360,6 +401,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.83.1] - 2026-10-12
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - The live indicator sits lower in the installed iPhone app, clear of the blur iOS 27 draws under the status bar.
 - Closing a stop or trip returns the mobile sheet to the height the home had before it opened.
@@ -385,6 +428,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - The installed iPhone app fills the whole screen instead of stopping above the home indicator.
 
 ## [0.82.0] - 2026-10-08
@@ -397,6 +442,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Favourites can be reordered by dragging a card's handle, or with its arrow keys.
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Unpinning a favourite stop saved under one of its platform ids now removes it.
 
@@ -427,6 +474,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Departure times, the wall-board clock and the metro night notice follow the city's own time zone instead of a fixed Prague zone.
 - A trip ending just after midnight no longer counts as ended before midnight, and a ride to a stop past midnight shows the right minutes to arrival.
 - Ride alerts are no longer lost when the user's and a followed ride swap places, and a followed ride that has arrived is not followed again from its link.
@@ -435,6 +484,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.80.1] - 2026-10-06
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Ústecký kraj trains show their route and stop times again, from Spojenka's national timetable instead of the JrUtil history that stopped on 30 September; more of their stations open a departure board, and trips running past midnight no longer show as ended.
 
@@ -453,6 +504,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - A trip that has reached its last stop says so and stops being followed, offering the vehicle's next trip; a ride on it ends too.
 - The air-conditioning filter of a departure board no longer marks the map as filtered.
 
@@ -470,6 +523,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Returning to a stop after a while no longer shows delay arrows compared against long-outdated delays.
 
 ## [0.79.6] - 2026-10-04
@@ -480,6 +535,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Departures read only the requested stops' station relations instead of the whole network's stop map.
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Brno vehicle details no longer show a vehicle the map has on a different trip.
 - Selecting a vehicle no longer makes it jump back to an older position or restart the live refresh countdown.
@@ -493,11 +550,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - A vehicle reporting a trip more than four hours before its start or after its end is no longer shown on that trip.
 
 ## [0.79.4] - 2026-10-01
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Prague's live vehicle map no longer occasionally fails to load: the fleet is now built once and shared at the edge instead of every fresh isolate redoing the work, which was tipping over the CPU limit.
 - Every API endpoint starts up on roughly a third of the CPU on a fresh isolate: the backend validates with zod/mini and builds each schema on first use.
@@ -515,6 +576,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Ústecký kraj stops are drawn in DÚK green; where a PID and a DÚK stop stand on the same spot only the selected network's is drawn, and its panel links to the other network's departures there.
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Line chips of a stop show line colours where they are taken from the departures (Ústecký kraj).
 - Vehicles keep loading for the visible map while it follows a selected vehicle.
@@ -547,6 +610,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Search results can be browsed with the arrow keys, and Enter opens the highlighted result.
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - On mobile, text fields in dialogs opened over the detail drawer (feedback, alerts search) can be focused and typed into again.
 
@@ -584,6 +649,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Loading skeletons for the vehicle panel, departure board and favorites now match the current layouts.
 - Brno asks KORDIS conditionally whether its feed changed and reuses the stored fleet when it has not, cutting that check from about 10 ms to 2 ms of Worker CPU on a fresh instance.
 
@@ -591,17 +658,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Brno vehicle positions follow KORDIS within seconds again: a stale stored fleet is refreshed within the request instead of after it, which delayed every new feed by a request and left positions a minute old.
 
 ## [0.76.3] - 2026-09-27
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Brno vehicles no longer lag up to a minute behind KORDIS: the feed is read uncached, so a cached copy of the previous publication (KORDIS sends a one-day max-age) is never re-stamped as current.
 
 ## [0.76.2] - 2026-09-27
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Brno's fleet is no longer rebuilt when KORDIS has not published a new feed since the stored build (it publishes every ~35 s); the stored build is re-stamped instead, roughly halving the rebuilds that pushed Worker requests over the CPU limit.
 - Prague's vehicles list maps and checks the Golemio fleet with less CPU, and the KORDIS feed and Golemio fleet are no longer copied to the edge cache, where the copy expired before anything read it.
@@ -613,6 +686,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Whether an alert is active or upcoming is worked out in the app from its validity dates, so incidents announced for later show as upcoming.
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Prague alerts keep the parsed planned closures at the edge for an hour and parse the RSS feed with less CPU, instead of every fresh Worker re-parsing the 450 KB feed over the CPU limit.
 - Brno's vehicle rebuild reads trip aliases as runs of consecutive ids (35 KB instead of 400 KB), cutting CPU on a fresh Worker.
@@ -630,12 +705,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Brno vehicle detail reads the vehicle from the stored fleet instead of decoding the whole KORDIS feed on every request, which pushed requests over the CPU limit and took other cities down with them.
 - Prague departures and vehicle detail read only the connection files of the trips they show instead of the whole 785 KB connections file, and Brno, Prešov and Prague use less CPU on a fresh Worker for departures, vehicle detail and vehicles.
 
 ## [0.75.1] - 2026-09-26
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Brno's vehicle rebuild uses about a third less CPU (no full-feed byte compare, leaner decode, a native sort for trip assignment), easing the Worker CPU-limit kills that took every city down with it.
 - Requests no longer wait on another request's unfinished upstream fetch or build, which stalled every city after one request was killed and cascaded into CPU-limit failures.
@@ -656,6 +735,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Search results on mobile are no longer hidden behind an open detail drawer.
 - Opening the app no longer asks for location; it only follows you at launch when permission is already granted.
 - Locating yourself in another city switches to that city instead of showing it with the previous city's data.
@@ -663,6 +744,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.74.6] - 2026-09-25
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Brno vehicles are matched to the right trip again while KORDIS broadcasts the previous timetable export's trip ids, instead of many landing on an unrelated line.
 - Route colors and line names for every city, including Prague, now come from one shared static source, fixing Prague's substitute-service and night-line highlighting along the way.
@@ -677,6 +760,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - The GTFS vehicle map request is served from the already-serialized fleet build, and concurrent requests share one rebuild, cutting CPU per request under the platform limit.
 - Route shapes for Brno and Prešov are loaded by the app straight from the static data CDN instead of through the vehicle-detail API, taking that work and memory off the backend.
 - Brno, Prešov and DÚK timetables are read from small hashed files instead of chunks up to 1.3MB, fixing the backend running out of CPU after a few minutes of traffic.
@@ -688,6 +773,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Brno and Prague requests read the last built vehicle list from the edge cache instead of always rebuilding it, so a fresh Worker isolate no longer pays the full CPU cost that was pushing it over the platform's per-request limit; the rebuild runs in the background instead.
 - Every Brno/KORDIS static and live-feed fetch now uses the same reliable edge cache Prague's requests already had, instead of an unreliable hint that left a fresh isolate re-downloading everything.
 - Prague's vehicle detail no longer validates a trip's full route shape field-by-field, which could on its own push a cold request over the CPU limit.
@@ -696,11 +783,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Brno's leased České dráhy RegioPanter trains show the train's own name and correct operator instead of being misattributed to DPMB.
 
 ## [0.74.2] - 2026-09-22
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - A Ústecký kraj station's unplaced-line survey no longer stays wedged for the rest of the isolate's life if the request running it is cut off mid-flight.
 - Brno vehicles decode the realtime feed with a lean decoder and skip rebuilding the fleet while the feed is unchanged, cutting the CPU that pushed requests over the Workers limit.
@@ -718,6 +809,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - The map no longer goes blank with "Source Offline" when a single refresh fails; failed polls are retried and the last positions stay on screen.
 - The map and stats panel share one city-wide vehicle feed through the edge cache instead of separate per-viewport and stats requests, so far fewer requests reach the backend.
 - The status panel badge shows the feed's state instead of the device's connection.
@@ -734,12 +827,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Vehicle positions that stop being refreshed are reported as stale and then dropped, everywhere, instead of being served as live.
 - Ústecký kraj assigns fewer vehicles to the wrong trip, since every running trip is now available for matching.
 
 ## [0.73.6] - 2026-09-19
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - MCP: departures that already left are no longer returned as upcoming (Brno, Prešov).
 - MCP: stop search ranks exact name matches first and ignores diacritics; departures by stop name cover every platform of the station.
@@ -751,17 +848,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - MCP: the endpoint declines the unused SSE stream (405) instead of leaving it hanging, which stopped clients reconnecting every few seconds.
 
 ## [0.73.4] - 2026-09-19
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Prague vehicles load the fleet once and filter per map view, stopping CPU-limit 503s when zoomed out.
 
 ## [0.73.3] - 2026-09-19
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Brno vehicles and vehicle detail no longer re-decode an unchanged realtime feed, cutting refresh CPU about fourfold.
 
@@ -773,11 +876,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Prague departures and vehicle detail no longer fail with 503 (Worker CPU limit): metro badges now come from the stop list already on the device instead of a 2.8 MB file parsed on the server.
 
 ## [0.73.1] - 2026-09-19
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Brno: two vehicles can no longer be matched to the same trip, which sent vehicles onto the wrong line and made a click open a different vehicle.
 - Opening a vehicle always shows the vehicle that was clicked, never another one found by its trip.
@@ -801,6 +908,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Brno vehicles are matched to the right trip again. KORDIS renumbers nearly every trip on each GTFS export while its realtime feed keeps sending the previous numbering, so the feed's trip id was trusted whenever it happened to exist in the current export - which after a renumbering is a different trip. Vehicles now resolve through the run-id alias table, falling back to the raw id only while that is the one in service, so it keeps working once the feed catches up.
 
 ## [0.71.0] - 2026-09-17
@@ -818,11 +927,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Opening a link to another city's stop or trip no longer first requests it from the previously selected city.
 
 ## [0.69.4] - 2026-09-13
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Red error, delay and high-priority alert text is readable in dark mode.
 - Monospace text uses Fira Code instead of falling back to the system font.
@@ -838,6 +951,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Line colours, place search results, points of sale and the Brno live-delay stream are validated before use.
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Links to a stop or trip whose ID contains `%` no longer crash the app.
 - Stats show "No data" for an empty view instead of `NaN%`, and punctuality shares add up to 100% when some vehicles report no delay.
@@ -875,6 +990,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Vehicles no longer jump back to an older position while panning the map, since each viewport could be served a differently aged cached snapshot.
 
 ## [0.69.0] - 2026-09-11
@@ -885,6 +1002,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - "Show full alert" in vehicle detail opens the alerts modal scrolled to that alert and expanded.
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Alert descriptions in vehicle detail no longer show a partly cut-off line under the ellipsis.
 - Brno alert descriptions show their paragraphs and bullet lists instead of one run-on block with stray `. .` separators.
@@ -902,6 +1021,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - A failed static-data fetch on a cold isolate is now retried after 5s instead of serving empty routes for two hours.
 - Live vehicles, vehicle detail, departures and stats no longer lag one poll behind, because the browser was answering each poll from its HTTP cache.
 
@@ -913,6 +1034,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Removed the KV-based feedback rate limiter, which could not hold under concurrency; request-rate limiting is enforced at the Cloudflare edge.
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Fixed the `get_realtime_vehicles` MCP tool returning no vehicles in either city, and no longer filtering the fleet by the map-framing bounding box, which had been discarding every suburban and regional vehicle.
 - A failed or malformed stops fetch now returns a 502 instead of an opaque 500, and is no longer cached as an empty result for two hours.
@@ -939,6 +1062,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Fixed vehicles waiting at their origin being reported as running early, with all upcoming stop times shifted; departure status is now evaluated against the schedule before any delay is estimated.
 - Cut the CPU cost of the Brno vehicle feed by replacing the 2.5MB `api.json` lookup with a compact per-trip index, resolving CPU-limit 503s on cold Worker isolates.
 - Patched the remaining development-toolchain advisories (sharp, hono, js-yaml, fast-uri, qs), bringing `npm audit` to zero vulnerabilities.
@@ -946,6 +1071,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.65.1] - 2026-09-09
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Fixed intermittent 503 "Exceeded CPU Limit" errors on Brno endpoints, caused by the vehicle detail poll re-parsing the entire multi-megabyte GTFS shape chunk every 10 seconds; route geometry, trip stops and departure tuples are now memoised in size-bounded in-isolate caches.
 - Prevented a single CPU-killed request from stalling every subsequent request in the same Worker isolate by bounding how long `CacheManager` will wait on another request's in-flight fetch.
@@ -962,11 +1089,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Fixed vehicle tracking on ended trips by treating mismatched GTFS-RT live vehicles as a static fallback instead of interpolating them onto the old route.
 
 ## [0.63.3] - 2026-09-01
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Fixed MCP connector silent failures by correctly mapping comma-separated `stop_id` query arrays and explicitly omitting UI-only virtual map centroids from search results.
 - Expose `platform` and `platform_code` correctly to the MCP tools.
@@ -975,11 +1106,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Fixed 1px right border clipping issue across all ScrollArea components by introducing a 1px viewport padding.
 
 ## [0.63.1] - 2026-09-01
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Fixed missing backdrop-filter blur on Map overlays in production and Firefox by resolving CSS minification conflicts and native support.
 
@@ -990,6 +1125,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Local delay estimation fallback for GTFS-RT vehicles based on static schedules and real-time position.
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Fixed critical "Worker exceeded CPU time limit" crashes in Brno caused by heavy API JSON parsing during cold starts.
 
@@ -1009,11 +1146,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Fixed an issue where Cloudflare Access authorization flows (paths under `/cdn-cgi/`) were being intercepted by the PWA service worker, breaking the `/admin` login redirect.
 
 ## [0.62.5] - 2026-08-18
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Fixed an issue where the Kordis vehicle mapping logic incorrectly prioritized stale trips over active ones if they appeared earlier in the GTFS-RT feed.
 
@@ -1027,17 +1168,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - E2E tests: Correctly configure `departs-preferences` localStorage structure, preventing the Welcome Modal from blocking tests.
 
 ## [0.62.2] - 2026-08-16
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Made `routeShortName` line filter evaluation case-insensitive across backend APIs to fix search matching for mixed-case line names like `xS41`.
 
 ## [0.62.1] - 2026-08-15
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Derived `before_track` state position directly from initial stop scheduled departure in GTFS vehicle detail enricher.
 
@@ -1064,6 +1211,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.59.16] - 2026-08-11
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - Added `before_track` status estimation for KORDIS GTFS-RT vehicles based on stationary speed and time before scheduled departure.
 
@@ -1096,6 +1245,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Cleaned up redundant timetable properties from `route_geojson` point features in vehicle detail responses for Prague and Brno.
 
 ## [0.59.10] - 2026-08-10
@@ -1120,6 +1271,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Fixed missing English translations for the network stats panel and monitor tabs.
 
 ## [0.59.6] - 2026-08-09
@@ -1138,11 +1291,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - Fixed bug in Brno vehicle map selection caused by overlapping duplicate Kordis RT entities sharing the same coordinates.
 
 ## [0.59.3] - 2026-08-08
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - **Brno RT Map Feed**: Prioritized active GTFS routes over historical aliases in the RT feed mapping to fix a bug where valid reused trip IDs were incorrectly dropped or hallucinated due to stale alias history.
 
@@ -1150,11 +1307,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - **Stats API Error**: Resolved an issue where fetching statistics triggered a 'missing parameters' API error instead of returning full data.
 
 ## [0.59.1] - 2026-08-07
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - **Brno GTFS-RT Trip Alignment**: Introduced `trip_aliases.json` support to resolve legacy `trip_id`s from the live feed to updated static schedule trip IDs following timetable updates.
 
@@ -1180,11 +1341,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - **Service Alert Categories**: Unified bus and trolleybus categories, added funicular/ferry mode matching, and added Extended GTFS route types.
 
 ## [0.57.5] - 2026-07-27
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - **Line Badges**: Restored rounded corner aesthetics, subtle border strokes, and padding for line badges across all transit modes.
 
@@ -1210,6 +1375,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - **Glass UI Rendering**: Resolved Firefox backdrop-filter canvas blur bug by increasing base glass opacity.
 
 ## [0.57.0] - 2026-07-26
@@ -1223,11 +1390,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - **Vehicle Filtering**: Filtered out invalid vehicles from KORDIS GTFS-RT feeds.
 
 ## [0.56.6] - 2026-07-26
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - **GTFS-RT Vehicle Stop Matching**: Implemented multi-tier stop node matching for trains and parent stops.
 - **Alert Text Sanitization**: Added HTML tag stripping and line-break formatting for GTFS service alerts.
@@ -1247,6 +1418,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.56.1] - 2026-07-16
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - **Edge Caching**: Configured `caches.default` Web Cache API for upstream Golemio API requests to prevent Cloudflare Worker rate limits.
 
@@ -1277,6 +1450,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.53.6] - 2026-07-12
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - **Performance**: Fixed O(N²) nested loops in alert mapping and duplicate fetches in KORDIS GTFS-RT feeds.
 - **Map Rendering**: Resolved vehicle duplication on Brno map by deduplicating KORDIS GTFS-RT entities.
@@ -1309,6 +1484,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- The filter badge on the phone sheet's settings button keeps its small size.
+
 - **Departures API Chunking**: Optimized static stop departures payload splitting to eliminate Cloudflare Worker CPU timeouts.
 
 ## [0.50.0] - 2026-07-01
@@ -1320,6 +1497,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.49.7] - 2026-07-01
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - **KORDIS Query Optimization**: Achieved a 45x speedup on KORDIS vehicle queries by requesting required database fields and reducing payload size.
 
@@ -1350,6 +1529,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.48.2] - 2026-06-14
 
 ### Fixed
+
+- The filter badge on the phone sheet's settings button keeps its small size.
 
 - **Cache Stampede Protection**: Implemented isolate-level Promise caching to prevent CPU limits during concurrent cache-miss requests.
 

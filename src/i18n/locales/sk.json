@@ -419,7 +419,6 @@
     "upstreamErrorDesc": "API dopravného podniku je momentálne nedostupné alebo vracia chyby.",
     "offlineDesc": "Skontrolujte, prosím, svoje pripojenie k sieti. Nie je možné sa pripojiť k serverom dopravy.",
     "refreshingDesc": "Sťahovanie najnovších polôh vozidiel...",
-    "filtered": "Filtrované",
     "refreshInterval": "Obnovovať každých"
   },
   "toasts": {

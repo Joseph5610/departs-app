@@ -405,7 +405,6 @@
     "upstreamErrorDesc": "The transit agency API is currently unavailable or returning errors.",
     "offlineDesc": "Please check your network connection. Unable to connect to the transit servers.",
     "refreshingDesc": "Fetching the latest transit vehicle positions...",
-    "filtered": "Filtered",
     "refreshInterval": "Refresh every"
   },
   "toasts": {

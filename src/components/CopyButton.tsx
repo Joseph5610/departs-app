@@ -10,8 +10,8 @@ interface CopyButtonProps {
 
 /** A small capsule copying something, confirming once it did. */
 export const CopyButton = ({ label, copiedLabel, isCopied, onCopy }: CopyButtonProps) => (
-    <Button size="sm" variant="selected" className="shrink-0 gap-1.5 pl-2.5" onClick={onCopy}>
-        {isCopied ? <Check className="size-3.75 text-tint-mint" /> : <Copy className="size-3.75 text-tint-mint" />}
+    <Button size="sm" variant="secondary" className="shrink-0 gap-1.5 pl-2.5" onClick={onCopy}>
+        {isCopied ? <Check className="size-3.75" /> : <Copy className="size-3.75" />}
         {isCopied ? copiedLabel : label}
     </Button>
 );

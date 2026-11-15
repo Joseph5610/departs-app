@@ -278,7 +278,7 @@ const ControlButton = ({ children, onClick, title, testId, inPill = false, inShe
                 size="icon"
                 onClick={onClick}
                 aria-label={title}
-                className={cn(inPill ? "relative rounded-none shrink-0 h-11 w-11" : "shrink-0", inSheet && "size-12 text-foreground [&_svg]:size-5.25 [&_svg]:stroke-[1.75]")}
+                className={cn(inPill ? "relative rounded-none shrink-0 h-11 w-11" : "shrink-0", inSheet && "size-12 text-foreground [&>svg]:size-5.25 [&>svg]:stroke-[1.75]")}
                 data-testid={testId}
             >
                 {children}
