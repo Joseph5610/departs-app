@@ -48,7 +48,9 @@ export const useSwipeAction = (onLeft: (() => void) | undefined, onRight?: () =>
         if (!g || g.id !== e.pointerId) return;
         release();
         if (g.phase !== 'swiping') return;
-        if (commit && Math.abs(g.offset) >= DEPARTURES_CONFIG.SWIPE_ACTION_PX) (g.dir < 0 ? onLeft : onRight)?.();
+        const action = commit && Math.abs(g.offset) >= DEPARTURES_CONFIG.SWIPE_ACTION_PX ? (g.dir < 0 ? onLeft : onRight) : undefined;
+        // After the touchend: an action that swaps the sheet's card unmounts this row, and a touchend on a removed row never reaches the sheet, which then stays mid-drag.
+        if (action) requestAnimationFrame(() => action());
         show(e.currentTarget, 0, true);
     };
 

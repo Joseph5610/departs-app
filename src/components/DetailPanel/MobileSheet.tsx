@@ -223,7 +223,8 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, fitsContent = false, col
 
     const { folded: isToolbarFolded, onScroll: onCardScroll } = useToolbarFold(`${cardKey}|${isFull}`);
 
-    const cycleDetent = () => setDetent(DETENTS[(DETENTS.indexOf(detent ?? 'peek') + 1) % DETENTS.length]);
+    /** A tap on the grabber steps to the neighbouring height, as iOS does: peek to half, half to full, full back to half. */
+    const cycleDetent = () => setDetent(detent === 'half' ? 'full' : 'half');
 
     return (
         <>
@@ -284,7 +285,11 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, fitsContent = false, col
                     onPointerDown={(e) => { if (e.pointerType === 'touch' && inHomeIndicator(e.clientY)) e.stopPropagation(); }}
                     onTouchStart={(e) => { if (inHomeIndicator(e.touches[0].clientY)) e.stopPropagation(); }}
                     // Content below full height does not scroll, so a mouse wheel or trackpad raises the sheet instead.
-                    onWheel={(e) => { if (!isFull && e.deltaY > 0) setDetent('full'); }}
+                    onWheel={(e) => {
+                        if (!isFull && e.deltaY > 0) setDetent('full');
+                        // Scrolled back to its top, the list hands a further upward wheel to the sheet.
+                        else if (isFull && e.deltaY < 0 && !(e.target as HTMLElement).closest('[data-panel-scroller]')?.scrollTop) setDetent('half');
+                    }}
                     header={
                         <div ref={headerRef} className="relative shrink-0 flex flex-col">
                             {floating?.(isFull)}
@@ -304,6 +309,13 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, fitsContent = false, col
                                     window.addEventListener('pointercancel', () => done.abort(), { signal: done.signal });
                                 }}
                                 onKeyDown={(e) => {
+                                    const step = e.key === 'ArrowUp' ? 1 : e.key === 'ArrowDown' ? -1 : 0;
+                                    if (step) {
+                                        e.preventDefault();
+                                        const at = DETENTS.indexOf(detent ?? 'peek') + step;
+                                        if (at >= 0 && at < DETENTS.length) setDetent(DETENTS[at]);
+                                        return;
+                                    }
                                     if (e.key !== 'Enter' && e.key !== ' ') return;
                                     e.preventDefault();
                                     cycleDetent();
