@@ -27,7 +27,6 @@ export const useMyTripActions = () => {
             toast(t('myTrip.limit', { count: MY_TRIP_CONFIG.MAX_TRIPS }));
             return false;
         }
-        toast(previous ? t('myTrip.updated') : t('myTrip.saved'));
         const key = tripPushKey(trip);
         if (key === null || registrationChange(previous, trip) !== 'register') return true;
 

@@ -73,7 +73,9 @@ test.describe('Mobile home sheet', () => {
         await expect.poll(width).toBe(136);
 
         // At the peek only the title shows, whatever mounts while the sheet stays there.
-        await page.getByTestId('home-sheet-grabber').click();
+        await page.getByTestId('home-sheet-grabber').focus();
+        await page.keyboard.press('ArrowDown');
+        await page.keyboard.press('ArrowDown');
         await expect(toolbar).toBeHidden();
         await page.evaluate(() => { history.pushState({}, '', '/prague/stop/U1111Z1P?x=1'); dispatchEvent(new PopStateEvent('popstate')); });
         await expect(toolbar).toBeHidden();

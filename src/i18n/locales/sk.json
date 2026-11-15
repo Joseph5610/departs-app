@@ -319,8 +319,6 @@
     "leadLabel": "Upozorniť pred odchodom",
     "loading": "Načítavam spoj…",
     "save": "Uložiť",
-    "saved": "Cesta uložená",
-    "updated": "Cesta upravená",
     "fromStop": "z {{stop}} · odchod {{time}}",
     "onBoard": "Už ste vo vozidle",
     "showTrip": "Zobraziť spoj",
@@ -421,7 +419,6 @@
     "upstreamErrorDesc": "API dopravného podniku je momentálne nedostupné alebo vracia chyby.",
     "offlineDesc": "Skontrolujte, prosím, svoje pripojenie k sieti. Nie je možné sa pripojiť k serverom dopravy.",
     "refreshingDesc": "Sťahovanie najnovších polôh vozidiel...",
-    "filtered": "Filtrované",
     "refreshInterval": "Obnovovať každých"
   },
   "toasts": {

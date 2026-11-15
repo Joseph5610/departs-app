@@ -47,7 +47,7 @@ export const MyTripCardContent = () => {
     const { closeMyTrip } = useUiStore(s => s.actions);
     if (!target) return null;
     return (
-        <div className="flex min-h-0 flex-1 flex-col gap-3 px-(--panel-gutter) pt-1.5 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] [--stop-list-max:24dvh]">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-(--panel-gutter) pt-1.5 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] [--stop-list-max:none]">
             <MyTripSheetBody key={target.tripId} target={target} onClose={closeMyTrip} inCard />
         </div>
     );
@@ -115,15 +115,12 @@ const MyTripSheetBody = ({ target, onClose, inCard = false }: { target: MyTripTa
     return (
         <>
             {!inCard && (
-                <DialogHeader className="flex-row items-center gap-3 pr-8 text-left">
-                    {line && <LineBadge name={line} routeColor={detail?.route_color ?? ''} size="lg" />}
-                    <div className="flex min-w-0 flex-col">
-                        <DialogTitle className="truncate type-title">{detail?.trip_headsign ?? ''}</DialogTitle>
-                        <DialogDescription className="type-meta">{existing ? t('myTrip.title') : t('myTrip.take')}</DialogDescription>
-                    </div>
+                <DialogHeader className="pr-8 text-left">
+                    <DialogTitle className="type-title">{t('myTrip.title')}</DialogTitle>
+                    <DialogDescription className="sr-only">{detail?.trip_headsign ?? ''}</DialogDescription>
                 </DialogHeader>
             )}
-            {inCard && (
+            {(
                 <div className="flex shrink-0 items-start gap-3 px-1">
                     {line && <LineBadge name={line} routeColor={detail?.route_color ?? ''} size="lg" />}
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -136,7 +133,7 @@ const MyTripSheetBody = ({ target, onClose, inCard = false }: { target: MyTripTa
                 </div>
             )}
 
-            <Card size="none" className="min-h-0 shrink overflow-y-auto overscroll-contain">
+            <Card size="none" className={cn(inCard ? "shrink-0" : "min-h-0 shrink overflow-y-auto overscroll-contain")}>
                 <JourneyRow leg="board" kind="toggle" title={t('myTrip.boardTitle')} summary={boardSummary} isOpen={open === 'board'} onClick={() => toggle('board')} />
                 {open === 'board' && (isChoosingBoard || !boarding ? (
                         <StopList

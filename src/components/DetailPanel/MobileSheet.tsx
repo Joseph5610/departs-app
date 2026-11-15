@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/cn';
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
@@ -30,19 +31,22 @@ const sheetStyle = (full: SnapPoint, peek: SnapPoint, startsAtPeek: boolean, hei
     '--panel-gutter': '1rem',
 }) as React.CSSProperties;
 
-/** The header's and the card's natural height together while `active`, null otherwise; follows the card as it grows. */
-const useFitHeight = (active: boolean, header: React.RefObject<HTMLDivElement | null>, card: React.RefObject<HTMLDivElement | null>, cardKey: string | null) => {
-    const [height, setHeight] = useState<number | null>(null);
+/**
+ * The header's and the card's natural height together while `active`, null otherwise; follows the card as it grows.
+ * Null too while the card is still loading (shorter than `minPx`), and for another card's stale measure.
+ */
+const useFitHeight = (active: boolean, header: React.RefObject<HTMLDivElement | null>, card: React.RefObject<HTMLDivElement | null>, cardKey: string | null, minPx: number) => {
+    const [fit, setFit] = useState<{ key: string | null; height: number } | null>(null);
     useLayoutEffect(() => {
         const headerEl = header.current, cardEl = card.current;
         if (!active || !headerEl || !cardEl) return;
-        // A ResizeObserver reports each element once on observe, which takes the first measure.
-        const observer = new ResizeObserver(() => setHeight(Math.ceil(headerEl.offsetHeight + cardEl.scrollHeight)));
+        // Rendered before the browser paints, so the sheet never shows a frame at a stale height.
+        const observer = new ResizeObserver(() => flushSync(() => setFit({ key: cardKey, height: Math.ceil(headerEl.offsetHeight + cardEl.scrollHeight) })));
         observer.observe(headerEl);
         observer.observe(cardEl);
         return () => observer.disconnect();
     }, [active, header, card, cardKey]);
-    return active ? height : null;
+    return active && fit && fit.key === cardKey && fit.height > minPx ? fit.height : null;
 };
 
 /** Each card, and the home, eases in when it replaces what the sheet showed. */
@@ -158,7 +162,8 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, fitsContent = false, col
     }, [heights.peek]);
     const headerRef = useRef<HTMLDivElement>(null);
     const fitRef = useRef<HTMLDivElement>(null);
-    const fitHeight = useFitHeight(fitsContent && isOpen, headerRef, fitRef, cardKey);
+    // Shorter than the peek's capsule, a card is still loading: fitting it would fold the sheet into the capsule and back.
+    const fitHeight = useFitHeight(fitsContent && isOpen, headerRef, fitRef, cardKey, heightOf(heights.peek) + SHEET.PEEK_CONTENT_PX);
     const points = useMemo<Record<Detent, SnapPoint>>(() => ({
         peek: heights.peek,
         // A card as tall as the full height keeps the usual half, as two equal detents would make full unreachable.
@@ -218,7 +223,8 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, fitsContent = false, col
 
     const { folded: isToolbarFolded, onScroll: onCardScroll } = useToolbarFold(`${cardKey}|${isFull}`);
 
-    const cycleDetent = () => setDetent(DETENTS[(DETENTS.indexOf(detent ?? 'peek') + 1) % DETENTS.length]);
+    /** A tap on the grabber steps to the neighbouring height, as iOS does: peek to half, half to full, full back to half. */
+    const cycleDetent = () => setDetent(detent === 'half' ? 'full' : 'half');
 
     return (
         <>
@@ -279,7 +285,11 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, fitsContent = false, col
                     onPointerDown={(e) => { if (e.pointerType === 'touch' && inHomeIndicator(e.clientY)) e.stopPropagation(); }}
                     onTouchStart={(e) => { if (inHomeIndicator(e.touches[0].clientY)) e.stopPropagation(); }}
                     // Content below full height does not scroll, so a mouse wheel or trackpad raises the sheet instead.
-                    onWheel={(e) => { if (!isFull && e.deltaY > 0) setDetent('full'); }}
+                    onWheel={(e) => {
+                        if (!isFull && e.deltaY > 0) setDetent('full');
+                        // Scrolled back to its top, the list hands a further upward wheel to the sheet.
+                        else if (isFull && e.deltaY < 0 && !(e.target as HTMLElement).closest('[data-panel-scroller]')?.scrollTop) setDetent('half');
+                    }}
                     header={
                         <div ref={headerRef} className="relative shrink-0 flex flex-col">
                             {floating?.(isFull)}
@@ -299,6 +309,13 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, fitsContent = false, col
                                     window.addEventListener('pointercancel', () => done.abort(), { signal: done.signal });
                                 }}
                                 onKeyDown={(e) => {
+                                    const step = e.key === 'ArrowUp' ? 1 : e.key === 'ArrowDown' ? -1 : 0;
+                                    if (step) {
+                                        e.preventDefault();
+                                        const at = DETENTS.indexOf(detent ?? 'peek') + step;
+                                        if (at >= 0 && at < DETENTS.length) setDetent(DETENTS[at]);
+                                        return;
+                                    }
                                     if (e.key !== 'Enter' && e.key !== ' ') return;
                                     e.preventDefault();
                                     cycleDetent();

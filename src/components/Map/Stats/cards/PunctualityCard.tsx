@@ -1,3 +1,4 @@
+import { cn } from '@/lib/cn';
 import { StatsCard } from './StatsCard';
 import { Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -28,13 +29,13 @@ export const PunctualityCard = ({ stats }: PunctualityCardProps) => {
             <div className="px-3.5 pb-3.5">
                 <div className="flex justify-between items-end mb-2.5">
                     <div>
-                        <div className="type-title tabular-nums">
+                        <div className="type-display tabular-nums">
                             {formatMinutes(stats.average_delay)}
                         </div>
                         <div className="type-note text-foreground/60 mt-1">{t('stats.averageDelay')}</div>
                     </div>
                     <div className="text-right">
-                        <div className="type-title text-destructive tabular-nums">
+                        <div className={cn("type-display tabular-nums", stats.delayed_over_5_min_count > 0 && "text-destructive")}>
                             {stats.delayed_over_5_min_count}
                         </div>
                         <div className="type-note text-foreground/60 mt-1">{t('stats.delayedOver5')}</div>
@@ -59,7 +60,7 @@ export const PunctualityCard = ({ stats }: PunctualityCardProps) => {
                     <Separator className="bg-sep data-horizontal:h-[0.5px]" />
                     <FactRow
                         label={t('stats.totalDelay')}
-                        value={<span className="text-destructive">{t('stats.hoursValue', { value: Math.round(stats.total_delay_seconds / 3600) })}</span>}
+                        value={<span className={cn(Math.round(stats.total_delay_seconds / 3600) > 0 && "text-destructive")}>{t('stats.hoursValue', { value: Math.round(stats.total_delay_seconds / 3600) })}</span>}
                     />
                 </>
             )}

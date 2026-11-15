@@ -75,13 +75,13 @@ export const StatsPanel = memo(() => {
                         <Card size="none">
                             <CardContent className="p-3.5 flex flex-col justify-center h-full">
                                 <SectionHeading className="mb-0.5 px-0">{t('stats.vehicles')}</SectionHeading>
-                                <span className="type-title tabular-nums">{activeStats.total_vehicles}</span>
+                                <span className="type-display tabular-nums">{activeStats.total_vehicles}</span>
                             </CardContent>
                         </Card>
                         <Card size="none">
                             <CardContent className="p-3.5 flex flex-col justify-center h-full">
                                 <SectionHeading className="mb-0.5 px-0">{t('stats.lines')}</SectionHeading>
-                                <span className="type-title tabular-nums">{activeStats.total_lines}</span>
+                                <span className="type-display tabular-nums">{activeStats.total_lines}</span>
                             </CardContent>
                         </Card>
                     </div>

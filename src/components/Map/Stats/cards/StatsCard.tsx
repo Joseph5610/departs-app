@@ -17,7 +17,7 @@ interface StatsCardProps {
 export const StatsCard = ({ icon: Icon, title, iconClassName = 'text-muted-foreground', className, flush = false, children }: StatsCardProps) => (
     <Card size="none" className={className}>
         <CardHeader className="p-3.5 pb-2">
-            <CardTitle className="flex items-center gap-2 type-row">
+            <CardTitle className="flex items-center gap-2 type-headsign">
                 <Icon size={16} className={iconClassName} />
                 <span>{title}</span>
             </CardTitle>

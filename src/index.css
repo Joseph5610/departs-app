@@ -209,7 +209,7 @@
   /* Type scale for the sizes between Tailwind's steps (xs 12, sm 14, base 16, lg 18). Only the size: line
      height inherits unless a leading-* class sets it. Use these, never text-[13px]. */
   --text-nano: 0.5rem;        /*  8px  long names in the smallest line badges */
-  --text-micro: 0.5625rem;    /*  9px  tiny badges and zone codes */
+  --text-micro: 0.625rem;     /* 10px  tiny badges and zone codes, the smallest text */
   --text-label: 0.625rem;     /* 10px  micro labels, compact badges */
   --text-badge: 0.65625rem;   /* 10.5px  platform codes in circles */
   --text-caption: 0.6875rem;  /* 11px  captions and small print */
@@ -374,6 +374,7 @@
 
 
 /* The app's only text styles; line badges and platform circles alone size their own codes. */
+@utility type-display { font-size: 1.375rem; line-height: 1.75rem; font-weight: 700; letter-spacing: -0.035em; }
 @utility type-title { font-size: 1.25rem; line-height: 1.75rem; font-weight: 700; letter-spacing: -0.04em; }
 @utility type-note { font-size: 0.75rem; line-height: 1rem; font-weight: 400; }
 @utility type-control { font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
@@ -388,9 +389,9 @@
 @utility type-headsign { font-size: 0.9375rem; line-height: 1.25rem; font-weight: 600; }
 @utility type-meta { font-size: 0.8125rem; line-height: 1.125rem; font-weight: 400; }
 @utility type-group { font-size: 0.8125rem; line-height: 1.125rem; font-weight: 600; }
-@utility type-pill { font-size: var(--text-micro); line-height: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: calc(var(--tracking-normal) + 0.05em); }
+@utility type-pill { font-size: var(--text-label); line-height: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
 @utility type-badge { font-size: var(--text-label); line-height: 1rem; font-weight: 700; }
-@utility type-label { font-size: var(--text-label); line-height: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+@utility type-label { font-size: var(--text-caption); line-height: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 
 /* The material of controls; `glassy-thick` is the denser one of sheets and panels. */
 @utility glassy {

@@ -149,24 +149,24 @@ export const StopTimeline = ({ stopTimes, routeName, routeColor, effectiveSequen
                         </span>
                         {isFollowingShared ? (
                             <Button
-                                variant="ghost"
-                                size="icon-sm"
+                                variant="secondary"
+                                size="icon-xs"
                                 onClick={() => unfollow(true)}
                                 aria-label={t('share.stopWatching')}
                                 title={t('share.stopWatching')}
-                                className="text-muted-foreground hover:text-foreground shrink-0"
+                                className="shrink-0"
                             >
                                 <CloseIcon />
                             </Button>
                         ) : !hasEnded && (
                             <Button
-                                variant="ghost"
+                                variant="secondary"
                                 size="sm"
                                 onClick={() => {
                                     followSharedTrip();
                                     toast(t('share.watchStarted', { stop: sharedExit?.stopName ?? lastStop?.properties.stop_name ?? '' }));
                                 }}
-                                className="text-tint-mint hover:bg-primary/15 hover:text-tint-mint shrink-0"
+                                className="shrink-0"
                             >
                                 {t('share.watch')}
                             </Button>

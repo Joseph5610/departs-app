@@ -117,7 +117,7 @@ const NoteIcon = ({ children }: { children: React.ReactNode }) => (
 );
 
 /** A note's words and badges as running text, so a long phrase wraps word by word instead of dropping to its own line. */
-const NOTE_TEXT = "min-w-0 leading-5";
+const NOTE_TEXT = "min-w-0";
 
 /** A line named inside a note, as its badge, so "waits for 910" never reads as a count. */
 const NoteBadge = ({ name, color }: { name: string; color: string }) => (

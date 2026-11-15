@@ -55,7 +55,7 @@ export const DirectionRowSkeleton = ({ headsignWidth, chips, divider, continuesL
                         {note && <Skeleton className="my-0.5 h-3 w-40" />}
                         {chips > 0 && (
                             <div className="flex gap-1.5">
-                                {Array.from({ length: chips }, (_, idx) => <Skeleton key={idx} className="h-7 w-16 rounded-full" />)}
+                                {Array.from({ length: chips }, (_, idx) => <Skeleton key={idx} className="h-7 w-18 rounded-full" />)}
                             </div>
                         )}
                     </>
@@ -65,8 +65,31 @@ export const DirectionRowSkeleton = ({ headsignWidth, chips, divider, continuesL
     </>
 );
 
-/** DepartureBoardSkeleton: a few direction rows, one line with two directions among them. */
-export const DepartureBoardSkeleton = () => (
+/** A station board's platform heading: its circle and name, as SectionTitle draws it. */
+const SectionHeadingSkeleton = () => (
+    <div className="flex h-6 items-center gap-2">
+        <Skeleton className="size-6 rounded-full" />
+        <Skeleton className="h-4 w-28" />
+    </div>
+);
+
+/**
+ * DepartureBoardSkeleton: a few direction rows, one line with two directions among them. A station's board
+ * (`sections`) is laid out in platform sections, so its rows load where they will stay.
+ */
+export const DepartureBoardSkeleton = ({ sections = false }: { sections?: boolean }) => sections ? (
+    <div className="flex flex-col gap-5 pt-1.5" aria-hidden="true">
+        {[['w-36', 'w-28'], ['w-40', 'w-24']].map((widths, i) => (
+            <section key={i} className={cn("flex flex-col", i === 0 && "mt-3.5")}>
+                <SectionHeadingSkeleton />
+                <SkeletonList card={false}>
+                    <DirectionRowSkeleton headsignWidth={widths[0]} chips={2} divider={false} />
+                    <DirectionRowSkeleton headsignWidth={widths[1]} chips={2} divider />
+                </SkeletonList>
+            </section>
+        ))}
+    </div>
+) : (
     <SkeletonList card={false}>
         <DirectionRowSkeleton headsignWidth="w-36" chips={2} divider={false} />
         <DirectionRowSkeleton headsignWidth="w-28" chips={2} divider={false} continuesLine />

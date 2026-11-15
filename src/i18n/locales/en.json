@@ -311,8 +311,6 @@
     "leadLabel": "Alert me before it leaves",
     "loading": "Loading the trip…",
     "save": "Save",
-    "saved": "Trip saved",
-    "updated": "Trip updated",
     "fromStop": "from {{stop}} · departs {{time}}",
     "onBoard": "Already on board",
     "showTrip": "Show trip",
@@ -407,7 +405,6 @@
     "upstreamErrorDesc": "The transit agency API is currently unavailable or returning errors.",
     "offlineDesc": "Please check your network connection. Unable to connect to the transit servers.",
     "refreshingDesc": "Fetching the latest transit vehicle positions...",
-    "filtered": "Filtered",
     "refreshInterval": "Refresh every"
   },
   "toasts": {

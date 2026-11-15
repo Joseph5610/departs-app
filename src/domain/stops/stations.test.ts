@@ -35,19 +35,19 @@ describe('favoriteMarks', () => {
         { id: 'Q', platforms: [{ id: 'Q1', aliases: ['Q1P'] }] },
     ]);
 
-    // Below the platforms' zoom only the station is drawn, so a pinned platform must star its station.
-    it('stars the station of a pinned platform, and only that platform', () => {
-        expect(favoriteMarks([{ model, pinIds: ['P2'] }])).toEqual({ stationIds: ['S'], platformIds: ['P2'] });
+    // The map's star agrees with the board's: only what is pinned, never the station or platforms around it.
+    it('stars only a pinned platform, not its station', () => {
+        expect(favoriteMarks([{ model, pinIds: ['P2'] }])).toEqual({ stationIds: [], platformIds: ['P2'] });
     });
 
-    it('stars every platform of a pinned station', () => {
-        expect(favoriteMarks([{ model, pinIds: ['S'] }])).toEqual({ stationIds: ['S'], platformIds: ['P1', 'P2'] });
+    it('stars only a pinned station, not its platforms', () => {
+        expect(favoriteMarks([{ model, pinIds: ['S'] }])).toEqual({ stationIds: ['S'], platformIds: [] });
     });
 
     // A pin saved under an alias or a pre-stops.json PID id still stars its stop.
     it('stars a stop pinned under an alias or a comma-joined id', () => {
-        expect(favoriteMarks([{ model, pinIds: ['Q1P'] }])).toEqual({ stationIds: ['Q'], platformIds: ['Q1'] });
-        expect(favoriteMarks([{ model: null, pinIds: ['P1,P2'] }, { model, pinIds: ['P1,P2'] }])).toEqual({ stationIds: ['S'], platformIds: ['P1', 'P2'] });
+        expect(favoriteMarks([{ model, pinIds: ['Q1P'] }])).toEqual({ stationIds: [], platformIds: ['Q1'] });
+        expect(favoriteMarks([{ model: null, pinIds: ['P1,P2'] }, { model, pinIds: ['P1,P2'] }])).toEqual({ stationIds: ['S'], platformIds: [] });
     });
 });
 

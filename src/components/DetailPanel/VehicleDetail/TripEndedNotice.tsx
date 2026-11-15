@@ -48,6 +48,7 @@ export const TripEndedNotice = ({ vehicle, hasEnded }: { vehicle: DisplayVehicle
         >
             {next && (
                 <Button
+                    variant="secondary"
                     size="sm"
                     onClick={() => navigate(paths.trip(selectedCity, next.tripId, vehicle.vehicle_id))}
                     className="mt-2 self-start"

@@ -54,11 +54,11 @@ export const VehicleHero = ({
         >
             <div className="relative z-10 flex flex-col p-3.5 pb-2.5">
                 <div className="flex justify-between items-start gap-3">
-                    <div className="flex flex-col gap-0.5 min-w-0">
+                    <div className="flex flex-1 flex-col gap-0.5 min-w-0">
                         <span className="type-label text-muted-foreground">
                             {t('map.vehicleDetails.directionLabel')}
                         </span>
-                        <h2 data-testid="vehicle-headsign" className="type-title text-foreground">
+                        <h2 data-testid="vehicle-headsign" className="type-display text-foreground">
                             {displayVehicle.trip_headsign ? (
                                 <span className="animate-in fade-in duration-500">
                                     {displayVehicle.trip_headsign}
@@ -71,9 +71,6 @@ export const VehicleHero = ({
                         </h2>
                     </div>
                     <div className="flex gap-2 shrink-0">
-                        {isDetailLoading && (
-                            <Skeleton className="size-8 rounded-full" />
-                        )}
                         {!displayVehicle.isStaticFallback && (
                             <Button
                                 variant={isFollowing ? 'selected' : 'pill'}
@@ -124,10 +121,10 @@ export const VehicleHero = ({
             {displayVehicle.vehicle_descriptor && (
                 <HeroFooter className="mt-auto flex items-center justify-between gap-3">
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="type-row text-foreground">
+                        <span className="type-meta font-medium text-foreground">
                             {vehicleTypeLabel}
                             {displayVehicle.vehicle_descriptor.vehicle_registration_number && (
-                                <span className="ml-1.5 type-meta">
+                                <span className="ml-1.5 font-normal">
                                     <VehicleNumber
                                         number={displayVehicle.vehicle_descriptor.vehicle_registration_number}
                                         operator={displayVehicle.vehicle_descriptor.operator}
@@ -136,12 +133,12 @@ export const VehicleHero = ({
                             )}
                         </span>
                         {displayVehicle.vehicle_descriptor.operator && (
-                            <span className="line-clamp-1 type-meta text-muted-foreground">{displayVehicle.vehicle_descriptor.operator}</span>
+                            <span className="line-clamp-1 type-note text-muted-foreground">{displayVehicle.vehicle_descriptor.operator}</span>
                         )}
                         <IdLine>
-                            {displayVehicle.run_number && <span>{t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}</span>}
+                            {displayVehicle.run_number ? <span>{t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}</span> : null}
                             {displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor.vehicle_registration_number) && (
-                                <span className="min-w-0 truncate font-mono">{displayVehicle.vehicle_id}</span>
+                                <span className="min-w-0 truncate tabular-nums">{displayVehicle.vehicle_id}</span>
                             )}
                         </IdLine>
                     </div>
@@ -176,10 +173,11 @@ export const VehicleHero = ({
 /** The vehicle's number, linked to its seznam-autobusu.cz page when the number pins down one vehicle. */
 /** A vehicle's identifiers in one muted line, a dot between each that is present. */
 const IdLine = ({ children }: { children: React.ReactNode }) => {
-    const ids = Children.toArray(children);
+    // An absent fact may come as an empty string or 0, which would still take a dot.
+    const ids = Children.toArray(children).filter(id => id !== '' && id !== '0');
     if (ids.length === 0) return null;
     return (
-        <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 type-meta text-muted-foreground">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 type-note text-muted-foreground">
             {ids.map((id, i) => <Fragment key={i}>{i > 0 && <span aria-hidden="true">·</span>}{id}</Fragment>)}
         </div>
     );

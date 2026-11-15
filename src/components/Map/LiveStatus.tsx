@@ -6,7 +6,7 @@ import { useNow } from '@/hooks/useNow';
 import { cn } from '@/lib/cn';
 import { SystemStatusModal } from '@/components/Modals/SystemStatusModal';
 import { usePreferencesStore } from '@/state/preferencesStore';
-import { AlertTriangle, Filter, WifiOff } from 'lucide-react';
+import { AlertTriangle, WifiOff } from 'lucide-react';
 import { SignalMark } from '@/components/SignalMark';
 import { Pressable } from '@/components/Pressable';
 
@@ -19,9 +19,6 @@ export const LiveStatus = () => {
     const status = useSystemStatus();
     const yieldsToRides = useLiveStatusYieldsToRides();
 
-    const isFiltered = usePreferencesStore(
-        s => s.routeTypeFilter.length > 0 || s.delayFilter.length > 0 || s.stopTypeFilter.length > 0
-    );
     const [isModalOpen, setIsModalOpen] = useState(false);
     const closeModal = useCallback(() => setIsModalOpen(false), []);
     const now = useNow();
@@ -36,12 +33,6 @@ export const LiveStatus = () => {
         if (status.type === 'upstream_offline') return { text: t('liveStatus.upstreamError'), color: 'text-tint-amber', icon: <AlertTriangle className="size-3 shrink-0" /> };
         if (status.type === 'stale') return { text: t('liveStatus.stale'), color: 'text-tint-amber', icon: <SignalMark /> };
         if (status.type === 'refreshing') return { text: t('liveStatus.refreshing'), color: 'text-tint-amber', icon: <SignalMark className="animate-pulse" /> };
-        if (isFiltered) return {
-            text: t('liveStatus.filtered'),
-            color: 'text-purple-400',
-            icon: <Filter className="size-3 shrink-0" />,
-            showCountdown: true
-        };
         return {
             text: t('liveStatus.live'),
             color: 'text-tint-mint',

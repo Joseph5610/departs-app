@@ -60,7 +60,7 @@ export const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
 export const SearchRowBody = ({ title, subtitle, lines }: Pick<SearchItemProps, 'title' | 'subtitle' | 'lines'>) => (
     <div className="flex flex-col gap-0.5 min-w-0 flex-1">
         {title && (
-            <span className="text-foreground type-group truncate">
+            <span className="text-foreground type-headsign truncate">
                 {title}
             </span>
         )}

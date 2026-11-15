@@ -19,18 +19,17 @@ const buttonVariants = cva(
         ghost: "text-muted-foreground hover:bg-foreground/10 hover:text-foreground active:bg-foreground/15",
         link: "text-tint-mint underline-offset-4 hover:underline",
         tinted: "glassy text-muted-foreground hover:text-foreground hover:bg-foreground/10 active:bg-foreground/15",
-        /** "More of these": dashed like an empty slot of the chips it extends, so it never reads as a menu. */
+        /** A chip-shaped control, such as "more of these" after a row of chips. */
         pill: "bg-fill text-muted-foreground tabular-nums hover:bg-fill-2 hover:text-foreground",
         /** An on state of a pill: the mint tint of a selected chip. */
         selected: "bg-selected text-foreground hover:bg-primary/50",
         /** A bare control on glass or a tinted bar; it keeps the colour around it. */
         quiet: "hover:bg-fill-2 active:bg-fill-2 aria-expanded:bg-fill-2",
-        more: "bg-transparent border border-dashed border-foreground/20 text-muted-foreground tabular-nums hover:bg-fill hover:text-foreground",
       },
       size: {
         default: "hit-target h-control-lg px-5 type-group",
         /** The one prominent action at the end of a sheet. */
-        lg: "h-12 px-6 type-group",
+        lg: "h-12 px-6 type-headsign",
         sm: "hit-target h-control-md px-3 type-group",
         /** A link beside text or a pill: no box, only its 44px target. */
         inline: "hit-target gap-1.5 type-group",
