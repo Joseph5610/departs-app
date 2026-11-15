@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The phone sheet's grabber steps to the neighbouring height, and a row swipe no longer leaves the sheet stuck mid-drag.
 - The map stars exactly the stop pinned, as its board's star does, not every platform of a pinned station.
 - Loading placeholders match the board, trip and favourites they stand in for, so content no longer jumps when it loads.
+- A trip without a run number (trains) no longer shows a stray dot before its vehicle id.
 - Stats show zero delays in neutral colours, and A/C and wheelchair filters use the app's selected colour.
 
 ## [0.97.1] - 2026-11-06

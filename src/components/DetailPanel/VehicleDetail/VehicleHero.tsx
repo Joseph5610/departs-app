@@ -136,7 +136,7 @@ export const VehicleHero = ({
                             <span className="line-clamp-1 type-note text-muted-foreground">{displayVehicle.vehicle_descriptor.operator}</span>
                         )}
                         <IdLine>
-                            {displayVehicle.run_number && <span>{t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}</span>}
+                            {displayVehicle.run_number ? <span>{t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}</span> : null}
                             {displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor.vehicle_registration_number) && (
                                 <span className="min-w-0 truncate tabular-nums">{displayVehicle.vehicle_id}</span>
                             )}
@@ -173,7 +173,8 @@ export const VehicleHero = ({
 /** The vehicle's number, linked to its seznam-autobusu.cz page when the number pins down one vehicle. */
 /** A vehicle's identifiers in one muted line, a dot between each that is present. */
 const IdLine = ({ children }: { children: React.ReactNode }) => {
-    const ids = Children.toArray(children);
+    // An absent fact may come as an empty string or 0, which would still take a dot.
+    const ids = Children.toArray(children).filter(id => id !== '' && id !== '0');
     if (ids.length === 0) return null;
     return (
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 type-note text-muted-foreground">
