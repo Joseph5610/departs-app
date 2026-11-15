@@ -4,7 +4,7 @@ import { cn } from '@/lib/cn';
 
 /** A disruption's or notice's own text, alike in the alerts list and on a board. */
 export const AlertText = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-    <div className={cn("type-row font-semibold leading-tight text-foreground/95 whitespace-pre-line", className)}>{children}</div>
+    <div className={cn("type-row font-semibold text-foreground/95 whitespace-pre-line", className)}>{children}</div>
 );
 
 /** When a disruption or notice applies: a calendar and the dates as a plain note under its text. */

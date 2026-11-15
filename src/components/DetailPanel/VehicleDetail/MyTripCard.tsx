@@ -24,7 +24,7 @@ export const MyTripCard = ({ trip, exit, lastStopName, onOpen, onEnd }: MyTripCa
 
     if (!trip) {
         return (
-            <Button className="w-full gap-1.75" onClick={() => onOpen()}>
+            <Button size="lg" className="w-full gap-1.75" onClick={() => onOpen()}>
                 <Route size={16} strokeWidth={2.25} />
                 {t('myTrip.take')}
             </Button>

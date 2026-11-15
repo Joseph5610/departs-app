@@ -115,15 +115,12 @@ const MyTripSheetBody = ({ target, onClose, inCard = false }: { target: MyTripTa
     return (
         <>
             {!inCard && (
-                <DialogHeader className="flex-row items-center gap-3 pr-8 text-left">
-                    {line && <LineBadge name={line} routeColor={detail?.route_color ?? ''} size="lg" />}
-                    <div className="flex min-w-0 flex-col">
-                        <DialogTitle className="truncate type-title">{detail?.trip_headsign ?? ''}</DialogTitle>
-                        <DialogDescription className="type-meta">{existing ? t('myTrip.title') : t('myTrip.take')}</DialogDescription>
-                    </div>
+                <DialogHeader className="pr-8 text-left">
+                    <DialogTitle className="type-title">{t('myTrip.title')}</DialogTitle>
+                    <DialogDescription className="sr-only">{detail?.trip_headsign ?? ''}</DialogDescription>
                 </DialogHeader>
             )}
-            {inCard && (
+            {(
                 <div className="flex shrink-0 items-start gap-3 px-1">
                     {line && <LineBadge name={line} routeColor={detail?.route_color ?? ''} size="lg" />}
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">

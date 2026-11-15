@@ -55,7 +55,7 @@ export const FavoriteLineRow = ({ favorite, stop, departures, isFirst }: Favorit
             variant="ghost"
             onClick={openBoard}
             aria-label={t('favorites.openBoard')}
-            className="h-auto w-fit max-w-full justify-start gap-0.5 rounded-badge p-0 type-note text-muted-foreground hover:bg-transparent hover:text-foreground"
+            className="h-auto w-fit max-w-full justify-start gap-0.5 rounded-badge p-0 type-meta text-muted-foreground hover:bg-transparent hover:text-foreground"
         >
             <span className="truncate">{t('favorites.fromStop', { stop: stopName })}</span>
             <ChevronRight size={14} strokeWidth={1.75} className="shrink-0" />

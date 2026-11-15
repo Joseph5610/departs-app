@@ -58,13 +58,13 @@ export const VehicleHero = ({
                         <span className="type-label text-muted-foreground">
                             {t('map.vehicleDetails.directionLabel')}
                         </span>
-                        <h2 data-testid="vehicle-headsign" className="type-title text-foreground">
+                        <h2 data-testid="vehicle-headsign" className="type-display text-foreground">
                             {displayVehicle.trip_headsign ? (
                                 <span className="animate-in fade-in duration-500">
                                     {displayVehicle.trip_headsign}
                                 </span>
                             ) : isDetailLoading ? (
-                                <Skeleton className="h-7 w-3/4 max-w-80 rounded-badge bg-muted opacity-40" />
+                                <Skeleton className="h-7.5 w-3/4 max-w-80 rounded-badge bg-muted opacity-40" />
                             ) : (
                                 t('map.vehicleDetails.headingToDestination')
                             )}
@@ -124,10 +124,10 @@ export const VehicleHero = ({
             {displayVehicle.vehicle_descriptor && (
                 <HeroFooter className="mt-auto flex items-center justify-between gap-3">
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="type-row text-foreground">
+                        <span className="type-meta font-medium text-foreground">
                             {vehicleTypeLabel}
                             {displayVehicle.vehicle_descriptor.vehicle_registration_number && (
-                                <span className="ml-1.5 type-meta">
+                                <span className="ml-1.5 font-normal">
                                     <VehicleNumber
                                         number={displayVehicle.vehicle_descriptor.vehicle_registration_number}
                                         operator={displayVehicle.vehicle_descriptor.operator}
@@ -136,12 +136,12 @@ export const VehicleHero = ({
                             )}
                         </span>
                         {displayVehicle.vehicle_descriptor.operator && (
-                            <span className="line-clamp-1 type-meta text-muted-foreground">{displayVehicle.vehicle_descriptor.operator}</span>
+                            <span className="line-clamp-1 type-note text-muted-foreground">{displayVehicle.vehicle_descriptor.operator}</span>
                         )}
                         <IdLine>
                             {displayVehicle.run_number && <span>{t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}</span>}
                             {displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor.vehicle_registration_number) && (
-                                <span className="min-w-0 truncate font-mono">{displayVehicle.vehicle_id}</span>
+                                <span className="min-w-0 truncate tabular-nums">{displayVehicle.vehicle_id}</span>
                             )}
                         </IdLine>
                     </div>
@@ -179,7 +179,7 @@ const IdLine = ({ children }: { children: React.ReactNode }) => {
     const ids = Children.toArray(children);
     if (ids.length === 0) return null;
     return (
-        <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 type-meta text-muted-foreground">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 type-note text-muted-foreground">
             {ids.map((id, i) => <Fragment key={i}>{i > 0 && <span aria-hidden="true">·</span>}{id}</Fragment>)}
         </div>
     );
