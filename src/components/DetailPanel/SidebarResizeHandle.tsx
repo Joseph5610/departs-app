@@ -89,6 +89,10 @@ export const SidebarResizeHandle = () => {
             className="group absolute inset-y-0 -right-3 z-10 w-4 cursor-col-resize touch-none outline-none"
         >
             <div className="absolute inset-y-6 left-1 w-0.5 -translate-x-1/2 rounded-full bg-primary opacity-0 transition-opacity group-hover:opacity-100 group-hover:delay-150 group-focus-visible:opacity-100 in-data-sidebar-resizing:opacity-100 in-data-sidebar-resizing:delay-0" />
+            {/* A finger needs a 44px target: on touch screens a grabber mid-edge, the rest of the edge left to scrolling and the map. */}
+            <div aria-hidden="true" className="absolute top-1/2 -left-3 hidden h-24 w-11 -translate-y-1/2 pointer-coarse:block">
+                <span className="absolute top-1/2 left-5 h-9 w-1 -translate-y-1/2 rounded-full bg-handle transition-colors in-data-sidebar-resizing:bg-primary" />
+            </div>
         </div>
     );
 };
