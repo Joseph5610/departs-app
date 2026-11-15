@@ -1,5 +1,6 @@
 import type { AlertLine, RSSItem, RouteInfo } from '@/types';
 import { resolveLine } from '@shared/lines';
+import { alertPhase } from '@shared/alerts';
 import { mapStable } from '@/lib/memoize';
 
 /** Resolves each alert's `lines` into `resolvedLines`: by route id, then by name, then in KORDIS's numeric-id table. */
@@ -21,11 +22,14 @@ export function resolveAlertLines(
     });
 }
 
-/** Alerts with `isActive`/`isFuture` as of `nowMs`, from their validity window; an alert without dates is active. */
+/**
+ * Alerts with `isActive`/`isFuture` as of `nowMs`, from their validity window; an alert without dates is active.
+ * An incident open-ended for too long is also `isStale`: still listed, but no disruption now.
+ */
 export function withAlertTiming(alerts: RSSItem[], nowMs: number): RSSItem[] {
     return alerts.map((alert) => {
-        const isFuture = !!alert.valid_from && Date.parse(alert.valid_from) > nowMs;
-        const hasEnded = !!alert.valid_to && Date.parse(alert.valid_to) < nowMs;
-        return { ...alert, isActive: !isFuture && !hasEnded, isFuture };
+        const phase = alertPhase(alert, nowMs);
+        const isStale = alert.type === 'incident' && phase === 'stale';
+        return { ...alert, isActive: phase === 'current' || phase === 'stale', isFuture: phase === 'upcoming', isStale };
     });
 }

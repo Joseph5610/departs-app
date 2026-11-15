@@ -1,4 +1,4 @@
-/* Ride-mode Web Push, imported into the generated service worker (vite.config.ts `workbox.importScripts`). */
+/* Ride-mode and disruption Web Push, imported into the generated service worker (vite.config.ts `workbox.importScripts`). */
 self.addEventListener('push', (event) => {
     let data = {};
     try {
@@ -8,8 +8,10 @@ self.addEventListener('push', (event) => {
     }
     // Declarative Web Push (`web_push: 8030`) nests the notification; Safari 18.4+ shows it without this handler.
     const notification = data.notification || data;
+    // Disruption pushes carry the count of current disruptions on the user's lines for the app icon.
+    const badge = typeof data.app_badge === 'number' && self.navigator.setAppBadge ? self.navigator.setAppBadge(data.app_badge).catch(() => {}) : null;
     // Safari revokes a subscription whose pushes show no notification.
-    event.waitUntil(self.registration.showNotification(notification.title || 'departs.app', {
+    event.waitUntil(Promise.all([badge, self.registration.showNotification(notification.title || 'departs.app', {
         body: notification.body,
         tag: notification.tag,
         renotify: Boolean(notification.tag && notification.renotify),
@@ -20,7 +22,7 @@ self.addEventListener('push', (event) => {
         badge: '/notification-badge.png',
         timestamp: Date.now(),
         data: { navigate: notification.navigate },
-    }));
+    })]));
 });
 
 self.addEventListener('notificationclick', (event) => {

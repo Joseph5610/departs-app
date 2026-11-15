@@ -1,6 +1,6 @@
 import { DurableObject } from 'cloudflare:workers';
 import { RIDE_PUSH } from '../_core/config';
-import { sendPush } from '../_core/push/webPush';
+import { sendPush, vapidAuthorizer } from '../_core/push/webPush';
 import type { AppVehicleDetail } from '../_core/types';
 import { handleRequest, runAlarm, type RideTrip, type RideWatchRequest } from '../_domain/rides/watchRun';
 
@@ -24,12 +24,12 @@ export class RideWatch extends DurableObject<RidePushEnv> {
             console.error('VAPID keys are not configured; ride pushes are off.');
             return this.ctx.storage.deleteAll();
         }
-        const vapid = { publicKey, privateKey, subject: RIDE_PUSH.VAPID_SUBJECT };
         const now = Date.now();
+        const authorize = vapidAuthorizer({ publicKey, privateKey, subject: RIDE_PUSH.VAPID_SUBJECT }, Math.floor(now / 1000));
         await runAlarm(this.ctx.storage, {
             readDetail: trip => this.readDetail(trip),
             // One broken subscription must not stop the trip's other riders.
-            push: (subscription, payload) => sendPush(subscription, payload, vapid, Math.floor(now / 1000)).catch((error: unknown) => {
+            push: (subscription, payload) => sendPush(subscription, payload, authorize).catch((error: unknown) => {
                 console.error('Push failed', error);
                 return 0;
             }),

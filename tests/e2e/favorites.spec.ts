@@ -160,6 +160,11 @@ test.describe('Favorites Tests', () => {
             await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x - i * 10, y: y + i * 2 }] });
         }
         expect(await sheetTop()).toBe(before);
+        const block = page.getByText('Pin', { exact: true });
+        await expect(block).toBeVisible();
+        const swipeBlock = block.locator('..');
+        await expect(swipeBlock).toHaveCSS('width', '88px');
+        await expect(swipeBlock).toHaveCSS('border-top-left-radius', '22px');
         await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
 
         await expect(page.getByText('Line C towards Letňany added to favorites')).toBeVisible();
@@ -197,7 +202,7 @@ test.describe('Favorites Tests', () => {
 
         const linesTab = page.getByTestId('favorites-tab-lines');
         const stopsTab = page.getByTestId('favorites-tab-stops');
-        await expect(linesTab).toHaveAttribute('aria-selected', 'true');
+        await expect(linesTab).toHaveAttribute('aria-pressed', 'true');
         await expect(page.getByText('Letňany')).toBeVisible();
         await expect(page.getByText('Hlavní nádraží', { exact: true })).not.toBeVisible();
 
@@ -206,7 +211,7 @@ test.describe('Favorites Tests', () => {
         await expect(page.getByText('Letňany')).not.toBeVisible();
 
         await page.reload();
-        await expect(page.getByTestId('favorites-tab-stops')).toHaveAttribute('aria-selected', 'true');
+        await expect(page.getByTestId('favorites-tab-stops')).toHaveAttribute('aria-pressed', 'true');
     });
 
     test('should reorder pinned stops by dragging their handle', async ({ page }) => {

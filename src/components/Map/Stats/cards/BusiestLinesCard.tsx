@@ -1,9 +1,10 @@
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Hash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LineBadge } from '@/components/LineBadge';
-import type { CityStats } from '@/types';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
+import type { CityStats } from '@/types';
+import { StatsCard } from './StatsCard';
+import { FactRow } from '@/components/FactRow';
 
 interface BusiestLinesCardProps {
     stats: CityStats;
@@ -11,33 +12,19 @@ interface BusiestLinesCardProps {
 
 export const BusiestLinesCard = ({ stats }: BusiestLinesCardProps) => {
     const { t } = useTranslation();
-
-    if (!stats.busiest_lines || stats.busiest_lines.length === 0) {
-        return null;
-    }
+    if (!stats.busiest_lines || stats.busiest_lines.length === 0) return null;
 
     return (
-        <Card variant="subtle" size="none">
-            <CardHeader className="p-3.5 pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                    <Hash size={16} className="text-fuchsia-400" />
-                    <span>{t('stats.busiestLines')}</span>
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3.5 pt-0">
-                <div className="flex flex-wrap gap-2">
-                    {stats.busiest_lines.map((item) => (
-                        <div key={item.line} className="flex items-center gap-1.5 bg-muted/50 border border-border/50 px-2 py-1 rounded-md">
-                            <LineBadge 
-                                name={item.line} 
-                                routeColor={item.route_color || FALLBACK_ROUTE_COLOR}
-                                size="sm"
-                            />
-                            <span className="text-xs font-bold text-foreground tabular-nums">{item.count} {t('stats.cars')}</span>
-                        </div>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
+        <StatsCard icon={Hash} title={t('stats.busiestLines')} iconClassName="text-fuchsia-400" flush>
+            <div className="flex flex-col">
+                {stats.busiest_lines.map(item => (
+                    <FactRow
+                        key={item.line}
+                        label={<LineBadge name={item.line} routeColor={item.route_color || FALLBACK_ROUTE_COLOR} size="row" />}
+                        value={`${item.count} ${t('stats.cars')}`}
+                    />
+                ))}
+            </div>
+        </StatsCard>
     );
 };

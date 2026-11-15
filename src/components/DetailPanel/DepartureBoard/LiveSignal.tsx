@@ -3,9 +3,9 @@ import type { LiveStatus } from '@/domain/departures';
 import { SignalMark } from '@/components/SignalMark';
 
 const LIVE_COLOR: Partial<Record<LiveStatus, string>> = {
-    onTime: 'text-emerald-600 dark:text-emerald-400',
+    onTime: 'text-tint-mint',
     late: 'text-destructive',
-    early: 'text-sky-500',
+    early: 'text-tint-sky',
 };
 
 /**

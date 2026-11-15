@@ -1,24 +1,26 @@
-import { useState, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, X, Activity } from 'lucide-react';
+import { Activity, Bus } from 'lucide-react';
 import { Virtuoso } from 'react-virtuoso';
 import { useVehicles } from '@/hooks/data/useVehicles';
 import { useVehicleMonitor } from '@/hooks/derived/useVehicleMonitor';
-import type { SearchField } from '@/domain/vehicles';
+import type { SearchField as VehicleSearchField } from '@/domain/vehicles';
 import { VehicleMonitorRow } from './VehicleMonitorRow';
+import { FilterChip } from '@/components/FilterChip';
 import { SegmentedControl } from '@/components/SegmentedControl';
-import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
-import { cn } from '@/lib/cn';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { routeTypeRank } from '@/domain/routes';
 import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
+import { SearchField } from '@/components/SearchField';
+import { EmptyState } from '@/components/EmptyState';
 
-const modePillClass = (isActive: boolean) => cn(
-    "text-xs font-semibold px-3 py-1.5 rounded-full transition-all cursor-pointer shrink-0 border shadow-2xs",
-    isActive ? "bg-foreground text-background border-foreground" : "bg-card hover:bg-muted/60 text-foreground border-border/80"
-);
 
 export const VehicleMonitorList = () => {
+    // The list scrolls with the panel around it rather than in a box of its own.
+    const [scroller, setScroller] = useState<HTMLElement | null>(null);
+    const listRef = useCallback((list: HTMLDivElement | null) => {
+        setScroller(list?.closest<HTMLElement>('[data-slot="scroll-area-viewport"], [data-panel-scroller]') ?? null);
+    }, []);
     const { t } = useTranslation();
     const cityConfig = useCityConfig();
     const allowedVehicleTypes = useMemo(
@@ -27,7 +29,7 @@ export const VehicleMonitorList = () => {
     );
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchField, setSearchField] = useState<SearchField>('line');
+    const [searchField, setSearchField] = useState<VehicleSearchField>('line');
     const [modeFilter, setModeFilter] = useState<string>('all');
 
     const { networkVehicles: activeCollection, isFetching: isNetworkFetching } = useVehicles();
@@ -44,73 +46,46 @@ export const VehicleMonitorList = () => {
 
     return (
         <div className="flex flex-col gap-2.5 pt-1 pb-2">
-            <div className="flex items-center gap-2 h-10 px-3 rounded-xl border border-border/60 bg-card/60 transition-all">
-                <Search size={14} className="text-muted-foreground/50 shrink-0" />
+            <SearchField
+                value={searchQuery}
+                onValueChange={setSearchQuery}
+                placeholder={searchField === 'vehicle' ? t('stats.monitor.searchByVehicle') : t('stats.monitor.searchByLine')}
+                aria-label={searchField === 'vehicle' ? t('stats.monitor.searchByVehicle') : t('stats.monitor.searchByLine')}
+                clearLabel={t('search.clearFilter')}
+                lead={
+                    <SegmentedControl
+                        size="sm"
+                        value={searchField}
+                        onChange={setSearchField}
+                        options={[
+                            { value: 'line', label: t('stats.monitor.fieldLine') },
+                            { value: 'vehicle', label: t('stats.monitor.fieldVehicle') },
+                        ]}
+                    />
+                }
+            />
 
-                <SegmentedControl
-                    size="sm"
-                    value={searchField}
-                    onChange={setSearchField}
-                    options={[
-                        { value: 'line', label: t('stats.monitor.fieldLine') },
-                        { value: 'vehicle', label: t('stats.monitor.fieldVehicle') },
-                    ]}
-                />
-
-                <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={
-                        searchField === 'vehicle' ? t('stats.monitor.searchByVehicle')
-                        : t('stats.monitor.searchByLine')
-                    }
-                    className="flex-1 min-w-0 bg-transparent text-sm outline-none ring-0 border-0 focus:outline-none focus:ring-0 placeholder:text-muted-foreground/40"
-                />
-
-                {searchQuery && (
-                    <button
-                        type="button"
-                        onClick={() => setSearchQuery('')}
-                        className="text-muted-foreground/50 hover:text-foreground cursor-pointer shrink-0 transition-colors"
-                    >
-                        <X size={13} />
-                    </button>
-                )}
-            </div>
-
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
-                <button
-                    type="button"
-                    onClick={() => setModeFilter('all')}
-                    className={modePillClass(modeFilter === 'all')}
-                >
-                    {t('common.all')} ({totalCount})
-                </button>
-
+            <div className="-my-2 flex items-center gap-1.5 overflow-x-auto py-2.5 no-scrollbar">
+                <FilterChip label={t('common.all')} count={totalCount} isActive={modeFilter === 'all'} onClick={() => setModeFilter('all')} />
                 {allowedVehicleTypes.map(slug => {
                     const count = modeCounts[slug] ?? 0;
-                    if (count === 0) return null;
                     const Icon = ROUTE_TYPE_ICONS[slug as keyof typeof ROUTE_TYPE_ICONS];
-                    if (!Icon) return null;
+                    if (count === 0 || !Icon) return null;
                     const isActive = modeFilter === slug;
-
                     return (
-                        <button
+                        <FilterChip
                             key={slug}
-                            type="button"
+                            icon={Icon}
+                            label={t(`settings.vehicleTypes.${slug}`)}
+                            count={count}
+                            isActive={isActive}
                             onClick={() => setModeFilter(isActive ? 'all' : slug)}
-                            className={cn(modePillClass(isActive), "flex items-center gap-1.5")}
-                        >
-                            <Icon size={14} strokeWidth={1.75} />
-                            <span>{t(`settings.vehicleTypes.${slug}`)}</span>
-                            <span className="text-label opacity-75">({count})</span>
-                        </button>
+                        />
                     );
                 })}
             </div>
 
-            <div className="flex items-center justify-between text-caption text-muted-foreground px-1">
+            <div className="flex items-center justify-between type-note text-muted-foreground px-0.5">
                 <span>
                     {t('stats.monitor.showingCount', { count: items.length, total: totalCount })}
                 </span>
@@ -119,26 +94,20 @@ export const VehicleMonitorList = () => {
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground opacity-60">
                     <Activity className="animate-pulse" size={24} />
-                    <span className="text-xs font-medium">{t('common.loading')}</span>
+                    <span className="type-note">{t('common.loading')}</span>
                 </div>
             ) : items.length > 0 ? (
-                <div className="border border-border/30 rounded-xl overflow-hidden bg-card/20 h-[520px] max-h-[60vh]">
-                    <Virtuoso
-                        style={{ height: '100%' }}
-                        data={items}
-                        itemContent={(_index, item) => (
-                            <VehicleMonitorRow key={item.id} item={item} />
-                        )}
-                    />
+                <div ref={listRef} className="overflow-hidden rounded-surface bg-fill">
+                    {scroller && (
+                        <Virtuoso
+                            customScrollParent={scroller}
+                            data={items}
+                            itemContent={(_index, item) => <VehicleMonitorRow key={item.id} item={item} />}
+                        />
+                    )}
                 </div>
             ) : (
-                <Empty className="py-10 bg-muted/20">
-                    <EmptyHeader>
-                        <EmptyTitle className="text-xs font-medium text-muted-foreground">
-                            {t('stats.monitor.noVehiclesFound')}
-                        </EmptyTitle>
-                    </EmptyHeader>
-                </Empty>
+                <EmptyState icon={Bus} title={t('stats.monitor.noVehiclesFound')} />
             )}
         </div>
     );

@@ -15,3 +15,8 @@ id = "36234b692ee146bfb00c09686809cbb1"
 name = "RIDE_WATCH"
 class_name = "RideWatch"
 script_name = "departs-ride-push"
+
+[[durable_objects.bindings]]
+name = "DISRUPTION_WATCH"
+class_name = "DisruptionWatch"
+script_name = "departs-ride-push"

@@ -1,9 +1,7 @@
 import { memo, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, ChevronDown, ChevronRight, Train } from 'lucide-react';
+import { ArrowRight, ChevronDown, Train } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { Card } from '@/components/ui/card';
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import type { DepartureClickHandler, Platform, SelectedStop, AppError } from '@/types';
 import { useDepartures } from '@/hooks/data/useDepartures';
 import { InfoTexts } from './InfoTexts';
@@ -20,12 +18,14 @@ import { useOpenStop } from '@/hooks/features/useOpenStop';
 import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
 import { safeHexColor } from '@/lib/color';
 import { badgeColumnStyle } from '@/lib/lineBadge';
+import { SectionTitle } from '@/components/SectionTitle';
 import { PlatformCircle } from '@/components/PlatformCircle';
 import { LineBadge } from '@/components/LineBadge';
 import { useSelectionStore } from '@/state/selectionStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useRideStore } from '@/state/rideStore';
 import { useNowEvery } from '@/hooks/useNow';
+import { EmptyState } from '@/components/EmptyState';
 
 const NO_PLATFORMS: Platform[] = [];
 
@@ -131,40 +131,22 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
     }
 
     return (
-        <div className="flex flex-col gap-3">
-            {jsonLd && (
-                <script type="application/ld+json">
-                    {JSON.stringify(jsonLd)}
-                </script>
-            )}
+        <div className="flex flex-col gap-5 pt-1.5">
             <VehicleFilterNotice hiddenCount={hiddenByVehicleFilters} />
             <InfoTexts selectedStop={selectedStop} />
             
             {groupedDepartures.length === 0 ? (
                 <MetroClosedOr show={!isFiltered && !!board && servesMode(board, 'metro')} timeZone={timezone} closedHours={lineRules.metroClosedHours}>
-                    <Empty className="py-12">
-                        <EmptyHeader>
-                            <EmptyMedia
-                                variant="icon"
-                                className="size-14 rounded-2xl bg-muted/30 border border-border/50 text-muted-foreground shadow-sm [&_svg:not([class*='size-'])]:size-7"
-                            >
-                                <Train strokeWidth={1.5} className="opacity-50" />
-                            </EmptyMedia>
-                            <EmptyTitle className="text-base font-bold text-foreground/80">
-                                {selectedLine
-                                    ? t('map.departures.noUpcomingForLine', { line: selectedLine })
-                                    : t('map.departures.noUpcoming')}
-                            </EmptyTitle>
-                            <EmptyDescription className="text-sm">
-                                {t('map.departures.noUpcomingDescription')}
-                            </EmptyDescription>
-                        </EmptyHeader>
-                    </Empty>
+                    <EmptyState
+                        icon={Train}
+                        title={selectedLine ? t('map.departures.noUpcomingForLine', { line: selectedLine }) : t('map.departures.noUpcoming')}
+                        description={t('map.departures.noUpcomingDescription')}
+                    />
                 </MetroClosedOr>
             ) : (
                 sections ? (
-                    <div className="@container">
-                        <div className="grid grid-cols-1 items-start gap-3 @2xl:grid-cols-2">
+                    <div className="@container first:mt-3.5">
+                        <div className="grid grid-cols-1 items-start gap-5 @2xl:grid-cols-2">
                             {sections.map(section => (
                                 <PlatformSectionView
                                     key={section.key}
@@ -177,10 +159,15 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
                         </div>
                     </div>
                 ) : (
-                    <Card size="none" variant="inset" className="px-2" style={badgeColumn}>
+                    <div className="not-first:-mt-3" style={badgeColumn}>
                         <DirectionRows groups={groupedDepartures} inPlatformSection={false} {...rowProps} />
-                    </Card>
+                    </div>
                 )
+            )}
+            {jsonLd && (
+                <script type="application/ld+json">
+                    {JSON.stringify(jsonLd)}
+                </script>
             )}
         </div>
     );
@@ -247,20 +234,20 @@ const PlatformSectionView = memo(({ section, platformStopId, badgeColumn, rowPro
     const { shown, hidden } = useMemo(() => sectionPreview(section.groups, DEPARTURES_CONFIG.SECTION_PREVIEW_LINES), [section.groups]);
     const groups = showAll ? section.groups : shown;
     return (
-        <section className="flex flex-col gap-1.5">
+        <section className="flex flex-col">
             {section.key && <PlatformHeader section={section} platformStopId={platformStopId} />}
-            <Card size="none" variant="inset" className="px-2" style={badgeColumn}>
+            <div style={badgeColumn}>
                 {/* A metro line's rows name their track, which is the line's own. */}
                 <DirectionRows groups={groups} inPlatformSection={!section.metroLine} {...rowProps} />
                 {hidden > 0 && (
-                    <div className="flex justify-center border-t border-border/50 py-2.5">
+                    <div className="flex justify-center py-2.5">
                         <Button variant="more" size="chip" aria-expanded={showAll} onClick={() => rowProps.onToggleGroup(sectionId)}>
                             {showAll ? t('map.departures.fewerLines') : t('map.departures.moreLines', { count: hidden })}
                             <ChevronDown size={14} strokeWidth={2} className={cn("transition-transform duration-200", showAll && "rotate-180")} />
                         </Button>
                     </div>
                 )}
-            </Card>
+            </div>
         </section>
     );
 });
@@ -276,33 +263,19 @@ interface PlatformHeaderProps {
 const PlatformHeader = ({ section, platformStopId }: PlatformHeaderProps) => {
     const { t } = useTranslation();
     const openStop = useOpenStop();
+    const onOpen = platformStopId ? () => openStop(platformStopId) : undefined;
     const title = section.metroLine ? (
-        <>
-            <LineBadge name={section.metroLine} routeColor={section.metroColor ?? FALLBACK_ROUTE_COLOR} />
-            <span className="flex-1 text-body-sm font-semibold text-foreground">{t('map.departures.metroSection', { line: section.metroLine })}</span>
-        </>
+        <SectionTitle onOpen={onOpen} lead={<LineBadge name={section.metroLine} routeColor={section.metroColor ?? FALLBACK_ROUTE_COLOR} />}>
+            {t('map.departures.metroSection', { line: section.metroLine })}
+        </SectionTitle>
     ) : section.platform ? (
-        <>
-            <PlatformCircle code={section.platform} size="md" />
-            <span className="flex-1 text-body-sm font-semibold text-foreground">
-                {t('map.departures.platformSection', { code: section.platform })}
-            </span>
-        </>
+        <SectionTitle onOpen={onOpen} lead={<PlatformCircle code={section.platform} size="section" />}>
+            {t('map.departures.platformSection', { code: section.platform })}
+        </SectionTitle>
     ) : (
-        <span className="flex min-w-0 flex-1 items-center gap-2 text-body-sm font-semibold text-foreground">
-            <ArrowRight size={16} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-hidden="true" />
-            <span className="truncate">{t('map.departures.towardsSection', { stop: section.direction })}</span>
-        </span>
+        <SectionTitle onOpen={onOpen} lead={<ArrowRight size={16} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-hidden="true" />}>
+            {t('map.departures.towardsSection', { stop: section.direction })}
+        </SectionTitle>
     );
-    if (!platformStopId) return <div className="flex items-center gap-2 px-2 py-1">{title}</div>;
-    return (
-        <button
-            type="button"
-            onClick={() => openStop(platformStopId)}
-            className="flex items-center gap-2 rounded-lg px-2 py-1 text-left outline-none transition-colors hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-ring/50"
-        >
-            {title}
-            <ChevronRight size={16} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-hidden="true" />
-        </button>
-    );
+    return <div className="mb-2 flex min-h-6 items-center">{title}</div>;
 };

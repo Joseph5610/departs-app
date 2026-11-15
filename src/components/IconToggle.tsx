@@ -11,7 +11,7 @@ export interface IconToggleProps {
     labelClassName?: string;
 }
 
-/** Outlined tile with an icon over a label, used for filter and category pickers. */
+/** A tile with an icon over a label, used for filter and category pickers. */
 export const IconToggle = ({ icon: Icon, label, isActive, onClick, testId, className, labelClassName }: IconToggleProps) => (
     <Toggle
         pressed={isActive}
@@ -20,10 +20,8 @@ export const IconToggle = ({ icon: Icon, label, isActive, onClick, testId, class
         data-testid={testId}
         className={cn(
             "h-auto flex flex-col items-center justify-center gap-1.5 px-3 transition-[transform,colors] font-semibold active:scale-95 group",
-            "border-border/80 hover:bg-foreground/10 hover:text-foreground",
             // `!` overrides the Toggle's own pressed background.
-            "aria-pressed:bg-primary/20! aria-pressed:text-primary! aria-pressed:border-primary/50! aria-pressed:shadow-[0_0_12px_rgba(var(--color-primary),0.15)]",
-            "aria-[pressed=false]:bg-transparent aria-[pressed=false]:text-foreground/70",
+            "aria-pressed:bg-selected! aria-pressed:text-foreground!",
             className
         )}
     >

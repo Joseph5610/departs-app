@@ -1,5 +1,5 @@
 import { LINE_SEARCH } from '@/config/constants';
-import type { RouteInfo } from '@/types';
+import type { RouteInfo, ShownHistoryItem } from '@/types';
 
 /** What a line badge needs of a route: `routes.json` by upper-cased line name (`RouteMetadata.byName`). */
 export type LineMetadata = Pick<RouteInfo, 'route_color' | 'type'>;
@@ -34,3 +34,9 @@ export const lineBadges = (names: readonly string[], metaMap: ReadonlyMap<string
         const meta = metaMap.get(name.toUpperCase());
         return { name, type: meta?.type || 'bus', route_color: meta?.route_color };
     });
+
+/** The line badges of a recent search: a stop's lines, or the lines it filtered, by `routes` of its own city. */
+export const historyItemLines = (item: ShownHistoryItem, routes: ReadonlyMap<string, LineMetadata>): LineBadgeData[] | undefined =>
+    item.type === 'stop' ? item.stop?.lines :
+    item.type === 'line' ? lineBadges(item.lines, routes) :
+    undefined;

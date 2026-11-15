@@ -17,8 +17,10 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { MAP_CAMERA } from '@/config/constants';
+import { Badge } from '@/components/ui/badge';
 
-const SHEET_PILL = 'glassy rounded-full overflow-hidden shadow-lg';
+// The fade stays on the glass itself: on a parent it would cut the glass off from the map behind it.
+const SHEET_PILL = 'glassy rounded-full overflow-hidden opacity-(--sheet-controls-opacity,1)';
 
 interface MapControlsProps {
     /** `corner` floats top-right of the map; `sheet` rides above the mobile sheet's top edge with only settings and locate. */
@@ -110,7 +112,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
             strokeWidth={1.5}
             className={cn(
                 "transition-all",
-                isGeoPending ? "animate-spin text-primary" : "transition-transform"
+                isGeoPending ? "animate-spin text-tint-mint" : "transition-transform"
             )}
          />
     );
@@ -118,6 +120,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
     const settingsButton = (
         <ControlButton
             inPill
+            inSheet={placement === 'sheet'}
             onClick={onSettings}
             title={t('map.controls.settings')}
             testId="map-settings-btn"
@@ -142,9 +145,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
             >
                 <AlertTriangle size={20} strokeWidth={1.5} className={cn(incidentsCount > 0 ? "text-destructive" : "transition-transform hover:scale-110")} />
                 {incidentsCount > 0 && (
-                    <span className="absolute top-1 right-1 bg-destructive text-destructive-foreground text-micro font-bold px-1 py-0 rounded-full min-w-4 text-center shadow-sm pointer-events-none">
-                        {incidentsCount}
-                    </span>
+                    <Badge variant="alert" className="pointer-events-none absolute top-1 right-1 shadow-sm">{incidentsCount}</Badge>
                 )}
             </ControlButton>
         </>
@@ -153,6 +154,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
     const compassButton = showCompass && (
         <ControlButton
             inPill={placement === 'sheet'}
+            inSheet={placement === 'sheet'}
             onClick={onResetBearing}
             title={t('map.controls.resetBearing')}
         >
@@ -164,17 +166,18 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
         return (
             <div
                 className={cn(
-                    "absolute bottom-full right-3 mb-3 flex flex-col gap-2 items-end transition-opacity duration-200",
-                    hidden ? "opacity-0 pointer-events-none" : "opacity-100"
+                    "absolute bottom-full right-3 mb-3 flex flex-col gap-2 items-end",
+                    hidden && "pointer-events-none"
                 )}
                 data-testid="map-controls"
             >
                 {compassButton && <ButtonGroup orientation="vertical" className={SHEET_PILL}>{compassButton}</ButtonGroup>}
                 <ButtonGroup orientation="vertical" className={SHEET_PILL}>
                     {settingsButton}
-                    <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
+                    <ButtonGroupSeparator orientation="horizontal" className="bg-sep mx-2.75" />
                     <ControlButton
                         inPill
+                        inSheet
                         onClick={(e) => onLocate(e)}
                         title={t('map.controls.myLocation')}
                         testId="map-locate-btn"
@@ -197,7 +200,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                     {locateIcon}
                 </ControlButton>
 
-                <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden shadow-sm">
+                <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden">
                     {settingsButton}
                     {alertsButton}
                     <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
@@ -211,7 +214,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                             size={20}
                             strokeWidth={1.5}
                             className={cn(
-                                isFavoritesRoute ? "fill-primary text-primary" : "transition-transform hover:scale-110"
+                                isFavoritesRoute ? "fill-primary text-tint-mint" : "transition-transform hover:scale-110"
                             )}
                          />
                     </ControlButton>
@@ -226,13 +229,13 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                             size={20}
                             strokeWidth={1.5}
                             className={cn(
-                                isStatsRoute ? "text-primary" : "transition-transform hover:scale-110"
+                                isStatsRoute ? "text-tint-mint" : "transition-transform hover:scale-110"
                             )}
                         />
                     </ControlButton>
                 </ButtonGroup>
 
-                <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden shadow-sm">
+                <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden">
                     <ControlButton
                         inPill
                         onClick={onZoomIn}
@@ -257,6 +260,8 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
 });
 
 interface ControlButtonProps {
+    /** Sized for the phone, riding above the sheet. */
+    inSheet?: boolean;
     children: React.ReactNode;
     onClick: (e: React.MouseEvent) => void;
     title: string;
@@ -265,7 +270,7 @@ interface ControlButtonProps {
     inPill?: boolean;
 }
 
-const ControlButton = ({ children, onClick, title, testId, inPill = false }: ControlButtonProps) => (
+const ControlButton = ({ children, onClick, title, testId, inPill = false, inSheet = false }: ControlButtonProps) => (
     <Tooltip>
         <TooltipTrigger render={
             <Button
@@ -273,14 +278,14 @@ const ControlButton = ({ children, onClick, title, testId, inPill = false }: Con
                 size="icon"
                 onClick={onClick}
                 aria-label={title}
-                className={inPill ? "relative rounded-none shrink-0 h-11 w-11" : "shrink-0 shadow-sm"}
+                className={cn(inPill ? "relative rounded-none shrink-0 h-11 w-11" : "shrink-0", inSheet && "size-12 text-foreground [&_svg]:size-5.25 [&_svg]:stroke-[1.75]")}
                 data-testid={testId}
             >
                 {children}
             </Button>
         } />
         <TooltipContent side="left" sideOffset={8}>
-            <p className="font-medium text-xs">{title}</p>
+            <p className="type-note">{title}</p>
         </TooltipContent>
     </Tooltip>
 );

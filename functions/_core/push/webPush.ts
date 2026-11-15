@@ -6,6 +6,10 @@ export interface PushTarget {
     keys: { p256dh: string; auth: string };
 }
 
+/** A Declarative Web Push message (WebKit, iOS/macOS 18.4+): Safari shows it without running the service worker; other browsers hand the same JSON to `push-sw.js`. */
+export const declarativePush = (notification: object, appBadge?: number): string =>
+    JSON.stringify({ web_push: 8030, notification, app_badge: appBadge });
+
 /** The application server's VAPID key pair as base64url: the 65-byte public point and the 32-byte private scalar. */
 export interface VapidKeys {
     publicKey: string;
@@ -59,6 +63,16 @@ const hkdf = async (salt: Uint8Array<ArrayBuffer>, ikm: Uint8Array<ArrayBuffer>,
     return new Uint8Array(await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt, info }, key, bytes * 8));
 };
 
+/** Whether a subscription's `p256dh` is a point on P-256: a key that isn't could never be pushed to, so it is refused up front. */
+export const isDeviceKey = async (p256dh: string): Promise<boolean> => {
+    try {
+        await crypto.subtle.importKey('raw', fromBase64Url(p256dh), { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+        return true;
+    } catch {
+        return false;
+    }
+};
+
 /**
  * Encrypts a push message for one subscription (RFC 8291, `aes128gcm` content coding) as a single record.
  * `serverKeys` and `salt` are fresh per message; tests pass fixed ones.
@@ -100,17 +114,39 @@ export const vapidAuthorization = async (endpoint: string, vapid: VapidKeys, now
     return `vapid t=${unsigned}.${toBase64Url(signature)}, k=${vapid.publicKey}`;
 };
 
+/** The `Authorization` header for an endpoint. */
+export type VapidAuthorizer = (endpoint: string) => Promise<string>;
+
+/** Signs the header once per push service for one run: the token names only the service's origin and an expiry. */
+export const vapidAuthorizer = (vapid: VapidKeys, nowS: number): VapidAuthorizer => {
+    const byOrigin = new Map<string, Promise<string>>();
+    return (endpoint) => {
+        const origin = new URL(endpoint).origin;
+        const header = byOrigin.get(origin) ?? vapidAuthorization(endpoint, vapid, nowS);
+        byOrigin.set(origin, header);
+        return header;
+    };
+};
+
+/** How long a push service keeps an undelivered push, and how urgently it delivers it. */
+export interface PushDelivery {
+    ttlS: number;
+    urgency: 'normal' | 'high';
+}
+
+const RIDE_DELIVERY: PushDelivery = { ttlS: RIDE_PUSH.TTL_S, urgency: 'high' };
+
 /** Sends one push; returns the push service's status (404/410: the subscription is gone and must be dropped). */
-export const sendPush = async (target: PushTarget, payload: string, vapid: VapidKeys, nowS: number): Promise<number> => {
+export const sendPush = async (target: PushTarget, payload: string, authorize: VapidAuthorizer, delivery = RIDE_DELIVERY): Promise<number> => {
     const body = await encryptPayload(text(payload), fromBase64Url(target.keys.p256dh), fromBase64Url(target.keys.auth));
     const response = await fetch(target.endpoint, {
         method: 'POST',
         headers: {
-            Authorization: await vapidAuthorization(target.endpoint, vapid, nowS),
+            Authorization: await authorize(target.endpoint),
             'Content-Encoding': 'aes128gcm',
             'Content-Type': 'application/octet-stream',
-            TTL: String(RIDE_PUSH.TTL_S),
-            Urgency: 'high',
+            TTL: String(delivery.ttlS),
+            Urgency: delivery.urgency,
         },
         body,
     });

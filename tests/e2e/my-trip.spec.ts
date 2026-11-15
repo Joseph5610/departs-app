@@ -57,13 +57,14 @@ test.describe('My trip', () => {
         await mockTrip(page);
         await page.goto('/prague/stop/U1111Z1P');
 
-        await page.getByTestId('my-trip-bell').first().click();
+        await page.locator('[data-testid^="departure-item-"]').first().click({ button: 'right' });
+        await page.getByRole('menuitem', { name: /taking this trip|Jedu tímto|Idem týmto/ }).click();
         const sheet = page.getByRole('dialog').filter({ has: page.getByTestId('my-trip-save') });
         await expect(sheet).toBeVisible();
         // The board's stop is the boarding stop, with a lead preselected.
         await expect(sheet.getByText('Hlavní nádraží', { exact: false }).first()).toBeVisible();
         await sheet.getByRole('button', { name: /Boarding|Nástup/ }).click();
-        await expect(sheet.locator('[data-slot=toggle-group-item][aria-pressed=true]')).toHaveCount(1);
+        await expect(sheet.locator('[role=group] button[aria-pressed=true]')).toHaveCount(1);
 
         await sheet.getByRole('button', { name: /Getting off|Výstup|Výstup/ }).click();
         await sheet.getByRole('button', { name: /Florenc/ }).click();
@@ -88,11 +89,12 @@ test.describe('My trip', () => {
     test('saves a boarding stop without an alert', async ({ page }) => {
         await mockTrip(page);
         await page.goto('/prague/stop/U1111Z1P');
-        await page.getByTestId('my-trip-bell').first().click();
+        await page.locator('[data-testid^="departure-item-"]').first().click({ button: 'right' });
+        await page.getByRole('menuitem', { name: /taking this trip|Jedu tímto|Idem týmto/ }).click();
         const sheet = page.getByRole('dialog').filter({ has: page.getByTestId('my-trip-save') });
         await sheet.getByRole('button', { name: /Boarding|Nástup/ }).click();
         await sheet.getByRole('button', { name: /No alert|Bez upozornění/ }).click();
-        await expect(sheet.locator('[data-slot=toggle-group-item][aria-pressed=true]')).toHaveText(/No alert|Bez upozornění/);
+        await expect(sheet.locator('[role=group] button[aria-pressed=true]')).toHaveText(/No alert|Bez upozornění/);
         await sheet.getByRole('button', { name: /Getting off|Výstup/ }).click();
         await sheet.getByRole('button', { name: /Florenc/ }).click();
         await sheet.getByTestId('my-trip-save').click();
@@ -123,6 +125,21 @@ test.describe('My trip', () => {
         await page.getByTestId('departure-item-trip-1').click({ button: 'right' });
         await page.getByRole('menuitem', { name: /taking this trip|Jedu tímto spojem/ }).click();
         await expect(page.getByTestId('my-trip-save')).toBeVisible();
+    });
+
+    // Showing the trip already open would only close the sheet, so the link is offered from a board alone.
+    test('offers to show the trip only when it is not the one open', async ({ page }) => {
+        await mockTrip(page);
+        await page.goto('/prague/stop/U1111Z1P');
+        await page.getByTestId('departure-item-trip-1').click({ button: 'right' });
+        await page.getByRole('menuitem', { name: /taking this trip|Jedu tímto spojem/ }).click();
+        const showTrip = page.getByRole('button', { name: /^(Show trip|Zobrazit spoj)$/ });
+        await expect(showTrip).toBeVisible();
+
+        await page.goto('/prague/trip/trip-1/veh-1');
+        await page.getByRole('button', { name: /taking this trip|Jedu tímto spojem/ }).first().click();
+        await expect(page.getByTestId('my-trip-save')).toBeVisible();
+        await expect(showTrip).toHaveCount(0);
     });
 
     // Already aboard and riding to the end is a valid trip: tracked in the bar, with no alerts.
@@ -157,7 +174,7 @@ test.describe('My trip', () => {
         await mockTrip(page);
         await seedTrips(page, [savedTrip('trip-1')]);
         await page.goto('/prague/stop/U1111Z1P');
-        await page.getByTestId('my-trip-bell').first().click();
+        await page.getByTestId('my-trip-chip').first().click();
         const sheet = page.getByRole('dialog').filter({ has: page.getByTestId('my-trip-save') });
         await sheet.getByRole('button', { name: /Getting off|Výstup/ }).click();
         await sheet.getByRole('button', { name: /^Vysočanská/ }).click();
@@ -178,6 +195,24 @@ test.describe('My trip', () => {
         expect(shared).toContain('/prague/trip/trip-1/veh-1?board=1&exit=2');
         expect(shared).toContain('Hlavní nádraží');
         expect(shared).toContain('Florenc');
+    });
+
+    // One sheet at a time: on a phone My trip replaces the sheet's content, and closing it restores it.
+    test('opens as a card in the phone sheet', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await mockTrip(page);
+        await seedTrips(page, [savedTrip('trip-1')]);
+        await page.goto('/prague/stop/U1111Z1P');
+        await page.getByTestId('my-trip-chip').first().click();
+
+        const panel = page.getByTestId('detail-panel');
+        await expect(panel.getByTestId('my-trip-save')).toBeVisible();
+        await expect(page.locator('[data-slot="dialog-content"]')).toHaveCount(0);
+        // The card is as tall as its content: the sheet's top stands below the usual half height.
+        await expect.poll(() => panel.evaluate(el => el.getBoundingClientRect().top)).toBeGreaterThan(844 * 0.44 + 1);
+        await expect(panel.getByRole('button', { name: /End trip|Ukončit cestu/ })).toBeInViewport();
+        await panel.getByTestId('detail-panel-close').click();
+        await expect(page.getByTestId('departure-item-trip-1')).toBeVisible();
     });
 
     test('stacks two trips behind a tab and fans them out', async ({ page }) => {

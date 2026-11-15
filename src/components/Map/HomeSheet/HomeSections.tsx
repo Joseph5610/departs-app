@@ -18,8 +18,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { NearbyStopRow } from './NearbyStopRow';
-import { SheetSection } from './SheetSection';
-import { CompactLineCard, CompactStopCard } from './CompactFavoriteCard';
+import { HomeSection } from './HomeSection';
+import { FavoriteLineRow, FavoriteStopRow } from './FavoriteRows';
+import { Badge } from '@/components/ui/badge';
+import { DEPARTURES_CONFIG } from '@/config/constants';
 
 interface HomeSectionsProps {
     /** The list scrolls only at full height, so at the lower heights a drag anywhere moves the sheet. */
@@ -55,98 +57,94 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
         [alerts, allLines, allStops],
     );
     const hasFavorites = allStops.length > 0 || allLines.length > 0;
+    const homeFavorites = useMemo(() => [
+        ...allLines.map(line => ({ kind: 'line' as const, line })),
+        ...allStops.map(pin => ({ kind: 'stop' as const, stop: pin.stop })),
+    ].slice(0, DEPARTURES_CONFIG.HOME_FAVORITES_LIMIT), [allLines, allStops]);
 
     return (
         <div
-            className={cn("flex-1 min-h-0 select-none overscroll-contain px-6 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] flex flex-col gap-5", isFull ? "overflow-y-auto" : "overflow-hidden")}
+            className={cn("flex-1 min-h-0 select-none overscroll-contain px-(--panel-gutter) pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+2.5rem)] flex flex-col gap-5", isFull ? "overflow-y-auto" : "overflow-hidden")}
             data-testid="home-sections"
         >
             {myIncidents.length > 0 && (
                 <Item
-                    variant="outline"
-                    className="flex-nowrap rounded-2xl border-destructive/30 bg-destructive/10 text-left"
+                    size="none"
+                    className="flex-nowrap rounded-surface border-0 bg-tint-red/16 px-3.5 py-3 text-left"
                     render={<button type="button" onClick={() => myIncidents[0].guid ? openAlert(myIncidents[0].guid) : setIsAlertsOpen(true)} data-testid="home-disruptions" />}
                 >
-                    <ItemMedia variant="icon" className="text-destructive"><AlertTriangle size={20} strokeWidth={1.5} /></ItemMedia>
+                    <ItemMedia variant="rowIcon" className="text-destructive"><AlertTriangle size={20} strokeWidth={1.75} /></ItemMedia>
                     <ItemContent className="min-w-0 gap-0.5">
-                        <ItemTitle className="text-title font-semibold text-foreground">{t('home.disruptionsOnYourLines', { count: myIncidents.length })}</ItemTitle>
-                        <ItemDescription className="text-xs line-clamp-1">{myIncidents[0].title}</ItemDescription>
+                        <ItemTitle className="type-row text-foreground">{t('home.disruptionsOnYourLines', { count: myIncidents.length })}</ItemTitle>
+                        <ItemDescription className="type-meta line-clamp-1">{myIncidents[0].title}</ItemDescription>
                     </ItemContent>
-                    <ItemActions><ChevronRight size={18} strokeWidth={1.5} className="text-muted-foreground" /></ItemActions>
+                    <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
                 </Item>
             )}
 
             {!hasFavorites && (
-                <SheetSection title={t('favorites.title')}>
-                    <Card variant="inset" size="none">
-                        <Item size="none" className="flex-nowrap px-4 py-3">
-                            <ItemMedia variant="icon" className="self-center! translate-y-0! text-favorite"><Star size={20} strokeWidth={1.5} /></ItemMedia>
+                <HomeSection title={t('favorites.title')}>
+                    <Card size="none">
+                        <Item variant="row" size="none" >
+                            <ItemMedia variant="rowIcon" className="text-favorite"><Star size={20} strokeWidth={1.75} /></ItemMedia>
                             <ItemContent className="min-w-0">
-                                <ItemDescription className="text-body-sm leading-snug">{t('favorites.emptySub')}</ItemDescription>
+                                <ItemDescription className="type-meta">{t('favorites.emptySub')}</ItemDescription>
                             </ItemContent>
                         </Item>
                     </Card>
-                </SheetSection>
+                </HomeSection>
             )}
 
             {hasFavorites && (
-                <SheetSection
-                    title={t('favorites.title')}
-                    action={
-                        <Button variant="link" size="sm" className="px-0" onClick={() => navigate(paths.favorites(selectedCity))}>
-                            {t('home.seeAll')}
-                        </Button>
-                    }
-                >
-                    <div className="-mx-6 flex gap-2.5 overflow-x-auto px-6 pb-1 snap-x snap-mandatory scroll-px-6">
-                        {allLines.map(fav => (
-                            <CompactLineCard
-                                key={`${fav.stopId}|${fav.line}|${fav.headsign}`}
-                                favorite={fav}
-                                stop={lineStops.get(fav.stopId)}
-                                departures={departuresByStop.get(fav.stopId) ?? []}
+                <HomeSection title={t('favorites.title')} onOpen={() => navigate(paths.favorites(selectedCity))}>
+                    <Card size="none">
+                        {homeFavorites.map(fav => fav.kind === 'line' ? (
+                            <FavoriteLineRow
+                                key={`${fav.line.stopId}|${fav.line.line}|${fav.line.headsign}`}
+                                favorite={fav.line}
+                                stop={lineStops.get(fav.line.stopId)}
+                                departures={departuresByStop.get(fav.line.stopId) ?? []}
+                                isLoading={isLoading}
+                            />
+                        ) : (
+                            <FavoriteStopRow
+                                key={fav.stop.id}
+                                stop={fav.stop}
+                                departures={departuresByStop.get(fav.stop.id) ?? []}
                                 isLoading={isLoading}
                             />
                         ))}
-                        {allStops.map(pin => (
-                            <CompactStopCard
-                                key={pin.stop.id}
-                                stop={pin.stop}
-                                departures={departuresByStop.get(pin.stop.id) ?? []}
-                                isLoading={isLoading}
-                            />
-                        ))}
-                    </div>
-                </SheetSection>
+                    </Card>
+                </HomeSection>
             )}
 
-            <SheetSection title={t('home.nearby')}>
+            <HomeSection title={t('home.nearby')}>
                 {!hasLocation ? (
-                    <Card variant="inset" size="none">
-                        <Item size="none" className="flex-nowrap px-4 py-3">
-                            <ItemMedia variant="icon" className="self-center! translate-y-0! text-muted-foreground"><MapPin size={20} strokeWidth={1.5} /></ItemMedia>
+                    <Card size="none">
+                        <Item variant="row" size="none" >
+                            <ItemMedia variant="rowIcon" className="text-muted-foreground"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
                             <ItemContent className="min-w-0">
-                                <ItemDescription className="text-body-sm leading-snug">{t('home.locationNeeded')}</ItemDescription>
+                                <ItemDescription className="type-meta">{t('home.locationNeeded')}</ItemDescription>
                             </ItemContent>
                             <ItemActions>
-                                <Button variant="tinted" size="sm" className="rounded-full" onClick={(e) => onLocate(e)}>
-                                    <LocateFixed size={15} strokeWidth={1.5} />
+                                <Button variant="secondary" size="sm" onClick={(e) => onLocate(e)}>
+                                    <LocateFixed size={15} strokeWidth={1.75} />
                                     {t('home.useLocationShort')}
                                 </Button>
                             </ItemActions>
                         </Item>
                     </Card>
                 ) : nearby.length === 0 ? (
-                    <Card variant="inset" size="none">
-                        <Item size="none" className="flex-nowrap px-4 py-3">
-                            <ItemMedia variant="icon" className="self-center! translate-y-0! text-muted-foreground"><MapPin size={20} strokeWidth={1.5} /></ItemMedia>
+                    <Card size="none">
+                        <Item variant="row" size="none" >
+                            <ItemMedia variant="rowIcon" className="text-muted-foreground"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
                             <ItemContent className="min-w-0">
-                                <ItemDescription className="text-body-sm leading-snug">{t('home.noNearby')}</ItemDescription>
+                                <ItemDescription className="type-meta">{t('home.noNearby')}</ItemDescription>
                             </ItemContent>
                         </Item>
                     </Card>
                 ) : (
-                    <Card variant="inset" size="none" className="overflow-hidden">
+                    <Card size="none" className="overflow-hidden">
                         {nearby.map(n => (
                             <NearbyStopRow
                                 key={n.stop.id}
@@ -157,34 +155,34 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
                         ))}
                     </Card>
                 )}
-            </SheetSection>
+            </HomeSection>
 
-            <SheetSection title={t('home.network')}>
-                <Card variant="inset" size="none" className="overflow-hidden">
+            <HomeSection title={t('home.network')}>
+                <Card size="none" className="overflow-hidden">
                     {hasAlerts && (
-                        <Item variant="settings" size="none" className="flex-nowrap text-left" render={<button type="button" onClick={() => setIsAlertsOpen(true)} data-testid="home-alerts-row" />}>
-                            <ItemMedia variant="icon" className={incidentsCount > 0 ? "text-destructive" : "text-muted-foreground"}><AlertTriangle size={20} strokeWidth={1.5} /></ItemMedia>
-                            <ItemContent><ItemTitle className="text-title text-foreground">{t('alerts.title')}</ItemTitle></ItemContent>
+                        <Item variant="row" size="none" render={<button type="button" onClick={() => setIsAlertsOpen(true)} data-testid="home-alerts-row" />}>
+                            <ItemMedia variant="rowIcon" className={incidentsCount > 0 ? "text-destructive" : "text-muted-foreground"}><AlertTriangle size={20} strokeWidth={1.75} /></ItemMedia>
+                            <ItemContent><ItemTitle className="type-row text-foreground">{t('alerts.title')}</ItemTitle></ItemContent>
                             <ItemActions>
                                 {incidentsCount > 0 && (
-                                    <span className="min-w-5 rounded-full bg-destructive px-1.5 text-center text-xs font-bold leading-5 text-destructive-foreground">{incidentsCount}</span>
+                                    <Badge variant="alert">{incidentsCount}</Badge>
                                 )}
-                                <ChevronRight size={18} strokeWidth={1.5} className="text-muted-foreground" />
+                                <ChevronRight size={17} strokeWidth={1.75} className="text-label-3" />
                             </ItemActions>
                         </Item>
                     )}
-                    <Item variant="settings" size="none" className="flex-nowrap text-left" render={<button type="button" onClick={() => navigate(paths.stats(selectedCity))} />}>
-                        <ItemMedia variant="icon" className="text-muted-foreground"><BarChart3 size={20} strokeWidth={1.5} /></ItemMedia>
-                        <ItemContent><ItemTitle className="text-title text-foreground">{t('stats.title')}</ItemTitle></ItemContent>
-                        <ItemActions><ChevronRight size={18} strokeWidth={1.5} className="text-muted-foreground" /></ItemActions>
+                    <Item variant="row" size="none" render={<button type="button" onClick={() => navigate(paths.stats(selectedCity))} />}>
+                        <ItemMedia variant="rowIcon" className="text-muted-foreground"><BarChart3 size={20} strokeWidth={1.75} /></ItemMedia>
+                        <ItemContent><ItemTitle className="type-row text-foreground">{t('stats.title')}</ItemTitle></ItemContent>
+                        <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
                     </Item>
-                    <Item variant="settings" size="none" className="flex-nowrap text-left" render={<button type="button" onClick={() => setIsFeedbackOpen(true)} />}>
-                        <ItemMedia variant="icon" className="text-muted-foreground"><MessageSquare size={20} strokeWidth={1.5} /></ItemMedia>
-                        <ItemContent><ItemTitle className="text-title text-foreground">{t('feedback.title')}</ItemTitle></ItemContent>
-                        <ItemActions><ChevronRight size={18} strokeWidth={1.5} className="text-muted-foreground" /></ItemActions>
+                    <Item variant="row" size="none" render={<button type="button" onClick={() => setIsFeedbackOpen(true)} />}>
+                        <ItemMedia variant="rowIcon" className="text-muted-foreground"><MessageSquare size={20} strokeWidth={1.75} /></ItemMedia>
+                        <ItemContent><ItemTitle className="type-row text-foreground">{t('feedback.title')}</ItemTitle></ItemContent>
+                        <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
                     </Item>
                 </Card>
-            </SheetSection>
+            </HomeSection>
         </div>
     );
 };

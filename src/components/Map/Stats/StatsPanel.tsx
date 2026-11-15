@@ -1,5 +1,6 @@
+import { SectionHeading } from '@/components/SectionHeading';
 import { useMemo, memo } from 'react';
-import { Activity, AlertTriangle } from 'lucide-react';
+import { Activity, AlertTriangle, BarChart3 } from 'lucide-react';
 import { useVehicles } from '@/hooks/data/useVehicles';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,7 +17,7 @@ import { MovementStateCard } from './cards/MovementStateCard';
 import { MostDelayedCard } from './cards/MostDelayedCard';
 import { VehicleMixCard } from './cards/VehicleMixCard';
 import { BusiestLinesCard } from './cards/BusiestLinesCard';
-import { OtherDataCard } from './cards/OtherDataCard';
+import { EmptyState } from '@/components/EmptyState';
 
 export const StatsPanel = memo(() => {
     const cityConfig = useCityConfig();
@@ -51,11 +52,12 @@ export const StatsPanel = memo(() => {
     return (
         <div className="flex flex-col gap-0 pt-0">
             <div className="flex items-center justify-between px-1 pb-3">
-                <span className="text-xs font-semibold text-muted-foreground">
+                <span className="type-control text-muted-foreground">
                     {t('stats.scopeLabel')}
                 </span>
 
                 <SegmentedControl
+                    size="sm"
                     value={tab}
                     onChange={setTab}
                     options={[
@@ -66,23 +68,20 @@ export const StatsPanel = memo(() => {
             </div>
 
             {isFetching ? (
-                <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground opacity-60">
-                    <Activity className="animate-pulse" size={24} />
-                    <span className="text-sm font-medium">{t('common.loading')}</span>
-                </div>
+                <EmptyState icon={Activity} title={t('common.loading')} className="[&_svg]:animate-pulse" />
             ) : activeStats && activeStats.total_vehicles > 0 ? (
                 <div className="flex flex-col gap-3 pt-2 pb-2">
                     <div className="grid grid-cols-2 gap-3">
-                        <Card variant="subtle" size="none">
+                        <Card size="none">
                             <CardContent className="p-3.5 flex flex-col justify-center h-full">
-                                <span className="micro-label text-foreground/60 mb-0.5">{t('stats.vehicles')}</span>
-                                <span className="text-2xl font-black tabular-nums tracking-tighter leading-none">{activeStats.total_vehicles}</span>
+                                <SectionHeading className="mb-0.5 px-0">{t('stats.vehicles')}</SectionHeading>
+                                <span className="type-title tabular-nums">{activeStats.total_vehicles}</span>
                             </CardContent>
                         </Card>
-                        <Card variant="subtle" size="none">
+                        <Card size="none">
                             <CardContent className="p-3.5 flex flex-col justify-center h-full">
-                                <span className="micro-label text-foreground/60 mb-0.5">{t('stats.lines')}</span>
-                                <span className="text-2xl font-black tabular-nums tracking-tighter leading-none">{activeStats.total_lines}</span>
+                                <SectionHeading className="mb-0.5 px-0">{t('stats.lines')}</SectionHeading>
+                                <span className="type-title tabular-nums">{activeStats.total_lines}</span>
                             </CardContent>
                         </Card>
                     </div>
@@ -90,7 +89,7 @@ export const StatsPanel = memo(() => {
                     {!hasNetworkDelayData && tab === 'network' && (
                         <Alert variant="warning">
                             <AlertTriangle size={16} />
-                            <AlertDescription className="text-xs leading-relaxed">
+                            <AlertDescription className="type-note">
                                 {t('stats.networkDelayNotice')}
                             </AlertDescription>
                         </Alert>
@@ -104,14 +103,11 @@ export const StatsPanel = memo(() => {
                     )}
 
                     <MovementStateCard stats={activeStats} />
-                    <VehicleMixCard stats={activeStats} />
+                    <VehicleMixCard stats={activeStats} networkStats={enrichedNetworkStats} />
                     <BusiestLinesCard stats={activeStats} />
-                    <OtherDataCard activeStats={activeStats} networkStats={enrichedNetworkStats} />
                 </div>
             ) : (
-                <div className="flex-1 flex items-center justify-center py-12 text-muted-foreground text-sm">
-                    {t('stats.noData')}
-                </div>
+                <EmptyState icon={BarChart3} title={t('stats.noData')} />
             )}
         </div>
     );

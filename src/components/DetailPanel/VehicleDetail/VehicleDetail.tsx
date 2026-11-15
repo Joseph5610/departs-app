@@ -1,7 +1,9 @@
 import { useMemo, useState, memo } from 'react';
 import { cn } from '@/lib/cn';
+import { SectionHeading } from '@/components/SectionHeading';
 import { useAlerts } from '@/hooks/data/useAlerts';
 import { useTranslation } from 'react-i18next';
+import { safeHexColor } from '@/lib/color';
 import { useUiStore } from '@/state/uiStore';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { pushChannelOf } from '@/domain/cities';
@@ -13,7 +15,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { TRIP_CONFIG, VEHICLE_ALERTS } from '@/config/constants';
+import { TRIP_CONFIG, VEHICLE_ALERTS, FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { alertsForLine, isHighPriorityAlert } from '@/domain/alerts';
 import type { RSSItem, VehicleDetail as VehicleDetailType, AppError } from '@/types';
 
@@ -99,11 +101,11 @@ export const VehicleDetail = memo<VehicleDetailProps>(({
                     />
 
                     {relevantAlerts.length > 0 && (
-                        <div className="flex flex-col gap-3 mt-2">
-                            <span className="micro-label-widest text-muted-foreground px-1">
+                        <div className="flex flex-col gap-2 mt-1">
+                            <SectionHeading>
                                 {t('alerts.title')}
                                 {relevantAlerts.length > 1 && ` (${relevantAlerts.length})`}
-                            </span>
+                            </SectionHeading>
                             <LineAlertList alerts={relevantAlerts} />
                         </div>
                     )}
@@ -113,6 +115,7 @@ export const VehicleDetail = memo<VehicleDetailProps>(({
                             stopTimes={displayVehicle.stop_times.features}
                             hasEnded={hasEnded}
                             routeName={displayVehicle.routeName}
+                            routeColor={safeHexColor(displayVehicle.route_color) ?? FALLBACK_ROUTE_COLOR}
                             effectiveSequence={displayVehicle.effectiveSequence}
                             delay={displayVehicle.delay}
                             tripId={displayVehicle.gtfs_trip_id}
@@ -150,7 +153,7 @@ const LineAlertList = ({ alerts }: { alerts: RSSItem[] }) => {
                 item={alert}
                 compact
                 onOpenFull={guid ? () => openAlert(guid) : undefined}
-                className={cn(idx > 0 && "border-t border-border/50", isHighPriorityAlert(alert.priority) && "bg-destructive/10")}
+                className={cn(idx > 0 && "before:absolute before:top-0 before:right-0 before:left-11.5 before:h-[0.5px] before:bg-sep", isHighPriorityAlert(alert.priority) && "bg-tint-red/16")}
             />
         );
     };
@@ -164,7 +167,7 @@ const LineAlertList = ({ alerts }: { alerts: RSSItem[] }) => {
                         <CollapsibleContent>
                             {overflow.map((alert, idx) => renderItem(alert, idx + previewCount))}
                         </CollapsibleContent>
-                        <CollapsibleTrigger className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 border-t border-border/50 micro-label text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors outline-none cursor-pointer">
+                        <CollapsibleTrigger className="row-hover-group flex w-full items-center justify-center gap-1.5 px-3.5 py-3 type-meta text-muted-foreground hover:text-foreground">
                             {showAll ? t('alerts.showLess') : t('alerts.showMore', { count: overflow.length })}
                             {showAll ? <ChevronUp size={14} strokeWidth={1.5} /> : <ChevronDown size={14} strokeWidth={1.5} />}
                         </CollapsibleTrigger>

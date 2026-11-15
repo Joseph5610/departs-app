@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Footprints, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useNavigate } from '@/hooks/features/useNavigate';
 import { formatStopDistance } from '@/hooks/derived/useStopDistance';
 
@@ -14,26 +15,27 @@ export const NavigatePill = ({ target }: NavigatePillProps) => {
     const { handleNavigate, stopDistanceInfo } = useNavigate(target);
 
     return (
-        <button
-            type="button"
+        <Button
+            variant="secondary"
+            size="sm"
             onClick={handleNavigate}
-            className="flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border/50 bg-card px-3 font-semibold text-foreground shadow-sm outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="shrink-0 gap-1.5 pl-2.5"
             data-testid="board-walk"
         >
             {stopDistanceInfo?.isReasonableWalkingDistance && !stopDistanceInfo.isAtStop ? (
                 <>
-                    <Footprints size={14} strokeWidth={1.5} />
+                    <Footprints strokeWidth={1.75} className="size-3.75" />
                     {t('map.departures.minutes', { count: stopDistanceInfo.time })}
                 </>
             ) : (
                 <>
-                    <MapPin size={14} strokeWidth={1.5} />
+                    <MapPin strokeWidth={1.75} className="size-3.75" />
                     {/* The short form, so the items beside the pill still fit on a narrow phone. */}
                     {stopDistanceInfo?.isAtStop ? t('map.departures.atStopShort')
                         : stopDistanceInfo ? formatStopDistance(stopDistanceInfo, t, i18n.language)
                         : t('map.departures.openInMaps')}
                 </>
             )}
-        </button>
+        </Button>
     );
 };

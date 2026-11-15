@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { encryptPayload, fromBase64Url, importServerKeys, toBase64Url, vapidAuthorization } from './webPush';
+import { encryptPayload, fromBase64Url, importServerKeys, isDeviceKey, toBase64Url, vapidAuthorization, vapidAuthorizer } from './webPush';
 
 // RFC 8291 Section 5 example and Appendix A inputs.
 const RFC = {
@@ -20,6 +20,13 @@ describe('encryptPayload', () => {
     });
 });
 
+describe('isDeviceKey', () => {
+    it('accepts a P-256 point and refuses well-formed bytes that are not one', async () => {
+        expect(await isDeviceKey(RFC.uaPublic)).toBe(true);
+        expect(await isDeviceKey(`B${'A'.repeat(86)}`)).toBe(false);
+    });
+});
+
 describe('vapidAuthorization', () => {
     it('signs a JWT for the push service origin that our public key verifies', async () => {
         const vapid = { publicKey: RFC.asPublic, privateKey: RFC.asPrivate, subject: 'mailto:info@departs.app' };
@@ -32,5 +39,17 @@ describe('vapidAuthorization', () => {
         const verifier = await crypto.subtle.importKey('raw', fromBase64Url(RFC.asPublic), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
         const valid = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, verifier, fromBase64Url(signature), new TextEncoder().encode(`${head}.${claims}`));
         expect(valid).toBe(true);
+    });
+});
+
+describe('vapidAuthorizer', () => {
+    // ECDSA signatures are randomized, so the same header twice means it was signed once.
+    it('signs once per push service and again for another one', async () => {
+        const authorize = vapidAuthorizer({ publicKey: RFC.asPublic, privateKey: RFC.asPrivate, subject: 'mailto:info@departs.app' }, 1_000);
+        const apple = await authorize('https://web.push.apple.com/a');
+        expect(await authorize('https://web.push.apple.com/b')).toBe(apple);
+        const fcm = await authorize('https://fcm.googleapis.com/fcm/send/c');
+        expect(fcm).not.toBe(apple);
+        expect(fcm).toContain('k=');
     });
 });

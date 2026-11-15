@@ -200,5 +200,38 @@ export const RIDE_PUSH = {
 } as const;
 
 
+/** Pushes of new disruptions on the lines a device pinned, one `DisruptionWatch` per city. */
+export const DISRUPTION_PUSH = {
+    /** How often a city's alerts are read while anyone is subscribed: the alerts API's cache, so no read is wasted on a cached answer. */
+    POLL_INTERVAL_S: CACHE_TTL.RSS_INCIDENTS,
+    /** How long a push service keeps an undelivered disruption push. */
+    TTL_S: 3600,
+    /** Subscriptions one city accepts. */
+    MAX_SUBSCRIBERS: 5000,
+    /** New subscriptions one address may add to a city per day; generous for carrier NAT, a wall for a flood. */
+    NEW_PER_IP_PER_DAY: 20,
+    /** A subscription the app hasn't renewed this long (it renews at every launch) is dropped. */
+    SUBSCRIBER_MAX_AGE_MS: 60 * 24 * 3600_000,
+    /** How often lapsed subscriptions are swept; listing every subscriber on each poll would spend the free plan's row reads. */
+    SWEEP_INTERVAL_MS: 24 * 3600_000,
+    /** An alert gone from the feed is forgotten this long after; if it comes back within it, it isn't pushed again. */
+    SEEN_TTL_MS: 2 * 24 * 3600_000,
+    /** A running alert's last-seen time is rewritten only this often, so a poll that finds nothing new writes nothing. */
+    SEEN_REFRESH_MS: 12 * 3600_000,
+    /** Pushes one alarm sends; the rest wait for the next alarm `QUEUE_INTERVAL_S` later (the free plan allows 50 subrequests per run). */
+    PUSHES_PER_RUN: 40,
+    /** Subscribers one alarm reads while fanning out; most match no new incident and cost no push. */
+    FANOUT_PAGE: 500,
+    /** New incidents pushed to one subscriber per read; more at once would only bury each other. */
+    MAX_PUSHES_PER_SUBSCRIBER: 3,
+    /** Pushes in flight at once; a Worker keeps 6 connections open. */
+    PUSH_CONCURRENCY: 6,
+    /** Keys one storage `delete` takes (the Durable Object limit is 128). */
+    DELETE_BATCH: 128,
+    QUEUE_INTERVAL_S: 1,
+    /** Largest `/api/[city]/disruptions` body accepted. */
+    MAX_BODY_BYTES: 16_384,
+} as const;
+
 /** Push services a ride subscription may point at; the ride-push Worker POSTs to nothing else. */
 export const PUSH_SERVICE_HOSTS = [/^fcm\.googleapis\.com$/, /^([a-z0-9-]+\.)*push\.apple\.com$/, /^updates\.push\.services\.mozilla\.com$/, /^([a-z0-9-]+\.)*notify\.windows\.com$/];

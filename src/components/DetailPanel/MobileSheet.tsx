@@ -1,25 +1,49 @@
 import type React from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/cn';
 import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { SHEET } from '@/config/constants';
 import { readSafeArea } from '@/lib/safeArea';
-
-type SnapPoint = number | string;
+import { peekGapPx, snapHeight, type SnapPoint } from '@/lib/sheetMorph';
+import { useSheetMorph } from '@/hooks/features/useSheetMorph';
+import { useToolbarFold } from '@/hooks/features/useToolbarFold';
 
 const { TAP_SLOP_PX } = SHEET;
 
 /**
  * The popup is exactly the full height, so a drag past it meets resistance at once; the fill below it
- * reaches a screen down, so an overdrag never shows the map. Sticky headers inside paint the sheet's surface.
+ * reaches a screen down, so an overdrag never shows the map.
  */
-const sheetStyle = (full: SnapPoint) => ({
+const sheetStyle = (full: SnapPoint, peek: SnapPoint, startsAtPeek: boolean, height: number | null) => ({
+    // Base UI measures its offset a frame after the popup resizes, which would flick the sheet up; a resting sheet takes it from the detent.
+    ...(height !== null && { '--drawer-y': `calc(${full} - ${height}px + var(--drawer-swipe-movement-y))` }),
+    // The sheet's shape for its first frame, before useSheetMorph has measured it.
+    '--sheet-morph': startsAtPeek ? 0 : 1,
+    '--sheet-glass-height': startsAtPeek ? `${SHEET.PEEK_CONTENT_PX}px` : '100%',
+    // Below the peek's offset a drag only resists, then stops; Base UI brings the sheet back on release.
+    '--peek-y': `calc(${full} - ${peek})`,
+    '--translate-y': `min(var(--drawer-y), calc(var(--peek-y) + (var(--drawer-y) - var(--peek-y)) * ${SHEET.OVERDRAG_RATE}), calc(var(--peek-y) + ${SHEET.OVERDRAG_MAX_PX}px))`,
     '--drawer-content-height': full,
     '--drawer-content-max-height': full,
     '--bleed': 'var(--app-height)',
-    '--sticky-bg': 'var(--glass-fallback)',
+    '--panel-gutter': '1rem',
 }) as React.CSSProperties;
+
+/** The header's and the card's natural height together while `active`, null otherwise; follows the card as it grows. */
+const useFitHeight = (active: boolean, header: React.RefObject<HTMLDivElement | null>, card: React.RefObject<HTMLDivElement | null>, cardKey: string | null) => {
+    const [height, setHeight] = useState<number | null>(null);
+    useLayoutEffect(() => {
+        const headerEl = header.current, cardEl = card.current;
+        if (!active || !headerEl || !cardEl) return;
+        // A ResizeObserver reports each element once on observe, which takes the first measure.
+        const observer = new ResizeObserver(() => setHeight(Math.ceil(headerEl.offsetHeight + cardEl.scrollHeight)));
+        observer.observe(headerEl);
+        observer.observe(cardEl);
+        return () => observer.disconnect();
+    }, [active, header, card, cardKey]);
+    return active ? height : null;
+};
 
 /** Each card, and the home, eases in when it replaces what the sheet showed. */
 const CARD_ENTER = 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-200';
@@ -27,11 +51,16 @@ const CARD_ENTER = 'motion-safe:animate-in motion-safe:fade-in motion-safe:slide
 interface Heights { peek: SnapPoint; full: SnapPoint }
 
 /**
- * The peek shows the grabber and the search row above the home indicator; the full height is the screen
- * minus the status bar and a small gap, like the Maps app's large sheet.
+ * The peek is the floating capsule plus the gap under it; the full height is the screen minus the status
+ * bar and a small gap, like the Maps app's large sheet.
  */
+const bottomInset = () => Math.max(
+    readSafeArea('bottom'),
+    document.documentElement.classList.contains('standalone') ? SHEET.STANDALONE_BOTTOM_INSET_PX : 0,
+);
+
 const measureHeights = (): Heights => ({
-    peek: `${Math.round(SHEET.PEEK_CONTENT_PX + Math.max(readSafeArea('bottom') - SHEET.PEEK_HOME_INDICATOR_OVERLAP_PX, SHEET.PEEK_MIN_BOTTOM_INSET_PX))}px`,
+    peek: `${SHEET.PEEK_CONTENT_PX + peekGapPx(bottomInset())}px`,
     full: `${Math.round(window.innerHeight - Math.max(readSafeArea('top'), SHEET.FULL_TOP_MIN_INSET_PX) - SHEET.FULL_TOP_GAP_PX)}px`,
 });
 
@@ -45,9 +74,7 @@ type Detent = 'peek' | 'half' | 'full';
 const DETENTS: Detent[] = ['peek', 'half', 'full'];
 
 const atLeast = (detent: Detent, min: Detent): Detent => (DETENTS.indexOf(detent) >= DETENTS.indexOf(min) ? detent : min);
-/** A detent's visible height in pixels. */
-const heightOf = (point: SnapPoint): number =>
-    typeof point === 'number' ? point * window.innerHeight : parseFloat(point);
+const heightOf = (point: SnapPoint): number => snapHeight(point, window.innerHeight);
 
 /**
  * Where a flick down from `from` lands: the lower detent nearest the sheet's height at release, so a
@@ -65,6 +92,8 @@ interface MobileSheetProps {
     cardKey: string | null;
     /** The height a newly opened card needs at least. */
     minSnap: 'half' | 'full';
+    /** The card's middle height is its content's own, and it opens there however high the sheet stood. */
+    fitsContent?: boolean;
     /** Each change collapses the sheet to its peek. */
     collapseRequest?: number;
     header: React.ReactNode;
@@ -73,6 +102,8 @@ interface MobileSheetProps {
     selfScrolling?: boolean;
     /** The home's fixed top row (search); in the header so a mouse can drag the sheet by it. */
     homeHeader?: React.ReactNode;
+    /** The card's bottom toolbar, told whether scrolling folded it. */
+    toolbar?: (collapsed: boolean) => React.ReactNode;
     /** The home content, told whether the sheet is at full height (the only height its list scrolls at) and at its peek (where none of it shows). */
     home?: (isFull: boolean, isPeek: boolean) => React.ReactNode;
     /** Rides above the sheet's top edge, hidden at full height. */
@@ -88,18 +119,30 @@ interface MobileSheetProps {
  * Content scrolls only at full height, so at the lower heights every vertical drag moves the sheet
  * and scrolling down with a wheel raises it to full.
  */
-export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header, subHeader, selfScrolling, homeHeader, home, floating, onDismiss, children }: MobileSheetProps) => {
+export const MobileSheet = ({ isOpen, cardKey, minSnap, fitsContent = false, collapseRequest, header, subHeader, selfScrolling, homeHeader, toolbar, home, floating, onDismiss, children }: MobileSheetProps) => {
     const { t } = useTranslation();
 
     // The heights by name, so they can follow the screen while the sheet keeps its place.
     // Base UI keeps a stale height if the popup regrows before its shrink renders (iOS resume), so follow the screen only once it settles.
+    const popupRef = useRef<HTMLDivElement>(null);
     const [heights, setHeights] = useState(measureHeights);
+    // A screen change (the safe area arriving, the browser's bars) moves the detents; the sheet follows at once, without sliding.
+    useLayoutEffect(() => {
+        const popup = popupRef.current;
+        if (!popup) return;
+        popup.style.transition = 'none';
+        const frame = requestAnimationFrame(() => requestAnimationFrame(() => { popup.style.transition = ''; }));
+        return () => cancelAnimationFrame(frame);
+    }, [heights]);
     useEffect(() => {
         let timer: number | undefined;
         const update = () => {
             window.clearTimeout(timer);
             if (document.visibilityState === 'hidden') return;
-            timer = window.setTimeout(() => setHeights(prev => { const next = measureHeights(); return sameHeights(prev, next) ? prev : next; }), SHEET.RESIZE_SETTLE_MS);
+            timer = window.setTimeout(() => {
+                const next = measureHeights();
+                setHeights(prev => (sameHeights(prev, next) ? prev : next));
+            }, SHEET.RESIZE_SETTLE_MS);
         };
         window.addEventListener('resize', update);
         document.addEventListener('visibilitychange', update);
@@ -110,9 +153,20 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
             document.removeEventListener('visibilitychange', update);
         };
     }, []);
-    const points = useMemo<Record<Detent, SnapPoint>>(() => ({ peek: heights.peek, half: SHEET.HALF, full: heights.full }), [heights]);
+    useEffect(() => {
+        document.documentElement.style.setProperty('--sheet-peek', String(heights.peek));
+    }, [heights.peek]);
+    const headerRef = useRef<HTMLDivElement>(null);
+    const fitRef = useRef<HTMLDivElement>(null);
+    const fitHeight = useFitHeight(fitsContent && isOpen, headerRef, fitRef, cardKey);
+    const points = useMemo<Record<Detent, SnapPoint>>(() => ({
+        peek: heights.peek,
+        // A card as tall as the full height keeps the usual half, as two equal detents would make full unreachable.
+        half: fitHeight === null || fitHeight >= heightOf(heights.full) ? SHEET.HALF : `${fitHeight}px`,
+        full: heights.full,
+    }), [heights, fitHeight]);
     const snapPoints = useMemo(() => DETENTS.map(d => points[d]), [points]);
-    const style = useMemo(() => sheetStyle(heights.full), [heights.full]);
+    const [startsAtPeek] = useState(cardKey === null);
 
     // A card open from the first render (a shared stop link) starts at its own height; null while a swipe-close is undone.
     const [detent, setDetent] = useState<Detent | null>(() => (cardKey === null ? 'peek' : minSnap));
@@ -142,7 +196,7 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
             setDetent(homeDetent);
         } else {
             if (prevCardKey === null) setHomeDetent(current);
-            setDetent(atLeast(current, minSnap));
+            setDetent(fitsContent ? 'half' : atLeast(current, minSnap));
         }
     }
 
@@ -154,14 +208,24 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
     }
 
     const isFull = detent === 'full';
+    const restingHeight = detent ? heightOf(points[detent]) : null;
+    const style = useMemo(() => sheetStyle(heights.full, heights.peek, startsAtPeek, restingHeight), [heights.full, heights.peek, startsAtPeek, restingHeight]);
+
+    const scrimRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
+    const toolbarRef = useRef<HTMLDivElement>(null);
+    useSheetMorph({ popup: popupRef, header: headerRef, scrim: scrimRef, content: contentRef, toolbar: toolbarRef }, points, detent);
+
+    const { folded: isToolbarFolded, onScroll: onCardScroll } = useToolbarFold(`${cardKey}|${isFull}`);
 
     const cycleDetent = () => setDetent(DETENTS[(DETENTS.indexOf(detent ?? 'peek') + 1) % DETENTS.length]);
 
     return (
         <>
             <div
+                ref={scrimRef}
                 aria-hidden="true"
-                className={cn("pointer-events-none fixed inset-0 z-499 bg-black/40 transition-opacity duration-300", isFull ? "opacity-100" : "opacity-0")}
+                className="pointer-events-none fixed inset-0 z-499 bg-black/25 opacity-0"
             />
             <Drawer
                 open={true}
@@ -179,8 +243,7 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
                         if (details.reason === 'swipe') {
                             swipeCloseFromRef.current = detent ?? 'peek';
                             // The popup still sits where the finger left it.
-                            const popup = document.querySelector('[data-slot="drawer-popup"]');
-                            swipeCloseHeightRef.current = popup ? window.innerHeight - popup.getBoundingClientRect().top : 0;
+                            swipeCloseHeightRef.current = popupRef.current ? window.innerHeight - popupRef.current.getBoundingClientRect().top : 0;
                         }
                         setDetent(null);
                         return;
@@ -204,7 +267,9 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
                 disablePointerDismissal={true}
             >
                 <DrawerContent
+                    ref={popupRef}
                     variant="glassy"
+                    glassClassName="sheet-glass"
                     className="outline-none text-foreground"
                     style={style}
                     initialFocus={false}
@@ -216,7 +281,7 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
                     // Content below full height does not scroll, so a mouse wheel or trackpad raises the sheet instead.
                     onWheel={(e) => { if (!isFull && e.deltaY > 0) setDetent('full'); }}
                     header={
-                        <div className="relative shrink-0 flex flex-col">
+                        <div ref={headerRef} className="relative shrink-0 flex flex-col">
                             {floating?.(isFull)}
                             {/* Not a <button>: Base UI never starts a mouse drag on one, and this is the handle a mouse drags by. */}
                             <div
@@ -239,15 +304,15 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
                                     cycleDetent();
                                 }}
                                 aria-label={t('home.resizeSheet')}
-                                className="flex h-7 w-full shrink-0 cursor-grab items-center justify-center rounded-t-[32px] outline-none focus-visible:ring-2 focus-visible:ring-ring/50 active:cursor-grabbing"
+                                className="relative flex h-[calc(0.75rem+0.25rem*var(--sheet-morph,1))] w-full shrink-0 cursor-grab items-center justify-center rounded-t-sheet outline-none before:absolute before:inset-x-1/4 before:-top-7 before:bottom-0 focus-visible:ring-2 focus-visible:ring-ring/50 active:cursor-grabbing"
                                 data-testid="home-sheet-grabber"
                             >
-                                <span className="h-1.5 w-10 rounded-full bg-border" />
+                                <span className="h-1 w-9 rounded-full bg-handle" />
                             </div>
                             {isOpen ? (
                                 <div key={cardKey} className={CARD_ENTER}>
-                                    <div className="px-6 pb-2">{header}</div>
-                                    {subHeader && <div className="w-full">{subHeader}</div>}
+                                    <div className="sheet-row-gutter">{header}</div>
+                                    {subHeader && <div className="w-full opacity-(--sheet-content-opacity,1) [visibility:var(--sheet-content-visibility,visible)]">{subHeader}</div>}
                                 </div>
                             ) : (
                                 <>
@@ -258,17 +323,25 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, collapseRequest, header,
                         </div>
                     }
                 >
-                    {!isOpen ? (
-                        <div key="home" className={cn("flex flex-1 min-h-0 flex-col", CARD_ENTER)}>{home?.(isFull, detent === 'peek')}</div>
-                    ) : selfScrolling ? (
-                        <div key={cardKey} className={cn("flex flex-1 min-h-0 flex-col", CARD_ENTER)}>{children}</div>
-                    ) : (
-                        <div key={cardKey} className={cn("flex-1 min-h-0 px-6 overscroll-contain", isFull ? "overflow-y-auto" : "overflow-hidden", CARD_ENTER)}>
-                            <div className="pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]">{children}</div>
-                        </div>
-                    )}
+                    <div ref={contentRef} className="flex flex-1 min-h-0 flex-col">
+                        {!isOpen ? (
+                            <div key="home" className={cn("flex flex-1 min-h-0 flex-col", CARD_ENTER)}>{home?.(isFull, detent === 'peek')}</div>
+                        ) : selfScrolling ? (
+                            <div key={cardKey} ref={fitRef} className={cn("flex min-h-0 flex-col", fitsContent ? "shrink" : "flex-1", CARD_ENTER)}>{children}</div>
+                        ) : (
+                            <div
+                                key={cardKey}
+                                onScroll={toolbar ? onCardScroll : undefined}
+                                data-panel-scroller
+                                className={cn("flex-1 min-h-0 px-(--panel-gutter) overscroll-contain", isFull ? "overflow-y-auto" : "overflow-hidden", toolbar && "scroll-edge", CARD_ENTER)}
+                            >
+                                <div className={toolbar ? "pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)]" : "pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]"}>{children}</div>
+                            </div>
+                        )}
+                    </div>
                 </DrawerContent>
             </Drawer>
+            <div ref={toolbarRef} className="relative z-501">{isOpen && toolbar?.(isFull && isToolbarFolded)}</div>
         </>
     );
 };

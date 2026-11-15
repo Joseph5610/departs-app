@@ -24,5 +24,5 @@ export const usePinLine = (stopId: string, line: string, headsign: string) => {
         });
     };
 
-    return { isPinned, toggle, label: t(isPinned ? 'favorites.unpinLine' : 'favorites.pinLine', { line, headsign }) };
+    return { isPinned, toggle, label: t(isPinned ? 'favorites.unpinLine' : 'favorites.pinLine', { line, headsign }), swipeLabel: t(isPinned ? 'favorites.swipeUnpin' : 'favorites.swipePin') };
 };

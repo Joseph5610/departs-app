@@ -15,11 +15,11 @@ interface FavoriteReorderRowProps {
 export const FavoriteReorderRow = ({ lead, title, subtitle, isFirst, dragHandle }: FavoriteReorderRowProps) => (
     <>
     {!isFirst && <RowSeparator />}
-    <div className="flex items-center gap-2.5 py-3 pl-1.5 pr-1">
-        <span className="flex w-(--badge-col) shrink-0 justify-center">{lead}</span>
+    <div className="flex items-center gap-3 py-2.5">
+        <span className="flex w-(--badge-col) shrink-0">{lead}</span>
         <span className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate text-title font-semibold leading-tight text-foreground" data-testid="favorite-reorder-title">{title}</span>
-            {subtitle && <span className="truncate text-xs text-muted-foreground">{subtitle}</span>}
+            <span className="truncate type-headsign text-foreground" data-testid="favorite-reorder-title">{title}</span>
+            {subtitle && <span className="truncate type-note text-muted-foreground">{subtitle}</span>}
         </span>
         {dragHandle && <DragHandleButton handle={dragHandle} />}
     </div>

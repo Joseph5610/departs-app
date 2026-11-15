@@ -13,6 +13,8 @@ export interface Env {
     DPMP_REALTIME_URL?: string;
     /** The ride-push Worker's `RideWatch` Durable Objects; unbound where that Worker isn't deployed. */
     RIDE_WATCH?: DurableObjectNamespace;
+    /** The same Worker's `DisruptionWatch` Durable Objects, one per city. */
+    DISRUPTION_WATCH?: DurableObjectNamespace;
 }
 
 /**

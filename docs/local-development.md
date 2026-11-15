@@ -85,3 +85,5 @@ npx wrangler dev -c workers/ride-push/wrangler.toml --port 8790 --inspector-port
 It reads its VAPID keys from `workers/ride-push/.dev.vars`, created as in [Ride push deployment, step 1](./ride-push-deployment.md#1-vapid-keys). `npm run dev` connects to it through Wrangler's local dev registry.
 
 To test the whole flow, serve a build, since only a build registers the service worker that receives pushes: `npm run build && npx wrangler pages dev dist`.
+
+The same Worker runs the disruption watch. To try a push without waiting for a real incident, point it at a server answering `/api/<city>/alerts` with your own JSON (`--var API_ORIGIN:http://localhost:<port>`), turn the switch on in the served build, then add an incident with a new `guid` on a pinned line: the push comes at the next poll, within 5 minutes. The first poll after the watch starts only records what is already there.

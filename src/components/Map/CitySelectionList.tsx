@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { Button } from '@/components/ui/button';
+import { SectionHeading } from '@/components/SectionHeading';
 import { Badge } from '@/components/ui/badge';
 import type { CityFacts } from '@shared/cities';
 import { groupCitiesByCountry } from '@/domain/cities';
@@ -40,22 +42,21 @@ export const CitySelectionList = ({
         const subtitle = t(`map.regions.${city.slug}`, { defaultValue: '' });
 
         return (
-            <button
+            <Button
                 key={city.slug}
                 onClick={() => onSelect(city)}
                 aria-pressed={isSelected}
+                variant="pill"
                 className={cn(
-                    "group relative w-full flex items-center justify-start rounded-2xl border transition-[border-color,box-shadow,background-color] duration-300 outline-none overflow-hidden focus-visible:ring-2 focus-visible:ring-primary/60",
+                    "group relative h-auto w-full justify-start overflow-hidden rounded-surface whitespace-normal text-foreground focus-visible:ring-2 focus-visible:ring-primary/60",
+                    isSelected && "ring-[1.5px] ring-inset ring-primary/70",
                     compact ? "h-17 gap-3 px-4 py-3" : "h-20 gap-4 p-4",
-                    isSelected
-                        ? "border-primary/50 bg-card dark:bg-muted/30"
-                        : "border-border/60 bg-card hover:border-border hover:bg-muted/40 dark:bg-muted/30 dark:hover:bg-muted/50"
                 )}
             >
                 <div
                     className={cn(
                         "absolute inset-y-0 right-0 w-1/2 pointer-events-none bg-linear-to-l to-transparent transition-opacity duration-500",
-                        isSelected ? "from-primary/20 opacity-100" : "from-primary/10 opacity-0 group-hover:opacity-100"
+                        isSelected ? "opacity-0" : "from-primary/10 opacity-0 group-hover:opacity-100"
                     )}
                 />
                 <div
@@ -63,8 +64,8 @@ export const CitySelectionList = ({
                     className={cn(
                         "absolute right-1 top-1.5 -bottom-1 w-3/5 origin-bottom-right pointer-events-none bg-current transition-[opacity,transform,color] duration-500",
                         isSelected
-                            ? "text-primary opacity-100 scale-105"
-                            : "text-foreground opacity-30 group-hover:text-primary group-hover:opacity-70 group-hover:scale-105"
+                            ? "text-tint-mint opacity-100 scale-105"
+                            : "text-foreground opacity-30 group-hover:text-tint-mint group-hover:opacity-70 group-hover:scale-105"
                     )}
                     style={{
                         maskImage: `url(/cities/${city.slug}-line.webp)`,
@@ -81,8 +82,8 @@ export const CitySelectionList = ({
                 <div className={cn(
                     "relative z-10 flex items-center justify-center w-6 h-6 rounded-full border-2 transition-[border-color,background-color,color] duration-300 shrink-0",
                     isSelected 
-                        ? "border-primary bg-primary text-primary-foreground shadow-sm" 
-                        : "border-border bg-background/60 text-transparent group-hover:border-muted-foreground/50"
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-label-3 text-transparent"
                 )}>
                     <Check size={14} strokeWidth={3} className={cn("transition-transform duration-300", isSelected ? "scale-100" : "scale-50 opacity-0")} />
                 </div>
@@ -90,8 +91,8 @@ export const CitySelectionList = ({
                 <div className="relative flex flex-col items-start z-10">
                     <div className="flex items-center gap-2">
                         <span className={cn(
-                            "font-semibold tracking-tight text-foreground",
-                            compact ? "text-lg leading-6" : "text-xl"
+                            "text-foreground",
+                            compact ? "type-section" : "type-title"
                         )}>
                             {city.name}
                         </span>
@@ -102,12 +103,12 @@ export const CitySelectionList = ({
                         )}
                     </div>
                     {subtitle && (
-                        <span className={cn("text-muted-foreground", compact ? "text-sm leading-5" : "text-sm font-medium")}>
+                        <span className={cn("text-muted-foreground", compact ? "type-row" : "type-row")}>
                             {subtitle}
                         </span>
                     )}
                 </div>
-            </button>
+            </Button>
         );
     };
 
@@ -116,9 +117,7 @@ export const CitySelectionList = ({
             {groups.length > 1
                 ? groups.map((group) => (
                     <section key={group.country} className={cn("flex flex-col", compact ? "gap-2" : "gap-2.5")}>
-                        <div className="text-label text-muted-foreground/50 font-bold uppercase tracking-widest px-1">
-                            {countryNames?.of(group.country) ?? group.country}
-                        </div>
+                        <SectionHeading>{countryNames?.of(group.country) ?? group.country}</SectionHeading>
                         {group.cities.map(renderCity)}
                     </section>
                 ))

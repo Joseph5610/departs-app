@@ -69,7 +69,7 @@ function DrawerOverlay({
     <DrawerPrimitive.Backdrop
       data-slot="drawer-overlay"
       className={cn(
-        "fixed inset-0 z-500 min-h-dvh bg-black/10 opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))] transition-opacity duration-450 ease-[cubic-bezier(0.32,0.72,0,1)] select-none data-ending-style:pointer-events-none data-ending-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-snap-points:[--drawer-overlay-min-opacity:0.5] data-starting-style:opacity-0 data-swiping:duration-0 supports-backdrop-filter:backdrop-blur-xs supports-[-webkit-touch-callout:none]:absolute",
+        "fixed inset-0 z-500 min-h-dvh bg-black/10 opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))] transition-opacity duration-450 ease-[cubic-bezier(0.32,0.72,0,1)] select-none data-ending-style:pointer-events-none data-ending-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-snap-points:[--drawer-overlay-min-opacity:0.5] data-starting-style:opacity-0 data-swiping:duration-0 supports-backdrop-filter: supports-[-webkit-touch-callout:none]:absolute",
         className
       )}
       {...props}
@@ -98,10 +98,13 @@ function DrawerContent({
   className,
   children,
   variant = "default",
+  glassClassName = "inset-0 rounded-[inherit]",
   header,
   ...props
 }: DrawerPrimitive.Popup.Props & {
-  variant?: "default" | "glassy" | "tinted"
+  variant?: "default" | "glassy"
+  /** Shapes the glass layer of the `glassy` variant, which otherwise fills the popup. */
+  glassClassName?: string
   /** Rendered outside Drawer.Content so mouse drags on it move the drawer; Content stays text-selectable. */
   header?: React.ReactNode
 }) {
@@ -125,7 +128,7 @@ function DrawerContent({
           data-snap-points={hasSnapPoints ? "" : undefined}
           className={cn(
             // Base.
-            "group/drawer-popup pointer-events-auto fixed z-500 m-(--drawer-inset,0px) flex h-(--drawer-content-height) max-h-(--drawer-content-max-height,none) min-h-0 w-(--drawer-content-width,auto) transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col text-sm transition-[transform,height,opacity,filter] duration-450 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none select-none [interpolate-size:allow-keywords] data-[swipe-direction=down]:rounded-t-[32px] data-[swipe-direction=down]:border-t border-border/50 shadow-[0_-8px_32px_rgba(0,0,0,0.5)] data-[swipe-direction=left]:rounded-r-xl data-[swipe-direction=left]:border-r data-[swipe-direction=right]:rounded-l-xl data-[swipe-direction=right]:border-l data-[swipe-direction=up]:rounded-b-xl data-[swipe-direction=up]:border-b",
+            "group/drawer-popup pointer-events-auto fixed z-500 m-(--drawer-inset,0px) flex h-(--drawer-content-height) max-h-(--drawer-content-max-height,none) min-h-0 w-(--drawer-content-width,auto) transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col type-row transition-[transform,height,opacity,filter] duration-450 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none focus-visible:ring-0 select-none [interpolate-size:allow-keywords] data-[swipe-direction=down]:rounded-t-sheet data-[swipe-direction=left]:rounded-r-surface data-[swipe-direction=right]:rounded-l-surface data-[swipe-direction=up]:rounded-b-surface",
             // Nested.
             "data-nested-drawer-open:overflow-hidden data-nested-drawer-open:brightness-95",
             // Bleed.
@@ -141,7 +144,7 @@ function DrawerContent({
             // Axis: x.
             "data-[swipe-axis=x]:inset-y-0 data-[swipe-axis=x]:flex-row",
             // Direction: down.
-            "data-[swipe-direction=down]:bottom-0 data-[swipe-direction=down]:origin-bottom data-[swipe-direction=down]:[--closed-transform:translate3d(0,calc(100%+var(--drawer-inset,0px)+2px),0)] data-[swipe-direction=down]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)-var(--stack-peek-offset)-(var(--stack-shrink)*var(--stack-height)))]",
+            "data-[swipe-direction=down]:bottom-0 data-[swipe-direction=down]:origin-bottom data-[swipe-direction=down]:[--closed-transform:translate3d(0,calc(100%+var(--drawer-inset,0px)+2px),0)] data-[swipe-direction=down]:[--drawer-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)-var(--stack-peek-offset)-(var(--stack-shrink)*var(--stack-height)))] data-[swipe-direction=down]:[--translate-y:var(--drawer-y)]",
             // Direction: up.
             "data-[swipe-direction=up]:top-0 data-[swipe-direction=up]:origin-top data-[swipe-direction=up]:[--closed-transform:translate3d(0,calc(-100%-var(--drawer-inset,0px)-2px),0)] data-[swipe-direction=up]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)+var(--stack-peek-offset)+(var(--stack-shrink)*var(--stack-height)))]",
             // Direction: left.
@@ -149,14 +152,14 @@ function DrawerContent({
             // Direction: right.
             "data-[swipe-direction=right]:right-0 data-[swipe-direction=right]:origin-right data-[swipe-direction=right]:[--closed-transform:translate3d(calc(100%+var(--drawer-inset,0px)+2px),0,0)] data-[swipe-direction=right]:[--translate-x:calc(var(--drawer-swipe-movement-x)-var(--stack-peek-offset)-(var(--stack-shrink)*100%))]",
             variant === "default" && "bg-popover text-popover-foreground",
-            (variant === "glassy" || variant === "tinted") && "isolate [--drawer-bleed-background:var(--background)]",
+            variant === "glassy" && "isolate [--drawer-bleed-background:var(--background)]",
             className
           )}
           {...props}
         >
           {/* The glass sits on a layer behind the content, not the popup: a backdrop blur on the popup would stop anything inside it (controls riding above the sheet) from blurring the page. */}
-          {(variant === "glassy" || variant === "tinted") && (
-            <div aria-hidden="true" className="glassy absolute! inset-0 -z-10 rounded-[inherit] border-0! shadow-none! pointer-events-none" />
+          {variant === "glassy" && (
+            <div aria-hidden="true" data-slot="drawer-glass" className={cn("glassy-thick absolute! -z-10 pointer-events-none", glassClassName)} />
           )}
           {showSwipeHandle && <DrawerSwipeHandle />}
           {header}
@@ -202,7 +205,7 @@ function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
     <DrawerPrimitive.Title
       data-slot="drawer-title"
       className={cn(
-        "cn-font-heading text-base font-medium text-foreground",
+        "cn-font-heading type-row text-foreground",
         className
       )}
       {...props}
@@ -217,7 +220,7 @@ function DrawerDescription({
   return (
     <DrawerPrimitive.Description
       data-slot="drawer-description"
-      className={cn("text-sm text-balance text-muted-foreground", className)}
+      className={cn("type-row text-balance text-muted-foreground", className)}
       {...props}
     />
   )

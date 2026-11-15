@@ -4,6 +4,39 @@ import { MapPage } from '../page-objects/MapPage';
 import { SearchPage } from '../page-objects/SearchPage';
 
 test.describe('Departure Board Tests', () => {
+    // A trip's row holds its time and notes, so it must grow with them instead of taking a button's height.
+    test('keeps an expanded later departure as tall as its content', async ({ page }) => {
+        const mapPage = new MapPage(page);
+        await mockStops(page, hlavniNadrazi());
+        const at = (minutes: number) => new Date(Date.now() + minutes * 60_000).toISOString();
+        const departures = Array.from({ length: 8 }, (_, i) => ({ tripId: `trip-${i}`, line: '9', headsign: 'Spojovací', type: '0', scheduled: at(i * 8 + 2), timestamp: at(i * 8 + 2), delay: 0, continues_as: { line: '10', headsign: 'Vozovna Motol' } }));
+        await page.route('**/api/*/departures*', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ departures }) }));
+        await mapPage.goto('/prague/stop/U1111Z1P');
+
+        await page.getByRole('button', { name: /more connections/i }).first().click();
+        const row = page.locator('[data-testid^="departure-item-trip-"]').last();
+        await expect(row).toBeVisible({ timeout: 15000 });
+        const box = (await row.boundingBox())!;
+        expect(box.height).toBeGreaterThanOrEqual(44);
+    });
+
+    test('gives the phone board\'s small controls 44px touch targets', async ({ browser }) => {
+        const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+        const page = await context.newPage();
+        await page.addInitScript(() => {
+            window.localStorage.setItem('departs-preferences', JSON.stringify({ state: { hasSeenWelcome: true, selectedCity: 'prague' }, version: 0 }));
+        });
+        await mockStops(page, hlavniNadrazi());
+        await page.route('**/api/*/departures*', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ departures: [] }) }));
+        await page.goto('/prague/stop/U1111Z1P');
+
+        const hitHeight = (testId: string) => page.getByTestId(testId).evaluate(el => getComputedStyle(el, '::before').height);
+        await expect(page.getByTestId('detail-panel-close')).toBeVisible({ timeout: 30000 });
+        expect(await hitHeight('detail-panel-close')).toBe('44px');
+        expect(await hitHeight('board-walk')).toBe('44px');
+        await context.close();
+    });
+
     test('should load departures and allow expanding connections', async ({ page }) => {
         const mapPage = new MapPage(page);
         const searchPage = new SearchPage(page);

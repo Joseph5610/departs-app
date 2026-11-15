@@ -8,9 +8,15 @@ import { foldDiacritics } from '@shared/text';
 export const isHighPriorityAlert = (priority: string | undefined | null): boolean =>
     priority === 'high' || priority === '1';
 
-/** How many of the alerts are incidents (disruptions now), the count the alerts buttons badge. */
+/** Whether an alert is a disruption now: an incident that has started, not ended and is not a stale leftover. */
+export const isCurrentIncident = (alert: RSSItem): boolean => alert.type === 'incident' && !!alert.isActive && !alert.isStale;
+
+/** How many of the alerts are disruptions now, the count the alerts buttons badge. */
 export const countIncidents = (alerts: readonly RSSItem[] | undefined): number =>
-    alerts?.filter(a => a.type === 'incident').length ?? 0;
+    alerts?.filter(isCurrentIncident).length ?? 0;
+
+/** Listing order by timing: current alerts, then upcoming (or ended) ones, stale incidents last. */
+const timingRank = (alert: RSSItem): number => (alert.isStale ? 2 : alert.isActive ? 0 : 1);
 
 /** Which alerts the alerts list shows. */
 export type AlertFilterMode = 'all' | 'incident' | 'exclusion';
@@ -38,7 +44,7 @@ const getTransportMode = (item: RSSItem): string => {
 
 /**
  * The alerts list: filtered by type and a search over title, description and line names, grouped by mode
- * in mode order; within a mode incidents first, then active ones, then high priority.
+ * in mode order; within a mode incidents first, then current, upcoming and stale ones, then high priority.
  */
 export const alertSections = (alerts: RSSItem[], filterMode: AlertFilterMode, searchQuery: string): AlertSection[] => {
     const q = foldDiacritics(searchQuery.trim());
@@ -70,8 +76,8 @@ export const alertSections = (alerts: RSSItem[], filterMode: AlertFilterMode, se
             if (a.type === 'incident' && b.type !== 'incident') return -1;
             if (a.type !== 'incident' && b.type === 'incident') return 1;
 
-            if (a.isActive && !b.isActive) return -1;
-            if (!a.isActive && b.isActive) return 1;
+            const byTiming = timingRank(a) - timingRank(b);
+            if (byTiming !== 0) return byTiming;
 
             return Number(isHighPriorityAlert(b.priority)) - Number(isHighPriorityAlert(a.priority));
         });
@@ -88,14 +94,14 @@ export const alertsForLine = (alerts: RSSItem[], routeName: string): RSSItem[] =
 };
 
 /**
- * The active incidents on any of `lineNames` (compared case-insensitively), high priority first:
+ * The current incidents on any of `lineNames` (compared case-insensitively), high priority first:
  * what the home sheet raises as disruptions on the rider's own lines.
  */
 export const incidentsOnLines = (alerts: readonly RSSItem[] | undefined, lineNames: ReadonlySet<string>): RSSItem[] => {
     if (!alerts || lineNames.size === 0) return [];
     const names = new Set([...lineNames].map(n => n.toUpperCase()));
     return alerts
-        .filter(item => item.type === 'incident' && item.isActive && item.resolvedLines?.some(m => names.has(m.name.toUpperCase())))
+        .filter(item => isCurrentIncident(item) && item.resolvedLines?.some(m => names.has(m.name.toUpperCase())))
         .sort((a, b) => Number(isHighPriorityAlert(b.priority)) - Number(isHighPriorityAlert(a.priority)));
 };
 

@@ -4,10 +4,14 @@ import { ArrowRightLeft, ChevronDown, ChevronUp, CornerDownRight, type LucideIco
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
 import { cn } from '@/lib/cn';
+import { SectionHeading } from '@/components/SectionHeading';
+import { TRIP_CONFIG } from '@/config/constants';
 import { distinctLines } from '@/domain/departures';
 import { lineLabel } from '@/domain/routes';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { LineBadge } from '@/components/LineBadge';
+import { Card } from '@/components/ui/card';
+import { Item } from '@/components/ui/item';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { TimelineTime } from './TimelineTime';
 import type { Continuation, StopConnection } from '@/types';
@@ -26,28 +30,21 @@ const StopTransferBlock = ({ icon: Icon, title, isPast, defaultOpen, preview, ch
     const [open, setOpen] = useState(defaultOpen);
 
     return (
-        <Collapsible
-            open={open}
-            onOpenChange={setOpen}
-            className={cn(
-                "mb-1 rounded-lg border border-border/50 bg-muted/40 px-2 py-1 transition-opacity duration-700",
-                isPast ? "opacity-40" : "opacity-100"
-            )}
-        >
-            <CollapsibleTrigger className="w-full flex items-center gap-1.5 px-1 py-0.5 micro-label text-muted-foreground cursor-pointer rounded-md outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring">
-                <Icon size={12} strokeWidth={2} className="shrink-0" />
-                <span className="shrink-0">{title}</span>
-                <span className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
-                    {!open && preview}
-                </span>
-                {open ? <ChevronUp size={14} strokeWidth={1.5} className="shrink-0" /> : <ChevronDown size={14} strokeWidth={1.5} className="shrink-0" />}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-                <ul aria-label={title} className="flex flex-col">
+        <Card size="none" className={cn("mb-2 transition-opacity duration-700", isPast && "opacity-40")}>
+            <Collapsible open={open} onOpenChange={setOpen}>
+                <CollapsibleTrigger className="row-hover-group flex h-9 w-full items-center gap-1.5 px-3.5 text-muted-foreground hover:text-foreground">
+                    <Icon size={14} strokeWidth={1.75} className="shrink-0" />
+                    <SectionHeading className="shrink-0 px-0 text-inherit">{title}</SectionHeading>
+                    <span className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
+                        {!open && preview}
+                    </span>
+                    {open ? <ChevronUp size={14} strokeWidth={1.5} className="shrink-0" /> : <ChevronDown size={14} strokeWidth={1.5} className="shrink-0" />}
+                </CollapsibleTrigger>
+                <CollapsibleContent aria-label={title}>
                     {children}
-                </ul>
-            </CollapsibleContent>
-        </Collapsible>
+                </CollapsibleContent>
+            </Collapsible>
+        </Card>
     );
 };
 
@@ -72,10 +69,10 @@ const ConnectionRow = ({ tripId, vehicleId, line, routeColor, headsign, time, de
         <>
             <LineBadge name={line} routeColor={routeColor ?? ''} size="lg" />
             <span className="flex flex-col min-w-0 flex-1">
-                <span className="text-sm font-medium truncate">{headsign}</span>
+                <span className="type-row truncate">{headsign}</span>
                 {note && (
                     <span className={cn(
-                        "text-label leading-tight",
+                        "type-note",
                         isWarning ? "text-destructive font-semibold" : "text-muted-foreground"
                     )}>
                         {note}
@@ -85,22 +82,18 @@ const ConnectionRow = ({ tripId, vehicleId, line, routeColor, headsign, time, de
             {time && <TimelineTime realtimeTime={realtimeTime} scheduledTime={time} hasRealtime={hasRealtime} />}
         </>
     );
-    const rowClass = "w-full flex items-center gap-2 px-1 py-1.5 text-left rounded-md";
+    const row = "[--row-sep:3.625rem]";
 
+    if (!tripId) return <Item variant="row" size="none" className={row}>{content}</Item>;
     return (
-        <li>
-            {tripId ? (
-                <button
-                    type="button"
-                    onClick={() => navigate(paths.trip(selectedCity, tripId, vehicleId))}
-                    className={cn(rowClass, "cursor-pointer hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring")}
-                >
-                    {content}
-                </button>
-            ) : (
-                <div className={rowClass}>{content}</div>
-            )}
-        </li>
+        <Item
+            variant="row"
+            size="none"
+            render={<button type="button" onClick={() => navigate(paths.trip(selectedCity, tripId, vehicleId))} />}
+            className={row}
+        >
+            {content}
+        </Item>
     );
 };
 
@@ -114,9 +107,15 @@ export const StopConnections = memo(({ connections, isPast, defaultOpen }: {
 
     const previewLines = useMemo(() => distinctLines(connections), [connections]);
 
-    const preview = previewLines.map(([line, color]) => (
-        <LineBadge key={line} name={line} routeColor={color} size="sm" />
-    ));
+    const hiddenLines = previewLines.length - TRIP_CONFIG.TRANSFER_PREVIEW_LINES;
+    const preview = (
+        <>
+            {previewLines.slice(0, TRIP_CONFIG.TRANSFER_PREVIEW_LINES).map(([line, color]) => (
+                <LineBadge key={line} name={line} routeColor={color} size="row" />
+            ))}
+            {hiddenLines > 0 && <span className="shrink-0 tabular-nums">+{hiddenLines}</span>}
+        </>
+    );
 
     return (
         <StopTransferBlock
@@ -164,7 +163,7 @@ export const StopContinuation = memo(({ continuation, isPast }: {
             title={t('map.vehicleDetails.continuesAs')}
             isPast={isPast}
             defaultOpen
-            preview={<LineBadge name={continuation.line} routeColor={continuation.route_color ?? ''} size="sm" />}
+            preview={<LineBadge name={continuation.line} routeColor={continuation.route_color ?? ''} size="row" />}
         >
             <ConnectionRow
                 tripId={continuation.trip_id}

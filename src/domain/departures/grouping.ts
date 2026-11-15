@@ -251,6 +251,10 @@ export const groupsHidingTrips = (groups: DepartureLineGroup[], tripIds: Readonl
     return result;
 };
 
+/** The names of the lines pinned in `city`, each once, in pinned order; directions and stops don't matter. */
+export const pinnedLineNames = (lines: readonly FavoriteLine[], city: string): string[] =>
+    [...new Set(lines.filter(fav => fav.city === city).map(fav => fav.line))];
+
 /** Every line a rider follows: the pinned lines and all lines serving the pinned stops. */
 export const favoriteLineNames = (lines: readonly FavoriteLine[], stops: readonly { lines: readonly StopLine[] }[]): Set<string> => {
     const names = new Set<string>();

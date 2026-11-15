@@ -11,10 +11,12 @@ const isPushEndpoint = (value: string): boolean => {
     }
 };
 
-const endpointSchema = z.string().check(z.maxLength(1024), z.refine(isPushEndpoint));
+/** A push subscription's endpoint at one of the known push services. */
+export const endpointSchema = z.string().check(z.maxLength(1024), z.refine(isPushEndpoint));
 const textSchema = z.object({ title: z.string().check(z.maxLength(120)), body: z.string().check(z.maxLength(200)) });
 const idSchema = z.string().check(z.minLength(1), z.maxLength(200));
-const subscriptionSchema = z.object({
+/** A browser's push subscription, as `PushSubscription.toJSON()` gives it. */
+export const subscriptionSchema = z.object({
     endpoint: endpointSchema,
     // A P-256 point (65 bytes) and a 16-byte secret, base64url.
     keys: z.object({ p256dh: z.string().check(z.regex(/^[A-Za-z0-9_-]{87}={0,1}$/)), auth: z.string().check(z.regex(/^[A-Za-z0-9_-]{22}(==)?$/)) }),

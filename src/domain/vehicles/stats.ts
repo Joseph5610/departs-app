@@ -97,3 +97,13 @@ export function aggregateCityStats(features: VehicleFeature[]): CityStats {
         timestamp: new Date().toISOString()
     };
 }
+
+/** The vehicle types of the stats, most vehicles first. */
+export const vehicleTypesByCount = (types: CityStats['vehicle_types']): [string, number][] =>
+    Object.entries(types).sort((a, b) => b[1] - a[1]);
+
+/** Whether the fleet's low-floor or air-conditioning counts are worth a row: some vehicle on screen or in the network reports one. */
+export const fleetAmenityRows = (active: CityStats, network: CityStats | null | undefined) => ({
+    lowFloor: (network?.low_floor_count ?? 0) > 0 || active.low_floor_count > 0,
+    airConditioned: (network?.air_conditioned_count ?? 0) > 0 || active.air_conditioned_count > 0,
+});

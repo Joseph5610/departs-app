@@ -30,5 +30,5 @@ export const useAlerts = () => {
     });
 
     const alerts = data ? brandAlerts(timeAlerts(data.alerts ?? NO_ALERTS, dataUpdatedAt), byId, byName, byKordisNumeric) : undefined;
-    return { alerts, isLoading, hasAlerts };
+    return { alerts, isLoading, hasAlerts, dataUpdatedAt };
 };

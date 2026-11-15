@@ -10,6 +10,7 @@ import { EXTERNAL_URLS } from '@/config/constants';
 import { SITE } from '@/config/site';
 import { isCityVisible } from '@/domain/cities';
 import { LegalLayout, LegalSection } from './LegalLayout';
+import { ExternalLinkIcon } from '@/components/ExternalLinkIcon';
 
 const attributionGroups = (unlockedCities: string[]): Array<{ labelKey: string; sources: DataAttribution[] }> => [
     ...Object.values(FRONTEND_CITIES_CONFIG)
@@ -24,7 +25,7 @@ const AttributionItem = ({ source }: { source: DataAttribution }) => {
     const licenseUrl = DATA_LICENSE_URLS[source.license];
     const licenseLabel = t(`settings.attributions.licenses.${source.license}`);
     return (
-        <Item variant="settings" size="none">
+        <Item variant="row" size="none">
             <ItemMedia variant="icon" className="text-muted-foreground">
                 <Database size={18} strokeWidth={2} />
             </ItemMedia>
@@ -57,17 +58,16 @@ interface LinkedItemProps {
 
 /** A row that links as a whole, so its badge stays a plain label: an anchor can't nest inside the row's own anchor. */
 const LinkedItem = ({ href, icon, title, description, badge }: LinkedItemProps) => (
-    <Item variant="settings" size="none" render={<a href={href} target="_blank" rel="noopener noreferrer" />}>
+    <Item variant="row" size="none" render={<a href={href} target="_blank" rel="noopener noreferrer" />}>
         <ItemMedia variant="icon" className="text-muted-foreground">{icon}</ItemMedia>
         <ItemContent>
             <ItemTitle className="text-foreground">{title}</ItemTitle>
             <ItemDescription className="text-xs line-clamp-none">{description}</ItemDescription>
         </ItemContent>
-        {badge && (
-            <ItemActions>
-                <Badge variant="label">{badge}</Badge>
-            </ItemActions>
-        )}
+        <ItemActions>
+            {badge && <Badge variant="label">{badge}</Badge>}
+            <ExternalLinkIcon />
+        </ItemActions>
     </Item>
 );
 
@@ -88,7 +88,7 @@ const LicensesPage = () => {
 
             {attributionGroups(unlockedCities).map(group => (
                 <LegalSection key={group.labelKey} heading={t(group.labelKey)}>
-                    <Card variant="subtle" size="none" className="overflow-hidden gap-0">
+                    <Card size="none" className="overflow-hidden gap-0">
                         <ItemGroup className="gap-0">
                             {group.sources.map(source => <AttributionItem key={`${source.url}|${source.title}`} source={source} />)}
                         </ItemGroup>
@@ -97,7 +97,7 @@ const LicensesPage = () => {
             ))}
 
             <LegalSection heading={t('legal.licenses.softwareHeading')}>
-                <Card variant="subtle" size="none" className="overflow-hidden gap-0">
+                <Card size="none" className="overflow-hidden gap-0">
                     <ItemGroup className="gap-0">
                         <LinkedItem
                             href={EXTERNAL_URLS.SOURCE_REPO}

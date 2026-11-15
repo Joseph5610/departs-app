@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MyTrip } from '@/types';
-import { startTripPush, stopTripPush } from './push';
+import { backgroundEndpoint, startDisruptionPush, startTripPush, stopDisruptionPush, stopTripPush } from './push';
 
 const NOW = Date.UTC(2026, 9, 20, 10, 0, 0);
 
@@ -97,5 +97,83 @@ describe('trip push requests', () => {
         await startTripPush(trip('t2'), {}, '/prague/trip/t2');
         await stopTripPush(trip('t2'));
         expect(sent.filter(request => request.endsWith('t2'))).toEqual(['add t2', 'remove t2']);
+    });
+});
+
+describe('disruption push requests', () => {
+    // Switching off and straight back on must leave the server subscribed: the add may not overtake the removal.
+    it('sends an add asked during a removal after it', async () => {
+        const { manager, answer } = fakePushManager();
+        answer();
+        usePushManager(manager);
+        await manager.subscribe();
+        let release = () => {};
+        const held = new Promise<void>(resolve => { release = resolve; });
+        vi.stubGlobal('fetch', vi.fn(async (_url: string, init: RequestInit) => {
+            const { action } = JSON.parse(String(init.body)) as { action: string };
+            sent.push(action);
+            if (action === 'remove') await held;
+            return new Response('{"ok":true}', { status: 200 });
+        }));
+
+        const removing = stopDisruptionPush('prague');
+        const adding = startDisruptionPush('prague', [{ name: '9', keys: ['L9'] }], 'Disruption · {lines}', '/prague', false);
+        await settle();
+        expect(sent).toEqual(['remove']);
+        release();
+        expect(await removing).toBe(true);
+        expect(await adding).toEqual({ ok: true });
+        expect(sent).toEqual(['remove', 'add']);
+    });
+
+    // A full trip's 429 is not this quota: only the disruption path turns it into `tooMany`.
+    it('reports the server refusing a network past its daily quota', async () => {
+        const { manager, answer } = fakePushManager();
+        answer();
+        usePushManager(manager);
+        await manager.subscribe();
+        vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":true,"message":"Too many subscriptions."}', { status: 429 })));
+        expect(await startDisruptionPush('prague', [{ name: '9', keys: ['L9'] }], 'x', '/prague', false)).toEqual({ ok: false, reason: 'tooMany' });
+    });
+});
+
+describe('a trip push the server refuses', () => {
+    it('keeps the server\'s own words for the toast', async () => {
+        const { manager, answer } = fakePushManager();
+        answer();
+        usePushManager(manager);
+        vi.stubGlobal('fetch', vi.fn(async () => new Response('{"error":true,"message":"Too many riders on this trip."}', { status: 429 })));
+        const result = await startTripPush(trip('t1'), {}, '/prague/trip/t1');
+        expect(result).toMatchObject({ ok: false, reason: expect.stringContaining('Too many riders') });
+    });
+});
+
+describe('backgroundEndpoint', () => {
+    const noSubscription = (subscribe: () => Promise<{ endpoint: string }>) => vi.stubGlobal('navigator', {
+        serviceWorker: { getRegistration: async () => ({ pushManager: { getSubscription: async () => null, subscribe } }) },
+    });
+
+    it('renews a subscription the browser dropped while permission stands', async () => {
+        noSubscription(async () => ({ endpoint: 'https://push/new' }));
+        vi.stubGlobal('Notification', { permission: 'granted' });
+        expect(await backgroundEndpoint()).toEqual({ endpoint: 'https://push/new', lost: false });
+    });
+
+    it('reports notifications lost once permission is gone', async () => {
+        noSubscription(async () => ({ endpoint: 'never' }));
+        vi.stubGlobal('Notification', { permission: 'denied' });
+        expect(await backgroundEndpoint()).toEqual({ endpoint: null, lost: true });
+    });
+
+    // Without a service worker (a dev server, a first load) nothing is known, so the switch must stay as it is.
+    it('reports nothing lost without a service worker', async () => {
+        vi.stubGlobal('navigator', { serviceWorker: { getRegistration: async () => undefined } });
+        expect(await backgroundEndpoint()).toEqual({ endpoint: null, lost: false });
+    });
+
+    it('keeps the switch through a passing failure to renew', async () => {
+        noSubscription(async () => { throw new Error('offline'); });
+        vi.stubGlobal('Notification', { permission: 'granted' });
+        expect(await backgroundEndpoint()).toEqual({ endpoint: null, lost: false });
     });
 });

@@ -79,7 +79,7 @@ const BoardRow = ({ dep, timeZone, now, walkMins, stopPlatform }: { dep: Departu
                 name={dep.line}
                 routeColor={dep.route_color ?? ''}
                 size="xl"
-                className="w-full h-[clamp(2rem,4.5vw,4.25rem)] rounded-[clamp(0.4rem,0.8vw,0.9rem)] text-[clamp(1rem,2.3vw,2.25rem)]"
+                className="w-full h-[clamp(2rem,4.5vw,4.25rem)] rounded-surface text-[clamp(1rem,2.3vw,2.25rem)]"
             />
             <div className="min-w-0">
                 <div className={cn(
@@ -187,7 +187,7 @@ const BoardPage = ({ city, stopId }: { city: string; stopId: string }) => {
                     <EmptyHeader className="max-w-[min(90vw,48rem)] gap-[clamp(0.5rem,1.5vh,1.25rem)]">
                         <EmptyMedia
                             variant="icon"
-                            className="size-[clamp(3.5rem,7vw,7rem)] rounded-[clamp(0.9rem,1.6vw,1.75rem)] bg-muted/30 border border-border/50 text-muted-foreground [&_svg:not([class*='size-'])]:size-[55%]"
+                            className="size-[clamp(3.5rem,7vw,7rem)] rounded-surface bg-muted/30 text-muted-foreground [&_svg:not([class*='size-'])]:size-[55%]"
                         >
                             <TrainFront strokeWidth={1.5} className="opacity-60" />
                         </EmptyMedia>

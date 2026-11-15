@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Banknote, CreditCard, MapPin, Smartphone } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/cn';
+import { HeroFooter } from '@/components/DetailPanel/HeroFooter';
 import { weekdayShortNames } from '@/domain/time';
 import type { OpeningStatus } from '@/domain/pointsOfSale';
 import type { PointOfSale } from '@/types';
@@ -16,15 +18,15 @@ const PAY_ICONS: Record<PointOfSale['payMethods'][number], React.ElementType> = 
 type Tone = 'open' | 'soon' | 'closed';
 
 const TONE_TEXT: Record<Tone, string> = {
-    open: 'text-emerald-500',
-    soon: 'text-amber-500',
-    closed: 'text-destructive',
+    open: 'text-tint-mint',
+    soon: 'text-tint-amber',
+    closed: 'text-tint-red',
 };
 
 const TONE_TINT: Record<Tone, string> = {
-    open: 'var(--color-emerald-500)',
-    soon: 'var(--color-amber-500)',
-    closed: 'var(--destructive)',
+    open: 'var(--tint-mint)',
+    soon: 'var(--tint-amber)',
+    closed: 'var(--tint-red)',
 };
 
 const toneOf = (status: OpeningStatus): Tone =>
@@ -44,23 +46,23 @@ export const PointOfSaleHero = ({ pos, status }: PointOfSaleHeroProps) => {
     return (
         <Card
             size="none"
-            className="border border-border/50 ring-0 overflow-hidden relative flex flex-col shadow-sm dark:inset-shadow-[0_1px_0_rgb(255_255_255/0.07)]"
+            className="overflow-hidden relative flex flex-col"
             style={tone ? {
                 backgroundImage: `linear-gradient(160deg, color-mix(in srgb, ${TONE_TINT[tone]} 9%, var(--hero-base)), var(--hero-base))`
             } : { backgroundColor: 'var(--hero-base)' }}
         >
             {hasBody && (
-                <div className="flex flex-col gap-3 p-4">
+                <div className="flex flex-col gap-3 p-3.5">
                     {status && tone && <OpeningState status={status} tone={tone} />}
                     {pos.payMethods.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
                             {pos.payMethods.map(pm => {
                                 const Icon = PAY_ICONS[pm];
                                 return (
-                                    <span key={pm} className="flex h-7 items-center gap-1.5 rounded-full bg-foreground/5 px-3 text-body-sm text-foreground/80">
-                                        <Icon size={14} strokeWidth={1.5} className="text-muted-foreground" />
+                                    <Badge key={pm} variant="info">
+                                        <Icon size={14} strokeWidth={1.5} />
                                         {t(`pos.payMethods.${pm}`, pm)}
-                                    </span>
+                                    </Badge>
                                 );
                             })}
                         </div>
@@ -69,10 +71,10 @@ export const PointOfSaleHero = ({ pos, status }: PointOfSaleHeroProps) => {
             )}
 
             {pos.address && (
-                <div className={cn("flex items-start gap-2 px-4 py-3 bg-foreground/3 text-body-sm text-foreground/80", hasBody && "border-t border-border/50")}>
+                <HeroFooter className={cn("flex items-start gap-2 type-meta text-foreground/80", !hasBody && "border-t-0")}>
                     <MapPin size={14} strokeWidth={1.5} className="mt-0.5 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 wrap-break-word">{pos.address}</span>
-                </div>
+                </HeroFooter>
             )}
         </Card>
     );
@@ -98,8 +100,8 @@ const OpeningState = ({ status, tone }: { status: OpeningStatus; tone: Tone }) =
 
     return (
         <div className="flex flex-col gap-0.5">
-            <span className={cn("text-heading font-semibold", TONE_TEXT[tone])}>{state}</span>
-            {note && <span className="text-body-sm text-muted-foreground">{note}</span>}
+            <span className={cn("type-section", TONE_TEXT[tone])}>{state}</span>
+            {note && <span className="type-meta text-muted-foreground">{note}</span>}
         </div>
     );
 };

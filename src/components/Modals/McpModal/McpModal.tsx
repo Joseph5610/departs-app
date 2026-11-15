@@ -1,17 +1,37 @@
+import { Item } from '@/components/ui/item';
+import type React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Sparkles, Copy, Check, Terminal, Laptop, Code2 } from 'lucide-react';
+import { Code2, Laptop, Terminal, type LucideIcon } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { CopyButton } from '@/components/CopyButton';
+import { SectionHeading } from '@/components/SectionHeading';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useUiStore } from '@/state/uiStore';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { SITE } from '@/config/site';
+
+const CLAUDE_CODE_COMMAND = `claude mcp add --transport sse departs ${SITE.MCP_URL}`;
+const CURSOR_CONFIG = JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", SITE.MCP_URL] } } }, null, 2);
+
+const McpRow = ({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children?: React.ReactNode }) => (
+    <Item variant="row" size="none" className="min-h-12 after:hidden">
+        <Icon size={20} strokeWidth={1.75} className="shrink-0 text-tint-mint" />
+        <span className="min-w-0 flex-1 truncate type-row text-foreground">{title}</span>
+        {children}
+    </Item>
+);
+
+const McpCode = ({ children }: { children: React.ReactNode }) => (
+    <div className="px-3.5 pb-3.5">
+        <pre className="overflow-x-auto rounded-nested bg-fill p-3 font-mono type-meta text-muted-foreground select-all">{children}</pre>
+    </div>
+);
 
 export const McpModal = () => {
     const { t } = useTranslation();
@@ -22,142 +42,46 @@ export const McpModal = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && setIsMcpModalOpen(false)}>
-            <DialogContent aria-describedby={undefined} variant="default" phoneLayout="page" className="max-w-xl">
-                <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
-                    <DialogTitle className="flex items-center gap-2 text-lg font-bold">
-                        <Sparkles className="size-5 text-primary animate-pulse" />
-                        <span>{t('mcp.title')}</span>
-                    </DialogTitle>
+            <DialogContent aria-describedby={undefined} phoneLayout="page" className="max-w-xl">
+                <DialogHeader className="px-(--panel-gutter) pt-6 pb-2 shrink-0">
+                    <DialogTitle>{t('mcp.title')}</DialogTitle>
                 </DialogHeader>
-                <ScrollArea className="flex-1 min-h-0 px-6">
-                    <div className="flex flex-col gap-6 py-2 pb-6">
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                            {t('mcp.subtitle')}
-                        </p>
+                <ScrollArea className="flex-1 min-h-0 px-(--panel-gutter)">
+                    <div className="flex flex-col gap-5 pb-6">
+                        <p className="type-meta text-muted-foreground">{t('mcp.subtitle')}</p>
 
-                        <Card variant="subtle" size="none">
-                            <div className="p-4 flex flex-col gap-2">
-                                <span className="text-label text-muted-foreground font-bold uppercase tracking-widest">
-                                    {t('mcp.endpointLabel')}
-                                </span>
-                                <div className="flex items-center justify-between gap-2">
-                                    <code className="text-xs font-mono text-primary font-semibold select-all break-all">
-                                        {SITE.MCP_URL}
-                                    </code>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
-                                        onClick={() => copy(SITE.MCP_URL, 'endpoint')}
-                                    >
-                                        {copiedKey === 'endpoint' ? (
-                                            <>
-                                                <Check className="size-3.5 text-emerald-500" />
-                                                <span className="text-emerald-500">{t('mcp.copied')}</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Copy className="size-3.5 text-muted-foreground" />
-                                                <span>{t('mcp.copyUrl')}</span>
-                                            </>
-                                        )}
-                                    </Button>
+                        <section className="flex flex-col gap-2">
+                            <SectionHeading>{t('mcp.endpointLabel')}</SectionHeading>
+                            <Card size="none">
+                                <div className="flex min-h-12 items-center justify-between gap-2 px-3.5 py-2.5">
+                                    <code className="min-w-0 truncate select-all font-mono type-meta text-tint-mint">{SITE.MCP_URL}</code>
+                                    <CopyButton label={t('mcp.copyUrl')} copiedLabel={t('mcp.copied')} isCopied={copiedKey === 'endpoint'} onCopy={() => copy(SITE.MCP_URL, 'endpoint')} />
                                 </div>
-                            </div>
+                            </Card>
+                        </section>
+
+                        <Card size="none">
+                            <McpRow icon={Laptop} title={`${t('mcp.claudeDesktopTitle')} (GUI)`} />
+                            <ol className="list-inside list-decimal space-y-1 px-3.5 pb-3.5 type-meta text-muted-foreground">
+                                <li>{t('mcp.claudeDesktopStep1')}</li>
+                                <li>{t('mcp.claudeDesktopStep2')}</li>
+                                <li>{t('mcp.claudeDesktopStep3')}</li>
+                            </ol>
                         </Card>
 
-                        <div className="flex flex-col gap-4">
-                            <Card variant="subtle" size="none">
-                                <div className="p-4 flex flex-col gap-2.5">
-                                    <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
-                                        <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                                            <Laptop className="size-4" />
-                                        </div>
-                                        <span>{t('mcp.claudeDesktopTitle')} (GUI)</span>
-                                    </div>
-                                    <ol className="text-xs text-muted-foreground leading-relaxed list-decimal list-inside space-y-1 pl-1">
-                                        <li>{t('mcp.claudeDesktopStep1')}</li>
-                                        <li>{t('mcp.claudeDesktopStep2')}</li>
-                                        <li>{t('mcp.claudeDesktopStep3')}</li>
-                                    </ol>
-                                </div>
-                            </Card>
+                        <Card size="none">
+                            <McpRow icon={Terminal} title={t('mcp.claudeCodeTitle')}>
+                                <CopyButton label={t('mcp.copy')} copiedLabel={t('mcp.copied')} isCopied={copiedKey === 'claudeCode'} onCopy={() => copy(CLAUDE_CODE_COMMAND, 'claudeCode')} />
+                            </McpRow>
+                            <McpCode>{CLAUDE_CODE_COMMAND}</McpCode>
+                        </Card>
 
-                            <Card variant="subtle" size="none">
-                                <div className="p-4 flex flex-col gap-2.5">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
-                                            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                                                <Terminal className="size-4" />
-                                            </div>
-                                            <span>{t('mcp.claudeCodeTitle')}</span>
-                                        </div>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
-                                            onClick={() => copy(`claude mcp add --transport sse departs ${SITE.MCP_URL}`, 'claudeCode')}
-                                        >
-                                            {copiedKey === 'claudeCode' ? (
-                                                <>
-                                                    <Check className="size-3.5 text-emerald-500" />
-                                                    <span className="text-emerald-500">{t('mcp.copied')}</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Copy className="size-3.5 text-muted-foreground" />
-                                                    <span>{t('mcp.copy')}</span>
-                                                </>
-                                            )}
-                                        </Button>
-                                    </div>
-                                    <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-caption font-mono text-foreground leading-relaxed overflow-x-auto select-all">
-                                        claude mcp add --transport sse departs {SITE.MCP_URL}
-                                    </pre>
-                                </div>
-                            </Card>
-
-                            <Card variant="subtle" size="none">
-                                <div className="p-4 flex flex-col gap-2.5">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2 font-semibold text-sm text-foreground">
-                                            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                                                <Code2 className="size-4" />
-                                            </div>
-                                            <span>{t('mcp.cursorTitle')}</span>
-                                        </div>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="h-7 text-xs font-semibold px-2.5 gap-1.5 shrink-0 bg-foreground/5 hover:bg-foreground/10 border-border/40 text-foreground transition-colors cursor-pointer"
-                                            onClick={() => copy(JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", SITE.MCP_URL] } } }, null, 2), 'cursor')}
-                                        >
-                                            {copiedKey === 'cursor' ? (
-                                                <>
-                                                    <Check className="size-3.5 text-emerald-500" />
-                                                    <span className="text-emerald-500">{t('mcp.copied')}</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Copy className="size-3.5 text-muted-foreground" />
-                                                    <span>{t('mcp.copy')}</span>
-                                                </>
-                                            )}
-                                        </Button>
-                                    </div>
-                                    <pre className="p-3 rounded-xl bg-muted/60 dark:bg-black/40 border border-border/50 text-caption font-mono text-foreground leading-relaxed overflow-x-auto select-all">
-                                        {JSON.stringify({
-                                            mcpServers: {
-                                                departs: {
-                                                    command: "npx",
-                                                    args: ["-y", "mcp-remote", SITE.MCP_URL]
-                                                }
-                                            }
-                                        }, null, 2)}
-                                    </pre>
-                                </div>
-                            </Card>
-                        </div>
+                        <Card size="none">
+                            <McpRow icon={Code2} title={t('mcp.cursorTitle')}>
+                                <CopyButton label={t('mcp.copy')} copiedLabel={t('mcp.copied')} isCopied={copiedKey === 'cursor'} onCopy={() => copy(CURSOR_CONFIG, 'cursor')} />
+                            </McpRow>
+                            <McpCode>{CURSOR_CONFIG}</McpCode>
+                        </Card>
                     </div>
                 </ScrollArea>
             </DialogContent>

@@ -8,7 +8,7 @@ export const LineFilterLabel = ({ lines }: { lines: LineBadgeData[] }) => {
     return (
         <span className="flex min-w-0 items-center" data-testid="search-line-filter">
             <LineBadges lines={lines} />
-            <span className="truncate text-title text-muted-foreground">{t('search.lineOnMap', { count: lines.length })}</span>
+            <span className="truncate type-row text-muted-foreground">{t('search.lineOnMap', { count: lines.length })}</span>
         </span>
     );
 };

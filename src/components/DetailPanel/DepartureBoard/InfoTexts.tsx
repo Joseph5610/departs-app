@@ -11,6 +11,8 @@ import { boardStopIds, isStationBoard, platformCodes, platformIdByCode } from '@
 import { useOpenStop } from '@/hooks/features/useOpenStop';
 import { noticeIconTone } from '@/components/Alerts/noticeTone';
 import { PlatformCircle } from '@/components/PlatformCircle';
+import { Pressable } from '@/components/Pressable';
+import { AlertText, ValidityLine } from '@/components/Alerts/AlertTexts';
 
 interface InfoTextsProps {
     selectedStop: SelectedStop;
@@ -65,10 +67,10 @@ const PlatformNoticesCard = ({ codes, priority, platformIds, onOpen }: PlatformN
     const { t } = useTranslation();
 
     return (
-        <Alert variant={alertVariant(priority)} className="items-center px-3 py-2.5">
+        <Alert variant={alertVariant(priority)} className="items-center *:[svg]:mt-0 *:[svg]:self-center">
             <AlertIcon className={cn("h-4 w-4 shrink-0", noticeIconTone(priority))} />
             <div className="flex min-w-0 items-center gap-2">
-                <AlertTitle className="min-w-0 flex-1 text-body-sm font-semibold leading-tight text-foreground/95">
+                <AlertTitle className="min-w-0 flex-1">
                     {t('map.departures.stationNotices')}
                 </AlertTitle>
                 <span className="flex shrink-0 flex-wrap justify-end gap-1">
@@ -86,14 +88,13 @@ const PlatformNoticeCode = ({ code, platformId, onOpen }: { code: string; platfo
     const circle = <PlatformCircle code={code} size="md" />;
     if (!platformId) return <span className="flex" aria-label={t('map.departures.platformCode', { code })}>{circle}</span>;
     return (
-        <button
-            type="button"
+        <Pressable
             onClick={() => onOpen(platformId)}
             aria-label={t('map.departures.platformCode', { code })}
             className="flex rounded-full transition-transform active:scale-95 hover:brightness-110"
         >
             {circle}
-        </button>
+        </Pressable>
     );
 };
 
@@ -104,22 +105,19 @@ const InfoTextCard = ({ info }: { info: Infotext }) => {
     return (
         <Alert
             variant={alertVariant(info.priority)}
-            className="relative p-3 sm:p-4 rounded-2xl"
-        >
+                    >
             <AlertIcon className={cn("h-4 w-4 mt-0.5 shrink-0", noticeIconTone(info.priority))} />
 
-            <AlertTitle className="flex flex-col gap-1 mb-2">
-                <span className="font-bold text-sm leading-tight text-foreground/95 whitespace-pre-line">
-                    {text}
-                </span>
+            <AlertTitle className="mb-1.5">
+                <AlertText>{text}</AlertText>
             </AlertTitle>
 
-            <AlertDescription className="grid gap-2">
-                <div className="text-label font-semibold text-foreground/60 mt-0.5">
+            <AlertDescription>
+                <ValidityLine>
                     {info.valid_to
                         ? `${formatDateTime(info.valid_from, i18n.resolvedLanguage)} – ${formatDateTime(info.valid_to, i18n.resolvedLanguage)}`
                         : t('alerts.validFrom', { date: formatDateTime(info.valid_from, i18n.resolvedLanguage) })}
-                </div>
+                </ValidityLine>
             </AlertDescription>
         </Alert>
     );
