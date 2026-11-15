@@ -319,8 +319,6 @@
     "leadLabel": "Upozornit před odjezdem",
     "loading": "Načítám spoj…",
     "save": "Uložit",
-    "saved": "Cesta uložena",
-    "updated": "Cesta upravena",
     "fromStop": "z {{stop}} · odjezd {{time}}",
     "onBoard": "Už jste ve voze",
     "showTrip": "Zobrazit spoj",

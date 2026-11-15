@@ -311,8 +311,6 @@
     "leadLabel": "Alert me before it leaves",
     "loading": "Loading the trip…",
     "save": "Save",
-    "saved": "Trip saved",
-    "updated": "Trip updated",
     "fromStop": "from {{stop}} · departs {{time}}",
     "onBoard": "Already on board",
     "showTrip": "Show trip",

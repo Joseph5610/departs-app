@@ -107,7 +107,7 @@ export const DirectionRow = memo(({
                             ))}
                             {hasMore && (
                                 <Button
-                                    variant="more"
+                                    variant="pill"
                                     size="chip"
                                     onClick={() => onToggleGroup?.(groupId)}
                                     aria-label={isExpanded ? t('map.departures.showLess') : t('map.departures.moreConnections', { count: hiddenCount })}

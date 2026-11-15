@@ -110,7 +110,7 @@ export const DepartureBoardHeader = memo(() => {
                                     <PropertyToggle
                                         isActive={requireAirConditioned}
                                         onToggle={toggleRequireAirConditioned}
-                                        activeClassName="bg-sky-500 text-white"
+                                        activeClassName="bg-primary text-primary-foreground"
                                         label={t('amenities.airConditioned')}
                                         testId="filter-ac"
                                     >
@@ -121,7 +121,7 @@ export const DepartureBoardHeader = memo(() => {
                                     <PropertyToggle
                                         isActive={requireWheelchairAccessible}
                                         onToggle={toggleRequireWheelchairAccessible}
-                                        activeClassName="bg-blue-600 text-white"
+                                        activeClassName="bg-primary text-primary-foreground"
                                         label={t('amenities.wheelchairAccessible')}
                                         testId="filter-accessible"
                                     >

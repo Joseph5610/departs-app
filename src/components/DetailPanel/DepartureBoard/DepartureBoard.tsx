@@ -241,7 +241,7 @@ const PlatformSectionView = memo(({ section, platformStopId, badgeColumn, rowPro
                 <DirectionRows groups={groups} inPlatformSection={!section.metroLine} {...rowProps} />
                 {hidden > 0 && (
                     <div className="flex justify-center py-2.5">
-                        <Button variant="more" size="chip" aria-expanded={showAll} onClick={() => rowProps.onToggleGroup(sectionId)}>
+                        <Button variant="pill" size="chip" aria-expanded={showAll} onClick={() => rowProps.onToggleGroup(sectionId)}>
                             {showAll ? t('map.departures.fewerLines') : t('map.departures.moreLines', { count: hidden })}
                             <ChevronDown size={14} strokeWidth={2} className={cn("transition-transform duration-200", showAll && "rotate-180")} />
                         </Button>

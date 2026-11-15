@@ -4,6 +4,22 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.97.2] - 2026-11-15
+
+### Changed
+
+- The trip hero's headsign leads with a larger size, its vehicle facts read as secondary, and small caps labels and status pills are easier to read.
+- Taking a trip shows no "Trip saved" toast; the ride bar confirms it.
+
+### Fixed
+
+- On a touch tablet the panel's edge has a finger-sized grabber for resizing it.
+- My trip on a phone opens in one move instead of folding into the search capsule and back.
+- The phone sheet's grabber steps to the neighbouring height, and a row swipe no longer leaves the sheet stuck mid-drag.
+- The map stars exactly the stop pinned, as its board's star does, not every platform of a pinned station.
+- Loading placeholders match the board, trip and favourites they stand in for, so content no longer jumps when it loads.
+- Stats show zero delays in neutral colours, and A/C and wheelchair filters use the app's selected colour.
+
 ## [0.97.1] - 2026-11-06
 
 ### Changed
