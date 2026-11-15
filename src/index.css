@@ -374,7 +374,7 @@
 
 
 /* The app's only text styles; line badges and platform circles alone size their own codes. */
-@utility type-display { font-size: 1.5rem; line-height: 1.875rem; font-weight: 700; letter-spacing: -0.03em; }
+@utility type-display { font-size: 1.375rem; line-height: 1.75rem; font-weight: 700; letter-spacing: -0.035em; }
 @utility type-title { font-size: 1.25rem; line-height: 1.75rem; font-weight: 700; letter-spacing: -0.04em; }
 @utility type-note { font-size: 0.75rem; line-height: 1rem; font-weight: 400; }
 @utility type-control { font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
@@ -389,7 +389,7 @@
 @utility type-headsign { font-size: 0.9375rem; line-height: 1.25rem; font-weight: 600; }
 @utility type-meta { font-size: 0.8125rem; line-height: 1.125rem; font-weight: 400; }
 @utility type-group { font-size: 0.8125rem; line-height: 1.125rem; font-weight: 600; }
-@utility type-pill { font-size: var(--text-caption); line-height: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: calc(var(--tracking-normal) + 0.05em); }
+@utility type-pill { font-size: var(--text-label); line-height: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
 @utility type-badge { font-size: var(--text-label); line-height: 1rem; font-weight: 700; }
 @utility type-label { font-size: var(--text-caption); line-height: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 

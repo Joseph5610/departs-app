@@ -54,7 +54,7 @@ export const VehicleHero = ({
         >
             <div className="relative z-10 flex flex-col p-3.5 pb-2.5">
                 <div className="flex justify-between items-start gap-3">
-                    <div className="flex flex-col gap-0.5 min-w-0">
+                    <div className="flex flex-1 flex-col gap-0.5 min-w-0">
                         <span className="type-label text-muted-foreground">
                             {t('map.vehicleDetails.directionLabel')}
                         </span>
@@ -64,16 +64,13 @@ export const VehicleHero = ({
                                     {displayVehicle.trip_headsign}
                                 </span>
                             ) : isDetailLoading ? (
-                                <Skeleton className="h-7.5 w-3/4 max-w-80 rounded-badge bg-muted opacity-40" />
+                                <Skeleton className="h-7 w-3/4 max-w-80 rounded-badge bg-muted opacity-40" />
                             ) : (
                                 t('map.vehicleDetails.headingToDestination')
                             )}
                         </h2>
                     </div>
                     <div className="flex gap-2 shrink-0">
-                        {isDetailLoading && (
-                            <Skeleton className="size-8 rounded-full" />
-                        )}
                         {!displayVehicle.isStaticFallback && (
                             <Button
                                 variant={isFollowing ? 'selected' : 'pill'}
