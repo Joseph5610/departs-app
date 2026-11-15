@@ -138,8 +138,8 @@ export interface FavoriteMarks {
 const NO_MARKS: FavoriteMarks = { stationIds: [], platformIds: [] };
 
 /**
- * The stations and platforms the map stars for each network's own pins, in its stops: a station
- * when it or any of its platforms is pinned, a platform when it, a section holding it or its whole station is.
+ * The stations and platforms the map stars for each network's own pins: only the stop exactly pinned, as its
+ * board's star shows it. A section (several platforms pinned as one board) stars each of its platforms.
  */
 export const favoriteMarks = (networks: readonly { model: StopModel | null; pinIds: readonly string[] }[]): FavoriteMarks => {
     if (networks.every(n => n.pinIds.length === 0)) return NO_MARKS;
@@ -151,10 +151,7 @@ export const favoriteMarks = (networks: readonly { model: StopModel | null; pinI
             const board: BoardStop | null = resolveStop(model, id);
             if (!board) continue;
             if (board.kind === 'station') stationIds.add(board.id);
-            for (const p of board.platforms) {
-                platformIds.add(p.id);
-                if (board.kind !== 'station') stationIds.add(p.station);
-            }
+            else for (const p of board.platforms) platformIds.add(p.id);
         }
     }
     return { stationIds: [...stationIds], platformIds: [...platformIds] };
