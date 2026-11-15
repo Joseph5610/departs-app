@@ -123,7 +123,7 @@ export const DepartureBoard = memo(({ selectedStop, onDepartureClick }: Departur
         [isFiltered, expandedGroups, onToggleGroup, boardStopId, timezone, highlightedTripId, onDepartureClick]);
 
     if (isLoading && groupedDepartures.length === 0) {
-        return <DepartureBoardSkeleton />;
+        return <DepartureBoardSkeleton sections={onStation} />;
     }
 
     if (isError && groupedDepartures.length === 0) {

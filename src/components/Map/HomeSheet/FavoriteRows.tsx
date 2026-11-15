@@ -18,6 +18,18 @@ import type { BoardStop, Departure, FavoriteLine } from '@/types';
 /** Lead column of a favourite row, as wide as a line badge so names line up under each other. */
 const LEAD = 'w-9 shrink-0 justify-center';
 
+/** A stop's next departures while they load: badge and minutes, as many as the row shows. */
+const DeparturesSkeleton = () => (
+    <span className="flex h-5 items-center gap-3">
+        {Array.from({ length: DEPARTURES_CONFIG.FAVORITE_STOP_ROW_COUNT }, (_, i) => (
+            <span key={i} className="flex items-center gap-1.5">
+                <Skeleton className="h-4.5 w-6 rounded-badge" />
+                <Skeleton className="h-3 w-9" />
+            </span>
+        ))}
+    </span>
+);
+
 const NoDepartures = () => {
     const { t } = useTranslation();
     return <span className="type-meta text-muted-foreground">{t('map.departures.noUpcoming')}</span>;
@@ -47,7 +59,7 @@ export const FavoriteStopRow = ({ stop, departures, isLoading }: FavoriteStopRow
             </ItemMedia>
             <ItemContent className="min-w-0 gap-1">
                 <ItemTitle className="w-full type-headsign text-foreground"><span className="truncate">{stop.name}</span></ItemTitle>
-                {next.length === 0 ? (isLoading ? <Skeleton className="h-4.5 w-40" /> : <NoDepartures />) : (
+                {next.length === 0 ? (isLoading ? <DeparturesSkeleton /> : <NoDepartures />) : (
                     <span className="flex min-w-0 items-center gap-3 overflow-hidden">
                         {next.map(dep => (
                             <span key={`${dep.tripId}-${dep.timestamp}`} className="flex shrink-0 items-center gap-1.5">
@@ -106,7 +118,12 @@ export const FavoriteLineRow = ({ favorite, stop, departures, isLoading }: Favor
                             </span>
                         )}
                     </>
-                ) : isLoading ? <Skeleton className="h-5 w-12" /> : <span className="type-headsign text-label-3" aria-label={t('map.departures.noUpcoming')}>–</span>}
+                ) : isLoading ? (
+                    <>
+                        <span className="flex h-5 items-center"><Skeleton className="h-4 w-12" /></span>
+                        <span className="flex h-4.5 items-center"><Skeleton className="h-3 w-16" /></span>
+                    </>
+                ) : <span className="type-headsign text-label-3" aria-label={t('map.departures.noUpcoming')}>–</span>}
             </ItemActions>
         </Item>
     );
