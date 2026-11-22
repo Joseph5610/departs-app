@@ -14,8 +14,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/cn';
 import { LineBadge } from '@/components/LineBadge';
 import { ButtonTooltip } from '@/components/ButtonTooltip';
-import { PanelActions } from '@/components/DetailPanel/PanelActions';
-import { useIsMobile } from '@/hooks/useIsMobile';
 import { NavigatePill } from '@/components/DetailPanel/NavigatePill';
 import { useStopTwin } from '@/hooks/derived/useStopTwin';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
@@ -26,7 +24,6 @@ import { Pressable } from '@/components/Pressable';
 /** Sticky subheader of a stop's board: distance and delay, stop actions and filters, then the line chips. */
 export const DepartureBoardHeader = memo(() => {
     const { t } = useTranslation();
-    const isMobile = useIsMobile();
 
     const requireAirConditioned = usePreferencesStore(s => s.requireAirConditioned);
     const requireWheelchairAccessible = usePreferencesStore(s => s.requireWheelchairAccessible);
@@ -98,7 +95,6 @@ export const DepartureBoardHeader = memo(() => {
                         </ButtonTooltip>
                     )}
                 </div>
-                {!isMobile && <PanelActions layout="chips" />}
             </div>
 
             {(uniqueLines.length > 0 || hasVehicleFilters) && (

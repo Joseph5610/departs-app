@@ -70,8 +70,8 @@ export const CitySwitcher = ({ className, variant = "tinted" }: CitySwitcherProp
                     <p className="type-note">{t('map.controls.switchCity')}</p>
                 </TooltipContent>
             </Tooltip>
-            <DialogContent className="sm:max-w-100 p-6 h-auto">
-                <DialogHeader className="pb-4 space-y-1.5">
+            <DialogContent size="sm">
+                <DialogHeader>
                     <DialogTitle className="type-title">{t('map.controls.switchCity')}</DialogTitle>
                     <p className="type-row text-muted-foreground/80">{t('map.regions.title')}</p>
                 </DialogHeader>

@@ -556,7 +556,7 @@
     "onScreen": "On Screen",
     "network": "Network",
     "networkDelayNotice": "Live delay data for the entire network is not available in this region. Please switch to the \"On Screen\" tab to see live data for vehicles currently in view.",
-    "scopeLabel": "Stats scope:",
+    "scopeLabel": "Stats scope",
     "title": "Network Stats",
     "lines": "Lines",
     "punctuality": "Punctuality",

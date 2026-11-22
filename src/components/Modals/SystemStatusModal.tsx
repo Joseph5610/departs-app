@@ -193,7 +193,7 @@ const SystemStatusDetails = () => {
 
 export const SystemStatusModal = memo(({ isOpen, onClose }: SystemStatusModalProps) => (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent aria-describedby={undefined} className="h-auto max-w-105 p-5 gap-4!">
+        <DialogContent aria-describedby={undefined} size="sm">
             <SystemStatusDetails />
         </DialogContent>
     </Dialog>

@@ -42,8 +42,8 @@ export const McpModal = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && setIsMcpModalOpen(false)}>
-            <DialogContent aria-describedby={undefined} phoneLayout="page" className="max-w-xl">
-                <DialogHeader className="px-(--panel-gutter) pt-6 pb-2 shrink-0">
+            <DialogContent aria-describedby={undefined} phoneLayout="page" size="lg">
+                <DialogHeader inset>
                     <DialogTitle>{t('mcp.title')}</DialogTitle>
                 </DialogHeader>
                 <ScrollArea className="flex-1 min-h-0 px-(--panel-gutter)">

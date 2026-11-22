@@ -1,4 +1,5 @@
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
+import { useTranslation } from "react-i18next"
 export type { DialogRootChangeEventDetails } from "@base-ui/react/dialog"
 
 import { cn } from "@/lib/cn"
@@ -48,6 +49,7 @@ function SheetContent({
   hideOverlay?: boolean
   variant?: 'default' | 'glassy'
 }) {
+  const { t } = useTranslation()
   return (
     <SheetPortal>
       {!hideOverlay && <SheetOverlay />}
@@ -84,7 +86,7 @@ function SheetContent({
             }
           >
             <CloseIcon />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t('common.close')}</span>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Popup>

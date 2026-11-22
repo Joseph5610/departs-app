@@ -79,7 +79,7 @@ export const SettingsModal = memo(() => {
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent aria-describedby={undefined} data-testid="settings-modal-content">
-                <DialogHeader className="px-(--panel-gutter) pt-6 pb-2 shrink-0">
+                <DialogHeader inset>
                     <DialogTitle>
                         {t('settings.title')}
                     </DialogTitle>

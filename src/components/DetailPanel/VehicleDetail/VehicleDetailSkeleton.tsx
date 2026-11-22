@@ -46,18 +46,20 @@ const VehicleHeroSkeleton = () => (
 export const StopTimelineSkeleton = () => (
     <div className="flex flex-col gap-3">
         <Skeleton className="h-12 w-full rounded-full" />
-        <div className="flex h-4 items-center px-1"><Skeleton className="h-2.5 w-24" /></div>
-        <div className="relative pl-6">
-            <div className="absolute left-2.75 top-5 bottom-5 w-0.5 bg-border/40" />
-            {['w-32', 'w-40', 'w-32', 'w-44', 'w-28', 'w-36'].map((width, i) => (
-                <div key={i} className="flex justify-between items-center relative min-h-10">
-                    <div className="absolute -left-4.25 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-muted" />
-                    <Skeleton className={cn("h-4", width)} />
-                    <div className="flex justify-end shrink-0 min-w-17">
-                        <Skeleton className="h-3 w-12" />
+        <div className="flex h-4 items-center"><Skeleton className="h-2.5 w-24" /></div>
+        <div className="relative pl-7">
+            <div className="relative">
+                <div className="absolute top-5 bottom-5 -left-4.75 w-1.5 rounded-full bg-fill-2" />
+                {['w-32', 'w-40', 'w-32', 'w-44', 'w-28', 'w-36'].map((width, i) => (
+                    <div key={i} className="relative flex min-h-10 items-center justify-between py-1.5">
+                        <div className="absolute top-1/2 -left-5 size-2 -translate-y-1/2 rounded-full bg-muted" />
+                        <Skeleton className={cn("h-4", width)} />
+                        <div className="flex justify-end shrink-0 min-w-17">
+                            <Skeleton className="h-3 w-12" />
+                        </div>
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     </div>
 );
