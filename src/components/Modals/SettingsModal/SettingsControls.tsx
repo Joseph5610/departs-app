@@ -14,18 +14,13 @@ export const RowText = ({ title, description, className }: { title: string; desc
 
 interface FilterGroupProps {
     title: string;
-    /** Shown right of the title, such as an "All" link. */
-    action?: React.ReactNode;
     children: React.ReactNode;
 }
 
-/** A row's nested filters: a small heading over a wrapping set of chips. */
-export const FilterGroup = ({ title, action, children }: FilterGroupProps) => (
+/** A row's nested filters: a small heading over a wrapping set of chips, the first of them "All". */
+export const FilterGroup = ({ title, children }: FilterGroupProps) => (
     <div className="flex flex-col gap-2">
-        <div className="flex min-h-4.5 items-center justify-between">
-            <SectionHeading>{title}</SectionHeading>
-            {action}
-        </div>
+        <SectionHeading className="min-h-4.5">{title}</SectionHeading>
         <div className="flex flex-wrap gap-x-1.5 gap-y-2">{children}</div>
     </div>
 );

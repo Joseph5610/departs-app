@@ -125,9 +125,9 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
             title={t('map.controls.settings')}
             testId="map-settings-btn"
         >
-            <Settings size={20} strokeWidth={1.5} className={cn("transition-transform hover:rotate-45", isFiltered && "text-purple-400")} />
+            <Settings size={20} strokeWidth={1.5} className="transition-transform hover:rotate-45" />
             {isFiltered && (
-                <span className="absolute top-1.5 right-1.5 grid size-4 place-items-center rounded-full bg-purple-500 text-white pointer-events-none">
+                <span className="absolute top-1.5 right-1.5 grid size-4 place-items-center rounded-full bg-primary text-primary-foreground pointer-events-none">
                     <Filter className="size-2.5" strokeWidth={2.5} />
                 </span>
             )}

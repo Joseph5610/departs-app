@@ -16,7 +16,7 @@ export const LiveIndicator = ({ status, trend }: { status: LiveStatus; trend: 'u
                 <motion.svg
                     key={trend}
                     viewBox="0 0 10 10"
-                    className={cn("size-2.5", trend === 'up' ? "fill-destructive" : "fill-emerald-600 dark:fill-emerald-400")}
+                    className={cn("size-2.5", trend === 'up' ? "fill-destructive" : "fill-tint-mint")}
                     initial={{ scale: 0, rotate: trend === 'up' ? -90 : 90 }}
                     animate={{ scale: 1, rotate: 0 }}
                     exit={{ scale: 0 }}
