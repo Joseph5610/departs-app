@@ -136,7 +136,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
 
     const alertsButton = hasAlerts && (
         <>
-            <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
+            <ButtonGroupSeparator orientation="horizontal" />
             <ControlButton
                 inPill
                 onClick={onAlerts}
@@ -174,7 +174,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                 {compassButton && <ButtonGroup orientation="vertical" className={SHEET_PILL}>{compassButton}</ButtonGroup>}
                 <ButtonGroup orientation="vertical" className={SHEET_PILL}>
                     {settingsButton}
-                    <ButtonGroupSeparator orientation="horizontal" className="bg-sep mx-2.75" />
+                    <ButtonGroupSeparator orientation="horizontal" />
                     <ControlButton
                         inPill
                         inSheet
@@ -203,7 +203,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                 <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden">
                     {settingsButton}
                     {alertsButton}
-                    <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
+                    <ButtonGroupSeparator orientation="horizontal" />
                     <ControlButton
                         inPill
                         onClick={onToggleFavorites}
@@ -218,7 +218,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                             )}
                          />
                     </ControlButton>
-                    <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
+                    <ButtonGroupSeparator orientation="horizontal" />
                     <ControlButton
                         inPill
                         onClick={onStats}
@@ -243,7 +243,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                     >
                         <Plus size={20} strokeWidth={1.5} />
                     </ControlButton>
-                    <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
+                    <ButtonGroupSeparator orientation="horizontal" />
                     <ControlButton
                         inPill
                         onClick={onZoomOut}

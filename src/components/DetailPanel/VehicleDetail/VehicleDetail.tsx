@@ -153,7 +153,7 @@ const LineAlertList = ({ alerts }: { alerts: RSSItem[] }) => {
                 item={alert}
                 compact
                 onOpenFull={guid ? () => openAlert(guid) : undefined}
-                className={cn(idx > 0 && "before:absolute before:top-0 before:right-0 before:left-11.5 before:h-[0.5px] before:bg-sep", isHighPriorityAlert(alert.priority) && "bg-tint-red/16")}
+                className={cn(idx > 0 && "row-separator-top", isHighPriorityAlert(alert.priority) && "bg-tint-red/16")}
             />
         );
     };

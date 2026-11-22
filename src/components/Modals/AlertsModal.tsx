@@ -171,7 +171,7 @@ export const AlertsContent = () => {
                                     size="none"
                                     className={cn(
                                         "rounded-none",
-                                        !row.isFirst && "relative before:absolute before:top-0 before:right-0 before:left-11.5 before:h-[0.5px] before:bg-sep",
+                                        !row.isFirst && "row-separator-top",
                                         row.isFirst && "rounded-t-surface",
                                         row.isLast && "rounded-b-surface mb-1"
                                     )}

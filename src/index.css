@@ -486,6 +486,21 @@
   }
 }
 
+/* The same hairline above a row, for rows that are not siblings in one list (virtualised, or split by a collapsible). */
+@utility row-separator-top {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: var(--row-sep, 2.875rem);
+    height: 0.5px;
+    background: var(--sep);
+  }
+}
+
 /* The one hover, press and focus of a list row, on a backdrop so it never shifts the row; `--row-hover-x/y` set its inset, `--row-hover-radius` its corner. */
 @utility row-hover {
   position: relative;

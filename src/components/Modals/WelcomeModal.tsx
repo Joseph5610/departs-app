@@ -109,7 +109,7 @@ export const WelcomeModal = memo(() => {
                 <div className="flex min-h-0 flex-1 flex-col gap-2">
                     <div className="flex shrink-0 items-center gap-4 px-2">
                         <div className="h-px flex-1 bg-linear-to-r from-transparent to-border"></div>
-                        <SectionHeading className="px-0 text-muted-foreground/60">
+                        <SectionHeading className="text-muted-foreground/60">
                             {t('welcome.chooseCity')}
                         </SectionHeading>
                         <div className="h-px flex-1 bg-linear-to-l from-transparent to-border"></div>

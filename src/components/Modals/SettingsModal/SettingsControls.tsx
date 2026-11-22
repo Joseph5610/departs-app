@@ -23,7 +23,7 @@ interface FilterGroupProps {
 export const FilterGroup = ({ title, action, children }: FilterGroupProps) => (
     <div className="flex flex-col gap-2">
         <div className="flex min-h-4.5 items-center justify-between">
-            <SectionHeading className="px-0">{title}</SectionHeading>
+            <SectionHeading>{title}</SectionHeading>
             {action}
         </div>
         <div className="flex flex-wrap gap-x-1.5 gap-y-2">{children}</div>
