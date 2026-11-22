@@ -350,9 +350,10 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, fitsContent = false, col
                                 key={cardKey}
                                 onScroll={toolbar ? onCardScroll : undefined}
                                 data-panel-scroller
-                                className={cn("flex-1 min-h-0 px-(--panel-gutter) overscroll-contain", isFull ? "overflow-y-auto" : "overflow-hidden", toolbar && "scroll-edge", CARD_ENTER)}
+                                className={cn("flex-1 min-h-0 px-(--panel-gutter) overscroll-contain scroll-edge", isFull ? "overflow-y-auto" : "overflow-hidden", toolbar && "scroll-edge-toolbar")}
                             >
-                                <div className={toolbar ? "pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)]" : "pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]"}>{children}</div>
+                                {/* The entrance runs on the content: the scroller's own animations drive its edge fade. */}
+                                <div className={cn(toolbar ? "pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)]" : "pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]", CARD_ENTER)}>{children}</div>
                             </div>
                         )}
                     </div>

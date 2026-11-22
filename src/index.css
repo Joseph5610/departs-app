@@ -559,14 +559,62 @@
   padding-inline: calc(1.5rem - 0.5rem * var(--sheet-morph, 1));
 }
 
-/* Content sliding under the floating toolbar fades out, with no gradient or backing behind it. */
+@property --edge-top {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --edge-bottom {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes edge-top {
+  to {
+    --edge-top: 1.25rem;
+  }
+}
+
+@keyframes edge-bottom {
+  from {
+    --edge-bottom: 1.25rem;
+  }
+  to {
+    --edge-bottom: 0px;
+  }
+}
+
+/* A scroller's content fades out at an edge it can still scroll past, instead of being cut there; put it on the element that scrolls. */
 @utility scroll-edge {
-  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 92px - var(--sheet-hidden, 0px)), rgb(0 0 0 / 0.1) calc(100% - 28px - var(--sheet-hidden, 0px)));
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 92px - var(--sheet-hidden, 0px)), rgb(0 0 0 / 0.1) calc(100% - 28px - var(--sheet-hidden, 0px)));
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--edge-top), #000 calc(100% - var(--edge-end, 0px) - var(--edge-bottom)), var(--edge-floor, transparent) calc(100% - var(--edge-end, 0px)));
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--edge-top), #000 calc(100% - var(--edge-end, 0px) - var(--edge-bottom)), var(--edge-floor, transparent) calc(100% - var(--edge-end, 0px)));
+
+  /* Without scroll timelines the animations would run once to their end and fade a list that sits at its top. */
+  @supports (animation-timeline: scroll()) {
+    animation-name: edge-top, edge-bottom;
+    animation-duration: auto;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(self);
+    animation-range: 0 1.25rem, calc(100% - 1.25rem) 100%;
+  }
 
   @media (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
     -webkit-mask-image: none;
     mask-image: none;
+  }
+}
+
+/* Content sliding under the floating toolbar fades out, with no gradient or backing behind it. */
+@utility scroll-edge-toolbar {
+  --edge-bottom: 64px;
+  --edge-end: calc(28px + var(--sheet-hidden, 0px));
+  --edge-floor: rgb(0 0 0 / 0.1);
+
+  @supports (animation-timeline: scroll()) {
+    animation-name: edge-top;
   }
 }
 

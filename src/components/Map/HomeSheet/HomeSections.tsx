@@ -64,7 +64,7 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
 
     return (
         <div
-            className={cn("flex-1 min-h-0 select-none overscroll-contain px-(--panel-gutter) pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+2.5rem)] flex flex-col gap-5", isFull ? "overflow-y-auto" : "overflow-hidden")}
+            className={cn("flex-1 min-h-0 select-none overscroll-contain scroll-edge px-(--panel-gutter) pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+2.5rem)] flex flex-col gap-5", isFull ? "overflow-y-auto" : "overflow-hidden")}
             data-testid="home-sections"
         >
             {myIncidents.length > 0 && (

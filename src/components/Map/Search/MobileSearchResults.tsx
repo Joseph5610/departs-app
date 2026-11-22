@@ -92,7 +92,7 @@ export const MobileSearchResults = ({
     );
 
     return (
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-(--panel-gutter) pt-1 pb-[45dvh] flex flex-col gap-5" data-testid="search-results">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain scroll-edge px-(--panel-gutter) pt-1 pb-[45dvh] flex flex-col gap-5" data-testid="search-results">
             {isEmptyQuery && searchHistory.length > 0 && (
                 <Section
                     title={t('search.recent')}

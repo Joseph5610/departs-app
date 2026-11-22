@@ -92,8 +92,8 @@ export const SearchDropdown = ({
     });
 
     return (
-        <div className="mt-2 overflow-hidden max-h-[60vh] rounded-surface glassy-thick p-1.5">
-            <Autocomplete.List className="max-h-[60vh] overflow-y-auto custom-scrollbar space-y-1">
+        <div className="mt-2 overflow-hidden rounded-surface glassy-thick p-1.5">
+            <Autocomplete.List className="max-h-[60vh] overflow-y-auto scroll-edge custom-scrollbar space-y-1">
                 {showHistory && (
                     <SearchGroup
                         heading={t('search.recent')}
