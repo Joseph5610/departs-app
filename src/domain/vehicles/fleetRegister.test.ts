@@ -61,8 +61,8 @@ describe('vehicleIdentifiers', () => {
         expect(vehicleIdentifiers('service-3-8536', '8536', undefined).fleetNumber).toBe('8536');
     });
 
-    it('splits a plate registration from the vehicle id that is the fleet number', () => {
-        expect(vehicleIdentifiers('21529', '2BU5867', undefined)).toEqual({ fleetNumber: '21529', plate: '2BU 5867', run: undefined });
+    it('shows a plate alone, not the feed vehicle id beside it', () => {
+        expect(vehicleIdentifiers('21529', '2BU5867', undefined)).toEqual({ fleetNumber: undefined, plate: '2BU 5867', run: undefined });
     });
 
     it('falls back to the vehicle id without a registration and drops empty facts', () => {

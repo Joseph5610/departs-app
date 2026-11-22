@@ -48,8 +48,8 @@ const present = (value: string | number | null | undefined): string | undefined 
 };
 
 /**
- * A vehicle's identifiers, each named once: a registration that is a licence plate is the plate and the
- * vehicle id the fleet number; any other registration is itself the fleet number.
+ * The identifiers a rider can read on the vehicle: a registration that is a licence plate stands alone,
+ * since the vehicle id beside it is only the feed's own number; any other registration is the fleet number.
  */
 export const vehicleIdentifiers = (
     vehicleId: string | null | undefined,
@@ -59,6 +59,6 @@ export const vehicleIdentifiers = (
     const reg = present(registration);
     const id = present(vehicleId);
     const plate = reg ? czechPlateOf(reg) ?? undefined : undefined;
-    const fleetNumber = plate ? (id && czechPlateOf(id) === null ? id : undefined) : reg ?? id;
+    const fleetNumber = plate ? undefined : reg ?? id;
     return { fleetNumber, plate, run: present(runNumber) };
 };
