@@ -179,7 +179,6 @@
       "lineLabel": "Linka {{line}}",
       "lineTitle": "Linka <badge/>",
       "runNumber": "Oběh",
-      "plate": "SPZ",
       "fleetRegisterLink": "Vozidlo na seznam-autobusu.cz",
       "delaySource": {
         "live": "Zpoždění posílá přímo vozidlo v reálném čase.",

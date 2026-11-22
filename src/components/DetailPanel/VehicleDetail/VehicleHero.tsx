@@ -129,7 +129,7 @@ export const VehicleHero = ({
                         )}
                         <IdLine>
                             {ids.fleetNumber && <RegisterLink value={ids.fleetNumber} text={`#${ids.fleetNumber}`} operator={descriptor.operator} />}
-                            {ids.plate && <RegisterLink value={ids.plate} text={`${t('map.vehicleDetails.plate')} ${ids.plate}`} operator={descriptor.operator} />}
+                            {ids.plate && <RegisterLink value={ids.plate} text={ids.plate} operator={descriptor.operator} />}
                             {ids.run && <span>{t('map.vehicleDetails.runNumber')} {ids.run}</span>}
                         </IdLine>
                     </div>
