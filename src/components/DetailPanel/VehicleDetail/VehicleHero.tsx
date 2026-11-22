@@ -17,7 +17,7 @@ import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { getDelayStatus } from '@/domain/delay';
 import { safeHexColor } from '@/lib/color';
 import { getRouteTypeI18nKey } from '@/domain/routes';
-import { delaySourceOf, fleetRegisterUrl, vehicleNotice, type DelaySource } from '@/domain/vehicles';
+import { delaySourceOf, fleetRegisterUrl, vehicleIdentifiers, vehicleNotice, type DelaySource } from '@/domain/vehicles';
 import { useNow } from '@/hooks/useNow';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { HeroFooter } from '@/components/DetailPanel/HeroFooter';
@@ -43,6 +43,8 @@ export const VehicleHero = ({
 
     const typeKey = getRouteTypeI18nKey(displayVehicle.route_type);
     const vehicleTypeLabel = displayVehicle.vehicle_descriptor?.vehicle_type || (typeKey ? t(typeKey) : '---');
+    const descriptor = displayVehicle.vehicle_descriptor;
+    const ids = vehicleIdentifiers(displayVehicle.vehicle_id, descriptor?.vehicle_registration_number, displayVehicle.run_number);
 
     return (
         <Card 
@@ -118,28 +120,17 @@ export const VehicleHero = ({
                 <TripEndedNotice vehicle={displayVehicle} hasEnded={hasEnded} />
             </div>
 
-            {displayVehicle.vehicle_descriptor && (
+            {descriptor && (
                 <HeroFooter className="mt-auto flex items-center justify-between gap-3">
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="type-meta font-medium text-foreground">
-                            {vehicleTypeLabel}
-                            {displayVehicle.vehicle_descriptor.vehicle_registration_number && (
-                                <span className="ml-1.5 font-normal">
-                                    <VehicleNumber
-                                        number={displayVehicle.vehicle_descriptor.vehicle_registration_number}
-                                        operator={displayVehicle.vehicle_descriptor.operator}
-                                    />
-                                </span>
-                            )}
-                        </span>
-                        {displayVehicle.vehicle_descriptor.operator && (
-                            <span className="line-clamp-1 type-note text-muted-foreground">{displayVehicle.vehicle_descriptor.operator}</span>
+                        <span className="type-meta font-medium text-foreground">{vehicleTypeLabel}</span>
+                        {descriptor.operator && (
+                            <span className="line-clamp-1 type-note text-muted-foreground">{descriptor.operator}</span>
                         )}
                         <IdLine>
-                            {displayVehicle.run_number ? <span>{t('map.vehicleDetails.runNumber')} {displayVehicle.run_number}</span> : null}
-                            {displayVehicle.vehicle_id && displayVehicle.vehicle_id !== String(displayVehicle.vehicle_descriptor.vehicle_registration_number) && (
-                                <span className="min-w-0 truncate tabular-nums">{displayVehicle.vehicle_id}</span>
-                            )}
+                            {ids.fleetNumber && <RegisterLink value={ids.fleetNumber} text={`#${ids.fleetNumber}`} operator={descriptor.operator} />}
+                            {ids.plate && <RegisterLink value={ids.plate} text={ids.plate} operator={descriptor.operator} />}
+                            {ids.run && <span>{t('map.vehicleDetails.runNumber')} {ids.run}</span>}
                         </IdLine>
                     </div>
 
@@ -170,11 +161,9 @@ export const VehicleHero = ({
     );
 };
 
-/** The vehicle's number, linked to its seznam-autobusu.cz page when the number pins down one vehicle. */
 /** A vehicle's identifiers in one muted line, a dot between each that is present. */
 const IdLine = ({ children }: { children: React.ReactNode }) => {
-    // An absent fact may come as an empty string or 0, which would still take a dot.
-    const ids = Children.toArray(children).filter(id => id !== '' && id !== '0');
+    const ids = Children.toArray(children);
     if (ids.length === 0) return null;
     return (
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 type-note text-muted-foreground">
@@ -183,12 +172,13 @@ const IdLine = ({ children }: { children: React.ReactNode }) => {
     );
 };
 
-const VehicleNumber = ({ number, operator }: { number: string | number; operator?: string }) => {
+/** A fleet number or plate, linked to its seznam-autobusu.cz page when it pins down one vehicle. */
+const RegisterLink = ({ value, text, operator }: { value: string; text: string; operator?: string }) => {
     const { t } = useTranslation();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const url = fleetRegisterUrl(selectedCity, operator, number);
-    const className = 'text-muted-foreground shrink-0';
-    if (!url) return <span className={className}>#{number}</span>;
+    const url = fleetRegisterUrl(selectedCity, operator, value);
+    const className = 'shrink-0 tabular-nums';
+    if (!url) return <span className={className}>{text}</span>;
     return (
         <ButtonTooltip label={t('map.vehicleDetails.fleetRegisterLink')}>
             <a
@@ -197,7 +187,7 @@ const VehicleNumber = ({ number, operator }: { number: string | number; operator
                 rel="noopener noreferrer"
                 className={cn(className, 'underline decoration-dotted underline-offset-2 hover:text-foreground transition-colors')}
             >
-                #{number}
+                {text}
             </a>
         </ButtonTooltip>
     );

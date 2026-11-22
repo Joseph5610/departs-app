@@ -4,6 +4,14 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.97.3] - 2026-11-22
+
+### Changed
+
+- The vehicle hero gives the model its own line and lists fleet number or licence plate and run in one consistent line below the operator.
+- Desktop modals blur the map behind them more strongly again.
+- Brno and other GTFS vehicles assigned to a trip hours ahead show as waiting for it instead of running far early.
+
 ## [0.97.2] - 2026-11-15
 
 ### Changed

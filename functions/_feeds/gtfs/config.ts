@@ -22,12 +22,9 @@ export const GTFS_CONFIG = {
     /** Stale threshold for live vehicles */
     VEHICLES_STALE_THRESHOLD_MS: 10 * 60 * 1000, // 10 minutes
 
-    /** Time window before scheduled departure when vehicle is considered "before_track" */
-    BEFORE_TRACK_WINDOW_MINS: 60,
-
     /**
      * When a vehicle may be matched to a trip: from `BEFORE_MINS` before its start to `AFTER_MINS` after
-     * its end. Mirrors departs-data `SCHEDULE_MATCH_WINDOW`, which writes each trip to the `schedule/<HH>.json`
+     * its end. A vehicle matched before the start waits for it (`before_track`), however early. Mirrors departs-data `SCHEDULE_MATCH_WINDOW`, which writes each trip to the `schedule/<HH>.json`
      * of every hour this span touches.
      */
     SCHEDULE_MATCH_WINDOW: { BEFORE_MINS: 240, AFTER_MINS: 240 },
