@@ -71,11 +71,11 @@ function fitsMatchWindow(trip: readonly number[], mins: number): boolean {
 
 /**
  * Whether a vehicle is waiting to start its trip: it has not passed the first stop (where the feed says
- * which stop it reached) and the trip departs within `BEFORE_TRACK_WINDOW_MINS`, though not in the last minute.
+ * which stop it reached) and the trip departs within the match window, though not in the last minute.
  */
 export function isWaitingToStart(minsToStart: number, reachedStopSequence?: number | null): boolean {
     if (reachedStopSequence != null && reachedStopSequence > 1) return false;
-    return minsToStart > 1 && minsToStart <= GTFS_CONFIG.BEFORE_TRACK_WINDOW_MINS;
+    return minsToStart > 1 && minsToStart <= GTFS_CONFIG.SCHEDULE_MATCH_WINDOW.BEFORE_MINS;
 }
 
 /**
