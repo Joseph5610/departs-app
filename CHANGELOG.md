@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - The vehicle hero gives the model its own line and lists fleet number or licence plate and run in one consistent line below the operator.
+- Desktop modals blur the map behind them more strongly again.
 
 ## [0.97.2] - 2026-11-15
 
