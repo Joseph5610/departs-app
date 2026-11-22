@@ -1,6 +1,6 @@
 import React, { useState, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowRightLeft, ChevronDown, ChevronUp, CornerDownRight, type LucideIcon } from 'lucide-react';
+import { ArrowRightLeft, CornerDownRight, type LucideIcon } from 'lucide-react';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
 import { cn } from '@/lib/cn';
@@ -16,6 +16,7 @@ import { usePreferencesStore } from '@/state/preferencesStore';
 import { TimelineTime } from './TimelineTime';
 import type { Continuation, StopConnection } from '@/types';
 import { addSecondsToTime } from '@shared/time';
+import { ExpandChevron } from '@/components/Chevron';
 
 /** A collapsible, labelled block under a stop listing trips a passenger can change to there. */
 const StopTransferBlock = ({ icon: Icon, title, isPast, defaultOpen, preview, children }: {
@@ -38,7 +39,7 @@ const StopTransferBlock = ({ icon: Icon, title, isPast, defaultOpen, preview, ch
                     <span className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
                         {!open && preview}
                     </span>
-                    {open ? <ChevronUp size={14} strokeWidth={1.5} className="shrink-0" /> : <ChevronDown size={14} strokeWidth={1.5} className="shrink-0" />}
+                    <ExpandChevron isOpen={open} inline />
                 </CollapsibleTrigger>
                 <CollapsibleContent aria-label={title}>
                     {children}

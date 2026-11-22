@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BellRing, Check, ChevronDown, ChevronUp, Share, UserRound, X } from 'lucide-react';
+import { BellRing, Check, ChevronDown, ChevronUp, Share, UserRound } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { RIDE_CONFIG } from '@/config/constants';
@@ -22,6 +22,7 @@ import { LineBadge } from '@/components/LineBadge';
 import { toast } from 'sonner';
 import { notificationPermission, requestNotificationPermission } from '@/lib/notifications';
 import { Pressable } from '@/components/Pressable';
+import { CloseIcon } from '@/components/CloseIcon';
 
 
 
@@ -135,7 +136,7 @@ const RideBarItem = ({ ride, kind, status }: { ride: Ride; kind: RideKind; statu
                         aria-label={t(isFollowed ? 'share.stopWatching' : 'ride.end')}
                         className="shrink-0"
                     >
-                        <X size={15} strokeWidth={2} />
+                        <CloseIcon />
                     </Button>
                 </span>
             </div>
@@ -229,7 +230,7 @@ const BoardingBarItem = ({ status, kind }: { status: BoardingStatus; kind: RideK
                         aria-label={t(isFollowed ? 'share.stopWatching' : 'myTrip.end')}
                         className="shrink-0"
                     >
-                        <X size={15} strokeWidth={2} />
+                        <CloseIcon />
                     </Button>
                 </span>
             </div>

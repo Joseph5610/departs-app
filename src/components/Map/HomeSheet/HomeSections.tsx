@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, BarChart3, ChevronRight, LocateFixed, MapPin, MessageSquare, Star } from 'lucide-react';
+import { AlertTriangle, BarChart3, LocateFixed, MapPin, MessageSquare, Star } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
@@ -22,6 +22,7 @@ import { HomeSection } from './HomeSection';
 import { FavoriteLineRow, FavoriteStopRow } from './FavoriteRows';
 import { Badge } from '@/components/ui/badge';
 import { DEPARTURES_CONFIG } from '@/config/constants';
+import { RowChevron } from '@/components/Chevron';
 
 interface HomeSectionsProps {
     /** The list scrolls only at full height, so at the lower heights a drag anywhere moves the sheet. */
@@ -78,7 +79,7 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
                         <ItemTitle className="type-row text-foreground">{t('home.disruptionsOnYourLines', { count: myIncidents.length })}</ItemTitle>
                         <ItemDescription className="type-meta line-clamp-1">{myIncidents[0].title}</ItemDescription>
                     </ItemContent>
-                    <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
+                    <ItemActions><RowChevron /></ItemActions>
                 </Item>
             )}
 
@@ -167,19 +168,19 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
                                 {incidentsCount > 0 && (
                                     <Badge variant="alert">{incidentsCount}</Badge>
                                 )}
-                                <ChevronRight size={17} strokeWidth={1.75} className="text-label-3" />
+                                <RowChevron />
                             </ItemActions>
                         </Item>
                     )}
                     <Item variant="row" size="none" render={<button type="button" onClick={() => navigate(paths.stats(selectedCity))} />}>
                         <ItemMedia variant="rowIcon" className="text-muted-foreground"><BarChart3 size={20} strokeWidth={1.75} /></ItemMedia>
                         <ItemContent><ItemTitle className="type-row text-foreground">{t('stats.title')}</ItemTitle></ItemContent>
-                        <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
+                        <ItemActions><RowChevron /></ItemActions>
                     </Item>
                     <Item variant="row" size="none" render={<button type="button" onClick={() => setIsFeedbackOpen(true)} />}>
                         <ItemMedia variant="rowIcon" className="text-muted-foreground"><MessageSquare size={20} strokeWidth={1.75} /></ItemMedia>
                         <ItemContent><ItemTitle className="type-row text-foreground">{t('feedback.title')}</ItemTitle></ItemContent>
-                        <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
+                        <ItemActions><RowChevron /></ItemActions>
                     </Item>
                 </Card>
             </HomeSection>

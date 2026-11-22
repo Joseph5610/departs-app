@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Maximize2 } from 'lucide-react';
+import { Maximize2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import type { RSSItem } from '@/types';
@@ -12,6 +12,7 @@ import { formatDateTime, formatStartDate } from '@/domain/time';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { AlertText, ValidityLine } from './AlertTexts';
 import { ExternalLinkIcon } from '@/components/ExternalLinkIcon';
+import { ExpandChevron } from '@/components/Chevron';
 import {
     Collapsible,
     CollapsibleContent,
@@ -88,9 +89,7 @@ export const CondensedAlertItem = ({ item, compact = false, defaultExpanded = fa
                     )}
                 </div>
 
-                <div className="shrink-0 pt-0.5 text-label-3 transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(180deg)' : 'none' }}>
-                    <ChevronDown size={17} strokeWidth={1.75} />
-                </div>
+                <ExpandChevron isOpen={isExpanded} className="mt-0.5 text-label-3" />
             </CollapsibleTrigger>
 
             <CollapsibleContent>

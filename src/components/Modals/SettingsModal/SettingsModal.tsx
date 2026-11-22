@@ -12,7 +12,7 @@ import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
 import { SectionHeading } from '@/components/SectionHeading';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { useUiStore } from '@/state/uiStore';
-import { ChevronRight, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { DisplaySection } from './DisplaySection';
 import { NotificationsSection } from './NotificationsSection';
 import { RowText } from './SettingsControls';
@@ -20,6 +20,7 @@ import { SettingsFooter } from './SettingsFooter';
 import { SUPPORTED_LANGUAGES } from '@/i18n/config';
 import { UI_TIMING_MS } from '@/config/constants';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { RowChevron } from '@/components/Chevron';
 
 /** The settings themselves: the body of the settings dialog and of the mobile settings card. */
 export const SettingsContent = () => {
@@ -52,7 +53,7 @@ export const SettingsContent = () => {
                     >
                         <ItemMedia variant="rowIcon" className="text-muted-foreground"><Sparkles strokeWidth={1.75} /></ItemMedia>
                         <RowText title={t('mcp.title')} description={t('mcp.subtitle')} />
-                        <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
+                        <ItemActions><RowChevron /></ItemActions>
                     </Item>
                 </Card>
             </section>

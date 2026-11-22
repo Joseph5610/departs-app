@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Globe, Search as SearchIcon, X } from 'lucide-react';
+import { Globe, Search as SearchIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { useSearch } from '@/hooks/features/useSearch';
@@ -82,7 +82,7 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                             aria-label={t('search.clearFilter')}
                             data-testid="search-clear-selection"
                         >
-                            <X size={17} strokeWidth={2} />
+                            <CloseIcon large />
                         </Button>
                     )}
                 </div>

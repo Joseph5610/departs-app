@@ -21,7 +21,6 @@
     "lineOnMap_other": "on the map",
     "clearRecent": "Clear",
     "stops": "Stops",
-    "showOnMap": "Show on map",
     "noResults": "No results",
     "noResultsHint": "Try a stop name, a line number or an address.",
     "placeholder": "Search stops, addresses, lines...",

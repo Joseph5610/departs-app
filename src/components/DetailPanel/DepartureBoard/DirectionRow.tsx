@@ -1,7 +1,6 @@
 import type React from 'react';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { boardingPlace, departureKey, visibleInGroup } from '@/domain/departures';
@@ -16,6 +15,7 @@ import { Amenities, ExpectedTime, LiveCountdown, MARKED_BACKDROP, TripNotes } fr
 import { RowSeparator } from './RowSeparator';
 import { BoardSection } from './BoardRow';
 import { Pressable } from '@/components/Pressable';
+import { ExpandChevron } from '@/components/Chevron';
 
 const NO_BOARDING_PLACE = { track: null, platform: null };
 
@@ -114,7 +114,7 @@ export const DirectionRow = memo(({
                                     aria-expanded={isExpanded}
                                 >
                                     {isExpanded ? t('map.departures.showLess') : `+${hiddenCount}`}
-                                    <ChevronDown size={14} strokeWidth={2} className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
+                                    <ExpandChevron isOpen={isExpanded} inline />
                                 </Button>
                             )}
                         </div>

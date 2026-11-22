@@ -1,13 +1,13 @@
 import { Children, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, MapPin, MapPinOff, Snowflake, Accessibility, Zap, History } from 'lucide-react';
+import { Info, MapPin, MapPinOff, History } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { IconTooltip } from '@/components/IconTooltip';
+import { AmenityIcons } from '@/components/AmenityIcons';
 import { ButtonTooltip } from '@/components/ButtonTooltip';
 import { SignalMark } from '@/components/SignalMark';
 import type { VehicleHeroProps } from './types';
@@ -134,27 +134,11 @@ export const VehicleHero = ({
                         </IdLine>
                     </div>
 
-                    {(displayVehicle.vehicle_descriptor?.is_air_conditioned || 
-                      displayVehicle.vehicle_descriptor?.has_usb_chargers || 
-                      displayVehicle.vehicle_descriptor?.is_wheelchair_accessible) && (
-                        <div className="flex h-fit shrink-0 items-center gap-2 rounded-nested bg-fill p-2">
-                            {displayVehicle.vehicle_descriptor?.is_air_conditioned && (
-                                <IconTooltip label={t('amenities.airConditioned')}>
-                                    <Snowflake size={14} strokeWidth={2} className="text-sky-400" aria-hidden="true" />
-                                </IconTooltip>
-                            )}
-                            {displayVehicle.vehicle_descriptor?.has_usb_chargers && (
-                                <IconTooltip label={t('amenities.usbChargers')}>
-                                    <Zap size={14} strokeWidth={2} className="text-amber-400" aria-hidden="true" />
-                                </IconTooltip>
-                            )}
-                            {(displayVehicle.vehicle_descriptor?.is_wheelchair_accessible) && (
-                                <IconTooltip label={t('amenities.wheelchairAccessible')}>
-                                    <Accessibility size={14} strokeWidth={2} className="text-emerald-400" aria-hidden="true" />
-                                </IconTooltip>
-                            )}
-                        </div>
-                    )}
+                    <AmenityIcons
+                        wheelchairAccessible={displayVehicle.vehicle_descriptor?.is_wheelchair_accessible}
+                        airConditioned={displayVehicle.vehicle_descriptor?.is_air_conditioned}
+                        usbChargers={displayVehicle.vehicle_descriptor?.has_usb_chargers}
+                    />
                 </HeroFooter>
             )}
         </Card>

@@ -1,7 +1,8 @@
 import type React from 'react';
-import { Search as SearchIcon, X } from 'lucide-react';
+import { Search as SearchIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
+import { CloseIcon } from '@/components/CloseIcon';
 
 interface SearchFieldProps extends Omit<React.ComponentProps<'input'>, 'value' | 'onChange' | 'className'> {
     value: string;
@@ -33,7 +34,7 @@ export const SearchField = ({ value, onValueChange, clearLabel, onClear, lead, c
         />
         {value && (
             <Button type="button" variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground" onClick={onClear ?? (() => onValueChange(''))} aria-label={clearLabel}>
-                <X size={16} strokeWidth={2} />
+                <CloseIcon large />
             </Button>
         )}
     </label>

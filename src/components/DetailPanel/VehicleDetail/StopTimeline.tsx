@@ -2,7 +2,7 @@ import type React from 'react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, UserRound } from 'lucide-react';
+import { UserRound } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { SectionHeading } from '@/components/SectionHeading';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ import { useUiStore } from '@/state/uiStore';
 import { MY_TRIP_CONFIG, SHARED_GROUND } from '@/config/constants';
 import { boardableStopId, indexStops } from '@/domain/stops';
 import { CloseIcon } from '@/components/CloseIcon';
+import { ExpandChevron } from '@/components/Chevron';
 
 /** The trip's stops on a vertical line, with past stops collapsed behind a toggle. */
 export const StopTimeline = ({ stopTimes, routeName, routeColor, effectiveSequence, delay, tripId, vehicleId, hasEnded }: StopTimelineProps) => {
@@ -182,7 +183,7 @@ export const StopTimeline = ({ stopTimes, routeName, routeColor, effectiveSequen
                             <CollapsibleTrigger className="relative flex h-11 w-full cursor-pointer items-center justify-between type-meta font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:underline">
                                 <span className="absolute -left-5 size-2 rounded-full bg-label-3" />
                                 {t('map.vehicleDetails.pastStops', { count: pastStopsCount })}
-                                <ChevronDown size={17} strokeWidth={1.75} className={cn("shrink-0 transition-transform duration-200", showPastStops && "rotate-180")} />
+                                <ExpandChevron isOpen={showPastStops} />
                             </CollapsibleTrigger>
                             </>
                         )}

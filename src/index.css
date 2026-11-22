@@ -622,6 +622,12 @@
   }
 }
 
+/* A sideways strip fading out at its right edge, hinting that it scrolls on. */
+@utility fade-end {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+}
+
 /* Content sliding under the floating toolbar fades out, with no gradient or backing behind it. */
 @utility scroll-edge-toolbar {
   --edge-bottom: 64px;

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
 import { usePreferencesStore } from '@/state/preferencesStore';
@@ -14,6 +14,7 @@ import { LineBadge } from '@/components/LineBadge';
 import { MinutesUntil } from '@/components/MinutesUntil';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR, MAP_CAMERA } from '@/config/constants';
 import type { BoardStop, Departure, FavoriteLine } from '@/types';
+import { RowChevron } from '@/components/Chevron';
 
 /** Lead column of a favourite row, as wide as a line badge so names line up under each other. */
 const LEAD = 'w-9 shrink-0 justify-center';
@@ -70,7 +71,7 @@ export const FavoriteStopRow = ({ stop, departures, isLoading }: FavoriteStopRow
                     </span>
                 )}
             </ItemContent>
-            <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
+            <ItemActions><RowChevron /></ItemActions>
         </Item>
     );
 };

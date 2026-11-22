@@ -1,7 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/cn';
-import { FALLBACK_ROUTE_COLOR, STOP_SEARCH } from '@/config/constants';
-import { LineBadge } from '@/components/LineBadge';
+import { LineBadges } from '@/components/LineBadges';
 import { Autocomplete } from '@base-ui/react/autocomplete';
 import type { LineBadgeData } from '@/domain/routes';
 
@@ -15,46 +14,6 @@ interface SearchItemProps {
     highlight?: boolean;
     testId?: string;
 }
-
-/**
- * LineBadges
- *
- * Renders a list of color-coded transit line badges.
- * Extracted from SearchItem to avoid IIFE in JSX.
- */
-export const LineBadges = ({ lines }: { lines: SearchItemProps['lines'] }) => {
-    if (!lines || lines.length === 0) return null;
-
-    const uniqueLines: NonNullable<SearchItemProps['lines']> = [];
-    const seen = new Set();
-    for (const line of lines) {
-        if (!seen.has(line.name)) {
-            seen.add(line.name);
-            uniqueLines.push(line);
-        }
-    }
-
-    return (
-        <>
-            {uniqueLines.slice(0, STOP_SEARCH.LINE_BADGE_LIMIT).map((line, idx) => {
-                const name = String(line.name || '');
-                if (!name) return null;
-
-                return (
-                    <div key={`${name}-${idx}`} className="mr-1.5 flex shrink-0">
-                        <LineBadge name={name} routeColor={line.route_color || FALLBACK_ROUTE_COLOR} />
-                    </div>
-                );
-            })}
-            
-            {uniqueLines.length > 5 && (
-                <span className="inline-flex items-center justify-center h-4.5 px-1 min-w-4.5 rounded-badge bg-fill-2 text-muted-foreground type-micro mr-1.5">
-                    +{uniqueLines.length - 5}
-                </span>
-            )}
-        </>
-    );
-};
 
 /** A search result's text, the same on the desktop dropdown and the phone's list. */
 export const SearchRowBody = ({ title, subtitle, lines }: Pick<SearchItemProps, 'title' | 'subtitle' | 'lines'>) => (

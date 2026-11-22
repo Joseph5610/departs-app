@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search as SearchIcon, X } from 'lucide-react';
+import { Search as SearchIcon } from 'lucide-react';
 import { useSearch } from '@/hooks/features/useSearch';
 import { cn } from '@/lib/cn';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Autocomplete } from '@base-ui/react/autocomplete';
 import { SearchDropdown } from './SearchDropdown';
 import { LineFilterLabel } from './LineFilterLabel';
 import { CitySwitcher } from '@/components/Map/CitySwitcher';
+import { CloseIcon } from '@/components/CloseIcon';
 
 /**
  * The desktop search box floating over the map, with its dropdown of results.
@@ -116,15 +117,15 @@ export const Search = memo(() => {
                                 <div className="absolute right-0 top-0 h-full flex items-center pr-1">
                                     <Button
                                         variant="ghost"
-                                        size="icon"
+                                        size="icon-sm"
                                         onClick={() => {
                                             s.clearSelection();
                                             inputRef.current?.focus();
                                         }}
-                                        className="h-9 w-9 text-muted-foreground"
+                                        className="text-muted-foreground"
                                         aria-label={t('search.clearFilter')}
                                     >
-                                        <X size={18} strokeWidth={2}  />
+                                        <CloseIcon large />
                                     </Button>
                                 </div>
                             )}

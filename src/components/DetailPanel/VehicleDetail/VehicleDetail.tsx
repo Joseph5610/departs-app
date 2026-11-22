@@ -7,7 +7,6 @@ import { safeHexColor } from '@/lib/color';
 import { useUiStore } from '@/state/uiStore';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { pushChannelOf } from '@/domain/cities';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import { CondensedAlertItem } from '@/components/Alerts/CondensedAlertItem';
 import { Card } from '@/components/ui/card';
 import {
@@ -29,6 +28,7 @@ import { ErrorState } from '@/components/DetailPanel/ErrorState';
 import { isTripEnded } from '@/domain/vehicles';
 import { useNowEvery } from '@/hooks/useNow';
 import { liveStopSequence } from '@shared/rides';
+import { ExpandChevron } from '@/components/Chevron';
 
 interface VehicleDetailProps {
     selectedVehicle: VehicleDetailType | null;
@@ -169,7 +169,7 @@ const LineAlertList = ({ alerts }: { alerts: RSSItem[] }) => {
                         </CollapsibleContent>
                         <CollapsibleTrigger className="row-hover-group flex w-full items-center justify-center gap-1.5 px-3.5 py-3 type-meta text-muted-foreground hover:text-foreground">
                             {showAll ? t('alerts.showLess') : t('alerts.showMore', { count: overflow.length })}
-                            {showAll ? <ChevronUp size={14} strokeWidth={1.5} /> : <ChevronDown size={14} strokeWidth={1.5} />}
+                            <ExpandChevron isOpen={showAll} inline />
                         </CollapsibleTrigger>
                     </>
                 )}

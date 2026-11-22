@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, RefreshCw, Download, Clock, Scale, MessageSquareHeart, ShieldCheck, FileText } from 'lucide-react';
+import { RefreshCw, Download, Clock, Scale, MessageSquareHeart, ShieldCheck, FileText } from 'lucide-react';
 import { version } from '../../../../package.json';
 import { usePWAStore } from '@/state/pwaStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
@@ -15,6 +15,7 @@ import { UI_TIMING_MS } from '@/config/constants';
 import { formatDateTime } from '@/domain/time';
 import { paths } from '@/lib/routes';
 import { ExternalLinkIcon } from '@/components/ExternalLinkIcon';
+import { RowChevron } from '@/components/Chevron';
 
 const LEGAL_LINKS = [
     { href: paths.privacy, label: 'legal.links.privacy', icon: ShieldCheck },
@@ -99,7 +100,7 @@ export const SettingsFooter = () => {
                 >
                     <ItemMedia variant="rowIcon" className="text-muted-foreground"><MessageSquareHeart strokeWidth={1.75} /></ItemMedia>
                     <RowText title={t('feedback.title')} />
-                    <ChevronRight size={17} strokeWidth={1.75} className="shrink-0 text-label-3" aria-hidden="true" />
+                    <RowChevron />
                 </Item>
                 {canInstall && (
                     <Item variant="row" size="none" render={<button onClick={() => { void promptInstall(); }} />}>

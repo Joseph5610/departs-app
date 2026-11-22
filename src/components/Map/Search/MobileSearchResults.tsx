@@ -12,12 +12,12 @@ import type { GeocodingResult } from '@/hooks/data/useGeocoding';
 import { WalkDistance } from '@/components/WalkDistance';
 import { StopModeIcon } from '@/components/StopModeIcon';
 import type { ShownHistoryItem, Stop, VehicleFeature } from '@/types';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
 import { HistoryItemIcon } from './HistoryItemIcon';
 import { historyItemSubtitle, historyItemTitle, posResultSubtitle, stopResultSubtitle, vehicleResultLines } from './searchItemText';
-import { LineBadges, SearchRowBody } from './SearchItem';
+import { SearchRowBody } from './SearchItem';
 import { SheetSection as Section } from '@/components/Map/HomeSheet/SheetSection';
 import { EmptyState } from '@/components/EmptyState';
 
@@ -140,15 +140,15 @@ export const MobileSearchResults = ({
 
             {queryLines && (
                 <Section title={t('search.lines')}>
-                    <Button
-                        variant="secondary"
-                        className="h-12 justify-start gap-2 rounded-surface bg-fill px-3.5"
-                        onClick={() => onLineSelect(queryLines)}
-                        data-testid={`search-item-line-${queryLines.join('-')}`}
-                    >
-                        <LineBadges lines={queryLineBadges ?? undefined} />
-                        <span className="type-row text-muted-foreground">{t('search.showOnMap')}</span>
-                    </Button>
+                    <Card size="none">
+                        <ResultRow
+                            icon={<SearchIcon />}
+                            title={t('search.filterByLine')}
+                            lines={queryLineBadges ?? undefined}
+                            onClick={() => onLineSelect(queryLines)}
+                            testId={`search-item-line-${queryLines.join('-')}`}
+                        />
+                    </Card>
                 </Section>
             )}
 
@@ -169,7 +169,7 @@ export const MobileSearchResults = ({
                             return (
                                 <ResultRow
                                     key={vehicleId}
-                                    icon={<BusFront size={18} strokeWidth={1.5} />}
+                                    icon={<BusFront size={20} strokeWidth={1.5} />}
                                     title={t('search.vehicleNumber', { number: vehicleDisplayNumber(vehicleId) })}
                                     subtitle={p.trip_headsign}
                                     onClick={() => onVehicleSelect(vehicle)}
@@ -188,7 +188,7 @@ export const MobileSearchResults = ({
                         {geocodingResults.map(place => (
                             <ResultRow
                                 key={place.id}
-                                icon={<Building2 size={18} strokeWidth={1.5} />}
+                                icon={<Building2 size={20} strokeWidth={1.5} />}
                                 title={place.name}
                                 subtitle={place.subtitle || undefined}
                                 onClick={() => onPlaceSelect(place)}
@@ -205,7 +205,7 @@ export const MobileSearchResults = ({
                         {posResults.map(result => (
                             <ResultRow
                                 key={result.pos.id}
-                                icon={<Ticket size={18} strokeWidth={1.5} />}
+                                icon={<Ticket size={20} strokeWidth={1.5} />}
                                 title={result.pos.name}
                                 subtitle={posResultSubtitle(result, t)}
                                 onClick={() => onPosSelect(result)}
