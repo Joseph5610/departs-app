@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.97.4] - 2026-11-22
+
+### Fixed
+
+- Content scrolling under the mobile sheet header is no longer clipped into rounded corners.
+
 ## [0.97.3] - 2026-11-22
 
 ### Changed
