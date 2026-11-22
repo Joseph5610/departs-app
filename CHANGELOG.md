@@ -6,9 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.97.4] - 2026-11-22
 
+### Changed
+
+- Lists in sheets, panels and dialogs fade out at the edge they scroll past instead of being cut off.
+- The delay filter gets an "All" chip and dots in the map's delay colours, like the other filters.
+- Desktop search shows "No results" and orders and labels its sections like the phone's.
+- A stop board's favourite and menu buttons sit in the desktop panel's title row, as on other panels.
+- Separators, section headings, chevrons, close buttons, dialog sizes and loading skeletons look the same on every screen.
+
 ### Fixed
 
 - Content scrolling under the mobile sheet header is no longer clipped into rounded corners.
+- The last result of the desktop search can be scrolled into view.
 
 ## [0.97.3] - 2026-11-22
 
