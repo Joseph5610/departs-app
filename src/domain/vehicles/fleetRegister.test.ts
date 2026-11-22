@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { czechPlateOf, fleetRegisterUrl } from './fleetRegister';
+import { czechPlateOf, fleetRegisterUrl, vehicleIdentifiers } from './fleetRegister';
 
 describe('czechPlateOf', () => {
     it('spaces a plate the feed sends packed', () => {
@@ -49,5 +49,23 @@ describe('fleetRegisterUrl', () => {
         expect(fleetRegisterUrl('prague', 'DP PRAHA', undefined)).toBeNull();
         expect(fleetRegisterUrl('prague', 'DP PRAHA', '')).toBeNull();
         expect(fleetRegisterUrl('prague', 'DP PRAHA', 'service-3-6809')).toBeNull();
+    });
+});
+
+describe('vehicleIdentifiers', () => {
+    it('names a numeric registration as the fleet number, not again as the vehicle id', () => {
+        expect(vehicleIdentifiers('1921', '1921', '01204')).toEqual({ fleetNumber: '1921', plate: undefined, run: '01204' });
+    });
+
+    it('prefers a numeric registration over a feed-internal vehicle id', () => {
+        expect(vehicleIdentifiers('service-3-8536', '8536', undefined).fleetNumber).toBe('8536');
+    });
+
+    it('splits a plate registration from the vehicle id that is the fleet number', () => {
+        expect(vehicleIdentifiers('21529', '2BU5867', undefined)).toEqual({ fleetNumber: '21529', plate: '2BU 5867', run: undefined });
+    });
+
+    it('falls back to the vehicle id without a registration and drops empty facts', () => {
+        expect(vehicleIdentifiers('7203', undefined, '0')).toEqual({ fleetNumber: '7203', plate: undefined, run: undefined });
     });
 });

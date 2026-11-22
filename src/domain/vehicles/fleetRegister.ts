@@ -33,3 +33,32 @@ export const fleetRegisterUrl = (
     if (countryId === undefined) return null;
     return `${FLEET_REGISTER.SEARCH_URL}?${new URLSearchParams({ prov: '1', operatorCountryId: String(countryId), evc: number, zapujcka: '2' })}`;
 };
+
+export interface VehicleIdentifiers {
+    /** The operator's fleet number. */
+    fleetNumber?: string;
+    /** A Czech licence plate in the register's spelling. */
+    plate?: string;
+    run?: string;
+}
+
+const present = (value: string | number | null | undefined): string | undefined => {
+    const s = value == null ? '' : String(value).trim();
+    return s && s !== '0' ? s : undefined;
+};
+
+/**
+ * A vehicle's identifiers, each named once: a registration that is a licence plate is the plate and the
+ * vehicle id the fleet number; any other registration is itself the fleet number.
+ */
+export const vehicleIdentifiers = (
+    vehicleId: string | null | undefined,
+    registration: string | number | undefined,
+    runNumber: string | number | null | undefined,
+): VehicleIdentifiers => {
+    const reg = present(registration);
+    const id = present(vehicleId);
+    const plate = reg ? czechPlateOf(reg) ?? undefined : undefined;
+    const fleetNumber = plate ? (id && czechPlateOf(id) === null ? id : undefined) : reg ?? id;
+    return { fleetNumber, plate, run: present(runNumber) };
+};
