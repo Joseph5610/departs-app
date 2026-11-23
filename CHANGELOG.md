@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The delay filter gets an "All" chip and dots in the map's delay colours, like the other filters.
 - Desktop search shows "No results" and orders and labels its sections like the phone's.
 - A stop board's favourite and menu buttons sit in the desktop panel's title row, as on other panels.
+- The folded phone toolbar's menu offers the favourite and share buttons it hides.
 - Separators, section headings, chevrons, close buttons, dialog sizes and loading skeletons look the same on every screen.
 - Decorative spins, glows, hover zooms and the current stop's ping are gone; locating only tints the button while it waits.
 

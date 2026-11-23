@@ -180,6 +180,24 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
                 } />
                 </ButtonTooltip>
                 <DropdownMenuContent align="end" className="w-68">
+                    {/* The folded toolbar shows only this menu, so it takes over the buttons that folded away. */}
+                    {toolbar && collapsed && (
+                        <>
+                            <DropdownMenuGroup>
+                                {stopId && (
+                                    <DropdownMenuItem render={<div data-testid="menu-favorite" onClick={handleToggleFavorite} />}>
+                                        <Star size={14} strokeWidth={1.75} fill={isFavorite ? 'currentColor' : 'none'} className={cn(isFavorite && "text-favorite")} />
+                                        {isFavorite ? t('map.departures.removeFromFavorites') : t('map.departures.addToFavorites')}
+                                    </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem render={<div data-testid="menu-share" onClick={handleShare} />} closeOnClick={false}>
+                                    <Share size={14} strokeWidth={1.75} />
+                                    {t('common.share')}
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                            <DropdownMenuSeparator />
+                        </>
+                    )}
                     {stopId && (
                         <>
                             <DropdownMenuGroup>

@@ -65,6 +65,12 @@ test.describe('Mobile home sheet', () => {
         await scrollBy(300);
         await expect.poll(width).toBe(48);
         await expect(toolbar.getByTestId('favorite-btn')).toHaveAttribute('tabindex', '-1');
+        // Folded, the menu carries the favourite and share it hides.
+        await toolbar.getByTestId('more-options-btn').click();
+        await expect(page.getByTestId('menu-favorite')).toBeVisible();
+        await expect(page.getByTestId('menu-share')).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expect(page.getByTestId('menu-share')).toBeHidden();
 
         await scrollBy(-10);
         await page.waitForTimeout(200);
