@@ -54,7 +54,7 @@ interface ResultRowProps {
 
 const ResultRow = ({ icon, title, subtitle, lines, meta, onClick, testId }: ResultRowProps) => (
     <Item variant="row" size="none" render={<button type="button" onClick={onClick} data-testid={testId} />}>
-        <ItemMedia variant="rowIcon" className="text-muted-foreground">{icon}</ItemMedia>
+        <ItemMedia variant="rowIcon">{icon}</ItemMedia>
         <SearchRowBody title={title} subtitle={subtitle} lines={lines} />
         {meta && <ItemActions className="shrink-0">{meta}</ItemActions>}
     </Item>

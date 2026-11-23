@@ -34,6 +34,26 @@ interface SystemStatusModalProps {
 }
 
 /** The modal's body; mounted only while the dialog is open, so its clock and subscriptions stop when closed. */
+interface StatusRowProps {
+    icon: React.ReactNode;
+    title: string;
+    valueClassName: string;
+    /** Makes the whole row a link, such as to the data provider. */
+    render?: React.ReactElement;
+    children: React.ReactNode;
+}
+
+/** One fact about the live data: its icon and name, the value on the right. */
+const StatusRow = ({ icon, title, valueClassName, render, children }: StatusRowProps) => (
+    <Item variant="row" size="none" render={render}>
+        <ItemMedia variant="rowIcon">{icon}</ItemMedia>
+        <ItemContent className="flex-none">
+            <ItemTitle className="type-row text-foreground whitespace-nowrap">{title}</ItemTitle>
+        </ItemContent>
+        <ItemActions className={valueClassName}>{children}</ItemActions>
+    </Item>
+);
+
 const SystemStatusDetails = () => {
     const { t } = useTranslation();
     const cityConfig = useCityConfig();
@@ -127,59 +147,27 @@ const SystemStatusDetails = () => {
                 </div>
 
                 <Card size="none">
-                        <Item variant="row" size="none" >
-                            <ItemMedia variant="rowIcon" className="text-muted-foreground">
-                                {status.isOnline ? <Wifi strokeWidth={1.5} /> : <WifiOff strokeWidth={1.5} />}
-                            </ItemMedia>
-                            <ItemContent className="flex-none">
-                                <ItemTitle className="type-row text-foreground whitespace-nowrap">{t('liveStatus.connection')}</ItemTitle>
-                            </ItemContent>
-                            <ItemActions className={cn("ml-auto type-row", status.isOnline ? "text-tint-mint" : "text-destructive")}>
-                                {status.isOnline ? t('liveStatus.online') : t('liveStatus.offline')}
-                            </ItemActions>
-                        </Item>
+                        <StatusRow icon={status.isOnline ? <Wifi strokeWidth={1.5} /> : <WifiOff strokeWidth={1.5} />} title={t('liveStatus.connection')} valueClassName={cn("ml-auto type-row", status.isOnline ? "text-tint-mint" : "text-destructive")}>
+                            {status.isOnline ? t('liveStatus.online') : t('liveStatus.offline')}
+                        </StatusRow>
 
-                        <Item variant="row" size="none" render={<a href={providerUrl} target="_blank" rel="noopener noreferrer" />}>
-                            <ItemMedia variant="rowIcon" className="text-muted-foreground">
-                                <Database strokeWidth={1.5} />
-                            </ItemMedia>
-                            <ItemContent className="flex-none">
-                                <ItemTitle className="type-row text-foreground whitespace-nowrap">{t('liveStatus.dataProvider')}</ItemTitle>
-                            </ItemContent>
-                            <ItemActions className="flex-1 justify-end type-row min-w-0">
-                                <span className="truncate">{providerName}</span>
-                                <ExternalLinkIcon />
-                            </ItemActions>
-                        </Item>
+                        <StatusRow icon={<Database strokeWidth={1.5} />} title={t('liveStatus.dataProvider')} valueClassName="flex-1 justify-end type-row min-w-0" render={<a href={providerUrl} target="_blank" rel="noopener noreferrer" />}>
+                            <span className="truncate">{providerName}</span>
+                            <ExternalLinkIcon />
+                        </StatusRow>
 
-                        <Item variant="row" size="none" >
-                            <ItemMedia variant="rowIcon" className="text-muted-foreground">
-                                <RefreshCw strokeWidth={1.5} />
-                            </ItemMedia>
-                            <ItemContent className="flex-none">
-                                <ItemTitle className="type-row text-foreground whitespace-nowrap">{t('liveStatus.dataFreshness')}</ItemTitle>
-                            </ItemContent>
-                            <ItemActions className="ml-auto type-row tabular-nums gap-1.5 whitespace-nowrap">
-                                <span className="font-semibold">{freshnessText}</span>
-                                {!status.isFetching && (
-                                    <span className="type-note text-muted-foreground">
-                                        · {t('liveStatus.nextRefreshIn', { seconds: nextRefreshIn })}
-                                    </span>
-                                )}
-                            </ItemActions>
-                        </Item>
+                        <StatusRow icon={<RefreshCw strokeWidth={1.5} />} title={t('liveStatus.dataFreshness')} valueClassName="ml-auto type-row tabular-nums gap-1.5 whitespace-nowrap">
+                            <span className="font-semibold">{freshnessText}</span>
+                            {!status.isFetching && (
+                                <span className="type-note text-muted-foreground">
+                                    · {t('liveStatus.nextRefreshIn', { seconds: nextRefreshIn })}
+                                </span>
+                            )}
+                        </StatusRow>
 
-                        <Item variant="row" size="none" >
-                            <ItemMedia variant="rowIcon" className="text-muted-foreground">
-                                <Timer strokeWidth={1.5} />
-                            </ItemMedia>
-                            <ItemContent className="flex-none">
-                                <ItemTitle className="type-row text-foreground whitespace-nowrap">{t('liveStatus.refreshInterval')}</ItemTitle>
-                            </ItemContent>
-                            <ItemActions className="ml-auto">
-                                <RefreshIntervalPicker />
-                            </ItemActions>
-                        </Item>
+                        <StatusRow icon={<Timer strokeWidth={1.5} />} title={t('liveStatus.refreshInterval')} valueClassName="ml-auto">
+                            <RefreshIntervalPicker />
+                        </StatusRow>
                     </Card>
 
                 <p className="flex gap-2 px-1 type-note text-muted-foreground">

@@ -51,7 +51,7 @@ export const SettingsContent = () => {
                         size="none"
                         render={<button onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsMcpModalOpen(true), UI_TIMING_MS.MODAL_SWAP_DELAY); }} />}
                     >
-                        <ItemMedia variant="rowIcon" className="text-muted-foreground"><Plug strokeWidth={1.75} /></ItemMedia>
+                        <ItemMedia variant="rowIcon"><Plug strokeWidth={1.75} /></ItemMedia>
                         <RowText title={t('mcp.title')} description={t('mcp.subtitle')} />
                         <ItemActions><RowChevron /></ItemActions>
                     </Item>

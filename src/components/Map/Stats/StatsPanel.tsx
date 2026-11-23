@@ -20,6 +20,16 @@ import { VehicleMixCard } from './cards/VehicleMixCard';
 import { BusiestLinesCard } from './cards/BusiestLinesCard';
 import { EmptyState } from '@/components/EmptyState';
 
+/** One headline count: a small caps label over a big number. */
+const StatTile = ({ label, value }: { label: string; value: number }) => (
+    <Card size="none">
+        <CardContent className="p-3.5 flex flex-col justify-center h-full">
+            <SectionHeading className="mb-0.5">{label}</SectionHeading>
+            <span className="type-display tabular-nums">{value}</span>
+        </CardContent>
+    </Card>
+);
+
 export const StatsPanel = memo(() => {
     const cityConfig = useCityConfig();
     const { t } = useTranslation();
@@ -78,18 +88,8 @@ export const StatsPanel = memo(() => {
             ) : activeStats && activeStats.total_vehicles > 0 ? (
                 <div className="flex flex-col gap-3 pt-2 pb-2">
                     <div className="grid grid-cols-2 gap-3">
-                        <Card size="none">
-                            <CardContent className="p-3.5 flex flex-col justify-center h-full">
-                                <SectionHeading className="mb-0.5">{t('stats.vehicles')}</SectionHeading>
-                                <span className="type-display tabular-nums">{activeStats.total_vehicles}</span>
-                            </CardContent>
-                        </Card>
-                        <Card size="none">
-                            <CardContent className="p-3.5 flex flex-col justify-center h-full">
-                                <SectionHeading className="mb-0.5">{t('stats.lines')}</SectionHeading>
-                                <span className="type-display tabular-nums">{activeStats.total_lines}</span>
-                            </CardContent>
-                        </Card>
+                        <StatTile label={t('stats.vehicles')} value={activeStats.total_vehicles} />
+                        <StatTile label={t('stats.lines')} value={activeStats.total_lines} />
                     </div>
 
                     {!hasNetworkDelayData && tab === 'network' && (

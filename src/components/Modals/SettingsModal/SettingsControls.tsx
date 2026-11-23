@@ -49,7 +49,7 @@ export const ToggleSection = ({ title, description, icon: Icon, isChecked, onTog
             size="none"
             render={<button onClick={() => onToggle(!isChecked)} />}
         >
-            <ItemMedia variant="rowIcon" className="text-muted-foreground">
+            <ItemMedia variant="rowIcon">
                 <Icon strokeWidth={1.75} />
             </ItemMedia>
             <RowText title={title} description={description} />

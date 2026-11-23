@@ -69,9 +69,7 @@ const RideBarItem = ({ ride, kind, status }: { ride: Ride; kind: RideKind; statu
                             </span>
                         )}
                     </span>
-                    <span className="flex flex-col min-w-0 flex-1 leading-tight">
-                        <span className={cn("type-label truncate", isAccent ? "text-primary-foreground/80" : "text-tint-mint")}>{kicker}</span>
-                        <span className="type-row truncate">{exitStopName}</span>
+                    <BarText kicker={kicker} title={exitStopName} isAccent={isAccent}>
                         {(showStopsLeft || showArrival) && (
                             <span className={cn("type-note tabular-nums truncate", subtle)}>
                                 {showStopsLeft && t('ride.stopsLeft', { count: stopsLeft })}
@@ -84,36 +82,19 @@ const RideBarItem = ({ ride, kind, status }: { ride: Ride; kind: RideKind; statu
                                 )}
                             </span>
                         )}
-                    </span>
-                    <span className="shrink-0 min-w-11 text-right leading-none tabular-nums">
-                        {isArrived ? (
-                            <Check size={22} strokeWidth={2.5} className="ml-auto" />
-                        ) : minutesToArrival === null ? null : minutesToArrival === 0 ? (
-                            <span className="type-row">{t('map.departures.now')}</span>
-                        ) : (
-                            <>
-                                <span className="type-section tabular-nums">{minutesToArrival}</span>
-                                <span className={cn("block type-control mt-0.5", subtle)}>min</span>
-                            </>
-                        )}
-                    </span>
+                    </BarText>
+                    {isArrived ? (
+                        <span className="shrink-0 min-w-11 text-right leading-none"><Check size={22} strokeWidth={2.5} className="ml-auto" /></span>
+                    ) : minutesToArrival !== null && <BarMinutes minutes={minutesToArrival} subtle={subtle} />}
                 </BarMain>
                 <BarDivider isAccent={isAccent} />
                 <span className="flex flex-col gap-0.5">
                     {isFollowed && isLive && askNotifications ? (
-                        <Button variant="quiet" size="icon-2xs"
-                            type="button"
-                            onClick={() => { void enableNotifications(); }}
-                            aria-label={t('share.notifyMe')}
-                            title={t('share.notifyMe')}
-                            data-testid="follow-notify"
-                            className="shrink-0"
-                        >
+                        <BarAction onClick={() => { void enableNotifications(); }} label={t('share.notifyMe')} testId="follow-notify">
                             <BellRing size={15} strokeWidth={1.75} />
-                        </Button>
+                        </BarAction>
                     ) : !isFollowed && isLive ? (
-                        <Button variant="quiet" size="icon-2xs"
-                            type="button"
+                        <BarAction
                             onClick={() => shareTrip({
                                 city: ride.city,
                                 tripId: ride.tripId,
@@ -123,21 +104,15 @@ const RideBarItem = ({ ride, kind, status }: { ride: Ride; kind: RideKind; statu
                                 // Under way the boarding is behind; a trip to its end has no exit of the user's to share.
                                 ride: 'toEnd' in ride && ride.toEnd ? undefined : { exitSequence: ride.exitSequence, stopName: exitStopName, time: arrivalTime },
                             })}
-                            aria-label={t('share.shareRide')}
-                            data-testid="ride-share"
-                            className="shrink-0"
+                            label={t('share.shareRide')}
+                            testId="ride-share"
                         >
                             <Share size={15} strokeWidth={1.75} />
-                        </Button>
+                        </BarAction>
                     ) : null}
-                    <Button variant="quiet" size="icon-2xs"
-                        type="button"
-                        onClick={() => (isFollowed ? unfollow(true) : endTrip(ride.tripId))}
-                        aria-label={t(isFollowed ? 'share.stopWatching' : 'ride.end')}
-                        className="shrink-0"
-                    >
+                    <BarAction onClick={() => (isFollowed ? unfollow(true) : endTrip(ride.tripId))} label={t(isFollowed ? 'share.stopWatching' : 'ride.end')}>
                         <CloseIcon />
-                    </Button>
+                    </BarAction>
                 </span>
             </div>
             {progress !== null && !isArrived && (
@@ -180,6 +155,37 @@ const BarDivider = ({ isAccent }: { isAccent: boolean }) => (
 );
 
 /** A My trip before boarding: the stop, the expected departure and the minutes left; opens the trip, like a ride's bar. */
+/** The kicker, stop name and a note line of a bar. */
+const BarText = ({ kicker, title, isAccent, children }: { kicker: string; title: string; isAccent: boolean; children?: React.ReactNode }) => (
+    <span className="flex flex-col min-w-0 flex-1 leading-tight">
+        <span className={cn("type-label truncate", isAccent ? "text-primary-foreground/80" : "text-tint-mint")}>{kicker}</span>
+        <span className="type-row truncate">{title}</span>
+        {children}
+    </span>
+);
+
+/** Minutes to go on a bar's right, or "now". */
+const BarMinutes = ({ minutes, subtle }: { minutes: number; subtle: string }) => {
+    const { t } = useTranslation();
+    return (
+        <span className="shrink-0 min-w-11 text-right leading-none tabular-nums">
+            {minutes === 0 ? <span className="type-row">{t('map.departures.now')}</span> : (
+                <>
+                    <span className="type-section tabular-nums">{minutes}</span>
+                    <span className={cn("block type-control mt-0.5", subtle)}>min</span>
+                </>
+            )}
+        </span>
+    );
+};
+
+/** One of a bar's small buttons on its right. */
+const BarAction = ({ onClick, label, testId, children }: { onClick: () => void; label: string; testId?: string; children: React.ReactNode }) => (
+    <Button variant="quiet" size="icon-2xs" type="button" onClick={onClick} aria-label={label} title={label} data-testid={testId} className="shrink-0">
+        {children}
+    </Button>
+);
+
 const BoardingBarItem = ({ status, kind }: { status: BoardingStatus; kind: RideKind }) => {
     const { t } = useTranslation();
     const { endTrip, unfollow } = useRideStore(s => s.actions);
@@ -192,46 +198,28 @@ const BoardingBarItem = ({ status, kind }: { status: BoardingStatus; kind: RideK
             <div className="flex items-center gap-1 pl-3 pr-1.5 py-2.5">
                 <BarMain onClick={() => navigate(paths.trip(trip.city, trip.tripId, trip.vehicleId))} label={t('ride.open')}>
                     {routeName && <LineBadge name={routeName} routeColor={routeColor} size="lg" />}
-                    <span className="flex flex-col min-w-0 flex-1 leading-tight">
-                        <span className={cn("type-label truncate", isSoon ? "text-primary-foreground/80" : "text-tint-mint")}>{t(isFollowed ? 'share.kickerBoard' : 'myTrip.kickerBoard')}</span>
-                        <span className="type-row truncate">{stopName}</span>
+                    <BarText kicker={t(isFollowed ? 'share.kickerBoard' : 'myTrip.kickerBoard')} title={stopName} isAccent={isSoon}>
                         <span className={cn("type-note tabular-nums truncate", subtle)}>{t('myTrip.departs', { time: departureTime })}</span>
-                    </span>
-                    <span className="shrink-0 min-w-11 text-right leading-none tabular-nums">
-                        {minutes === 0 ? (
-                            <span className="type-row">{t('map.departures.now')}</span>
-                        ) : (
-                            <>
-                                <span className="type-section tabular-nums">{minutes}</span>
-                                <span className={cn("block type-control mt-0.5", subtle)}>min</span>
-                            </>
-                        )}
-                    </span>
+                    </BarText>
+                    <BarMinutes minutes={minutes} subtle={subtle} />
                 </BarMain>
                 <BarDivider isAccent={isSoon} />
                 <span className="flex flex-col gap-0.5">
                     {!isFollowed && (
-                        <Button variant="quiet" size="icon-2xs"
-                            type="button"
+                        <BarAction
                             onClick={() => shareTrip({
                                 city: trip.city, tripId: trip.tripId, vehicleId: trip.vehicleId, line: routeName, headsign,
                                 board: { sequence: trip.board?.sequence ?? 0, stopName, time: departureTime },
                                 ride: trip.toEnd ? undefined : { exitSequence: trip.exitSequence, stopName: trip.exitStopName ?? '', time: arrivalTime },
                             })}
-                            aria-label={t('share.shareTrip')}
-                            className="shrink-0"
+                            label={t('share.shareTrip')}
                         >
                             <Share size={15} strokeWidth={1.75} />
-                        </Button>
+                        </BarAction>
                     )}
-                    <Button variant="quiet" size="icon-2xs"
-                        type="button"
-                        onClick={() => (isFollowed ? unfollow(true) : endTrip(trip.tripId))}
-                        aria-label={t(isFollowed ? 'share.stopWatching' : 'myTrip.end')}
-                        className="shrink-0"
-                    >
+                    <BarAction onClick={() => (isFollowed ? unfollow(true) : endTrip(trip.tripId))} label={t(isFollowed ? 'share.stopWatching' : 'myTrip.end')}>
                         <CloseIcon />
-                    </Button>
+                    </BarAction>
                 </span>
             </div>
         </BarFrame>
