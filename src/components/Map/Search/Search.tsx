@@ -134,24 +134,7 @@ export const Search = memo(() => {
                     </div>
 
                     {isListShown && (
-                        <SearchDropdown
-                            results={results}
-                            searchHistory={searchHistory}
-                            favoriteStopIds={s.pinnedStopIds}
-                            query={query}
-                            activeFilter={activeFilter}
-                            queryLines={s.queryLines}
-                            queryLineBadges={s.queryLineBadges}
-                            vehicleResults={s.vehicleResults}
-                            geocodingResults={s.geocodingResults}
-                            posResults={s.posResults}
-                            onStopSelect={s.selectStop}
-                            onHistorySelect={s.selectHistory}
-                            onLineSelect={s.selectLine}
-                            onPlaceSelect={s.selectPlace}
-                            onPosSelect={s.selectPos}
-                            onVehicleSelect={s.selectVehicle}
-                        />
+                        <SearchDropdown search={s} stops={results} />
                     )}
                 </div>
             </Autocomplete.Root>

@@ -2,7 +2,7 @@ import { GOLEMIO_CONFIG } from "./config";
 import { UPSTREAM_TTL_S } from "../../_core/config";
 import { MEMORY_CACHE_TTL } from "../../_core/feed/cacheManager";
 import { LruCache } from "../../_core/feed/LruCache";
-import { bucketOf } from "../gtfs/config";
+import { bucketOf } from "../../../shared/buckets";
 import { appClient } from '../../_core/ApiClient';
 
 /** `[to_trip_id, line, route_type, headsign, departure_time, min_transfer_s, max_wait_s, dayFlags]` */

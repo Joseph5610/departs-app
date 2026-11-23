@@ -139,25 +139,7 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                             <CloseIcon large />
                         </Button>
                     </div>
-                    <MobileSearchResults
-                        query={s.query}
-                        stopResults={s.stopResults}
-                        favoriteStops={s.pinnedStopList}
-                        location={userLocation}
-                        searchHistory={s.searchHistory}
-                        queryLines={s.queryLines}
-                        queryLineBadges={s.queryLineBadges}
-                        vehicleResults={s.vehicleResults}
-                        geocodingResults={s.geocodingResults}
-                        posResults={s.posResults}
-                        onStopSelect={s.selectStop}
-                        onHistorySelect={s.selectHistory}
-                        onClearHistory={clearHistory}
-                        onLineSelect={s.selectLine}
-                        onPlaceSelect={s.selectPlace}
-                        onPosSelect={s.selectPos}
-                        onVehicleSelect={s.selectVehicle}
-                    />
+                    <MobileSearchResults search={s} location={userLocation} onClearHistory={clearHistory} />
                     </div>
                 </div>,
                 document.body

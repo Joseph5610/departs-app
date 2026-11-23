@@ -1,18 +1,15 @@
 import { useMemo } from 'react';
-import { navigate } from '@/lib/history';
-import { paths } from '@/lib/routes';
-import { usePreferencesStore } from '@/state/preferencesStore';
-import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { getStopDistanceInfo, type NearbyStop } from '@/domain/stops';
 import { nextDepartures } from '@/domain/departures';
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { LineBadge } from '@/components/LineBadge';
 import { StopModeIcon } from '@/components/StopModeIcon';
 import { LineBadges } from '@/components/LineBadges';
-import { FALLBACK_ROUTE_COLOR, MAP_CAMERA } from '@/config/constants';
+import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import type { Departure } from '@/types';
 import { WalkDistance } from '@/components/WalkDistance';
 import { MinutesUntil } from '@/components/MinutesUntil';
+import { useOpenStop } from '@/hooks/features/useOpenStop';
 
 interface NearbyStopRowProps {
     nearby: NearbyStop;
@@ -22,17 +19,13 @@ interface NearbyStopRowProps {
 
 /** A stop near the user on the home sheet: its mode and lines, the next departure and the walk there; opens its board. */
 export const NearbyStopRow = ({ nearby, location, departures }: NearbyStopRowProps) => {
-    const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const flyTo = useMapMetadataStore(s => s.actions.flyTo);
+    const openStop = useOpenStop();
 
     const { stop } = nearby;
     const distanceInfo = useMemo(() => getStopDistanceInfo(location, stop.pos), [location, stop.pos]);
     const next = useMemo(() => nextDepartures(departures, 1, true)[0], [departures]);
 
-    const open = () => {
-        flyTo({ center: stop.pos, zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
-        navigate(paths.stop(selectedCity, stop.id));
-    };
+    const open = () => openStop(stop.id, { pos: stop.pos });
 
     return (
         <Item
