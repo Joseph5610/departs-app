@@ -12,7 +12,7 @@ import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
 import { SectionHeading } from '@/components/SectionHeading';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { useUiStore } from '@/state/uiStore';
-import { Sparkles } from 'lucide-react';
+import { Plug } from 'lucide-react';
 import { DisplaySection } from './DisplaySection';
 import { NotificationsSection } from './NotificationsSection';
 import { RowText } from './SettingsControls';
@@ -51,7 +51,7 @@ export const SettingsContent = () => {
                         size="none"
                         render={<button onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsMcpModalOpen(true), UI_TIMING_MS.MODAL_SWAP_DELAY); }} />}
                     >
-                        <ItemMedia variant="rowIcon" className="text-muted-foreground"><Sparkles strokeWidth={1.75} /></ItemMedia>
+                        <ItemMedia variant="rowIcon" className="text-muted-foreground"><Plug strokeWidth={1.75} /></ItemMedia>
                         <RowText title={t('mcp.title')} description={t('mcp.subtitle')} />
                         <ItemActions><RowChevron /></ItemActions>
                     </Item>

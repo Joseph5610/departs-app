@@ -41,8 +41,6 @@ export const UI_TIMING_MS = {
     MODAL_SWAP_DELAY: 150,
     /** How long a copy button shows its "copied" state. */
     COPIED_FEEDBACK: 2000,
-    /** How long the city switcher glows after the city changes. */
-    CITY_SWITCH_HIGHLIGHT: 2000,
     /** Time a service-worker update check waits for a new version before reporting "up to date". */
     UPDATE_CHECK_WAIT: 2500,
     /** How often minute-precision departure times (the home sheet's) re-render. */

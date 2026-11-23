@@ -75,7 +75,7 @@ export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequen
                 )}
 
                 {isNext && !isExit && (
-                    <div className="absolute -left-6 -top-4 z-20 text-white drop-shadow-md animate-slide-down-fade">
+                    <div className="absolute -left-6 -top-4 z-20 text-white drop-shadow-md">
                         <ChevronDown size={16} strokeWidth={3} />
                     </div>
                 )}

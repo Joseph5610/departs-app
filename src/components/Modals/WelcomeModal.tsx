@@ -94,10 +94,7 @@ export const WelcomeModal = memo(() => {
                 className="h-fit max-h-[calc(100dvh-2rem-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] max-w-md gap-3 p-5 short:max-w-2xl short:flex-row short:gap-5"
             >
                 <DialogHeader className="shrink-0 items-center gap-2 text-center short:w-5/12 short:justify-center short:border-r short:border-border/60 short:pr-5">
-                    <div className="size-11 mb-1 bg-black rounded-surface flex items-center justify-center p-0 shadow-2xl overflow-hidden relative">
-                        <div className="absolute inset-0 bg-primary/20 blur-xl"></div>
-                        <img src="/pwa-192x192.png" alt="" className="w-full h-full object-cover rounded-surface relative z-10" />
-                    </div>
+                    <img src="/pwa-192x192.png" alt="" className="mb-1 size-11 rounded-surface object-cover" />
                     <DialogTitle className="flex flex-wrap items-center justify-center gap-2 type-title">
                         {t('welcome.title')}
                         <Badge variant="beta">{t('common.beta')}</Badge>
@@ -107,13 +104,7 @@ export const WelcomeModal = memo(() => {
                     </p>
                 </DialogHeader>
                 <div className="flex min-h-0 flex-1 flex-col gap-2">
-                    <div className="flex shrink-0 items-center gap-4 px-2">
-                        <div className="h-px flex-1 bg-linear-to-r from-transparent to-border"></div>
-                        <SectionHeading className="text-muted-foreground/60">
-                            {t('welcome.chooseCity')}
-                        </SectionHeading>
-                        <div className="h-px flex-1 bg-linear-to-l from-transparent to-border"></div>
-                    </div>
+                    <SectionHeading className="shrink-0">{t('welcome.chooseCity')}</SectionHeading>
                     <div className="min-h-0 flex-1 -mx-2 px-2 py-0.5 overflow-y-auto overflow-x-hidden overscroll-contain">
                         <CitySelectionList
                             cities={cities}

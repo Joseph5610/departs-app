@@ -54,18 +54,12 @@ export const CitySelectionList = ({
                 )}
             >
                 <div
-                    className={cn(
-                        "absolute inset-y-0 right-0 w-1/2 pointer-events-none bg-linear-to-l to-transparent transition-opacity duration-500",
-                        isSelected ? "opacity-0" : "from-primary/10 opacity-0 group-hover:opacity-100"
-                    )}
-                />
-                <div
                     aria-hidden
                     className={cn(
-                        "absolute right-1 top-1.5 -bottom-1 w-3/5 origin-bottom-right pointer-events-none bg-current transition-[opacity,transform,color] duration-500",
+                        "absolute right-1 top-1.5 -bottom-1 w-3/5 pointer-events-none bg-current transition-[opacity,color] duration-300",
                         isSelected
-                            ? "text-tint-mint opacity-100 scale-105"
-                            : "text-foreground opacity-30 group-hover:text-tint-mint group-hover:opacity-70 group-hover:scale-105"
+                            ? "text-tint-mint opacity-100"
+                            : "text-foreground opacity-30 group-hover:opacity-50"
                     )}
                     style={{
                         maskImage: `url(/cities/${city.slug}-line.webp)`,

@@ -110,11 +110,8 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
         <LocateFixed
             size={20}
             strokeWidth={1.5}
-            className={cn(
-                "transition-all",
-                isGeoPending ? "animate-spin text-tint-mint" : "transition-transform"
-            )}
-         />
+            className={cn(isGeoPending && "text-tint-mint motion-safe:animate-pulse")}
+        />
     );
 
     const settingsButton = (
@@ -125,7 +122,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
             title={t('map.controls.settings')}
             testId="map-settings-btn"
         >
-            <Settings size={20} strokeWidth={1.5} className="transition-transform hover:rotate-45" />
+            <Settings size={20} strokeWidth={1.5} />
             {isFiltered && (
                 <span className="absolute top-1.5 right-1.5 grid size-4 place-items-center rounded-full bg-primary text-primary-foreground pointer-events-none">
                     <Filter className="size-2.5" strokeWidth={2.5} />
@@ -143,7 +140,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                 title={t('alerts.title')}
                 testId="map-alerts-btn"
             >
-                <AlertTriangle size={20} strokeWidth={1.5} className={cn(incidentsCount > 0 ? "text-destructive" : "transition-transform hover:scale-110")} />
+                <AlertTriangle size={20} strokeWidth={1.5} className={cn(incidentsCount > 0 && "text-destructive")} />
                 {incidentsCount > 0 && (
                     <Badge variant="alert" className="pointer-events-none absolute top-1 right-1 shadow-sm">{incidentsCount}</Badge>
                 )}
@@ -214,7 +211,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                             size={20}
                             strokeWidth={1.5}
                             className={cn(
-                                isFavoritesRoute ? "fill-primary text-tint-mint" : "transition-transform hover:scale-110"
+                                isFavoritesRoute && "fill-primary text-tint-mint"
                             )}
                          />
                     </ControlButton>
@@ -229,7 +226,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                             size={20}
                             strokeWidth={1.5}
                             className={cn(
-                                isStatsRoute ? "text-tint-mint" : "transition-transform hover:scale-110"
+                                isStatsRoute && "text-tint-mint"
                             )}
                         />
                     </ControlButton>
