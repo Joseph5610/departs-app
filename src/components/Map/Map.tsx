@@ -8,6 +8,7 @@ import MapGL, { Marker } from 'react-map-gl/maplibre';
 import type { GeoJSONSource } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '@/lib/maplibreWorker';
+import { applyPerfProbe } from '@/lib/perfProbe';
 import { MapPin } from 'lucide-react';
 import { DetailPanel } from '@/components/DetailPanel/DetailPanel';
 import { DepartureBoardHeader } from '@/components/DetailPanel/DepartureBoard/DepartureBoardHeader';
@@ -226,7 +227,7 @@ const MapInner = () => {
                 mapStyle={EXTERNAL_URLS.MAP_STYLES[(resolvedTheme as 'dark' | 'light') ?? 'dark'][mapBaseStyle]}
                 onMove={mapEvents?.onMove}
                 onMoveEnd={mapEvents?.onMoveEnd}
-                onLoad={mapEvents?.onLoad}
+                onLoad={(e) => { applyPerfProbe(e.target); mapEvents?.onLoad?.(e); }}
                 style={{ width: '100%', height: '100%', pointerEvents: 'auto' }}
                 onDragStart={mapEvents?.onDragStart}
                 onMouseEnter={(evt) => {

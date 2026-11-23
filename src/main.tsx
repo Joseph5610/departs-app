@@ -14,6 +14,7 @@ import i18n from './i18n/config'
 import { TRANSIT_REFRESH_MS } from './config/constants'
 import { initHistoryDepth } from './lib/history'
 import { pruneDeviceCache, refreshDeviceCacheWhenUnmetered } from './lib/deviceCache'
+import { startPerfProbe } from '@/lib/perfProbe'
 
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -39,6 +40,7 @@ initHistoryDepth()
 pruneDeviceCache()
 refreshDeviceCacheWhenUnmetered(queryClient)
 
+startPerfProbe()
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>

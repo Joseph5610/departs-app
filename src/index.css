@@ -762,3 +762,11 @@
 @utility animate-slide-down-fade {
   animation: slide-down-fade 2s infinite;
 }
+
+/* Temporary: `?perf=noglass` drops every backdrop blur to measure what it costs over the moving map. */
+.perf-noglass *,
+.perf-noglass *::before,
+.perf-noglass *::after {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
