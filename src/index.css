@@ -780,3 +780,17 @@
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
+
+/* Temporary: `?perf=blurN[,sat]` brings the translucent glass back on any device with an N px blur, to measure its cost. */
+:root.perf-blur {
+  --glass-backdrop: var(--perf-blur) !important;
+  --mat: oklch(0.97 0.006 250 / 0.42) !important;
+  --mat-thick: oklch(0.97 0.006 250 / 0.66) !important;
+  --mat-solid: oklch(0.97 0.006 250 / 0.84) !important;
+}
+
+:root.dark.perf-blur {
+  --mat: oklch(0.23 0.014 255 / 0.74) !important;
+  --mat-thick: oklch(0.23 0.014 255 / 0.88) !important;
+  --mat-solid: oklch(0.23 0.014 255 / 0.94) !important;
+}

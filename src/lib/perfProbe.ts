@@ -1,6 +1,6 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
 
-/** Temporary on-device diagnostics for map smoothness, switched on by `?perf=fps,noglass,dpr2,noslide,noglow,nonet`. */
+/** Temporary on-device diagnostics for map smoothness, switched on by `?perf=fps,noglass,blur8,sat,dpr2,noslide,noglow,nonet`. */
 const flags = new Set((new URLSearchParams(window.location.search).get('perf') ?? '').split(',').filter(Boolean));
 
 export const perfFlags = {
@@ -24,6 +24,11 @@ export const applyPerfProbe = (map: MapLibreMap) => {
 export const startPerfProbe = () => {
     if (flags.size === 0) return;
     if (flags.has('noglass')) document.documentElement.classList.add('perf-noglass');
+    const blur = [...flags].find(flag => /^blur\d+$/.test(flag));
+    if (blur) {
+        document.documentElement.classList.add('perf-blur');
+        document.documentElement.style.setProperty('--perf-blur', `blur(${blur.slice(4)}px)${flags.has('sat') ? ' saturate(140%)' : ''}`);
+    }
     if (!flags.has('fps')) return;
     const meter = document.createElement('div');
     meter.style.cssText = 'position:fixed;left:8px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:99999;padding:4px 8px;border-radius:8px;background:#000c;color:#0f0;font:12px ui-monospace,monospace;pointer-events:none';
