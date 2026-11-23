@@ -1,6 +1,7 @@
 import { SectionHeading } from '@/components/SectionHeading';
 import { useMemo, memo } from 'react';
-import { Activity, AlertTriangle, BarChart3 } from 'lucide-react';
+import { AlertTriangle, BarChart3 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useVehicles } from '@/hooks/data/useVehicles';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,6 +19,16 @@ import { MostDelayedCard } from './cards/MostDelayedCard';
 import { VehicleMixCard } from './cards/VehicleMixCard';
 import { BusiestLinesCard } from './cards/BusiestLinesCard';
 import { EmptyState } from '@/components/EmptyState';
+
+/** One headline count: a small caps label over a big number. */
+const StatTile = ({ label, value }: { label: string; value: number }) => (
+    <Card size="none">
+        <CardContent className="p-3.5 flex flex-col justify-center h-full">
+            <SectionHeading className="mb-0.5">{label}</SectionHeading>
+            <span className="type-display tabular-nums">{value}</span>
+        </CardContent>
+    </Card>
+);
 
 export const StatsPanel = memo(() => {
     const cityConfig = useCityConfig();
@@ -51,10 +62,8 @@ export const StatsPanel = memo(() => {
 
     return (
         <div className="flex flex-col gap-0 pt-0">
-            <div className="flex items-center justify-between px-1 pb-3">
-                <span className="type-control text-muted-foreground">
-                    {t('stats.scopeLabel')}
-                </span>
+            <div className="flex items-center justify-between pb-3">
+                <SectionHeading>{t('stats.scopeLabel')}</SectionHeading>
 
                 <SegmentedControl
                     size="sm"
@@ -68,22 +77,19 @@ export const StatsPanel = memo(() => {
             </div>
 
             {isFetching ? (
-                <EmptyState icon={Activity} title={t('common.loading')} className="[&_svg]:animate-pulse" />
+                <div className="flex flex-col gap-3 py-2" aria-hidden="true">
+                    <div className="grid grid-cols-2 gap-3">
+                        <Skeleton className="h-21 rounded-surface" />
+                        <Skeleton className="h-21 rounded-surface" />
+                    </div>
+                    <Skeleton className="h-40 rounded-surface" />
+                    <Skeleton className="h-32 rounded-surface" />
+                </div>
             ) : activeStats && activeStats.total_vehicles > 0 ? (
                 <div className="flex flex-col gap-3 pt-2 pb-2">
                     <div className="grid grid-cols-2 gap-3">
-                        <Card size="none">
-                            <CardContent className="p-3.5 flex flex-col justify-center h-full">
-                                <SectionHeading className="mb-0.5 px-0">{t('stats.vehicles')}</SectionHeading>
-                                <span className="type-display tabular-nums">{activeStats.total_vehicles}</span>
-                            </CardContent>
-                        </Card>
-                        <Card size="none">
-                            <CardContent className="p-3.5 flex flex-col justify-center h-full">
-                                <SectionHeading className="mb-0.5 px-0">{t('stats.lines')}</SectionHeading>
-                                <span className="type-display tabular-nums">{activeStats.total_lines}</span>
-                            </CardContent>
-                        </Card>
+                        <StatTile label={t('stats.vehicles')} value={activeStats.total_vehicles} />
+                        <StatTile label={t('stats.lines')} value={activeStats.total_lines} />
                     </div>
 
                     {!hasNetworkDelayData && tab === 'network' && (

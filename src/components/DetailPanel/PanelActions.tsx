@@ -43,8 +43,8 @@ import { ExternalLinkIcon } from '@/components/ExternalLinkIcon';
  * favorite toggle there, with departure sort and the official board in the menu, and share there too unless the toolbar shows it.
  */
 interface PanelActionsProps {
-    /** `chips` are small buttons for the stop action row; `toolbar` is the phone's floating capsule, with share beside the menu. */
-    layout?: 'header' | 'chips' | 'toolbar';
+    /** `toolbar` is the phone's floating capsule, with share beside the menu. */
+    layout?: 'header' | 'toolbar';
     /** The toolbar folded to its menu button while the list scrolls. */
     collapsed?: boolean;
 }
@@ -107,9 +107,7 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
 
     if (!tripId && !stopId) return null;
 
-    const chips = layout === 'chips';
     const toolbar = layout === 'toolbar';
-    const chipClassName = chips ? 'size-control-sm bg-field' : undefined;
     const toolbarButton = toolbar ? 'relative mx-0.5 size-10 rounded-full text-foreground after:absolute after:-inset-0.5 transition-[width,margin,opacity,background-color] duration-200' : undefined;
     const toolbarFold = toolbar ? cn(TOOLBAR_FOLD, collapsed && 'mx-0 w-0 overflow-hidden opacity-0') : undefined;
     const foldHidden = toolbar && collapsed ? { tabIndex: -1, 'aria-hidden': true } : undefined;
@@ -142,9 +140,9 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
                     aria-pressed={isFavorite}
                     data-testid="favorite-btn"
                     {...foldHidden}
-                    className={cn("shrink-0 text-muted-foreground", chipClassName, toolbarButton, toolbarFold, isFavorite && "text-favorite hover:text-favorite-hover")}
+                    className={cn("shrink-0 text-muted-foreground", toolbarButton, toolbarFold, isFavorite && "text-favorite hover:text-favorite-hover")}
                 >
-                    <Star size={chips ? 14 : 19} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={1.75} className={toolbar ? 'size-4.75' : undefined} />
+                    <Star size={19} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={1.75} className={toolbar ? 'size-4.75' : undefined} />
                 </Button>
                 </ButtonTooltip>
             ) : (
@@ -175,13 +173,31 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
                         size="icon-xs"
                         aria-label={t('common.moreOptions')}
                         data-testid="more-options-btn"
-                        className={cn("shrink-0 text-muted-foreground", chipClassName, toolbarButton)}
+                        className={cn("shrink-0 text-muted-foreground", toolbarButton)}
                     >
-                        <MoreHorizontal size={chips ? 16 : 19} strokeWidth={1.75} className={toolbar ? 'size-4.75' : undefined} />
+                        <MoreHorizontal size={19} strokeWidth={1.75} className={toolbar ? 'size-4.75' : undefined} />
                     </Button>
                 } />
                 </ButtonTooltip>
                 <DropdownMenuContent align="end" className="w-68">
+                    {/* The folded toolbar shows only this menu, so it takes over the buttons that folded away. */}
+                    {toolbar && collapsed && (
+                        <>
+                            <DropdownMenuGroup>
+                                {stopId && (
+                                    <DropdownMenuItem render={<div data-testid="menu-favorite" onClick={handleToggleFavorite} />}>
+                                        <Star size={14} strokeWidth={1.75} fill={isFavorite ? 'currentColor' : 'none'} className={cn(isFavorite && "text-favorite")} />
+                                        {isFavorite ? t('map.departures.removeFromFavorites') : t('map.departures.addToFavorites')}
+                                    </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem render={<div data-testid="menu-share" onClick={handleShare} />} closeOnClick={false}>
+                                    <Share size={14} strokeWidth={1.75} />
+                                    {t('common.share')}
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                            <DropdownMenuSeparator />
+                        </>
+                    )}
                     {stopId && (
                         <>
                             <DropdownMenuGroup>

@@ -21,7 +21,6 @@
     "lineOnMap_other": "on the map",
     "clearRecent": "Clear",
     "stops": "Stops",
-    "showOnMap": "Show on map",
     "noResults": "No results",
     "noResultsHint": "Try a stop name, a line number or an address.",
     "placeholder": "Search stops, addresses, lines...",
@@ -132,7 +131,6 @@
   "welcome": {
     "title": "Welcome to {{appName}}",
     "description": "The fastest way to track departures and real-time locations of your transport.",
-    "chooseCity": "Select Region",
     "cta": "Get Started"
   },
   "map": {
@@ -557,7 +555,7 @@
     "onScreen": "On Screen",
     "network": "Network",
     "networkDelayNotice": "Live delay data for the entire network is not available in this region. Please switch to the \"On Screen\" tab to see live data for vehicles currently in view.",
-    "scopeLabel": "Stats scope:",
+    "scopeLabel": "Stats scope",
     "title": "Network Stats",
     "lines": "Lines",
     "punctuality": "Punctuality",

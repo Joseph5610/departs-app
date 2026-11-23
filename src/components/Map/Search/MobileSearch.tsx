@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Globe, Search as SearchIcon, X } from 'lucide-react';
+import { Globe, Search as SearchIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { useSearch } from '@/hooks/features/useSearch';
@@ -82,7 +82,7 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                             aria-label={t('search.clearFilter')}
                             data-testid="search-clear-selection"
                         >
-                            <X size={17} strokeWidth={2} />
+                            <CloseIcon large />
                         </Button>
                     )}
                 </div>
@@ -107,7 +107,7 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                     <div aria-hidden="true" className="absolute inset-0 bg-black/25" onClick={close} />
                     <div
                         className={cn(
-                            "glassy-thick glassy-edge-top absolute! inset-x-0 bottom-0 flex flex-col rounded-t-sheet pt-4 transition-transform duration-200 ease-out [--glass-material:var(--mat-solid)]",
+                            "glassy glassy-edge-top absolute! inset-x-0 bottom-0 flex flex-col rounded-t-sheet pt-4 transition-transform duration-200 ease-out",
                             isOpen ? "translate-y-0" : "translate-y-6"
                         )}
                         style={SEARCH_SHEET_STYLE}

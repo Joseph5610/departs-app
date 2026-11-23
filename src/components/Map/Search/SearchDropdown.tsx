@@ -11,6 +11,8 @@ import { Autocomplete } from '@base-ui/react/autocomplete';
 import { cn } from '@/lib/cn';
 import { SectionHeading } from '@/components/SectionHeading';
 import { StopModeIcon } from '@/components/StopModeIcon';
+import { EmptyState } from '@/components/EmptyState';
+import { STOP_SEARCH } from '@/config/constants';
 
 import type { Stop, ShownHistoryItem, VehicleFeature } from '@/types';
 import { vehicleDisplayNumber } from '@/domain/vehicles';
@@ -91,9 +93,11 @@ export const SearchDropdown = ({
         );
     });
 
+    const hasResults = results.length > 0 || vehicleResults.length > 0 || posResults.length > 0 || geocodingResults.length > 0 || !!queryLines;
+
     return (
-        <div className="mt-2 overflow-hidden max-h-[60vh] rounded-surface glassy-thick p-1.5">
-            <Autocomplete.List className="max-h-[60vh] overflow-y-auto custom-scrollbar space-y-1">
+        <div className="mt-2 overflow-hidden rounded-surface glassy p-1.5">
+            <Autocomplete.List className="max-h-[60vh] overflow-y-auto scroll-edge custom-scrollbar space-y-1">
                 {showHistory && (
                     <SearchGroup
                         heading={t('search.recent')}
@@ -122,11 +126,27 @@ export const SearchDropdown = ({
                     </SearchGroup>
                 )}
 
+                {queryLines && (
+                    <SearchGroup heading={t('search.lines')}>
+                        <SearchItem
+                            icon={<SearchIcon size={20} strokeWidth={1.5} />}
+                            title={t('search.filterByLine')}
+                            lines={queryLineBadges ?? undefined}
+                            variant="primary"
+                            testId={`search-item-line-${queryLines.join('-')}`}
+                            onClick={() => onLineSelect(queryLines)}
+                        />
+                    </SearchGroup>
+                )}
+
+                {query !== '' && results.length > 0 && (
+                    <SearchGroup heading={t('search.stops')}>
+                        {renderStopResults('res')}
+                    </SearchGroup>
+                )}
+
                 {vehicleResults.length > 0 && (
-                    <SearchGroup
-                        heading={t('search.vehicles')}
-                        count={vehicleResults.length}
-                    >
+                    <SearchGroup heading={t('search.vehicles')}>
                         {vehicleResults.map((vehicle) => {
                             const p = vehicle.properties;
                             const vehicleId = p.vehicle_id ?? '';
@@ -145,30 +165,23 @@ export const SearchDropdown = ({
                     </SearchGroup>
                 )}
 
-                {queryLines && (
-                    <SearchGroup>
-                        <SearchItem
-                            icon={<SearchIcon size={20} strokeWidth={1.5} />}
-                            title={t('search.filterByLine')}
-                            lines={queryLineBadges ?? undefined}
-                            variant="primary"
-                            testId={`search-item-line-${queryLines.join('-')}`}
-                            onClick={() => onLineSelect(queryLines)}
-                        />
-                    </SearchGroup>
-                )}
-
-                {query !== '' && results.length > 0 && (
-                    <SearchGroup>
-                        {renderStopResults('res')}
+                {geocodingResults.length > 0 && (
+                    <SearchGroup heading={t('search.places')}>
+                        {geocodingResults.map((place) => (
+                            <SearchItem
+                                key={place.id}
+                                icon={<Building2 size={20} strokeWidth={1.5} />}
+                                title={place.name}
+                                subtitle={place.subtitle || undefined}
+                                testId={`search-item-place-${place.id}`}
+                                onClick={() => onPlaceSelect(place)}
+                            />
+                        ))}
                     </SearchGroup>
                 )}
 
                 {posResults.length > 0 && (
-                    <SearchGroup
-                        heading={t('search.pointsOfSale')}
-                        count={posResults.length}
-                    >
+                    <SearchGroup heading={t('search.pointsOfSale')}>
                         {posResults.map((result) => (
                             <SearchItem
                                 key={result.pos.id}
@@ -182,22 +195,8 @@ export const SearchDropdown = ({
                     </SearchGroup>
                 )}
 
-                {geocodingResults.length > 0 && (
-                    <SearchGroup
-                        heading={t('search.places')}
-                        count={geocodingResults.length}
-                    >
-                        {geocodingResults.map((place) => (
-                            <SearchItem
-                                key={place.id}
-                                icon={<Building2 size={20} strokeWidth={1.5} />}
-                                title={place.name}
-                                subtitle={place.subtitle || undefined}
-                                testId={`search-item-place-${place.id}`}
-                                onClick={() => onPlaceSelect(place)}
-                            />
-                        ))}
-                    </SearchGroup>
+                {query.length >= STOP_SEARCH.MIN_QUERY_LENGTH && !hasResults && (
+                    <EmptyState icon={SearchIcon} title={t('search.noResults')} description={t('search.noResultsHint')} className="py-8" />
                 )}
             </Autocomplete.List>
         </div>

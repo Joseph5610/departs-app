@@ -159,14 +159,16 @@ function DrawerContent({
         >
           {/* The glass sits on a layer behind the content, not the popup: a backdrop blur on the popup would stop anything inside it (controls riding above the sheet) from blurring the page. */}
           {variant === "glassy" && (
-            <div aria-hidden="true" data-slot="drawer-glass" className={cn("glassy-thick absolute! -z-10 pointer-events-none", glassClassName)} />
+            <div aria-hidden="true" data-slot="drawer-glass" className={cn("glassy absolute! -z-10 pointer-events-none", glassClassName)} />
           )}
           {showSwipeHandle && <DrawerSwipeHandle />}
           {header}
           <DrawerPrimitive.Content
             data-slot="drawer-content"
             className={cn(
-              "flex min-h-0 flex-1 flex-col overflow-hidden overscroll-contain rounded-[inherit] transition-opacity duration-300 ease-[cubic-bezier(0.45,1.005,0,1.005)] select-text group-data-nested-drawer-open/drawer-popup:opacity-0 group-data-nested-drawer-swiping/drawer-popup:opacity-100 group-data-swiping/drawer-popup:select-none"
+              "flex min-h-0 flex-1 flex-col overflow-hidden overscroll-contain transition-opacity duration-300 ease-[cubic-bezier(0.45,1.005,0,1.005)] select-text group-data-nested-drawer-open/drawer-popup:opacity-0 group-data-nested-drawer-swiping/drawer-popup:opacity-100 group-data-swiping/drawer-popup:select-none",
+              // Only the edges the content touches take the popup's rounding: under a header a rounded top would clip scrolled rows into a curve.
+              header || showSwipeHandle ? "rounded-b-[inherit]" : "rounded-[inherit]"
             )}
           >
             {children}

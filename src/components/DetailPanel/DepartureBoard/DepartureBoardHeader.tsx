@@ -14,8 +14,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/cn';
 import { LineBadge } from '@/components/LineBadge';
 import { ButtonTooltip } from '@/components/ButtonTooltip';
-import { PanelActions } from '@/components/DetailPanel/PanelActions';
-import { useIsMobile } from '@/hooks/useIsMobile';
 import { NavigatePill } from '@/components/DetailPanel/NavigatePill';
 import { useStopTwin } from '@/hooks/derived/useStopTwin';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
@@ -26,7 +24,6 @@ import { Pressable } from '@/components/Pressable';
 /** Sticky subheader of a stop's board: distance and delay, stop actions and filters, then the line chips. */
 export const DepartureBoardHeader = memo(() => {
     const { t } = useTranslation();
-    const isMobile = useIsMobile();
 
     const requireAirConditioned = usePreferencesStore(s => s.requireAirConditioned);
     const requireWheelchairAccessible = usePreferencesStore(s => s.requireWheelchairAccessible);
@@ -98,7 +95,6 @@ export const DepartureBoardHeader = memo(() => {
                         </ButtonTooltip>
                     )}
                 </div>
-                {!isMobile && <PanelActions layout="chips" />}
             </div>
 
             {(uniqueLines.length > 0 || hasVehicleFilters) && (
@@ -110,7 +106,6 @@ export const DepartureBoardHeader = memo(() => {
                                     <PropertyToggle
                                         isActive={requireAirConditioned}
                                         onToggle={toggleRequireAirConditioned}
-                                        activeClassName="bg-primary text-primary-foreground"
                                         label={t('amenities.airConditioned')}
                                         testId="filter-ac"
                                     >
@@ -121,7 +116,6 @@ export const DepartureBoardHeader = memo(() => {
                                     <PropertyToggle
                                         isActive={requireWheelchairAccessible}
                                         onToggle={toggleRequireWheelchairAccessible}
-                                        activeClassName="bg-primary text-primary-foreground"
                                         label={t('amenities.wheelchairAccessible')}
                                         testId="filter-accessible"
                                     >
@@ -163,13 +157,7 @@ DepartureBoardHeader.displayName = 'DepartureBoardHeader';
 
 /** A row of filter chips scrolling sideways under the board header, fading out at its right edge. */
 const ChipStrip = ({ children }: { children: React.ReactNode }) => (
-    <div
-        className="-mx-(--panel-gutter) -my-2 overflow-x-auto px-(--panel-gutter) pt-2.5 pb-2.5 no-scrollbar"
-        style={{
-            maskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 24px), transparent 100%)'
-        }}
-    >
+    <div className="-mx-(--panel-gutter) -my-2 overflow-x-auto px-(--panel-gutter) pt-2.5 pb-2.5 no-scrollbar fade-end">
         <div className="flex w-max items-center gap-1.5">
             {children}
             <div className="h-1 w-6 shrink-0" aria-hidden="true" />
@@ -178,10 +166,9 @@ const ChipStrip = ({ children }: { children: React.ReactNode }) => (
 );
 
 /** One vehicle-property filter, shaped like the line chips it leads; the line chips filter by line instead. */
-const PropertyToggle = ({ isActive, onToggle, activeClassName, label, testId, children }: {
+const PropertyToggle = ({ isActive, onToggle, label, testId, children }: {
     isActive: boolean;
     onToggle: () => void;
-    activeClassName: string;
     label: string;
     testId: string;
     children: React.ReactNode;
@@ -193,8 +180,8 @@ const PropertyToggle = ({ isActive, onToggle, activeClassName, label, testId, ch
         aria-label={label}
         data-testid={testId}
         className={cn(
-            "hit-target flex size-6 shrink-0 items-center justify-center rounded-full transition-[transform,colors] active:scale-95 select-none focus-visible:ring-primary/50",
-            isActive ? activeClassName : "bg-field text-muted-foreground hover:text-foreground"
+            "hit-target flex size-6 shrink-0 items-center justify-center rounded-badge transition-[transform,colors] active:scale-95 select-none focus-visible:ring-primary/50",
+            isActive ? "bg-primary text-primary-foreground" : "bg-field text-muted-foreground hover:text-foreground"
         )}
     >
         {children}

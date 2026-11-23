@@ -1,6 +1,7 @@
-import { ChevronDown, ChevronRight, LogIn, LogOut } from 'lucide-react';
+import { LogIn, LogOut } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Item } from '@/components/ui/item';
+import { RowChevron, ExpandChevron } from '@/components/Chevron';
 
 /** Which alert of a journey a row is about: boarding (before the trip leaves the user's stop) or exit. */
 export type JourneyLeg = 'board' | 'exit';
@@ -38,9 +39,9 @@ export const JourneyRow = ({ leg, title, summary, onClick, kind, isOpen = false,
                     <span className={cn("truncate type-note text-muted-foreground")}>{summary}</span>
                 </span>
                 {kind === 'toggle' ? (
-                    <ChevronDown size={17} strokeWidth={1.75} className={cn("shrink-0 text-label-3 transition-transform", isOpen && "rotate-180")} />
+                    <ExpandChevron isOpen={isOpen} className="text-label-3" />
                 ) : (
-                    <ChevronRight size={17} strokeWidth={1.75} className="shrink-0 text-label-3" />
+                    <RowChevron />
                 )}
             </Item>
         </div>

@@ -1,4 +1,5 @@
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
+import { useTranslation } from "react-i18next"
 export type { DialogRootChangeEventDetails } from "@base-ui/react/dialog"
 
 import { cn } from "@/lib/cn"
@@ -48,6 +49,7 @@ function SheetContent({
   hideOverlay?: boolean
   variant?: 'default' | 'glassy'
 }) {
+  const { t } = useTranslation()
   return (
     <SheetPortal>
       {!hideOverlay && <SheetOverlay />}
@@ -66,7 +68,7 @@ function SheetContent({
           "data-[side=bottom]:data-open:slide-in-from-bottom-10 data-[side=left]:data-open:slide-in-from-left-10 data-[side=right]:data-open:slide-in-from-right-10 data-[side=top]:data-open:slide-in-from-top-10",
           "data-closed:animate-out data-closed:fade-out-0",
           "data-[side=bottom]:data-closed:slide-out-to-bottom-10 data-[side=left]:data-closed:slide-out-to-left-10 data-[side=right]:data-closed:slide-out-to-right-10 data-[side=top]:data-closed:slide-out-to-top-10",
-          variant === 'glassy' && "glassy-thick",
+          variant === 'glassy' && "glassy",
           className
         )}
         {...props}
@@ -84,7 +86,7 @@ function SheetContent({
             }
           >
             <CloseIcon />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t('common.close')}</span>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Popup>

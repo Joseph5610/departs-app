@@ -37,7 +37,7 @@ export const MyTripCard = ({ trip, exit, lastStopName, onOpen, onEnd }: MyTripCa
     return (
         <Card size="none" className="overflow-hidden" data-testid="my-trip-card">
             <div className="flex h-10 items-center justify-between gap-2 pl-4 pr-2.5">
-                <SectionHeading className="px-0">{t('myTrip.title')}</SectionHeading>
+                <SectionHeading>{t('myTrip.title')}</SectionHeading>
                 <Button variant="secondary" size="icon-xs" onClick={onEnd} aria-label={t('myTrip.end')} title={t('myTrip.end')} className="text-muted-foreground hover:text-foreground">
                     <CloseIcon />
                 </Button>

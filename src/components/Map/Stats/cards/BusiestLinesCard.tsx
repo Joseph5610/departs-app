@@ -15,7 +15,7 @@ export const BusiestLinesCard = ({ stats }: BusiestLinesCardProps) => {
     if (!stats.busiest_lines || stats.busiest_lines.length === 0) return null;
 
     return (
-        <StatsCard icon={Hash} title={t('stats.busiestLines')} iconClassName="text-fuchsia-400" flush>
+        <StatsCard icon={Hash} title={t('stats.busiestLines')} iconClassName="text-tint-amber" flush>
             <div className="flex flex-col">
                 {stats.busiest_lines.map(item => (
                     <FactRow

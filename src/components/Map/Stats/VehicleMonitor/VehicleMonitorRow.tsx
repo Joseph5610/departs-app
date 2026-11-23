@@ -2,7 +2,6 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
-import { ChevronRight } from 'lucide-react';
 import { LineBadge } from '@/components/LineBadge';
 import { Badge } from '@/components/ui/badge';
 import { usePreferencesStore } from '@/state/preferencesStore';
@@ -11,6 +10,7 @@ import { cn } from '@/lib/cn';
 import { Item } from '@/components/ui/item';
 import { getDelayStatus } from '@/domain/delay';
 import { vehicleDisplayNumber, type EnrichedVehicleItem } from '@/domain/vehicles';
+import { RowChevron } from '@/components/Chevron';
 
 interface VehicleMonitorRowProps {
     item: EnrichedVehicleItem;
@@ -37,7 +37,7 @@ export const VehicleMonitorRow = memo(({ item }: VehicleMonitorRowProps) => {
     const displayId = item.vehicleId ? `#${vehicleDisplayNumber(item.vehicleId)}` : '—';
 
     return (
-        <Item variant="row" size="none" render={<button type="button" onClick={handleClick} />} className="group justify-between px-3 [--row-sep:0.75rem]">
+        <Item variant="row" size="none" render={<button type="button" onClick={handleClick} />} className="group justify-between [--row-sep:0.875rem]">
             <div className="flex items-center gap-2.5 shrink-0 min-w-36">
                 <LineBadge
                     name={item.line}
@@ -71,7 +71,7 @@ export const VehicleMonitorRow = memo(({ item }: VehicleMonitorRowProps) => {
                     </Badge>
                 )}
 
-                <ChevronRight size={14} className="text-label-3 transition-colors group-hover:text-foreground" />
+                <RowChevron className="transition-colors group-hover:text-foreground" />
             </div>
         </Item>
     );

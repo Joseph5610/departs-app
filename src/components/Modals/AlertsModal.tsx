@@ -171,7 +171,7 @@ export const AlertsContent = () => {
                                     size="none"
                                     className={cn(
                                         "rounded-none",
-                                        !row.isFirst && "relative before:absolute before:top-0 before:right-0 before:left-11.5 before:h-[0.5px] before:bg-sep",
+                                        !row.isFirst && "row-separator-top",
                                         row.isFirst && "rounded-t-surface",
                                         row.isLast && "rounded-b-surface mb-1"
                                     )}
@@ -198,8 +198,8 @@ export const AlertsModal = memo(() => {
 
     return (
         <Dialog open={isAlertsOpen && hasAlerts && !isMobile} onOpenChange={setIsAlertsOpen}>
-            <DialogContent aria-describedby={undefined} className="max-w-xl flex flex-col h-[calc(85dvh)] p-0 overflow-hidden gap-0" data-testid="alerts-modal-content">
-                <DialogHeader className="px-(--panel-gutter) pt-6 pb-2 shrink-0">
+            <DialogContent aria-describedby={undefined} size="lg" data-testid="alerts-modal-content">
+                <DialogHeader inset>
                     <DialogTitle>
                         {t('alerts.title')}
                     </DialogTitle>

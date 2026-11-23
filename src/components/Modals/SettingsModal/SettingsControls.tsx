@@ -14,18 +14,13 @@ export const RowText = ({ title, description, className }: { title: string; desc
 
 interface FilterGroupProps {
     title: string;
-    /** Shown right of the title, such as an "All" link. */
-    action?: React.ReactNode;
     children: React.ReactNode;
 }
 
-/** A row's nested filters: a small heading over a wrapping set of chips. */
-export const FilterGroup = ({ title, action, children }: FilterGroupProps) => (
+/** A row's nested filters: a small heading over a wrapping set of chips, the first of them "All". */
+export const FilterGroup = ({ title, children }: FilterGroupProps) => (
     <div className="flex flex-col gap-2">
-        <div className="flex min-h-4.5 items-center justify-between">
-            <SectionHeading className="px-0">{title}</SectionHeading>
-            {action}
-        </div>
+        <SectionHeading className="min-h-4.5">{title}</SectionHeading>
         <div className="flex flex-wrap gap-x-1.5 gap-y-2">{children}</div>
     </div>
 );
@@ -54,7 +49,7 @@ export const ToggleSection = ({ title, description, icon: Icon, isChecked, onTog
             size="none"
             render={<button onClick={() => onToggle(!isChecked)} />}
         >
-            <ItemMedia variant="rowIcon" className="text-muted-foreground">
+            <ItemMedia variant="rowIcon">
                 <Icon strokeWidth={1.75} />
             </ItemMedia>
             <RowText title={title} description={description} />

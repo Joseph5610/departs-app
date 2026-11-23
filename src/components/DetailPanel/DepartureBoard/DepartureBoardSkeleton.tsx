@@ -67,8 +67,8 @@ export const DirectionRowSkeleton = ({ headsignWidth, chips, divider, continuesL
 
 /** A station board's platform heading: its circle and name, as SectionTitle draws it. */
 const SectionHeadingSkeleton = () => (
-    <div className="flex h-6 items-center gap-2">
-        <Skeleton className="size-6 rounded-full" />
+    <div className="mb-2 flex min-h-6 items-center gap-2">
+        <Skeleton className="size-5.5 rounded-full" />
         <Skeleton className="h-4 w-28" />
     </div>
 );

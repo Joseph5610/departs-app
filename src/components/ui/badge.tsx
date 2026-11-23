@@ -30,7 +30,7 @@ const badgeVariants = cva(
         /** How many items need attention, such as current incidents: on a row or the corner of an icon. */
         alert: "h-4.5 min-w-4.5 px-1 rounded-full border-transparent bg-destructive type-badge tabular-nums tracking-normal text-destructive-foreground",
         /** Beta marker next to a product or city name. */
-        beta: "h-4 px-1.5 rounded-badge border-transparent bg-amber-500/15 type-badge text-amber-600 dark:text-amber-400",
+        beta: "h-4 px-1.5 rounded-badge border-transparent bg-tint-amber/15 type-badge text-tint-amber",
         label: "border-transparent bg-fill type-group text-muted-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
       },
     },

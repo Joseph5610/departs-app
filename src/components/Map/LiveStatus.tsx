@@ -54,17 +54,17 @@ export const LiveStatus = () => {
             <div className="pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-300">
                 <Pressable
                     onClick={() => setIsModalOpen(true)}
-                    className="glassy hit-target px-3 py-1.5 rounded-full hover:bg-white/10 active:bg-white/15 transition-colors focus-visible:ring-primary/50 flex items-center"
+                    className="glassy hit-target px-3 py-1.5 rounded-full hover:bg-fill active:bg-fill-2 transition-colors focus-visible:ring-primary/50 flex items-center"
                 >
                     <div className={cn("flex items-center gap-1.5 h-3", config.color)}>
                         {config.icon}
 
                         <div className="flex items-center gap-1.5 pt-px">
-                            <span className={cn("text-micro font-bold uppercase tracking-widest leading-none whitespace-nowrap", config.color)}>
+                            <span className={cn("type-pill leading-none whitespace-nowrap", config.color)}>
                                 {config.text}
                             </span>
                             {config.showCountdown && (
-                                <span className="text-micro font-bold text-muted-foreground/60 tabular-nums leading-none">
+                                <span className="type-pill text-muted-foreground tabular-nums leading-none">
                                     {nextRefreshIn}s
                                 </span>
                             )}

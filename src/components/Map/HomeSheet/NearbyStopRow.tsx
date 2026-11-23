@@ -8,7 +8,8 @@ import { nextDepartures } from '@/domain/departures';
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { LineBadge } from '@/components/LineBadge';
 import { StopModeIcon } from '@/components/StopModeIcon';
-import { FALLBACK_ROUTE_COLOR, MAP_CAMERA, STOP_SEARCH } from '@/config/constants';
+import { LineBadges } from '@/components/LineBadges';
+import { FALLBACK_ROUTE_COLOR, MAP_CAMERA } from '@/config/constants';
 import type { Departure } from '@/types';
 import { WalkDistance } from '@/components/WalkDistance';
 import { MinutesUntil } from '@/components/MinutesUntil';
@@ -47,10 +48,8 @@ export const NearbyStopRow = ({ nearby, location, departures }: NearbyStopRowPro
                 <ItemTitle className="w-full type-headsign text-foreground">
                     <span className="truncate">{stop.name}</span>
                 </ItemTitle>
-                <div className="flex flex-wrap items-center gap-1">
-                    {stop.lines.slice(0, STOP_SEARCH.LINE_BADGE_LIMIT).map(line => (
-                        <LineBadge key={line.name} name={line.name} routeColor={line.route_color || FALLBACK_ROUTE_COLOR} size="row" />
-                    ))}
+                <div className="flex flex-wrap items-center gap-y-1">
+                    <LineBadges lines={stop.lines} />
                 </div>
             </ItemContent>
             <ItemActions className="shrink-0 flex-col items-end gap-0.5">

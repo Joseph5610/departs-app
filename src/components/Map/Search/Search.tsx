@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search as SearchIcon, X } from 'lucide-react';
+import { Search as SearchIcon } from 'lucide-react';
 import { useSearch } from '@/hooks/features/useSearch';
+import { STOP_SEARCH } from '@/config/constants';
 import { cn } from '@/lib/cn';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { Autocomplete } from '@base-ui/react/autocomplete';
 import { SearchDropdown } from './SearchDropdown';
 import { LineFilterLabel } from './LineFilterLabel';
 import { CitySwitcher } from '@/components/Map/CitySwitcher';
+import { CloseIcon } from '@/components/CloseIcon';
 
 /**
  * The desktop search box floating over the map, with its dropdown of results.
@@ -53,7 +55,7 @@ export const Search = memo(() => {
 
     const results = query === '' && !activeFilter ? s.pinnedStopList : s.stopResults;
 
-    const showDropdown = (results.length > 0 || s.vehicleResults.length > 0 || s.posResults.length > 0 || s.geocodingResults.length > 0 || !!s.queryLines || (query === '' && !activeFilter && searchHistory.length > 0)) && query !== selectedPlace?.name;
+    const showDropdown = (results.length > 0 || s.vehicleResults.length > 0 || s.posResults.length > 0 || s.geocodingResults.length > 0 || !!s.queryLines || (query === '' && !activeFilter && searchHistory.length > 0) || (!activeFilter && query.length >= STOP_SEARCH.MIN_QUERY_LENGTH)) && query !== selectedPlace?.name;
     const isListShown = isOpen && showDropdown;
 
     return (
@@ -100,7 +102,7 @@ export const Search = memo(() => {
                                 aria-label={s.lineFilterLabel ?? t('search.placeholder')}
                                 onFocus={() => setIsOpen(true)}
                                 placeholder={activeFilter ? undefined : t('search.placeholder')}
-                                className="h-full w-full bg-transparent border-0! pl-10 type-field truncate placeholder:text-sm placeholder:text-muted-foreground focus-visible:ring-0! focus-visible:border-transparent! shadow-none! rounded-none outline-none"
+                                className="h-full w-full bg-transparent border-0! pl-10 type-field truncate placeholder:text-muted-foreground focus-visible:ring-0! focus-visible:border-transparent! shadow-none! rounded-none outline-none"
                                 data-testid="search-input"
                                 readOnly={!!activeFilter}
                             />
@@ -110,21 +112,21 @@ export const Search = memo(() => {
                                 </div>
                             )}
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-tint-mint transition-colors pointer-events-none">
-                                <SearchIcon size={18} strokeWidth={2} className={cn(activeFilter && "text-tint-mint")}  />
+                                <SearchIcon size={18} strokeWidth={1.75} className={cn(activeFilter && "text-tint-mint")} />
                             </div>
                             {(query || activeFilter) && (
                                 <div className="absolute right-0 top-0 h-full flex items-center pr-1">
                                     <Button
                                         variant="ghost"
-                                        size="icon"
+                                        size="icon-sm"
                                         onClick={() => {
                                             s.clearSelection();
                                             inputRef.current?.focus();
                                         }}
-                                        className="h-9 w-9 text-muted-foreground"
+                                        className="text-muted-foreground"
                                         aria-label={t('search.clearFilter')}
                                     >
-                                        <X size={18} strokeWidth={2}  />
+                                        <CloseIcon large />
                                     </Button>
                                 </div>
                             )}

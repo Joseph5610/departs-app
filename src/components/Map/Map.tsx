@@ -153,8 +153,9 @@ const MapInner = () => {
         (isFavoritesRoute ? <FavoritesTabs /> : <DepartureBoardHeader />)
     ), [isStatsRoute, isFavoritesRoute, selectedPos]);
 
-    const hasVehicleActions = !isStatsRoute && !isFavoritesRoute && !selectedPos && Boolean(selectedVehicle);
-    const detailActions = useMemo(() => (isFavoritesRoute ? <FavoritesReorderButton /> : hasVehicleActions ? <PanelActions /> : undefined), [isFavoritesRoute, hasVehicleActions]);
+    // A phone's stop board keeps its actions in the floating toolbar instead.
+    const hasPanelActions = !isStatsRoute && !isFavoritesRoute && !selectedPos && (Boolean(selectedVehicle) || (!isMobile && Boolean(selectedStop)));
+    const detailActions = useMemo(() => (isFavoritesRoute ? <FavoritesReorderButton /> : hasPanelActions ? <PanelActions /> : undefined), [isFavoritesRoute, hasPanelActions]);
 
     const detailContent = useMemo(() => (
         isStatsRoute ? <Suspense fallback={null}><StatsPanel /></Suspense> : isFavoritesRoute ? <FavoritesPanel /> : <DetailPanelContent />
@@ -354,11 +355,11 @@ const MapInner = () => {
                 title={sheetCard ? sheetCardTitle : detailTitle}
                 platformCode={showsStopBoard ? selectedStop?.board?.code : undefined}
                 subHeader={sheetCard ? undefined : detailSubHeader}
-                actions={sheetCard || (isMobile && hasVehicleActions) ? undefined : detailActions}
+                actions={sheetCard || (isMobile && hasPanelActions) ? undefined : detailActions}
                 collapseRequest={drawerCollapseRequest}
                 floating={renderSheetControls}
                 homeHeader={mobileSearch}
-                toolbar={!sheetCard && (hasVehicleActions || (showsStopBoard && selectedStop?.board)) ? renderBoardToolbar : undefined}
+                toolbar={!sheetCard && (hasPanelActions || (showsStopBoard && selectedStop?.board)) ? renderBoardToolbar : undefined}
                 home={renderMobileHome}
                 minSnap={sheetCard === 'settings' || sheetCard === 'alerts' ? 'full' : 'half'}
                 selfScrolling={sheetCard === 'alerts' || sheetCard === 'myTrip'}

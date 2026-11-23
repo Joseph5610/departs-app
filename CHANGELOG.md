@@ -4,6 +4,24 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.97.4] - 2026-11-22
+
+### Changed
+
+- Lists in sheets, panels and dialogs fade out at the edge they scroll past instead of being cut off.
+- The delay filter gets an "All" chip and dots in the map's delay colours, like the other filters.
+- Desktop search shows "No results" and orders and labels its sections like the phone's.
+- A stop board's favourite and menu buttons sit in the desktop panel's title row, as on other panels.
+- The folded phone toolbar's menu offers the favourite and share buttons it hides.
+- Separators, section headings, chevrons, close buttons, dialog sizes and loading skeletons look the same on every screen.
+- Decorative spins, glows, hover zooms and the current stop's ping are gone; locating only tints the button while it waits.
+
+### Fixed
+
+- The map runs smoothly again: the sheet, panels and controls over it are solid instead of blurring the map behind them on every frame.
+- Content scrolling under the mobile sheet header is no longer clipped into rounded corners.
+- The last result of the desktop search can be scrolled into view.
+
 ## [0.97.3] - 2026-11-22
 
 ### Changed

@@ -25,7 +25,7 @@ export const MovementStateCard = ({ stats }: MovementStateCardProps) => {
                         total={total}
                         segments={[
                             { key: 'inTransit', label: t('stats.inTransit'), count: in_transit, barClass: 'bg-tint-sky', textClass: 'text-tint-sky' },
-                            { key: 'atStop', label: t('stats.atStop'), count: at_stop, barClass: 'bg-indigo-400', textClass: 'text-indigo-400' },
+                            { key: 'atStop', label: t('stats.atStop'), count: at_stop, barClass: 'bg-tint-mint', textClass: 'text-tint-mint' },
                             { key: 'offTrack', label: t('stats.offTrack'), count: off_track, barClass: 'bg-tint-amber', textClass: 'text-tint-amber' },
                             { key: 'other', label: t('stats.unknownState'), count: other, barClass: 'bg-foreground/20', textClass: '', hideInLegend: true },
                         ]}

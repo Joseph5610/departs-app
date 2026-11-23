@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { LineBadgeData } from '@/domain/routes';
-import { LineBadges } from './SearchItem';
+import { LineBadges } from '@/components/LineBadges';
 
 /** The active line filter as the search box shows it: the line badges, then "on the map". */
 export const LineFilterLabel = ({ lines }: { lines: LineBadgeData[] }) => {

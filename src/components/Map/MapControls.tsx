@@ -110,11 +110,8 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
         <LocateFixed
             size={20}
             strokeWidth={1.5}
-            className={cn(
-                "transition-all",
-                isGeoPending ? "animate-spin text-tint-mint" : "transition-transform"
-            )}
-         />
+            className={cn(isGeoPending && "text-tint-mint motion-safe:animate-pulse")}
+        />
     );
 
     const settingsButton = (
@@ -125,9 +122,9 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
             title={t('map.controls.settings')}
             testId="map-settings-btn"
         >
-            <Settings size={20} strokeWidth={1.5} className={cn("transition-transform hover:rotate-45", isFiltered && "text-purple-400")} />
+            <Settings size={20} strokeWidth={1.5} />
             {isFiltered && (
-                <span className="absolute top-1.5 right-1.5 grid size-4 place-items-center rounded-full bg-purple-500 text-white pointer-events-none">
+                <span className="absolute top-1.5 right-1.5 grid size-4 place-items-center rounded-full bg-primary text-primary-foreground pointer-events-none">
                     <Filter className="size-2.5" strokeWidth={2.5} />
                 </span>
             )}
@@ -136,14 +133,14 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
 
     const alertsButton = hasAlerts && (
         <>
-            <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
+            <ButtonGroupSeparator orientation="horizontal" />
             <ControlButton
                 inPill
                 onClick={onAlerts}
                 title={t('alerts.title')}
                 testId="map-alerts-btn"
             >
-                <AlertTriangle size={20} strokeWidth={1.5} className={cn(incidentsCount > 0 ? "text-destructive" : "transition-transform hover:scale-110")} />
+                <AlertTriangle size={20} strokeWidth={1.5} className={cn(incidentsCount > 0 && "text-destructive")} />
                 {incidentsCount > 0 && (
                     <Badge variant="alert" className="pointer-events-none absolute top-1 right-1 shadow-sm">{incidentsCount}</Badge>
                 )}
@@ -174,7 +171,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                 {compassButton && <ButtonGroup orientation="vertical" className={SHEET_PILL}>{compassButton}</ButtonGroup>}
                 <ButtonGroup orientation="vertical" className={SHEET_PILL}>
                     {settingsButton}
-                    <ButtonGroupSeparator orientation="horizontal" className="bg-sep mx-2.75" />
+                    <ButtonGroupSeparator orientation="horizontal" />
                     <ControlButton
                         inPill
                         inSheet
@@ -203,7 +200,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                 <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden">
                     {settingsButton}
                     {alertsButton}
-                    <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
+                    <ButtonGroupSeparator orientation="horizontal" />
                     <ControlButton
                         inPill
                         onClick={onToggleFavorites}
@@ -214,11 +211,11 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                             size={20}
                             strokeWidth={1.5}
                             className={cn(
-                                isFavoritesRoute ? "fill-primary text-tint-mint" : "transition-transform hover:scale-110"
+                                isFavoritesRoute && "fill-primary text-tint-mint"
                             )}
                          />
                     </ControlButton>
-                    <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
+                    <ButtonGroupSeparator orientation="horizontal" />
                     <ControlButton
                         inPill
                         onClick={onStats}
@@ -229,7 +226,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                             size={20}
                             strokeWidth={1.5}
                             className={cn(
-                                isStatsRoute ? "text-tint-mint" : "transition-transform hover:scale-110"
+                                isStatsRoute && "text-tint-mint"
                             )}
                         />
                     </ControlButton>
@@ -243,7 +240,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                     >
                         <Plus size={20} strokeWidth={1.5} />
                     </ControlButton>
-                    <ButtonGroupSeparator orientation="horizontal" className="bg-border/50 mx-2" />
+                    <ButtonGroupSeparator orientation="horizontal" />
                     <ControlButton
                         inPill
                         onClick={onZoomOut}

@@ -41,8 +41,6 @@ export const UI_TIMING_MS = {
     MODAL_SWAP_DELAY: 150,
     /** How long a copy button shows its "copied" state. */
     COPIED_FEEDBACK: 2000,
-    /** How long the city switcher glows after the city changes. */
-    CITY_SWITCH_HIGHLIGHT: 2000,
     /** Time a service-worker update check waits for a new version before reporting "up to date". */
     UPDATE_CHECK_WAIT: 2500,
     /** How often minute-precision departure times (the home sheet's) re-render. */
@@ -70,8 +68,6 @@ export const SHEET = {
     OVERDRAG_RATE: 0.2,
     /** ...and no further than this. */
     OVERDRAG_MAX_PX: 14,
-    /** The sheet turns to its densest material from this share of the way between half and full. */
-    SOLID_FROM_RISE: 0.6,
     /** The morph loop stops after this many frames without movement. */
     MORPH_IDLE_FRAMES: 30,
     /** The content starts fading in at this share of the morph from peek to half... */

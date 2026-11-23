@@ -112,8 +112,8 @@ export const FeedbackModal = memo(() => {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent phoneLayout="page" className="max-w-xl" data-testid="feedback-modal-content">
-                <DialogHeader className="px-(--panel-gutter) pt-6 pb-2 shrink-0">
+            <DialogContent phoneLayout="page" size="lg" data-testid="feedback-modal-content">
+                <DialogHeader inset>
                     <DialogTitle>{t('feedback.title')}</DialogTitle>
                     <DialogDescription className="type-meta text-muted-foreground">
                         {t('feedback.description')}

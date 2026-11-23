@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, RefreshCw, Download, Clock, Scale, MessageSquareHeart, ShieldCheck, FileText } from 'lucide-react';
+import { RefreshCw, Download, Clock, Scale, MessageSquareHeart, ShieldCheck, FileText } from 'lucide-react';
 import { version } from '../../../../package.json';
 import { usePWAStore } from '@/state/pwaStore';
 import { usePreferencesStore } from '@/state/preferencesStore';
@@ -15,6 +15,7 @@ import { UI_TIMING_MS } from '@/config/constants';
 import { formatDateTime } from '@/domain/time';
 import { paths } from '@/lib/routes';
 import { ExternalLinkIcon } from '@/components/ExternalLinkIcon';
+import { RowChevron } from '@/components/Chevron';
 
 const LEGAL_LINKS = [
     { href: paths.privacy, label: 'legal.links.privacy', icon: ShieldCheck },
@@ -97,13 +98,13 @@ export const SettingsFooter = () => {
                     size="none"
                     render={<button onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsFeedbackOpen(true), UI_TIMING_MS.MODAL_SWAP_DELAY); }} />}
                 >
-                    <ItemMedia variant="rowIcon" className="text-muted-foreground"><MessageSquareHeart strokeWidth={1.75} /></ItemMedia>
+                    <ItemMedia variant="rowIcon"><MessageSquareHeart strokeWidth={1.75} /></ItemMedia>
                     <RowText title={t('feedback.title')} />
-                    <ChevronRight size={17} strokeWidth={1.75} className="shrink-0 text-label-3" aria-hidden="true" />
+                    <RowChevron />
                 </Item>
                 {canInstall && (
                     <Item variant="row" size="none" render={<button onClick={() => { void promptInstall(); }} />}>
-                        <ItemMedia variant="rowIcon" className="text-muted-foreground"><Download strokeWidth={1.75} /></ItemMedia>
+                        <ItemMedia variant="rowIcon"><Download strokeWidth={1.75} /></ItemMedia>
                         <RowText title={t('settings.install')} />
                     </Item>
                 )}
@@ -113,7 +114,7 @@ export const SettingsFooter = () => {
                     className={cn(isChecking && "opacity-50 pointer-events-none")}
                     render={<button onClick={handleCheckUpdate} disabled={isChecking} />}
                 >
-                    <ItemMedia variant="rowIcon" className={cn("text-muted-foreground", isChecking && "animate-spin text-tint-mint")}>
+                    <ItemMedia variant="rowIcon" className={cn(isChecking && "animate-spin text-tint-mint")}>
                         <RefreshCw strokeWidth={1.75} />
                     </ItemMedia>
                     <RowText title={isChecking ? t('settings.updates.checking') : t('settings.updates.check')} />
@@ -126,7 +127,7 @@ export const SettingsFooter = () => {
             <Card size="none">
                 {LEGAL_LINKS.map(({ href, label, icon: Icon }) => (
                     <Item key={href} variant="row" size="none" render={<a href={href} target="_blank" rel="noopener" />}>
-                        <ItemMedia variant="rowIcon" className="text-muted-foreground"><Icon strokeWidth={1.75} /></ItemMedia>
+                        <ItemMedia variant="rowIcon"><Icon strokeWidth={1.75} /></ItemMedia>
                         <RowText title={t(label)} />
                         <ItemActions><ExternalLinkIcon /></ItemActions>
                     </Item>

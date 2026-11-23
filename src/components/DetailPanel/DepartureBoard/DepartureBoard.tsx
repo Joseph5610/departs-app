@@ -1,7 +1,6 @@
 import { memo, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, ChevronDown, Train } from 'lucide-react';
-import { cn } from '@/lib/cn';
+import { ArrowRight, Train } from 'lucide-react';
 import type { DepartureClickHandler, Platform, SelectedStop, AppError } from '@/types';
 import { useDepartures } from '@/hooks/data/useDepartures';
 import { InfoTexts } from './InfoTexts';
@@ -26,6 +25,7 @@ import { usePreferencesStore } from '@/state/preferencesStore';
 import { useRideStore } from '@/state/rideStore';
 import { useNowEvery } from '@/hooks/useNow';
 import { EmptyState } from '@/components/EmptyState';
+import { ExpandChevron } from '@/components/Chevron';
 
 const NO_PLATFORMS: Platform[] = [];
 
@@ -243,7 +243,7 @@ const PlatformSectionView = memo(({ section, platformStopId, badgeColumn, rowPro
                     <div className="flex justify-center py-2.5">
                         <Button variant="pill" size="chip" aria-expanded={showAll} onClick={() => rowProps.onToggleGroup(sectionId)}>
                             {showAll ? t('map.departures.fewerLines') : t('map.departures.moreLines', { count: hidden })}
-                            <ChevronDown size={14} strokeWidth={2} className={cn("transition-transform duration-200", showAll && "rotate-180")} />
+                            <ExpandChevron isOpen={showAll} inline />
                         </Button>
                     </div>
                 )}

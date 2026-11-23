@@ -23,7 +23,6 @@
     "lineOnMap_other": "na mapě",
     "clearRecent": "Vymazat",
     "stops": "Zastávky",
-    "showOnMap": "Zobrazit na mapě",
     "noResults": "Nic nenalezeno",
     "noResultsHint": "Zkuste název zastávky, číslo linky nebo adresu.",
     "placeholder": "Hledat zastávky, adresy, linky...",
@@ -135,7 +134,6 @@
   "welcome": {
     "title": "Vítejte v {{appName}}",
     "description": "Nejrychlejší způsob, jak sledovat odjezdy a polohu vašich spojů v reálném čase.",
-    "chooseCity": "Vyberte region",
     "cta": "Začínáme"
   },
   "map": {
@@ -573,7 +571,7 @@
     "onScreen": "Na obrazovce",
     "network": "Celá síť",
     "networkDelayNotice": "Živá data o zpoždění pro celou síť nejsou v tomto regionu k dispozici. Přepněte prosím na záložku \"Na obrazovce\" pro zobrazení živých dat pro vozidla aktuálně v zorném poli.",
-    "scopeLabel": "Rozsah statistik:",
+    "scopeLabel": "Rozsah statistik",
     "title": "Statistiky sítě",
     "lines": "Linky",
     "punctuality": "Přesnost spojů",

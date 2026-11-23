@@ -32,13 +32,13 @@ export const PunctualityCard = ({ stats }: PunctualityCardProps) => {
                         <div className="type-display tabular-nums">
                             {formatMinutes(stats.average_delay)}
                         </div>
-                        <div className="type-note text-foreground/60 mt-1">{t('stats.averageDelay')}</div>
+                        <div className="type-note text-muted-foreground mt-1">{t('stats.averageDelay')}</div>
                     </div>
                     <div className="text-right">
                         <div className={cn("type-display tabular-nums", stats.delayed_over_5_min_count > 0 && "text-destructive")}>
                             {stats.delayed_over_5_min_count}
                         </div>
-                        <div className="type-note text-foreground/60 mt-1">{t('stats.delayedOver5')}</div>
+                        <div className="type-note text-muted-foreground mt-1">{t('stats.delayedOver5')}</div>
                     </div>
                 </div>
                 

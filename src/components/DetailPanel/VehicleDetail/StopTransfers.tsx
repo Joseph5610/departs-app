@@ -1,6 +1,6 @@
 import React, { useState, useMemo, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowRightLeft, ChevronDown, ChevronUp, CornerDownRight, type LucideIcon } from 'lucide-react';
+import { ArrowRightLeft, CornerDownRight, type LucideIcon } from 'lucide-react';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
 import { cn } from '@/lib/cn';
@@ -16,6 +16,7 @@ import { usePreferencesStore } from '@/state/preferencesStore';
 import { TimelineTime } from './TimelineTime';
 import type { Continuation, StopConnection } from '@/types';
 import { addSecondsToTime } from '@shared/time';
+import { ExpandChevron } from '@/components/Chevron';
 
 /** A collapsible, labelled block under a stop listing trips a passenger can change to there. */
 const StopTransferBlock = ({ icon: Icon, title, isPast, defaultOpen, preview, children }: {
@@ -34,11 +35,11 @@ const StopTransferBlock = ({ icon: Icon, title, isPast, defaultOpen, preview, ch
             <Collapsible open={open} onOpenChange={setOpen}>
                 <CollapsibleTrigger className="row-hover-group flex h-9 w-full items-center gap-1.5 px-3.5 text-muted-foreground hover:text-foreground">
                     <Icon size={14} strokeWidth={1.75} className="shrink-0" />
-                    <SectionHeading className="shrink-0 px-0 text-inherit">{title}</SectionHeading>
+                    <SectionHeading className="shrink-0 text-inherit">{title}</SectionHeading>
                     <span className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
                         {!open && preview}
                     </span>
-                    {open ? <ChevronUp size={14} strokeWidth={1.5} className="shrink-0" /> : <ChevronDown size={14} strokeWidth={1.5} className="shrink-0" />}
+                    <ExpandChevron isOpen={open} inline />
                 </CollapsibleTrigger>
                 <CollapsibleContent aria-label={title}>
                     {children}

@@ -155,7 +155,7 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
                 initialFocus={false}
                 data-testid="detail-panel"
             >
-                {/* Clips the content to the rounded-badge panel; the resize handle outside it reaches past the edge. */}
+                {/* Clips the content to the rounded panel; the resize handle outside it reaches past the edge. */}
                 <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden rounded-[inherit]">
                     <div className="shrink-0 flex flex-col">
                         <div className="px-6 pt-6 pb-2">
@@ -167,8 +167,8 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
                             </div>
                         )}
                     </div>
-                    <ScrollArea className="flex-1 min-h-0 pb-6">
-                        <div className="px-(--panel-gutter)">{children}</div>
+                    <ScrollArea className="flex-1 min-h-0">
+                        <div className="px-(--panel-gutter) pb-6">{children}</div>
                     </ScrollArea>
                 </div>
                 <SidebarResizeHandle />

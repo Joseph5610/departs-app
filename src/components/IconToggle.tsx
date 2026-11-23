@@ -19,13 +19,13 @@ export const IconToggle = ({ icon: Icon, label, isActive, onClick, testId, class
         variant="outline"
         data-testid={testId}
         className={cn(
-            "h-auto flex flex-col items-center justify-center gap-1.5 px-3 transition-[transform,colors] font-semibold active:scale-95 group",
+            "h-auto flex flex-col items-center justify-center gap-1.5 px-3 transition-colors font-semibold",
             // `!` overrides the Toggle's own pressed background.
             "aria-pressed:bg-selected! aria-pressed:text-foreground!",
             className
         )}
     >
-        <Icon size={18} className={cn("transition-transform duration-300", isActive ? 'scale-110 opacity-100' : 'group-hover:scale-110 opacity-70')} />
+        <Icon size={18} className={cn(!isActive && "opacity-70")} />
         <span className={labelClassName}>{label}</span>
     </Toggle>
 );

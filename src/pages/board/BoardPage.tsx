@@ -44,7 +44,7 @@ const BoardNotices = ({ stopIds, now }: { stopIds: string[]; now: number }) => {
         <footer className={cn(
             "flex items-center gap-[0.75em] px-[clamp(1rem,3vw,3rem)] py-[clamp(0.6rem,1.6vh,1.25rem)] border-t text-[clamp(0.85rem,1.6vw,1.5rem)] font-semibold",
             info.priority === 'high' ? "bg-destructive/15 border-destructive/40 text-foreground"
-                : info.priority === 'normal' ? "bg-amber-500/10 border-amber-500/30 text-foreground"
+                : info.priority === 'normal' ? "bg-tint-amber/10 border-tint-amber/30 text-foreground"
                 : "bg-muted/40 border-border text-muted-foreground"
         )}>
             <AlertIcon className={cn("size-[1.2em] shrink-0", noticeIconTone(info.priority))} />
@@ -95,7 +95,7 @@ const BoardRow = ({ dep, timeZone, now, walkMins, stopPlatform }: { dep: Departu
                     {dep.is_air_conditioned && <Snowflake className="size-[1.1em] opacity-60" strokeWidth={1.5} aria-label={t('amenities.airConditioned')} />}
                     {showPlatform && <span>{t('map.departures.platformCode', { code: dep.platform })}</span>}
                     {leaveText && (
-                        <span className={cn("font-semibold", leaveSecs < 60 ? "text-emerald-400" : "text-foreground")}>
+                        <span className={cn("font-semibold", leaveSecs < 60 ? "text-tint-mint" : "text-foreground")}>
                             {leaveText}
                         </span>
                     )}

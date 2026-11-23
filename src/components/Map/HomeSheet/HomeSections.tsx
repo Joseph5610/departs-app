@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, BarChart3, ChevronRight, LocateFixed, MapPin, MessageSquare, Star } from 'lucide-react';
+import { AlertTriangle, BarChart3, LocateFixed, MapPin, MessageSquare, Star } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
@@ -22,6 +22,7 @@ import { HomeSection } from './HomeSection';
 import { FavoriteLineRow, FavoriteStopRow } from './FavoriteRows';
 import { Badge } from '@/components/ui/badge';
 import { DEPARTURES_CONFIG } from '@/config/constants';
+import { RowChevron } from '@/components/Chevron';
 
 interface HomeSectionsProps {
     /** The list scrolls only at full height, so at the lower heights a drag anywhere moves the sheet. */
@@ -64,7 +65,7 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
 
     return (
         <div
-            className={cn("flex-1 min-h-0 select-none overscroll-contain px-(--panel-gutter) pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+2.5rem)] flex flex-col gap-5", isFull ? "overflow-y-auto" : "overflow-hidden")}
+            className={cn("flex-1 min-h-0 select-none overscroll-contain scroll-edge px-(--panel-gutter) pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+2.5rem)] flex flex-col gap-5", isFull ? "overflow-y-auto" : "overflow-hidden")}
             data-testid="home-sections"
         >
             {myIncidents.length > 0 && (
@@ -78,7 +79,7 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
                         <ItemTitle className="type-row text-foreground">{t('home.disruptionsOnYourLines', { count: myIncidents.length })}</ItemTitle>
                         <ItemDescription className="type-meta line-clamp-1">{myIncidents[0].title}</ItemDescription>
                     </ItemContent>
-                    <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
+                    <ItemActions><RowChevron /></ItemActions>
                 </Item>
             )}
 
@@ -122,7 +123,7 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
                 {!hasLocation ? (
                     <Card size="none">
                         <Item variant="row" size="none" >
-                            <ItemMedia variant="rowIcon" className="text-muted-foreground"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
+                            <ItemMedia variant="rowIcon"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
                             <ItemContent className="min-w-0">
                                 <ItemDescription className="type-meta">{t('home.locationNeeded')}</ItemDescription>
                             </ItemContent>
@@ -137,7 +138,7 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
                 ) : nearby.length === 0 ? (
                     <Card size="none">
                         <Item variant="row" size="none" >
-                            <ItemMedia variant="rowIcon" className="text-muted-foreground"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
+                            <ItemMedia variant="rowIcon"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
                             <ItemContent className="min-w-0">
                                 <ItemDescription className="type-meta">{t('home.noNearby')}</ItemDescription>
                             </ItemContent>
@@ -161,25 +162,25 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
                 <Card size="none" className="overflow-hidden">
                     {hasAlerts && (
                         <Item variant="row" size="none" render={<button type="button" onClick={() => setIsAlertsOpen(true)} data-testid="home-alerts-row" />}>
-                            <ItemMedia variant="rowIcon" className={incidentsCount > 0 ? "text-destructive" : "text-muted-foreground"}><AlertTriangle size={20} strokeWidth={1.75} /></ItemMedia>
+                            <ItemMedia variant="rowIcon" className={cn(incidentsCount > 0 && "text-destructive")}><AlertTriangle size={20} strokeWidth={1.75} /></ItemMedia>
                             <ItemContent><ItemTitle className="type-row text-foreground">{t('alerts.title')}</ItemTitle></ItemContent>
                             <ItemActions>
                                 {incidentsCount > 0 && (
                                     <Badge variant="alert">{incidentsCount}</Badge>
                                 )}
-                                <ChevronRight size={17} strokeWidth={1.75} className="text-label-3" />
+                                <RowChevron />
                             </ItemActions>
                         </Item>
                     )}
                     <Item variant="row" size="none" render={<button type="button" onClick={() => navigate(paths.stats(selectedCity))} />}>
-                        <ItemMedia variant="rowIcon" className="text-muted-foreground"><BarChart3 size={20} strokeWidth={1.75} /></ItemMedia>
+                        <ItemMedia variant="rowIcon"><BarChart3 size={20} strokeWidth={1.75} /></ItemMedia>
                         <ItemContent><ItemTitle className="type-row text-foreground">{t('stats.title')}</ItemTitle></ItemContent>
-                        <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
+                        <ItemActions><RowChevron /></ItemActions>
                     </Item>
                     <Item variant="row" size="none" render={<button type="button" onClick={() => setIsFeedbackOpen(true)} />}>
-                        <ItemMedia variant="rowIcon" className="text-muted-foreground"><MessageSquare size={20} strokeWidth={1.75} /></ItemMedia>
+                        <ItemMedia variant="rowIcon"><MessageSquare size={20} strokeWidth={1.75} /></ItemMedia>
                         <ItemContent><ItemTitle className="type-row text-foreground">{t('feedback.title')}</ItemTitle></ItemContent>
-                        <ItemActions><ChevronRight size={17} strokeWidth={1.75} className="text-label-3" /></ItemActions>
+                        <ItemActions><RowChevron /></ItemActions>
                     </Item>
                 </Card>
             </HomeSection>
