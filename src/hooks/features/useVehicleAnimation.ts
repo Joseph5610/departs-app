@@ -5,7 +5,6 @@ import type { VehicleCollection, VehicleFeature } from '@/types';
 import { VEHICLE_ANIMATION } from '@/config/constants';
 import { MAP_SOURCES } from '@/config/mapLayers';
 import { EMPTY_FEATURE_COLLECTION } from '@/lib/geojson';
-import { perfFlags } from '@/lib/perfProbe';
 
 interface TrackedPosition {
     coords: [number, number];
@@ -103,7 +102,7 @@ const advanceTrack = (prev: Track, features: VehicleFeature[], collectionTime: n
 
         if (distSq === 0 && prevPos.bearing === endBearing) {
             next.positions.set(id, prevPos);
-        } else if (perfFlags.noSlide || distSq > VEHICLE_ANIMATION.MAX_SLIDE_DISTANCE_SQ) {
+        } else if (distSq > VEHICLE_ANIMATION.MAX_SLIDE_DISTANCE_SQ) {
             next.positions.set(id, { coords: endCoords, bearing: endBearing });
         } else {
             next.targets.set(id, { startCoords: prevPos.coords, endCoords, startBearing: prevPos.bearing, endBearing, startTime: now });

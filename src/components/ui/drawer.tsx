@@ -159,7 +159,7 @@ function DrawerContent({
         >
           {/* The glass sits on a layer behind the content, not the popup: a backdrop blur on the popup would stop anything inside it (controls riding above the sheet) from blurring the page. */}
           {variant === "glassy" && (
-            <div aria-hidden="true" data-slot="drawer-glass" className={cn("glassy-thick absolute! -z-10 pointer-events-none", glassClassName)} />
+            <div aria-hidden="true" data-slot="drawer-glass" className={cn("glassy absolute! -z-10 pointer-events-none", glassClassName)} />
           )}
           {showSwipeHandle && <DrawerSwipeHandle />}
           {header}

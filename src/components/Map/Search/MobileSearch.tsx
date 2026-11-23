@@ -107,7 +107,7 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                     <div aria-hidden="true" className="absolute inset-0 bg-black/25" onClick={close} />
                     <div
                         className={cn(
-                            "glassy-thick glassy-edge-top absolute! inset-x-0 bottom-0 flex flex-col rounded-t-sheet pt-4 transition-transform duration-200 ease-out [--glass-material:var(--mat-solid)]",
+                            "glassy glassy-edge-top absolute! inset-x-0 bottom-0 flex flex-col rounded-t-sheet pt-4 transition-transform duration-200 ease-out",
                             isOpen ? "translate-y-0" : "translate-y-6"
                         )}
                         style={SEARCH_SHEET_STYLE}

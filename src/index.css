@@ -19,7 +19,6 @@
   --sidebar-inset: 20px;
   /* Top edge of the desktop chrome (search, map controls, panel); an installed app drops it below the status bar blur. */
   --chrome-top: var(--sidebar-inset);
-  --glass-backdrop: blur(16px) saturate(140%);
   --glass-edge-full: inset 0 0.5px 0 var(--edge-top), inset 0 0 0 0.5px var(--edge-bottom);
   --glass-edge-top: inset 0 0.5px 0 var(--edge-top);
   --thumb: #fff;
@@ -40,11 +39,7 @@
   --segment-selected: var(--primary);
   --on-segment-selected: var(--primary-foreground);
   --selected: color-mix(in oklch, var(--primary) 22%, transparent);
-  --glass-backdrop: blur(16px) saturate(190%);
-  --mat: oklch(0.97 0.006 250 / 0.42);
-  --mat-thick: oklch(0.97 0.006 250 / 0.66);
-  --mat-solid: oklch(0.97 0.006 250 / 0.84);
-  --mat-opaque: oklch(0.97 0.006 250);
+  --mat: oklch(0.97 0.006 250);
   --edge-top: rgb(255 255 255 / 0.8);
   --edge-bottom: rgb(255 255 255 / 0.3);
   --shadow-float: 0 10px 34px rgb(0 0 0 / 0.16), 0 2px 6px rgb(0 0 0 / 0.08), 0 0 0 0.5px rgb(0 0 0 / 0.06);
@@ -71,7 +66,6 @@
   --input: oklch(0.90 0 0);
   --ring: oklch(0.6959 0.1491 162.4796);
   --radius: 0.5rem;
-  --glass-fallback: oklch(0.96 0 0 / 0.96);
   --destructive-foreground: oklch(0.9851 0 0);
   --chart-1: oklch(0.6959 0.1491 162.4796);
   --chart-2: oklch(0.5960 0.1274 163.2254);
@@ -113,11 +107,7 @@
   --field: oklch(0.32 0.016 255 / 0.6);
   --sep: rgb(255 255 255 / 0.13);
   --selected: oklch(0.42 0.105 162);
-  --glass-backdrop: blur(16px) saturate(140%);
-  --mat: oklch(0.23 0.014 255 / 0.74);
-  --mat-thick: oklch(0.23 0.014 255 / 0.88);
-  --mat-solid: oklch(0.23 0.014 255 / 0.94);
-  --mat-opaque: oklch(0.23 0.014 255);
+  --mat: oklch(0.23 0.014 255);
   --edge-top: rgb(255 255 255 / 0.22);
   --edge-bottom: rgb(255 255 255 / 0.05);
   --shadow-float: 0 8px 28px rgb(0 0 0 / 0.38);
@@ -143,7 +133,6 @@
   --border: var(--sep);
   --input: oklch(0.30 0.01 260);
   --ring: oklch(0.78 0.17 162);
-  --glass-fallback: oklch(0.21 0.01 260 / 0.96);
   --destructive-foreground: oklch(0.9851 0 0);
   --chart-1: oklch(0.6959 0.1491 162.4796);
   --chart-2: oklch(0.5960 0.1274 163.2254);
@@ -180,26 +169,11 @@
 
 @media (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
   :root {
-    --glass-backdrop: none;
     --mat: oklch(0.97 0.004 250);
-    --mat-thick: oklch(0.97 0.004 250);
-    --mat-solid: oklch(0.97 0.004 250);
   }
 
   .dark {
     --mat: oklch(0.18 0 0);
-    --mat-thick: oklch(0.18 0 0);
-    --mat-solid: oklch(0.18 0 0);
-  }
-}
-
-/* On phones and tablets a backdrop blur over the map is redone with every map frame and halves the frame rate, so their glass is solid. */
-@media (pointer: coarse) {
-  :root {
-    --glass-backdrop: none;
-    --mat: var(--mat-opaque);
-    --mat-thick: var(--mat-opaque);
-    --mat-solid: var(--mat-opaque);
   }
 }
 
@@ -403,14 +377,11 @@
 @utility type-badge { font-size: var(--text-label); line-height: 1rem; font-weight: 700; }
 @utility type-label { font-size: var(--text-caption); line-height: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 
-/* The material of controls; `glassy-thick` is the denser one of sheets and panels. */
+/* The material of every surface over the map; solid, as a backdrop blur is redone with every map frame and stalls it. */
 @utility glassy {
-  --glass-material: var(--mat);
   position: relative;
   isolation: isolate;
-  background: var(--glass-material);
-  -webkit-backdrop-filter: var(--glass-backdrop);
-  backdrop-filter: var(--glass-backdrop);
+  background: var(--mat);
   box-shadow: var(--shadow-float);
   backface-visibility: hidden;
 
@@ -423,15 +394,6 @@
     pointer-events: none;
     box-shadow: var(--glass-edge, var(--glass-edge-full));
   }
-
-  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    background: var(--glass-fallback);
-  }
-}
-
-@utility glassy-thick {
-  @apply glassy;
-  --glass-material: var(--mat-thick);
 }
 
 /* The mobile sheet's glass: `--sheet-morph` runs from the peek capsule (0) to the full-width sheet (1), written outside React. */
@@ -444,37 +406,22 @@
   border-top-right-radius: calc(theme(--radius-peek) + (theme(--radius-sheet) - theme(--radius-peek)) * var(--sheet-morph, 0));
   border-bottom-left-radius: calc(theme(--radius-peek) * (1 - var(--sheet-morph, 0)));
   border-bottom-right-radius: calc(theme(--radius-peek) * (1 - var(--sheet-morph, 0)));
-  transition: background-color 0.5s;
-
-  /* Near opaque, a blur would not show but would still be redrawn with every map frame. */
-  &[data-solid] {
-    --glass-material: var(--mat-opaque);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
 
   &[data-edge-top] {
     --glass-edge: var(--glass-edge-top);
   }
 }
 
-/* What dims and blurs the page behind a modal. */
-/* Phones keep a light blur for the modal's glass to show through; desktop dims the busy map behind further. */
+/* What dims the page behind a modal; desktop dims the busy map behind further. */
 @utility modal-scrim {
   background: rgb(0 0 0 / 0.25);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
   @media (width >= theme(--breakpoint-md)) {
-    background: rgb(0 0 0 / 0.3);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
+    background: rgb(0 0 0 / 0.4);
   }
 }
 
 /* A toast is sonner's own positioned element, so it takes the sheet's glass without `glassy`'s layout. */
 @utility toast-glass {
-  -webkit-backdrop-filter: var(--glass-backdrop);
-  backdrop-filter: var(--glass-backdrop);
   border-radius: theme(--radius-surface) !important;
   box-shadow: var(--glass-edge-full), var(--shadow-float) !important;
 }
@@ -716,8 +663,6 @@
   width: 24px !important;
   border-radius: 50% !important;
   background: var(--mat) !important;
-  -webkit-backdrop-filter: var(--glass-backdrop);
-  backdrop-filter: var(--glass-backdrop);
   box-shadow: var(--glass-edge-full), var(--shadow-float);
 
   &::after {
@@ -771,26 +716,4 @@
 
 @utility animate-slide-down-fade {
   animation: slide-down-fade 2s infinite;
-}
-
-/* Temporary: `?perf=noglass` drops every backdrop blur to measure what it costs over the moving map. */
-.perf-noglass *,
-.perf-noglass *::before,
-.perf-noglass *::after {
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-}
-
-/* Temporary: `?perf=blurN[,sat]` brings the translucent glass back on any device with an N px blur, to measure its cost. */
-:root.perf-blur {
-  --glass-backdrop: var(--perf-blur) !important;
-  --mat: oklch(0.97 0.006 250 / 0.42) !important;
-  --mat-thick: oklch(0.97 0.006 250 / 0.66) !important;
-  --mat-solid: oklch(0.97 0.006 250 / 0.84) !important;
-}
-
-:root.dark.perf-blur {
-  --mat: oklch(0.23 0.014 255 / 0.74) !important;
-  --mat-thick: oklch(0.23 0.014 255 / 0.88) !important;
-  --mat-solid: oklch(0.23 0.014 255 / 0.94) !important;
 }

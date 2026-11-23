@@ -41,7 +41,6 @@ export const useSheetMorph = ({ popup, header, scrim, content, toolbar }: SheetM
                 const gap = peekHeight - SHEET.PEEK_CONTENT_PX;
                 glass.style.setProperty('--sheet-morph', String(morph));
                 glass.style.setProperty('--sheet-glass-height', morph < 1 ? `${Math.max(height, peekHeight) - gap * (1 - morph)}px` : '100%');
-                glass.toggleAttribute('data-solid', rise >= SHEET.SOLID_FROM_RISE);
                 glass.toggleAttribute('data-edge-top', morph >= 1);
             }
             header.current?.style.setProperty('--sheet-morph', String(morph));

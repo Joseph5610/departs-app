@@ -68,8 +68,6 @@ export const SHEET = {
     OVERDRAG_RATE: 0.2,
     /** ...and no further than this. */
     OVERDRAG_MAX_PX: 14,
-    /** The sheet turns to its densest material from this share of the way between half and full. */
-    SOLID_FROM_RISE: 0.6,
     /** The morph loop stops after this many frames without movement. */
     MORPH_IDLE_FRAMES: 30,
     /** The content starts fading in at this share of the morph from peek to half... */

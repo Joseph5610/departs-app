@@ -345,7 +345,7 @@ export const RideBar = () => {
                                 "flex items-center justify-center gap-1 text-muted-foreground transition-all duration-300 ease-out hover:text-foreground focus-visible:ring-primary/50",
                                 isExpanded
                                     ? "mt-1.5 h-5 w-12 rounded-full glassy"
-                                    : "glassy-thick absolute! inset-x-5 bottom-0 z-0 h-9 items-end rounded-b-surface pb-1"
+                                    : "glassy absolute! inset-x-5 bottom-0 z-0 h-9 items-end rounded-b-surface pb-1"
                             )}
                         >
                             {isExpanded ? <ChevronUp size={14} strokeWidth={2} /> : (

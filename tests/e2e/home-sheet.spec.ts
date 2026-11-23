@@ -61,7 +61,7 @@ test.describe('Mobile home sheet', () => {
         await expect.poll(width).toBe(136);
 
         await page.getByTestId('home-sheet-grabber').click();
-        await expect(page.locator('[data-slot="drawer-glass"]')).toHaveAttribute('data-solid', '');
+        await expect.poll(async () => (await page.locator('[data-slot="drawer-glass"]').boundingBox())!.y).toBeLessThan(150);
         await scrollBy(300);
         await expect.poll(width).toBe(48);
         await expect(toolbar.getByTestId('favorite-btn')).toHaveAttribute('tabindex', '-1');
@@ -122,7 +122,7 @@ test.describe('Mobile home sheet', () => {
         await expect(page.getByTestId('home-sheet-grabber')).toHaveCSS('height', '16px');
 
         await page.getByTestId('home-sheet-grabber').click();
-        await expect(glass).toHaveAttribute('data-solid', '');
+        await expect.poll(async () => (await glass.boundingBox())!.y).toBeLessThan(150);
         await context.close();
     });
 

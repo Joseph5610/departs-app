@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- The map runs smoothly again on phones and tablets: surfaces over it are solid there instead of blurring the map behind them on every frame.
+- The map runs smoothly again: the sheet, panels and controls over it are solid instead of blurring the map behind them on every frame.
 - Content scrolling under the mobile sheet header is no longer clipped into rounded corners.
 - The last result of the desktop search can be scrolled into view.
 

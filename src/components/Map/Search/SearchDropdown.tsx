@@ -96,7 +96,7 @@ export const SearchDropdown = ({
     const hasResults = results.length > 0 || vehicleResults.length > 0 || posResults.length > 0 || geocodingResults.length > 0 || !!queryLines;
 
     return (
-        <div className="mt-2 overflow-hidden rounded-surface glassy-thick p-1.5">
+        <div className="mt-2 overflow-hidden rounded-surface glassy p-1.5">
             <Autocomplete.List className="max-h-[60vh] overflow-y-auto scroll-edge custom-scrollbar space-y-1">
                 {showHistory && (
                     <SearchGroup
