@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Desktop search shows "No results" and orders and labels its sections like the phone's.
 - A stop board's favourite and menu buttons sit in the desktop panel's title row, as on other panels.
 - Separators, section headings, chevrons, close buttons, dialog sizes and loading skeletons look the same on every screen.
-- Decorative spins, glows, hover zooms and the bouncing next-stop arrow are gone; locating only tints the button while it waits.
+- Decorative spins, glows, hover zooms and the current stop's ping are gone; locating only tints the button while it waits.
 
 ### Fixed
 
