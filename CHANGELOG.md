@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Phone search results mark favourite stops with a star, as on desktop.
 
+### Fixed
+
+- The vehicle hero keeps room for its vehicle details while they load, so the card no longer jumps when they arrive.
+
 ## [0.97.4] - 2026-11-22
 
 ### Changed

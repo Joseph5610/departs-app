@@ -21,6 +21,7 @@ import { delaySourceOf, fleetRegisterUrl, vehicleIdentifiers, vehicleNotice, typ
 import { useNow } from '@/hooks/useNow';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { HeroFooter } from '@/components/DetailPanel/HeroFooter';
+import { HeroFooterSkeleton } from './VehicleDetailSkeleton';
 
 export const VehicleHero = ({
     displayVehicle,
@@ -120,7 +121,7 @@ export const VehicleHero = ({
                 <TripEndedNotice vehicle={displayVehicle} hasEnded={hasEnded} />
             </div>
 
-            {descriptor && (
+            {descriptor ? (
                 <HeroFooter className="mt-auto flex items-center justify-between gap-3">
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                         <span className="type-meta font-medium text-foreground">{vehicleTypeLabel}</span>
@@ -140,7 +141,7 @@ export const VehicleHero = ({
                         usbChargers={displayVehicle.vehicle_descriptor?.has_usb_chargers}
                     />
                 </HeroFooter>
-            )}
+            ) : isDetailLoading && <HeroFooterSkeleton />}
         </Card>
     );
 };

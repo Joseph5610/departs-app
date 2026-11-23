@@ -32,15 +32,19 @@ const VehicleHeroSkeleton = () => (
             </div>
         </div>
 
-        <HeroFooter className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <div className="flex h-4.5 items-center"><Skeleton className="h-3 w-40" /></div>
-                <div className="flex h-4 items-center"><Skeleton className="h-2.5 w-16" /></div>
-                <div className="flex h-4 items-center"><Skeleton className="h-2.5 w-28" /></div>
-            </div>
-            <Skeleton className="size-8 shrink-0 rounded-nested" />
-        </HeroFooter>
+        <HeroFooterSkeleton />
     </Card>
+);
+
+/** The hero's vehicle footer while the trip detail that carries it loads: model, operator, then the identifier line. */
+export const HeroFooterSkeleton = () => (
+    <HeroFooter className="mt-auto flex items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <div className="flex h-4.5 items-center"><Skeleton className="h-3 w-40" /></div>
+            <div className="flex h-4 items-center"><Skeleton className="h-2.5 w-16" /></div>
+            <div className="flex h-4 items-center"><Skeleton className="h-2.5 w-28" /></div>
+        </div>
+    </HeroFooter>
 );
 
 export const StopTimelineSkeleton = () => (
