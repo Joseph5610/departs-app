@@ -193,6 +193,16 @@
   }
 }
 
+/* On phones and tablets a backdrop blur over the map is redone with every map frame and halves the frame rate, so their glass is solid. */
+@media (pointer: coarse) {
+  :root {
+    --glass-backdrop: none;
+    --mat: var(--mat-opaque);
+    --mat-thick: var(--mat-opaque);
+    --mat-solid: var(--mat-opaque);
+  }
+}
+
 @media (prefers-contrast: more) {
   .dark {
     --label-2: rgb(255 255 255 / 0.84);
