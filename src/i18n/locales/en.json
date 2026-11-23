@@ -131,7 +131,6 @@
   "welcome": {
     "title": "Welcome to {{appName}}",
     "description": "The fastest way to track departures and real-time locations of your transport.",
-    "chooseCity": "Select Region",
     "cta": "Get Started"
   },
   "map": {

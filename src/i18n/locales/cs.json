@@ -134,7 +134,6 @@
   "welcome": {
     "title": "Vítejte v {{appName}}",
     "description": "Nejrychlejší způsob, jak sledovat odjezdy a polohu vašich spojů v reálném čase.",
-    "chooseCity": "Vyberte region",
     "cta": "Začínáme"
   },
   "map": {
