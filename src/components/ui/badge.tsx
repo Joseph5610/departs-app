@@ -52,5 +52,6 @@ function Badge({
 }
 
 export {
+  badgeVariants,
   Badge,
 }

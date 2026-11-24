@@ -128,6 +128,31 @@ function DialogDescription({
   )
 }
 
+
+function DialogClose({ ...props }: DialogPrimitive.Close.Props) {
+  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
+}
+
+
+function DialogFooter({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-footer"
+      className={cn(
+        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+}
+
 export {
   Dialog,
   DialogContent,
@@ -135,4 +160,6 @@ export {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
+  DialogFooter,
 }

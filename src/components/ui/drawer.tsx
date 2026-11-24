@@ -189,8 +189,62 @@ function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
 }
 
 
+
+function DrawerTrigger({ ...props }: DrawerPrimitive.Trigger.Props) {
+  return <DrawerPrimitive.Trigger data-slot="drawer-trigger" {...props} />
+}
+
+
+function DrawerClose({ ...props }: DrawerPrimitive.Close.Props) {
+  return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />
+}
+
+
+function DrawerHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="drawer-header"
+      className={cn(
+        "flex shrink-0 flex-col gap-0.5 p-4 pb-0 group-data-[swipe-axis=y]/drawer-popup:text-center md:gap-0.5 md:text-left",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+
+function DrawerFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="drawer-footer"
+      className={cn("mt-auto flex shrink-0 flex-col gap-2 p-4 pt-0", className)}
+      {...props}
+    />
+  )
+}
+
+
+function DrawerDescription({
+  className,
+  ...props
+}: DrawerPrimitive.Description.Props) {
+  return (
+    <DrawerPrimitive.Description
+      data-slot="drawer-description"
+      className={cn("type-row text-balance text-muted-foreground", className)}
+      {...props}
+    />
+  )
+}
+
 export {
   Drawer,
   DrawerContent,
   DrawerTitle,
+  DrawerTrigger,
+  DrawerClose,
+  DrawerHeader,
+  DrawerFooter,
+  DrawerDescription,
 }
