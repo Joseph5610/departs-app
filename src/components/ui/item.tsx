@@ -22,7 +22,7 @@ function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
 
 
 /** A row in a grouped list; its separator starts at the text, `--row-sep` from the left. */
-const ITEM_ROW = "group/item row-separator flex min-h-11 w-full flex-nowrap items-center gap-3 px-3.5 py-2 text-left type-row outline-none transition-colors duration-100 [button&]:row-hover-group [a&]:row-hover-group"
+const ITEM_ROW = "group/item row-separator flex min-h-11 w-full flex-nowrap items-center gap-3 px-3.5 py-2 text-left type-row outline-none focus-visible:ring-0 transition-colors duration-100 [button&]:row-hover-group [a&]:row-hover-group"
 
 function Item({
   className,
