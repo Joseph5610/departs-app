@@ -78,7 +78,7 @@ export const VehicleHero = ({
                                 aria-pressed={isFollowing}
                                 size="icon-xs"
                                 onClick={onToggleFollow}
-                                className="shrink-0"
+                                className={cn("shrink-0", isFollowing && "bg-selected text-foreground hover:bg-selected")}
                                 aria-label={t('map.vehicleDetails.track')}
                             >
                                 {isFollowing ? (

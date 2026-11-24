@@ -17,8 +17,8 @@ const buttonVariants = cva(
         /** A bare control: no fill until hovered or pressed. */
         ghost: "text-muted-foreground hover:bg-fill-2 hover:text-foreground active:bg-fill-2 aria-expanded:bg-fill-2",
         link: "text-tint-mint underline-offset-4 hover:underline",
-        /** A chip-shaped control, such as "more of these" after a row of chips; pressed, it takes the selected mint. */
-        pill: "bg-fill text-muted-foreground tabular-nums hover:bg-fill-2 hover:text-foreground aria-pressed:bg-selected aria-pressed:text-foreground",
+        /** A chip-shaped control, such as "more of these" after a row of chips. */
+        pill: "bg-fill text-muted-foreground tabular-nums hover:bg-fill-2 hover:text-foreground",
       },
       size: {
         default: "hit-target h-control-lg px-5 type-group",
