@@ -1,339 +1,169 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
-import 'react-json-view-lite/dist/index.css';
-
+import { AlertOctagon, Bug, ChevronLeft, Lightbulb, MessageSquare, Terminal, type LucideIcon } from 'lucide-react';
 import type { StoredFeedback } from '@/types';
 import { apiFetch } from '@/lib/apiClient';
+import { cn } from '@/lib/cn';
 import { formatTimeAgo } from '@/domain/time';
-
-import { Badge } from '@/components/ui/badge';
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
-import { Bug, Lightbulb, MessageSquare, Loader2, RefreshCw, Search, ChevronDown, AlertOctagon, Check, Copy, Terminal, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { AdminLayout } from '@/pages/admin/AdminLayout';
-import { buildAgentPrompt } from './agentPrompt';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useNowEvery } from '@/hooks/useNow';
 import { UI_TIMING_MS } from '@/config/constants';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { SearchField } from '@/components/SearchField';
+import { SegmentedControl } from '@/components/SegmentedControl';
+import { SectionHeading } from '@/components/SectionHeading';
+import { EmptyState } from '@/components/EmptyState';
+import { CopyButton } from '@/components/CopyButton';
+import { FactRow } from '@/components/FactRow';
+import { ExpandChevron } from '@/components/Chevron';
+import { AdminLayout } from '@/pages/admin/AdminLayout';
+import { AdminStatus, JsonPanel, RefreshButton } from '@/pages/admin/AdminParts';
+import { buildAgentPrompt } from './agentPrompt';
+import { filterFeedback, type FeedbackKind } from './feedbackFilter';
+
+const TYPE_ICONS: Record<StoredFeedback['type'], { icon: LucideIcon; tone: string }> = {
+    crash: { icon: AlertOctagon, tone: 'text-destructive' },
+    bug: { icon: Bug, tone: 'text-destructive' },
+    feature_request: { icon: Lightbulb, tone: 'text-tint-amber' },
+    other: { icon: MessageSquare, tone: 'text-tint-sky' },
+};
+
+const typeLabel = (type: StoredFeedback['type']) => type.replace('_', ' ');
+
+const TypeIcon = ({ type }: { type: StoredFeedback['type'] }) => {
+    const { icon: Icon, tone } = TYPE_ICONS[type];
+    return <Icon strokeWidth={1.75} className={tone} />;
+};
+
+/** A stack trace of a crash report under its heading. */
+const StackBlock = ({ title, stack }: { title: string; stack?: string }) => stack ? (
+    <section className="flex flex-col gap-2">
+        <SectionHeading>{title}</SectionHeading>
+        <Card size="none" className="bg-tint-red/16 p-4">
+            <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-xs text-destructive">{stack}</pre>
+        </Card>
+    </section>
+) : null;
+
+const FeedbackDetail = ({ item, now, onBack }: { item: StoredFeedback; now: number; onBack: () => void }) => {
+    const { copiedKey, copy } = useCopyToClipboard();
+    const [showsDiagnostics, setShowsDiagnostics] = useState(false);
+    const crash = item.type === 'crash' ? item.diagnostics?.crashInfo : undefined;
+    return (
+        <div className="flex flex-col gap-5">
+            <div className="flex flex-wrap items-center gap-2">
+                <Button variant="secondary" size="sm" className="gap-1 pl-2 lg:hidden" onClick={onBack}>
+                    <ChevronLeft /> List
+                </Button>
+                <span className="flex items-center gap-2 [&_svg]:size-4.5"><TypeIcon type={item.type} /><SectionHeading>{typeLabel(item.type)}</SectionHeading></span>
+                <span className="type-meta text-muted-foreground">{formatTimeAgo(item.timestamp, now, 'en')}</span>
+                <span className="ml-auto flex gap-2">
+                    <CopyButton label="Copy JSON" copiedLabel="Copied" isCopied={copiedKey === 'json'} onCopy={() => copy(JSON.stringify(item, null, 2), 'json')} />
+                    <Button size="sm" className="gap-1.5 pl-2.5" onClick={() => copy(buildAgentPrompt(item), 'prompt')}>
+                        <Terminal className="size-3.75" />
+                        {copiedKey === 'prompt' ? 'Copied' : 'Copy agent prompt'}
+                    </Button>
+                </span>
+            </div>
+
+            <Card size="none" className="p-4">
+                <p className="whitespace-pre-wrap type-row text-foreground">{item.message}</p>
+            </Card>
+
+            <StackBlock title="Error stack" stack={crash?.errorStack} />
+            <StackBlock title="Component stack" stack={crash?.componentStack} />
+
+            <Card size="none">
+                <FactRow label="ID" value={<span className="font-mono type-meta">{item.id}</span>} />
+                {item.email && <FactRow label="Email" value={item.email} />}
+                {item.ipAddress && <FactRow label="IP" value={<span className="font-mono type-meta">{item.ipAddress}</span>} />}
+                <FactRow label="Time" value={new Date(item.timestamp).toLocaleString()} />
+            </Card>
+
+            {item.diagnostics && (
+                <Card size="none">
+                    <Collapsible open={showsDiagnostics} onOpenChange={setShowsDiagnostics}>
+                        <CollapsibleTrigger render={<Item variant="row" size="none" render={<button type="button" />} />}>
+                            <ItemMedia variant="rowIcon"><Bug strokeWidth={1.75} /></ItemMedia>
+                            <ItemContent><ItemTitle className="type-row text-foreground">Diagnostics</ItemTitle></ItemContent>
+                            <ExpandChevron isOpen={showsDiagnostics} className="text-label-3" />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="border-t border-sep p-4">
+                            <JsonPanel data={item.diagnostics} shouldExpandNode={() => true} />
+                        </CollapsibleContent>
+                    </Collapsible>
+                </Card>
+            )}
+        </div>
+    );
+};
 
 export const AdminFeedback = () => {
-    const [filterText, setFilterText] = useState('');
-    const [filterType, setFilterType] = useState<'all' | 'feedback' | 'crash'>('all');
-    const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-    const [showMobileDetail, setShowMobileDetail] = useState(false);
+    const [query, setQuery] = useState('');
+    const [kind, setKind] = useState<FeedbackKind>('all');
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [showsDetail, setShowsDetail] = useState(false);
     const now = useNowEvery(UI_TIMING_MS.MINUTES_TICK);
 
-    const { data, isLoading, isError, error, refetch, isFetching } = useQuery<{ items: StoredFeedback[] }>({
+    const { data, isLoading, error, refetch, isFetching } = useQuery<{ items: StoredFeedback[] }>({
         queryKey: ['adminFeedback'],
-        queryFn: () => apiFetch<{ items: StoredFeedback[] }>('/admin/feedback')
+        queryFn: () => apiFetch<{ items: StoredFeedback[] }>('/admin/feedback'),
     });
-
-    const filteredItems = useMemo(() => {
-        if (!data?.items) return [];
-        const search = filterText.trim().toLowerCase();
-        
-        return data.items.filter(item => {
-            if (filterType === 'crash' && item.type !== 'crash') return false;
-            if (filterType === 'feedback' && item.type === 'crash') return false;
-            if (!search) return true;
-
-            const matchBasic = (
-                item.message.toLowerCase().includes(search) ||
-                item.type.toLowerCase().includes(search) ||
-                item.id.toLowerCase().includes(search) ||
-                (item.email && item.email.toLowerCase().includes(search)) ||
-                (item.ipAddress && item.ipAddress.toLowerCase().includes(search))
-            );
-
-            if (matchBasic) return true;
-            if (item.diagnostics) {
-                return JSON.stringify(item.diagnostics).toLowerCase().includes(search);
-            }
-            return false;
-        });
-    }, [data, filterType, filterText]);
-
-    const selectedItem = useMemo(() => {
-        if (!filteredItems.length) return null;
-        return filteredItems.find(item => item.id === selectedItemId) || filteredItems[0];
-    }, [filteredItems, selectedItemId]);
-
-    const activeItemId = selectedItem?.id || null;
-
-    const isDark = document.documentElement.classList.contains('dark');
-    const { copiedKey, copy } = useCopyToClipboard();
-
-    const getIcon = (type: string) => {
-        switch (type) {
-            case 'crash': return <AlertOctagon className="w-4 h-4 text-red-500" />;
-            case 'bug': return <Bug className="w-4 h-4 text-red-400" />;
-            case 'feature_request': return <Lightbulb className="w-4 h-4 text-amber-400" />;
-            default: return <MessageSquare className="w-4 h-4 text-sky-400" />;
-        }
-    };
-
-    const handleCopyRawJson = () => {
-        if (selectedItem) copy(JSON.stringify(selectedItem, null, 2), 'json');
-    };
-
-    const handleCopyAgentPrompt = () => {
-        if (selectedItem) copy(buildAgentPrompt(selectedItem), 'prompt');
-    };
-
-    const headerActions = (
-        <Button 
-            onClick={() => refetch()} 
-            disabled={isFetching} 
-            variant="ghost" 
-            size="icon" 
-            className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 shrink-0 cursor-pointer"
-            title="Refresh Feedback"
-        >
-            <RefreshCw size={16} className={isFetching ? 'animate-spin text-primary' : ''} />
-        </Button>
-    );
+    const items = data?.items ?? [];
+    const shown = filterFeedback(items, kind, query);
+    const selected = shown.find(item => item.id === selectedId) ?? shown[0];
 
     return (
-        <AdminLayout 
-            title="Feedback Hub" 
-            headerActions={headerActions} 
-            contentClassName="p-4 sm:p-6 flex flex-col gap-4 max-w-7xl mx-auto w-full min-h-0"
-        >
-            {isLoading && (
-                <div className="flex justify-center items-center h-64">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                </div>
-            )}
-
-            {isError && (
-                <div className="bg-destructive/10 text-destructive p-4 rounded-lg border border-destructive/20 shrink-0">
-                    <h3 className="font-bold">Error loading feedback</h3>
-                    <p>{(error as Error).message}</p>
-                </div>
-            )}
-
-            {!isLoading && !isError && data?.items?.length === 0 && (
-                <Empty className="py-12 bg-card/50 rounded-2xl border-border/40 shrink-0">
-                    <EmptyHeader>
-                        <EmptyMedia variant="icon" className="size-12 rounded-xl bg-muted/60 text-muted-foreground">
-                            <MessageSquare size={24} />
-                        </EmptyMedia>
-                        <EmptyTitle className="font-mono text-xs text-muted-foreground">
-                            No feedback or bug reports collected yet.
-                        </EmptyTitle>
-                    </EmptyHeader>
-                </Empty>
-            )}
-
-            {!isLoading && !isError && (data?.items?.length || 0) > 0 && (
-                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/70" />
-                        <Input 
-                            placeholder="Filter by message, email, ID or IP..." 
-                            className="h-9 pl-9 text-xs rounded-xl bg-foreground/5 border-border/40 text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:border-primary/50"
-                            value={filterText}
-                            onChange={(e) => setFilterText(e.target.value)}
-                        />
+        <AdminLayout title="Feedback Hub" headerActions={<RefreshButton onRefresh={() => refetch()} isRefreshing={isFetching} />}>
+            {isLoading || error ? <AdminStatus error={error} onRetry={() => refetch()} /> : items.length === 0 ? (
+                <EmptyState icon={MessageSquare} title="No feedback yet" description="Bug reports, requests and crashes show up here." />
+            ) : (
+                <>
+                    <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+                        <SearchField value={query} onValueChange={setQuery} clearLabel="Clear" placeholder="Message, email, ID or IP" className="sm:flex-1" />
+                        <SegmentedControl value={kind} onChange={setKind} options={[
+                            { value: 'all', label: `All (${items.length})` },
+                            { value: 'feedback', label: 'Feedback' },
+                            { value: 'crash', label: 'Crashes' },
+                        ]} />
                     </div>
-                    <Tabs value={filterType} onValueChange={(v) => setFilterType(v as 'all' | 'feedback' | 'crash')}>
-                        <TabsList variant="default" className="h-9 p-1 rounded-xl bg-foreground/5 border border-border/40 shrink-0">
-                            <TabsTrigger value="all" className="h-7 text-xs font-semibold rounded-lg px-3">
-                                All ({data?.items?.length || 0})
-                            </TabsTrigger>
-                            <TabsTrigger value="feedback" className="h-7 text-xs font-semibold rounded-lg px-3 gap-1.5">
-                                <MessageSquare className="w-3.5 h-3.5 opacity-70" />
-                                Feedback
-                            </TabsTrigger>
-                            <TabsTrigger value="crash" className="h-7 text-xs font-semibold rounded-lg px-3 gap-1.5 data-active:text-red-400">
-                                <AlertOctagon className="w-3.5 h-3.5 text-red-500" />
-                                Crashes
-                            </TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-                </div>
+
+                    <div className="flex min-h-0 flex-1 gap-4">
+                        <div className={cn("w-full shrink-0 overflow-y-auto lg:w-88", showsDetail && "max-lg:hidden")}>
+                            {shown.length === 0 ? (
+                                <EmptyState icon={MessageSquare} title="No matches" description={`Nothing matches “${query}”.`} />
+                            ) : (
+                                <Card size="none">
+                                    {shown.map(item => (
+                                        <Item
+                                            key={item.id}
+                                            variant="row"
+                                            size="none"
+                                            className={cn(item.id === selected?.id && "bg-selected")}
+                                            render={<button type="button" onClick={() => { setSelectedId(item.id); setShowsDetail(true); }} />}
+                                        >
+                                            <ItemMedia variant="rowIcon"><TypeIcon type={item.type} /></ItemMedia>
+                                            <ItemContent className="min-w-0 gap-0.5">
+                                                <ItemTitle className="w-full type-row text-foreground"><span className="line-clamp-2">{item.message}</span></ItemTitle>
+                                                <ItemDescription className="truncate type-note">
+                                                    {[typeLabel(item.type), formatTimeAgo(item.timestamp, now, 'en'), item.email].filter(Boolean).join(' · ')}
+                                                </ItemDescription>
+                                            </ItemContent>
+                                        </Item>
+                                    ))}
+                                </Card>
+                            )}
+                        </div>
+
+                        <div className={cn("min-w-0 flex-1 overflow-y-auto", !showsDetail && "max-lg:hidden")}>
+                            {selected && <FeedbackDetail item={selected} now={now} onBack={() => setShowsDetail(false)} />}
+                        </div>
+                    </div>
+                </>
             )}
-
-            <div className="flex gap-4 flex-1 min-h-0 relative">
-                <div className={`w-full lg:w-87.5 shrink-0 flex flex-col gap-2.5 overflow-y-auto pr-1 pb-4 ${showMobileDetail ? 'hidden lg:flex' : 'flex'}`}>
-                    {filteredItems?.length === 0 && data?.items?.length !== 0 && (
-                        <div className="text-center py-8 text-muted-foreground/70 font-mono text-xs">
-                            No results found for "{filterText}".
-                        </div>
-                    )}
-                    {filteredItems?.map((item) => {
-                        const isSelected = activeItemId === item.id;
-                        const isCrash = item.type === 'crash';
-                        return (
-                            <div 
-                                key={item.id} 
-                                onClick={() => {
-                                    setSelectedItemId(item.id);
-                                    setShowMobileDetail(true);
-                                }}
-                                className={`cursor-pointer rounded-xl p-3.5 transition-all border text-left flex flex-col gap-2 ${
-                                    isSelected 
-                                        ? (isCrash ? 'bg-red-500/10 border-red-500/40 ring-1 ring-red-500/20 shadow-xs' : 'bg-card border-primary/50 ring-1 ring-primary/20 shadow-xs') 
-                                        : (isCrash ? 'bg-red-500/3 hover:bg-red-500/8 border-red-500/20' : 'bg-card/60 hover:bg-card border-border/40 hover:border-border/70')
-                                }`}
-                            >
-                                <div className="flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-1.5">
-                                        {getIcon(item.type)}
-                                        <Badge variant="outline" className="micro-label px-2 py-0.5 rounded-md bg-foreground/5 border-border/40 text-muted-foreground">
-                                            {item.type.replace('_', ' ')}
-                                        </Badge>
-                                    </div>
-                                    <span className="text-caption font-mono text-muted-foreground/70 whitespace-nowrap">
-                                        {formatTimeAgo(item.timestamp, now, 'en')}
-                                    </span>
-                                </div>
-                                <p className="text-xs line-clamp-2 text-foreground/90 font-medium leading-relaxed">
-                                    {item.message}
-                                </p>
-                                {item.email && (
-                                    <div className="text-caption font-mono text-primary/90 truncate flex items-center gap-1 mt-0.5">
-                                        <span className="opacity-60">@</span> {item.email}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <div className={`flex-1 min-w-0 bg-card/80 backdrop-blur-md rounded-2xl border border-border/40 overflow-hidden flex flex-col shadow-xs ${!showMobileDetail ? 'hidden lg:flex' : 'flex'}`}>
-                    {selectedItem ? (
-                        <ScrollArea className={`h-full w-full ${selectedItem.type === 'crash' ? 'bg-red-500/2' : ''}`}>
-                            <div className="p-4 sm:p-6 flex flex-col gap-5">
-                                <div className="lg:hidden flex items-center mb-1">
-                                    <Button variant="ghost" size="sm" onClick={() => setShowMobileDetail(false)} className="-ml-2 h-8 text-xs font-semibold gap-1 rounded-lg">
-                                        <ArrowLeft className="w-4 h-4" />
-                                        Back to list
-                                    </Button>
-                                </div>
-
-                                <div className="flex justify-between items-start gap-4 flex-col sm:flex-row sm:items-center border-b border-border/40 pb-4">
-                                    <div className="flex flex-wrap items-center gap-2.5">
-                                        {getIcon(selectedItem.type)}
-                                        <Badge variant="outline" className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 bg-foreground/5 border-border/40 text-foreground">
-                                            {selectedItem.type.replace('_', ' ')}
-                                        </Badge>
-                                        <span className="text-xs font-mono text-muted-foreground/70">
-                                            {formatTimeAgo(selectedItem.timestamp, now, 'en')}
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                                        <Button 
-                                            variant="secondary" 
-                                            size="sm" 
-                                            onClick={handleCopyRawJson} 
-                                            className="h-8 px-3 text-xs font-semibold gap-1.5 text-foreground transition-all cursor-pointer flex-1 sm:flex-none"
-                                        >
-                                            {copiedKey === 'json' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                                            {copiedKey === 'json' ? 'Copied' : 'Copy Raw JSON'}
-                                        </Button>
-                                        <Button 
-                                            variant="default" 
-                                            size="sm" 
-                                            onClick={handleCopyAgentPrompt} 
-                                            className="h-8 px-3 rounded-lg text-xs font-bold gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xs transition-all cursor-pointer flex-1 sm:flex-none"
-                                        >
-                                            {copiedKey === 'prompt' ? <Check className="w-3.5 h-3.5" /> : <Terminal className="w-3.5 h-3.5" />}
-                                            {copiedKey === 'prompt' ? 'Copied' : 'Copy Agent Prompt'}
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                {selectedItem.email && (
-                                    <div className="text-xs font-mono font-semibold px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-lg truncate max-w-xs self-start">
-                                        {selectedItem.email}
-                                    </div>
-                                )}
-                                
-                                <div className="bg-foreground/3 rounded-xl p-4.5 border border-border/40 shadow-2xs">
-                                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground font-medium">{selectedItem.message}</p>
-                                </div>
-
-                                {selectedItem.type === 'crash' && selectedItem.diagnostics?.crashInfo && (
-                                    <div className="flex flex-col gap-3">
-                                        {selectedItem.diagnostics.crashInfo.errorStack && (
-                                            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 shadow-2xs">
-                                                <p className="text-xs font-bold text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                                    <AlertOctagon className="w-3.5 h-3.5" />
-                                                    Error Stack
-                                                </p>
-                                                <pre className="text-caption text-red-400 whitespace-pre-wrap font-mono overflow-x-auto bg-black/40 p-3 rounded-lg border border-red-500/20">
-                                                    {selectedItem.diagnostics.crashInfo.errorStack}
-                                                </pre>
-                                            </div>
-                                        )}
-                                        {selectedItem.diagnostics.crashInfo.componentStack && (
-                                            <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 shadow-2xs">
-                                                <p className="text-xs font-bold text-orange-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                                    <AlertOctagon className="w-3.5 h-3.5" />
-                                                    Component Stack
-                                                </p>
-                                                <pre className="text-caption text-orange-300 whitespace-pre-wrap font-mono overflow-x-auto bg-black/40 p-3 rounded-lg border border-orange-500/20">
-                                                    {selectedItem.diagnostics.crashInfo.componentStack}
-                                                </pre>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                                
-                                <div className="flex flex-col gap-2 text-xs font-mono text-muted-foreground/80 bg-foreground/2 p-4 rounded-xl border border-border/40">
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
-                                        <span className="uppercase text-label font-extrabold tracking-widest text-muted-foreground/60 sm:w-28 shrink-0">Feedback ID:</span>
-                                        <span className="text-foreground/90 font-mono break-all">{selectedItem.id}</span>
-                                    </div>
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
-                                        <span className="uppercase text-label font-extrabold tracking-widest text-muted-foreground/60 sm:w-28 shrink-0">Client IP:</span>
-                                        <span className="text-foreground/90 font-mono">{selectedItem.ipAddress}</span>
-                                    </div>
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3">
-                                        <span className="uppercase text-label font-extrabold tracking-widest text-muted-foreground/60 sm:w-28 shrink-0">Exact Time:</span>
-                                        <span className="text-foreground/90 font-mono">{new Date(selectedItem.timestamp).toLocaleString()}</span>
-                                    </div>
-                                </div>
-                                
-                                {selectedItem.diagnostics && (
-                                    <Collapsible className="bg-foreground/2 rounded-xl border border-border/40 overflow-hidden">
-                                        <CollapsibleTrigger className="w-full flex justify-between items-center p-3.5 hover:bg-foreground/5 transition-colors cursor-pointer data-[state=open]:[&>svg]:rotate-180">
-                                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                                                <Bug className="w-3.5 h-3.5 text-primary" />
-                                                Full Diagnostic Payload
-                                            </span>
-                                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200" />
-                                        </CollapsibleTrigger>
-                                        <CollapsibleContent className="px-3.5 pb-3.5">
-                                            <div className="w-full rounded-xl bg-black/40 p-3.5 border border-border/40 shadow-inner overflow-hidden">
-                                                <div className="text-xs [&>div]:bg-transparent! font-mono overflow-x-auto">
-                                                    <JsonView 
-                                                        data={selectedItem.diagnostics} 
-                                                        shouldExpandNode={allExpanded} 
-                                                        style={isDark ? darkStyles : defaultStyles} 
-                                                    />
-                                                </div>
-                                            </div>
-                                        </CollapsibleContent>
-                                    </Collapsible>
-                                )}
-                            </div>
-                        </ScrollArea>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-12 text-center gap-3">
-                            <MessageSquare className="w-10 h-10 opacity-20" />
-                            <p className="text-sm font-semibold text-foreground/80">Select an item from the list</p>
-                            <p className="text-xs opacity-70 max-w-xs font-mono">Click on a feedback or crash report on the left to view its detailed diagnostics.</p>
-                        </div>
-                    )}
-                </div>
-            </div>
         </AdminLayout>
     );
 };
