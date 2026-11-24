@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Segmented switches and filter chips are built on shared Tabs and Toggle components, so they can be reached and changed with the keyboard.
+- Notices, error screens, code blocks, tap-to-explain hints and list rows reuse the shared components, so they look and respond the same everywhere.
 
 ### Fixed
 
