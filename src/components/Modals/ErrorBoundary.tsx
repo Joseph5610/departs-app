@@ -8,7 +8,9 @@ import { getDiagnosticSnapshot } from '@/hooks/features/useDiagnosticData';
 import { Button } from '@/components/ui/button';
 import { TURNSTILE_SITE_KEY } from '@/config/constants';
 
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty';
+import { EmptyState } from '@/components/EmptyState';
+import { Alert, AlertTitle } from '@/components/ui/alert';
+import { CodeBlock } from '@/components/CodeBlock';
 
 interface Props {
     children?: ReactNode;
@@ -95,21 +97,8 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-background pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]">
             <div className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center">
-                <Empty className="border-0 px-4 py-8">
-                    <EmptyHeader>
-                        <EmptyMedia
-                            variant="tile" className="bg-tint-red/16 text-destructive"
-                        >
-                            <AlertCircle strokeWidth={1.5} />
-                        </EmptyMedia>
-                        <EmptyTitle className="type-title text-foreground">
-                            {t('errors.crash.title')}
-                        </EmptyTitle>
-                        <EmptyDescription className="type-meta">
-                            {t('errors.crash.description')}
-                        </EmptyDescription>
-                    </EmptyHeader>
-                    <EmptyContent className="w-full flex flex-col gap-3 pt-4">
+                <EmptyState icon={AlertCircle} tone="error" title={t('errors.crash.title')} description={t('errors.crash.description')} className="px-4 py-8">
+                    <div className="flex w-full flex-col gap-3 pt-4">
                         <Button
                             variant="default"
                             onClick={() => window.location.reload()}
@@ -142,16 +131,14 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
                                         )}
                                     </Button>
                                     {submitError && (
-                                        <div className="rounded-surface bg-tint-red/16 px-3.5 py-2 text-center type-meta text-destructive">
-                                            {submitError}
-                                        </div>
+                                        <Alert variant="destructive" align="center"><AlertTitle className="text-current">{submitError}</AlertTitle></Alert>
                                     )}
                                 </div>
                             ) : (
-                                <div className="flex items-center justify-center gap-2 type-row text-foreground h-11 bg-field rounded-full w-full animate-in fade-in slide-in-from-bottom-2 duration-300 shadow-sm">
-                                    <CheckCircle2 size={18} strokeWidth={2} className="text-tint-mint" />
-                                    {t('errors.crash.sent')}
-                                </div>
+                                <Alert variant="info" align="center">
+                                    <CheckCircle2 />
+                                    <AlertTitle>{t('errors.crash.sent')}</AlertTitle>
+                                </Alert>
                             )}
 
                             <div className="flex justify-center w-full mt-2">
@@ -166,20 +153,12 @@ function ErrorFallback({ error, errorInfo }: { error: Error; errorInfo?: ErrorIn
                             </>
                         )}
 
-                        <div className="mt-3 flex w-full flex-col gap-2 rounded-surface bg-fill p-3.5 text-left">
-                            <p className="text-destructive type-control font-mono break-all">
-                                {error?.toString()}
-                            </p>
-                            {errorInfo && (
-                                <div className="max-h-48 overflow-y-auto overflow-x-auto custom-scrollbar w-full">
-                                    <pre className="text-muted-foreground type-note font-mono whitespace-pre w-full">
-                                        {errorInfo.componentStack}
-                                    </pre>
-                                </div>
-                            )}
-                        </div>
-                    </EmptyContent>
-                </Empty>
+                        <CodeBlock className="mt-3 max-h-60 w-full text-left">
+                            <span className="text-destructive">{error?.toString()}</span>
+                            {errorInfo?.componentStack}
+                        </CodeBlock>
+                    </div>
+                </EmptyState>
             </div>
         </div>
     );

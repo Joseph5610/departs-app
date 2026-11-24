@@ -10,7 +10,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
 import { SectionHeading } from '@/components/SectionHeading';
-import { SegmentedControl } from '@/components/SegmentedControl';
 import { useUiStore } from '@/state/uiStore';
 import { Plug } from 'lucide-react';
 import { DisplaySection } from './DisplaySection';
@@ -21,6 +20,7 @@ import { SUPPORTED_LANGUAGES } from '@/i18n/config';
 import { UI_TIMING_MS } from '@/config/constants';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { RowChevron } from '@/components/Chevron';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 /** The settings themselves: the body of the settings dialog and of the mobile settings card. */
 export const SettingsContent = () => {
@@ -35,23 +35,20 @@ export const SettingsContent = () => {
 
             <section className="flex flex-col gap-2">
                 <SectionHeading>{t('settings.sections.language')}</SectionHeading>
-                <SegmentedControl
-                    fill
-                    value={i18n.resolvedLanguage ?? ''}
-                    onChange={(language) => i18n.changeLanguage(language)}
-                    options={SUPPORTED_LANGUAGES.map(language => ({ value: language, label: t(`settings.language.${language}`) }))}
-                />
+                <Tabs value={i18n.resolvedLanguage ?? ''} onValueChange={(language: string) => i18n.changeLanguage(language)}>
+                    <TabsList>
+                        {SUPPORTED_LANGUAGES.map(language => <TabsTrigger key={language} value={language}>{t(`settings.language.${language}`)}</TabsTrigger>)}
+                    </TabsList>
+                </Tabs>
             </section>
 
             <section className="flex flex-col gap-2">
                 <SectionHeading>{t('settings.sections.ai')}</SectionHeading>
                 <Card size="none">
                     <Item
-                        variant="row"
-                        size="none"
                         render={<button onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsMcpModalOpen(true), UI_TIMING_MS.MODAL_SWAP_DELAY); }} />}
                     >
-                        <ItemMedia variant="rowIcon"><Plug strokeWidth={1.75} /></ItemMedia>
+                        <ItemMedia variant="icon"><Plug strokeWidth={1.75} /></ItemMedia>
                         <RowText title={t('mcp.title')} description={t('mcp.subtitle')} />
                         <ItemActions><RowChevron /></ItemActions>
                     </Item>

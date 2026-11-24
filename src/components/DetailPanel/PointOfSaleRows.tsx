@@ -15,8 +15,8 @@ export const PosSection = ({ title, children }: { title?: string; children: Reac
 
 /** A row of a section: a muted icon, then the text. */
 export const PosRow = ({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) => (
-    <Item variant="row" size="none">
-        <ItemMedia variant="rowIcon">
+    <Item>
+        <ItemMedia variant="icon">
             <Icon strokeWidth={1.5} />
         </ItemMedia>
         <ItemContent>

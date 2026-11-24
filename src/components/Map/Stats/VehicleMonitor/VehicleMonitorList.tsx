@@ -1,18 +1,21 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Activity, Bus } from 'lucide-react';
+import { Bus } from 'lucide-react';
 import { Virtuoso } from 'react-virtuoso';
 import { useVehicles } from '@/hooks/data/useVehicles';
 import { useVehicleMonitor } from '@/hooks/derived/useVehicleMonitor';
 import type { SearchField as VehicleSearchField } from '@/domain/vehicles';
 import { VehicleMonitorRow } from './VehicleMonitorRow';
 import { FilterChip } from '@/components/FilterChip';
-import { SegmentedControl } from '@/components/SegmentedControl';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { routeTypeRank } from '@/domain/routes';
 import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
 import { SearchField } from '@/components/SearchField';
 import { EmptyState } from '@/components/EmptyState';
+import { ChipStrip } from '@/components/ChipStrip';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 export const VehicleMonitorList = () => {
@@ -53,19 +56,16 @@ export const VehicleMonitorList = () => {
                 aria-label={searchField === 'vehicle' ? t('stats.monitor.searchByVehicle') : t('stats.monitor.searchByLine')}
                 clearLabel={t('search.clearFilter')}
                 lead={
-                    <SegmentedControl
-                        size="sm"
-                        value={searchField}
-                        onChange={setSearchField}
-                        options={[
-                            { value: 'line', label: t('stats.monitor.fieldLine') },
-                            { value: 'vehicle', label: t('stats.monitor.fieldVehicle') },
-                        ]}
-                    />
+                    <Tabs value={searchField} onValueChange={setSearchField}>
+                        <TabsList size="sm">
+                            <TabsTrigger value="line">{t('stats.monitor.fieldLine')}</TabsTrigger>
+                            <TabsTrigger value="vehicle">{t('stats.monitor.fieldVehicle')}</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
                 }
             />
 
-            <div className="-my-2 flex items-center gap-1.5 overflow-x-auto py-2.5 no-scrollbar">
+            <ChipStrip>
                 <FilterChip label={t('common.all')} count={totalCount} isActive={modeFilter === 'all'} onClick={() => setModeFilter('all')} />
                 {allowedVehicleTypes.map(slug => {
                     const count = modeCounts[slug] ?? 0;
@@ -83,7 +83,7 @@ export const VehicleMonitorList = () => {
                         />
                     );
                 })}
-            </div>
+            </ChipStrip>
 
             <div className="flex items-center justify-between type-note text-muted-foreground px-0.5">
                 <span>
@@ -92,12 +92,9 @@ export const VehicleMonitorList = () => {
             </div>
 
             {isLoading ? (
-                <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground opacity-60">
-                    <Activity className="animate-pulse" size={24} />
-                    <span className="type-note">{t('common.loading')}</span>
-                </div>
+                <Skeleton className="h-64 rounded-surface" aria-hidden="true" />
             ) : items.length > 0 ? (
-                <div ref={listRef} className="overflow-hidden rounded-surface bg-fill">
+                <Card ref={listRef} size="none">
                     {scroller && (
                         <Virtuoso
                             customScrollParent={scroller}
@@ -105,7 +102,7 @@ export const VehicleMonitorList = () => {
                             itemContent={(_index, item) => <VehicleMonitorRow key={item.id} item={item} />}
                         />
                     )}
-                </div>
+                </Card>
             ) : (
                 <EmptyState icon={Bus} title={t('stats.monitor.noVehiclesFound')} />
             )}

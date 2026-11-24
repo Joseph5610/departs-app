@@ -221,8 +221,6 @@ const StopList = ({ leading, stops, selected, onPick }: {
 
 const StopChoice = ({ label, time, isSelected, onClick, isMuted = false }: { label: string; time: string | null; isSelected: boolean; onClick: () => void; isMuted?: boolean }) => (
     <Item
-        variant="row"
-        size="none"
         render={<button type="button" onClick={onClick} aria-pressed={isSelected} />}
         className="gap-2 type-row aria-pressed:font-semibold aria-pressed:text-tint-mint"
     >

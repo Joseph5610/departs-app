@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AlertOctagon, Bug, ChevronLeft, Lightbulb, MessageSquare, Terminal, type LucideIcon } from 'lucide-react';
-import type { StoredFeedback } from '@/types';
+import type { AppError, StoredFeedback } from '@/types';
 import { apiFetch } from '@/lib/apiClient';
 import { cn } from '@/lib/cn';
 import { formatTimeAgo } from '@/domain/time';
@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SearchField } from '@/components/SearchField';
-import { SegmentedControl } from '@/components/SegmentedControl';
 import { SectionHeading } from '@/components/SectionHeading';
 import { EmptyState } from '@/components/EmptyState';
 import { CopyButton } from '@/components/CopyButton';
@@ -23,6 +22,8 @@ import { AdminLayout } from '@/pages/admin/AdminLayout';
 import { AdminStatus, JsonPanel, RefreshButton } from '@/pages/admin/AdminParts';
 import { buildAgentPrompt } from './agentPrompt';
 import { filterFeedback, type FeedbackKind } from './feedbackFilter';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CodeBlock } from '@/components/CodeBlock';
 
 const TYPE_ICONS: Record<StoredFeedback['type'], { icon: LucideIcon; tone: string }> = {
     crash: { icon: AlertOctagon, tone: 'text-destructive' },
@@ -42,9 +43,7 @@ const TypeIcon = ({ type }: { type: StoredFeedback['type'] }) => {
 const StackBlock = ({ title, stack }: { title: string; stack?: string }) => stack ? (
     <section className="flex flex-col gap-2">
         <SectionHeading>{title}</SectionHeading>
-        <Card size="none" className="bg-tint-red/16 p-4">
-            <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-xs text-destructive">{stack}</pre>
-        </Card>
+        <CodeBlock className="whitespace-pre-wrap text-destructive">{stack}</CodeBlock>
     </section>
 ) : null;
 
@@ -86,8 +85,8 @@ const FeedbackDetail = ({ item, now, onBack }: { item: StoredFeedback; now: numb
             {item.diagnostics && (
                 <Card size="none">
                     <Collapsible open={showsDiagnostics} onOpenChange={setShowsDiagnostics}>
-                        <CollapsibleTrigger render={<Item variant="row" size="none" render={<button type="button" />} />}>
-                            <ItemMedia variant="rowIcon"><Bug strokeWidth={1.75} /></ItemMedia>
+                        <CollapsibleTrigger render={<Item render={<button type="button" />} />}>
+                            <ItemMedia variant="icon"><Bug strokeWidth={1.75} /></ItemMedia>
                             <ItemContent><ItemTitle className="type-row text-foreground">Diagnostics</ItemTitle></ItemContent>
                             <ExpandChevron isOpen={showsDiagnostics} className="text-label-3" />
                         </CollapsibleTrigger>
@@ -108,7 +107,7 @@ export const AdminFeedback = () => {
     const [showsDetail, setShowsDetail] = useState(false);
     const now = useNowEvery(UI_TIMING_MS.MINUTES_TICK);
 
-    const { data, isLoading, error, refetch, isFetching } = useQuery<{ items: StoredFeedback[] }>({
+    const { data, isLoading, error, refetch, isFetching } = useQuery<{ items: StoredFeedback[] }, AppError>({
         queryKey: ['adminFeedback'],
         queryFn: () => apiFetch<{ items: StoredFeedback[] }>('/admin/feedback'),
     });
@@ -124,11 +123,13 @@ export const AdminFeedback = () => {
                 <>
                     <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
                         <SearchField value={query} onValueChange={setQuery} clearLabel="Clear" placeholder="Message, email, ID or IP" className="sm:flex-1" />
-                        <SegmentedControl value={kind} onChange={setKind} options={[
-                            { value: 'all', label: `All (${items.length})` },
-                            { value: 'feedback', label: 'Feedback' },
-                            { value: 'crash', label: 'Crashes' },
-                        ]} />
+                        <Tabs value={kind} onValueChange={setKind}>
+                            <TabsList>
+                                <TabsTrigger value="all">All ({items.length})</TabsTrigger>
+                                <TabsTrigger value="feedback">Feedback</TabsTrigger>
+                                <TabsTrigger value="crash">Crashes</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
                     </div>
 
                     <div className="flex min-h-0 flex-1 gap-4">
@@ -140,12 +141,10 @@ export const AdminFeedback = () => {
                                     {shown.map(item => (
                                         <Item
                                             key={item.id}
-                                            variant="row"
-                                            size="none"
                                             className={cn(item.id === selected?.id && "bg-selected")}
                                             render={<button type="button" onClick={() => { setSelectedId(item.id); setShowsDetail(true); }} />}
                                         >
-                                            <ItemMedia variant="rowIcon"><TypeIcon type={item.type} /></ItemMedia>
+                                            <ItemMedia variant="icon"><TypeIcon type={item.type} /></ItemMedia>
                                             <ItemContent className="min-w-0 gap-0.5">
                                                 <ItemTitle className="w-full type-row text-foreground"><span className="line-clamp-2">{item.message}</span></ItemTitle>
                                                 <ItemDescription className="truncate type-note">

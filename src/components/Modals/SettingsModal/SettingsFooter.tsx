@@ -85,36 +85,30 @@ export const SettingsFooter = () => {
             <Card size="none">
                 {searchHistory.length > 0 && (
                     <Item
-                        variant="row"
-                        size="none"
                         render={<button onClick={() => { clearHistory(); toast.success(t('settings.clearHistory.success')); }} />}
                     >
-                        <ItemMedia variant="rowIcon" className="text-destructive"><Clock strokeWidth={1.75} /></ItemMedia>
+                        <ItemMedia variant="icon" className="text-destructive"><Clock strokeWidth={1.75} /></ItemMedia>
                         <RowText title={t('settings.clearHistory.button')} />
                     </Item>
                 )}
                 <Item
-                    variant="row"
-                    size="none"
                     render={<button onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsFeedbackOpen(true), UI_TIMING_MS.MODAL_SWAP_DELAY); }} />}
                 >
-                    <ItemMedia variant="rowIcon"><MessageSquareHeart strokeWidth={1.75} /></ItemMedia>
+                    <ItemMedia variant="icon"><MessageSquareHeart strokeWidth={1.75} /></ItemMedia>
                     <RowText title={t('feedback.title')} />
                     <RowChevron />
                 </Item>
                 {canInstall && (
-                    <Item variant="row" size="none" render={<button onClick={() => { void promptInstall(); }} />}>
-                        <ItemMedia variant="rowIcon"><Download strokeWidth={1.75} /></ItemMedia>
+                    <Item render={<button onClick={() => { void promptInstall(); }} />}>
+                        <ItemMedia variant="icon"><Download strokeWidth={1.75} /></ItemMedia>
                         <RowText title={t('settings.install')} />
                     </Item>
                 )}
                 <Item
-                    variant="row"
-                    size="none"
                     className={cn(isChecking && "opacity-50 pointer-events-none")}
                     render={<button onClick={handleCheckUpdate} disabled={isChecking} />}
                 >
-                    <ItemMedia variant="rowIcon" className={cn(isChecking && "animate-spin text-tint-mint")}>
+                    <ItemMedia variant="icon" className={cn(isChecking && "animate-spin text-tint-mint")}>
                         <RefreshCw strokeWidth={1.75} />
                     </ItemMedia>
                     <RowText title={isChecking ? t('settings.updates.checking') : t('settings.updates.check')} />
@@ -126,8 +120,8 @@ export const SettingsFooter = () => {
 
             <Card size="none">
                 {LEGAL_LINKS.map(({ href, label, icon: Icon }) => (
-                    <Item key={href} variant="row" size="none" render={<a href={href} target="_blank" rel="noopener" />}>
-                        <ItemMedia variant="rowIcon"><Icon strokeWidth={1.75} /></ItemMedia>
+                    <Item key={href} render={<a href={href} target="_blank" rel="noopener" />}>
+                        <ItemMedia variant="icon"><Icon strokeWidth={1.75} /></ItemMedia>
                         <RowText title={t(label)} />
                         <ItemActions><ExternalLinkIcon /></ItemActions>
                     </Item>

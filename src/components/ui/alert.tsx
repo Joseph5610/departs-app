@@ -7,18 +7,23 @@ const alertVariants = cva(
   "group/alert relative grid w-full gap-x-3 gap-y-1 rounded-surface px-3.5 py-3 text-left type-row has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] *:[svg]:col-start-1 *:[svg]:row-start-1 *:[svg]:row-span-full *:[svg]:self-start *:[svg]:mt-0.5 *:[svg]:shrink-0 *:[svg]:text-current",
   {
     variants: {
+      /** `center`: a one-line alert, its icon beside the text instead of at its top. */
+      align: {
+        top: "",
+        center: "items-center *:[svg]:mt-0 *:[svg]:self-center",
+      },
       variant: {
         default: "bg-fill text-foreground",
         destructive:
           "bg-tint-red/16 text-destructive *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current",
         warning:
-          "bg-amber-500/15 text-tint-amber *:data-[slot=alert-description]:text-tint-amber *:[svg]:text-current",
-        subtle: "bg-fill text-foreground",
+          "bg-tint-amber/15 text-tint-amber *:data-[slot=alert-description]:text-tint-amber *:[svg]:text-current",
         info: "bg-selected text-foreground *:data-[slot=alert-description]:text-tint-mint/90 *:[svg]:text-current",
       },
     },
     defaultVariants: {
       variant: "default",
+      align: "top",
     },
   }
 )
@@ -26,13 +31,14 @@ const alertVariants = cva(
 function Alert({
   className,
   variant,
+  align,
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
   return (
     <div
       data-slot="alert"
       role="alert"
-      className={cn(alertVariants({ variant }), className)}
+      className={cn(alertVariants({ variant, align }), className)}
       {...props}
     />
   )
@@ -68,6 +74,8 @@ function AlertDescription({
   )
 }
 
+
+
 function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -78,4 +86,9 @@ function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-export { Alert, AlertTitle, AlertDescription, AlertAction }
+export {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  AlertAction,
+}

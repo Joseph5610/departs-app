@@ -37,7 +37,7 @@ export const VehicleMonitorRow = memo(({ item }: VehicleMonitorRowProps) => {
     const displayId = item.vehicleId ? `#${vehicleDisplayNumber(item.vehicleId)}` : '—';
 
     return (
-        <Item variant="row" size="none" render={<button type="button" onClick={handleClick} />} className="group justify-between [--row-sep:0.875rem]">
+        <Item render={<button type="button" onClick={handleClick} />} className="group justify-between [--row-sep:0.875rem]">
             <div className="flex items-center gap-2.5 shrink-0 min-w-36">
                 <LineBadge
                     name={item.line}
@@ -55,12 +55,12 @@ export const VehicleMonitorRow = memo(({ item }: VehicleMonitorRowProps) => {
 
             <div className="flex items-center gap-2 shrink-0">
                 {delaySeconds === null ? (
-                    <Badge variant="muted" className="type-badge text-muted-foreground">
+                    <Badge variant="label" className="type-badge text-muted-foreground">
                         {t('map.vehicleDetails.notAvailable')}
                     </Badge>
                 ) : (
                     <Badge
-                        variant="muted"
+                        variant="label"
                         className={cn("type-badge tabular-nums", isLate ? "bg-destructive/10 text-destructive" : isEarly ? "bg-tint-sky/10 text-tint-sky" : "bg-tint-mint/10 text-tint-mint")}
                     >
                         {isLate

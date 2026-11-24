@@ -69,25 +69,26 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
             data-testid="home-sections"
         >
             {myIncidents.length > 0 && (
+                <Card size="none" className="shrink-0 bg-tint-red/16">
                 <Item
-                    size="none"
-                    className="flex-nowrap rounded-surface border-0 bg-tint-red/16 px-3.5 py-3 text-left"
+                    className="py-3"
                     render={<button type="button" onClick={() => myIncidents[0].guid ? openAlert(myIncidents[0].guid) : setIsAlertsOpen(true)} data-testid="home-disruptions" />}
                 >
-                    <ItemMedia variant="rowIcon" className="text-destructive"><AlertTriangle size={20} strokeWidth={1.75} /></ItemMedia>
+                    <ItemMedia variant="icon" className="text-destructive"><AlertTriangle size={20} strokeWidth={1.75} /></ItemMedia>
                     <ItemContent className="min-w-0 gap-0.5">
                         <ItemTitle className="type-row text-foreground">{t('home.disruptionsOnYourLines', { count: myIncidents.length })}</ItemTitle>
                         <ItemDescription className="type-meta line-clamp-1">{myIncidents[0].title}</ItemDescription>
                     </ItemContent>
                     <ItemActions><RowChevron /></ItemActions>
                 </Item>
+                </Card>
             )}
 
             {!hasFavorites && (
                 <HomeSection title={t('favorites.title')}>
                     <Card size="none">
-                        <Item variant="row" size="none" >
-                            <ItemMedia variant="rowIcon" className="text-favorite"><Star size={20} strokeWidth={1.75} /></ItemMedia>
+                        <Item >
+                            <ItemMedia variant="icon" className="text-favorite"><Star size={20} strokeWidth={1.75} /></ItemMedia>
                             <ItemContent className="min-w-0">
                                 <ItemDescription className="type-meta">{t('favorites.emptySub')}</ItemDescription>
                             </ItemContent>
@@ -122,8 +123,8 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
             <HomeSection title={t('home.nearby')}>
                 {!hasLocation ? (
                     <Card size="none">
-                        <Item variant="row" size="none" >
-                            <ItemMedia variant="rowIcon"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
+                        <Item >
+                            <ItemMedia variant="icon"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
                             <ItemContent className="min-w-0">
                                 <ItemDescription className="type-meta">{t('home.locationNeeded')}</ItemDescription>
                             </ItemContent>
@@ -137,8 +138,8 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
                     </Card>
                 ) : nearby.length === 0 ? (
                     <Card size="none">
-                        <Item variant="row" size="none" >
-                            <ItemMedia variant="rowIcon"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
+                        <Item >
+                            <ItemMedia variant="icon"><MapPin size={20} strokeWidth={1.75} /></ItemMedia>
                             <ItemContent className="min-w-0">
                                 <ItemDescription className="type-meta">{t('home.noNearby')}</ItemDescription>
                             </ItemContent>
@@ -161,8 +162,8 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
             <HomeSection title={t('home.network')}>
                 <Card size="none" className="overflow-hidden">
                     {hasAlerts && (
-                        <Item variant="row" size="none" render={<button type="button" onClick={() => setIsAlertsOpen(true)} data-testid="home-alerts-row" />}>
-                            <ItemMedia variant="rowIcon" className={cn(incidentsCount > 0 && "text-destructive")}><AlertTriangle size={20} strokeWidth={1.75} /></ItemMedia>
+                        <Item render={<button type="button" onClick={() => setIsAlertsOpen(true)} data-testid="home-alerts-row" />}>
+                            <ItemMedia variant="icon" className={cn(incidentsCount > 0 && "text-destructive")}><AlertTriangle size={20} strokeWidth={1.75} /></ItemMedia>
                             <ItemContent><ItemTitle className="type-row text-foreground">{t('alerts.title')}</ItemTitle></ItemContent>
                             <ItemActions>
                                 {incidentsCount > 0 && (
@@ -172,13 +173,13 @@ export const HomeSections = ({ isFull, isPeek }: HomeSectionsProps) => {
                             </ItemActions>
                         </Item>
                     )}
-                    <Item variant="row" size="none" render={<button type="button" onClick={() => navigate(paths.stats(selectedCity))} />}>
-                        <ItemMedia variant="rowIcon"><BarChart3 size={20} strokeWidth={1.75} /></ItemMedia>
+                    <Item render={<button type="button" onClick={() => navigate(paths.stats(selectedCity))} />}>
+                        <ItemMedia variant="icon"><BarChart3 size={20} strokeWidth={1.75} /></ItemMedia>
                         <ItemContent><ItemTitle className="type-row text-foreground">{t('stats.title')}</ItemTitle></ItemContent>
                         <ItemActions><RowChevron /></ItemActions>
                     </Item>
-                    <Item variant="row" size="none" render={<button type="button" onClick={() => setIsFeedbackOpen(true)} />}>
-                        <ItemMedia variant="rowIcon"><MessageSquare size={20} strokeWidth={1.75} /></ItemMedia>
+                    <Item render={<button type="button" onClick={() => setIsFeedbackOpen(true)} />}>
+                        <ItemMedia variant="icon"><MessageSquare size={20} strokeWidth={1.75} /></ItemMedia>
                         <ItemContent><ItemTitle className="type-row text-foreground">{t('feedback.title')}</ItemTitle></ItemContent>
                         <ItemActions><RowChevron /></ItemActions>
                     </Item>

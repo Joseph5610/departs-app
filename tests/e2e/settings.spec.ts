@@ -3,7 +3,7 @@ import { MapPage } from '../page-objects/MapPage';
 import { SettingsPage } from '../page-objects/SettingsPage';
 
 test.describe('Settings tests', () => {
-    test('drags the thumb of a segmented control to another option', async ({ page }) => {
+    test('switches the theme from its tabs', async ({ page }) => {
         const mapPage = new MapPage(page);
         const settingsPage = new SettingsPage(page);
         await mapPage.goto();
@@ -14,13 +14,10 @@ test.describe('Settings tests', () => {
         const light = settingsPage.container.getByTestId('theme-light');
         const system = settingsPage.container.getByTestId('theme-system');
         await light.click();
-        const from = (await light.boundingBox())!;
-        const to = (await system.boundingBox())!;
-        await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
-        await page.mouse.down();
-        await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 6 });
-        await page.mouse.up();
-        await expect(system).toHaveAttribute('aria-pressed', 'true');
+        await expect(light).toHaveAttribute('aria-selected', 'true');
+        await system.click();
+        await expect(system).toHaveAttribute('aria-selected', 'true');
+        await expect(light).toHaveAttribute('aria-selected', 'false');
     });
 
     // A window narrowed to a phone's width shows settings once, as the sheet's card, even after the desktop dialog was open.

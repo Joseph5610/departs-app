@@ -412,6 +412,11 @@
   }
 }
 
+/* What dims the map behind the raised sheet or the phone's search, without a blur redone with every map frame. */
+@utility scrim {
+  background: rgb(0 0 0 / 0.25);
+}
+
 /* What dims and blurs the page behind a modal; only while one is open, so its cost does not touch the map. */
 @utility modal-scrim {
   background: rgb(0 0 0 / 0.3);

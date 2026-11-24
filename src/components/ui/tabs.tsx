@@ -3,52 +3,37 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/cn"
 
-function Tabs({
-  className,
-  orientation = "horizontal",
-  ...props
-}: TabsPrimitive.Root.Props) {
-  return (
-    <TabsPrimitive.Root
-      data-slot="tabs"
-      data-orientation={orientation}
-      className={cn(
-        "group/tabs flex gap-2 data-horizontal:flex-col",
-        className
-      )}
-      {...props}
-    />
-  )
+function Tabs({ className, ...props }: TabsPrimitive.Root.Props) {
+  return <TabsPrimitive.Root data-slot="tabs" className={className} {...props} />
 }
 
 const tabsListVariants = cva(
-  "group/tabs-list inline-flex w-full items-stretch justify-center rounded-full p-1 text-muted-foreground group-data-horizontal/tabs:h-10 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col data-[variant=line]:rounded-none",
+  "relative grid auto-cols-fr grid-flow-col rounded-full bg-fill-2 p-0.5",
   {
     variants: {
-      variant: {
-        default: "bg-muted/40",
-        pill: "bg-black/5 dark:bg-white/10 rounded-full",
-        line: "gap-1 bg-transparent",
+      size: {
+        sm: "h-control-sm shrink-0 [&>[data-slot=tabs-trigger]]:px-2.5",
+        md: "h-control-lg [&>[data-slot=tabs-trigger]]:px-4",
       },
     },
     defaultVariants: {
-      variant: "default",
+      size: "md",
     },
   }
 )
 
+/** The segmented track: the selected tab's mint thumb slides under the labels. */
 function TabsList({
   className,
-  variant = "default",
+  size,
+  children,
   ...props
 }: TabsPrimitive.List.Props & VariantProps<typeof tabsListVariants>) {
   return (
-    <TabsPrimitive.List
-      data-slot="tabs-list"
-      data-variant={variant}
-      className={cn(tabsListVariants({ variant }), className)}
-      {...props}
-    />
+    <TabsPrimitive.List data-slot="tabs-list" className={cn(tabsListVariants({ size }), className)} {...props}>
+      <TabsPrimitive.Indicator className="absolute top-0.5 bottom-0.5 left-(--active-tab-left) w-(--active-tab-width) rounded-full bg-segment-selected motion-safe:transition-[left,width] motion-safe:duration-300 motion-safe:ease-[cubic-bezier(.32,.72,0,1)]" />
+      {children}
+    </TabsPrimitive.List>
   )
 }
 
@@ -57,16 +42,14 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={cn(
-        "relative inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-transparent px-3 type-row whitespace-nowrap text-muted-foreground transition-all group-data-vertical/tabs:w-full group-data-vertical/tabs:justify-start hover:text-foreground focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 group-data-[variant=default]/tabs-list:data-active:shadow-xs group-data-[variant=pill]/tabs-list:data-active:shadow-xs group-data-[variant=line]/tabs-list:data-active:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:border-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent",
-        "data-active:bg-card data-active:text-foreground dark:data-active:bg-foreground/15 dark:data-active:text-foreground data-active:border-border/60",
-        "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:-bottom-1.25 group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100",
+        "relative z-10 flex cursor-pointer items-center justify-center gap-1.5 rounded-full whitespace-nowrap type-group tabular-nums text-muted-foreground outline-none transition-colors duration-200 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 data-active:text-on-segment-selected [&_svg]:shrink-0",
         className
       )}
       {...props}
     />
   )
 }
+
 
 function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
   return (
@@ -78,4 +61,9 @@ function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
   )
 }
 
-export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }
+export {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+}

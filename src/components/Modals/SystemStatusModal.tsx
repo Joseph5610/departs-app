@@ -45,8 +45,8 @@ interface StatusRowProps {
 
 /** One fact about the live data: its icon and name, the value on the right. */
 const StatusRow = ({ icon, title, valueClassName, render, children }: StatusRowProps) => (
-    <Item variant="row" size="none" render={render}>
-        <ItemMedia variant="rowIcon">{icon}</ItemMedia>
+    <Item render={render}>
+        <ItemMedia variant="icon">{icon}</ItemMedia>
         <ItemContent className="flex-none">
             <ItemTitle className="type-row text-foreground whitespace-nowrap">{title}</ItemTitle>
         </ItemContent>

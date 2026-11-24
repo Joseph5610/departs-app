@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
+import { ButtonTooltip } from '@/components/ButtonTooltip';
 
 interface IconTooltipProps {
     label: string;
@@ -9,20 +9,9 @@ interface IconTooltipProps {
     side?: 'top' | 'bottom' | 'left' | 'right';
 }
 
-/**
- * IconTooltip
- *
- * Labels a non-interactive icon or badge; renders a `span` trigger so it can sit inside buttons and clickable rows.
- */
-export const IconTooltip = ({ label, children, className, side = 'top' }: IconTooltipProps) => (
-    <Tooltip>
-        <TooltipTrigger
-            render={<span aria-label={label} className={cn("inline-flex items-center shrink-0 cursor-default", className)} />}
-        >
-            {children}
-        </TooltipTrigger>
-        <TooltipContent side={side}>
-            <span className="font-medium">{label}</span>
-        </TooltipContent>
-    </Tooltip>
+/** Labels a non-interactive icon or badge; a `span` trigger, so it can sit inside buttons and clickable rows. */
+export const IconTooltip = ({ label, children, className, side }: IconTooltipProps) => (
+    <ButtonTooltip label={label} side={side}>
+        <span aria-label={label} className={cn("inline-flex shrink-0 cursor-default items-center", className)}>{children}</span>
+    </ButtonTooltip>
 );

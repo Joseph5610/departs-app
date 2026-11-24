@@ -15,12 +15,12 @@ import { cn } from '@/lib/cn';
 import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
 import { ALERTS_LIST } from '@/config/constants';
 import { SectionHeading } from '@/components/SectionHeading';
-import { SegmentedControl } from '@/components/SegmentedControl';
 import { alertSections, type AlertFilterMode } from '@/domain/alerts';
 import { Card } from '@/components/ui/card';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { SearchField } from '@/components/SearchField';
 import { EmptyState } from '@/components/EmptyState';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type AlertSection = ReturnType<typeof alertSections>[number];
 type ListRow =
@@ -120,16 +120,13 @@ export const AlertsContent = () => {
                     clearLabel={t('search.clearFilter')}
                 />
 
-                <SegmentedControl
-                    fill
-                    value={filterMode}
-                    onChange={setFilterMode}
-                    options={[
-                        { value: 'all', label: t('alerts.all') },
-                        { value: 'incident', label: t('alerts.incidents') },
-                        { value: 'exclusion', label: t('alerts.exclusions') },
-                    ]}
-                />
+                <Tabs value={filterMode} onValueChange={setFilterMode}>
+                    <TabsList>
+                        <TabsTrigger value="all">{t('alerts.all')}</TabsTrigger>
+                        <TabsTrigger value="incident">{t('alerts.incidents')}</TabsTrigger>
+                        <TabsTrigger value="exclusion">{t('alerts.exclusions')}</TabsTrigger>
+                    </TabsList>
+                </Tabs>
 
             </div>
 

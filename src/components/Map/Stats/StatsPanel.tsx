@@ -11,7 +11,6 @@ import { useCityConfig } from '@/hooks/data/useCities';
 import { hasEnrichment } from '@/domain/cities';
 import { aggregateCityStats } from '@/domain/vehicles';
 import { VehicleMonitorList } from './VehicleMonitor/VehicleMonitorList';
-import { SegmentedControl } from '@/components/SegmentedControl';
 
 import { PunctualityCard } from './cards/PunctualityCard';
 import { MovementStateCard } from './cards/MovementStateCard';
@@ -19,6 +18,7 @@ import { MostDelayedCard } from './cards/MostDelayedCard';
 import { VehicleMixCard } from './cards/VehicleMixCard';
 import { BusiestLinesCard } from './cards/BusiestLinesCard';
 import { EmptyState } from '@/components/EmptyState';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 /** One headline count: a small caps label over a big number. */
 const StatTile = ({ label, value }: { label: string; value: number }) => (
@@ -65,15 +65,12 @@ export const StatsPanel = memo(() => {
             <div className="flex items-center justify-between pb-3">
                 <SectionHeading>{t('stats.scopeLabel')}</SectionHeading>
 
-                <SegmentedControl
-                    size="sm"
-                    value={tab}
-                    onChange={setTab}
-                    options={[
-                        { value: 'screen', label: t('stats.onScreen') },
-                        { value: 'network', label: t('stats.network') },
-                    ]}
-                />
+                <Tabs value={tab} onValueChange={setTab}>
+                    <TabsList size="sm">
+                        <TabsTrigger value="screen">{t('stats.onScreen')}</TabsTrigger>
+                        <TabsTrigger value="network">{t('stats.network')}</TabsTrigger>
+                    </TabsList>
+                </Tabs>
             </div>
 
             {isFetching ? (

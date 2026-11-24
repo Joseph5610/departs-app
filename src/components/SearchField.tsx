@@ -3,6 +3,7 @@ import { Search as SearchIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/button';
 import { CloseIcon } from '@/components/CloseIcon';
+import { Input } from '@/components/ui/input';
 
 interface SearchFieldProps extends Omit<React.ComponentProps<'input'>, 'value' | 'onChange' | 'className'> {
     value: string;
@@ -21,7 +22,8 @@ export const SearchField = ({ value, onValueChange, clearLabel, onClear, lead, c
     <label className={cn("flex h-11 min-w-0 items-center gap-2.25 rounded-full bg-field pr-1 pl-3.5", className)}>
         <SearchIcon size={18} strokeWidth={1.75} className="shrink-0 text-muted-foreground" />
         {lead}
-        <input
+        <Input
+            variant="bare"
             ref={ref}
             type="search"
             autoComplete="off"
@@ -29,7 +31,6 @@ export const SearchField = ({ value, onValueChange, clearLabel, onClear, lead, c
             spellCheck={false}
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
-            className="h-full min-w-0 flex-1 bg-transparent type-field text-foreground outline-none focus-visible:outline-none focus-visible:ring-0 placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden"
             {...input}
         />
         {value && (

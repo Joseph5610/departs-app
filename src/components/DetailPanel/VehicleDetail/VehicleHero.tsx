@@ -6,12 +6,11 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AmenityIcons } from '@/components/AmenityIcons';
 import { ButtonTooltip } from '@/components/ButtonTooltip';
 import { SignalMark } from '@/components/SignalMark';
 import type { VehicleHeroProps } from './types';
-import { HeroNotice } from './HeroNotice';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { TripEndedNotice } from './TripEndedNotice';
 import { FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { getDelayStatus } from '@/domain/delay';
@@ -22,6 +21,7 @@ import { useNow } from '@/hooks/useNow';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { HeroFooter } from '@/components/DetailPanel/HeroFooter';
 import { HeroFooterSkeleton } from './VehicleDetailSkeleton';
+import { TapHint } from '@/components/TapHint';
 
 export const VehicleHero = ({
     displayVehicle,
@@ -39,8 +39,6 @@ export const VehicleHero = ({
 
     const bgColor = safeHexColor(displayVehicle.route_color) ?? FALLBACK_ROUTE_COLOR;
     const notice = vehicleNotice(displayVehicle.state_position, displayVehicle.isStaticFallback, hasEnded);
-    const noticeIconColor = notice === 'canceled' ? 'text-destructive' : 'text-tint-amber';
-    const noticeTextColor = notice === 'canceled' ? 'text-destructive/80' : 'text-tint-amber';
 
     const typeKey = getRouteTypeI18nKey(displayVehicle.route_type);
     const vehicleTypeLabel = displayVehicle.vehicle_descriptor?.vehicle_type || (typeKey ? t(typeKey) : '---');
@@ -76,10 +74,11 @@ export const VehicleHero = ({
                     <div className="flex gap-2 shrink-0">
                         {!displayVehicle.isStaticFallback && (
                             <Button
-                                variant={isFollowing ? 'selected' : 'pill'}
+                                variant="pill"
+                                aria-pressed={isFollowing}
                                 size="icon-xs"
                                 onClick={onToggleFollow}
-                                className="shrink-0"
+                                className={cn("shrink-0", isFollowing && "bg-selected text-foreground hover:bg-selected")}
                                 aria-label={t('map.vehicleDetails.track')}
                             >
                                 {isFollowing ? (
@@ -109,13 +108,11 @@ export const VehicleHero = ({
                 )}
 
                 {notice && (
-                    <HeroNotice
-                        icon={Info}
-                        title={t(`map.vehicleDetails.${notice}`)}
-                        description={t(`map.vehicleDetails.${notice}Description`)}
-                        tone={noticeIconColor}
-                        descriptionTone={noticeTextColor}
-                    />
+                    <Alert variant={notice === 'canceled' ? 'destructive' : 'warning'}>
+                        <Info />
+                        <AlertTitle className="text-current">{t(`map.vehicleDetails.${notice}`)}</AlertTitle>
+                        <AlertDescription className="type-note">{t(`map.vehicleDetails.${notice}Description`)}</AlertDescription>
+                    </Alert>
                 )}
 
                 <TripEndedNotice vehicle={displayVehicle} hasEnded={hasEnded} />
@@ -220,18 +217,11 @@ const LiveDataAgeBadge = ({ originTimestamp, delaySource }: { originTimestamp: s
     if (Number.isNaN(originMs)) return null;
     const liveDataAgeSeconds = Math.max(0, Math.floor((now - originMs) / 1000));
     return (
-        <Popover>
-            <PopoverTrigger render={<button type="button" className="outline-none" />}>
-                <Badge variant="hero" className="gap-1.5 cursor-pointer hover:brightness-95 transition-colors text-muted-foreground">
-                    <History className="size-3 shrink-0" strokeWidth={2.25} />
-                    <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
-                </Badge>
-            </PopoverTrigger>
-            <PopoverContent side="bottom" align="center" className="w-auto p-3 max-w-62.5">
-                <span className="type-meta text-foreground/90 block">
-                    {t(`map.vehicleDetails.delaySource.${delaySource}`)}
-                </span>
-            </PopoverContent>
-        </Popover>
+        <TapHint side="bottom" className="rounded-full" hint={t(`map.vehicleDetails.delaySource.${delaySource}`)}>
+            <Badge variant="hero" className="gap-1.5 text-muted-foreground">
+                <History className="size-3 shrink-0" strokeWidth={2.25} />
+                <span>{t('map.vehicleDetails.liveDataAge', { seconds: liveDataAgeSeconds })}</span>
+            </Badge>
+        </TapHint>
     );
 };

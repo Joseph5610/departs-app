@@ -12,19 +12,13 @@ const buttonVariants = cva(
         /** Disabled, it turns a solid grey like an iOS button, rather than a faded mint. */
         default:
           "bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-fill-2 disabled:text-muted-foreground disabled:opacity-100",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         secondary:
           "bg-field text-foreground hover:bg-foreground/20 active:bg-foreground/25",
-        ghost: "text-muted-foreground hover:bg-foreground/10 hover:text-foreground active:bg-foreground/15",
+        /** A bare control: no fill until hovered or pressed. */
+        ghost: "text-muted-foreground hover:bg-fill-2 hover:text-foreground active:bg-fill-2 aria-expanded:bg-fill-2",
         link: "text-tint-mint underline-offset-4 hover:underline",
-        tinted: "glassy text-muted-foreground hover:text-foreground hover:bg-foreground/10 active:bg-foreground/15",
         /** A chip-shaped control, such as "more of these" after a row of chips. */
         pill: "bg-fill text-muted-foreground tabular-nums hover:bg-fill-2 hover:text-foreground",
-        /** An on state of a pill: the mint tint of a selected chip. */
-        selected: "bg-selected text-foreground hover:bg-primary/50",
-        /** A bare control on glass or a tinted bar; it keeps the colour around it. */
-        quiet: "hover:bg-fill-2 active:bg-fill-2 aria-expanded:bg-fill-2",
       },
       size: {
         default: "hit-target h-control-lg px-5 type-group",

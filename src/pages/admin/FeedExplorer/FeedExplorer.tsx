@@ -5,14 +5,15 @@ import { usePreferencesStore } from '@/state/preferencesStore';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { CITY_LIST, DEFAULT_CITY_SLUG } from '@/config/cities';
+import type { AppError } from '@/types';
 import { apiFetch } from '@/lib/apiClient';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { SegmentedControl } from '@/components/SegmentedControl';
 import { CopyButton } from '@/components/CopyButton';
 import { AdminLayout } from '@/pages/admin/AdminLayout';
 import { AdminStatus, JsonPanel, RefreshButton } from '@/pages/admin/AdminParts';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type FeedType = 'vehicles' | 'alerts';
 type RssItems = { rss?: { channel?: { item?: unknown } } };
@@ -32,8 +33,6 @@ const feedItemCount = (data: unknown, feedType: FeedType, isPrague: boolean): nu
     return (entity ?? features ?? []).length;
 };
 
-const FEED_OPTIONS = [{ value: 'vehicles', label: 'Vehicles' }, { value: 'alerts', label: 'Alerts' }] as const;
-const CITY_OPTIONS = CITY_LIST.map(city => ({ value: city.slug, label: city.name }));
 
 export const FeedExplorer = () => {
     // Local, so browsing feeds here doesn't switch the city the map opens with.
@@ -43,7 +42,7 @@ export const FeedExplorer = () => {
     const [isExpandedAll, setIsExpandedAll] = useState(false);
     const { copiedKey, copy } = useCopyToClipboard();
 
-    const { data, isLoading, isFetching, error, refetch } = useQuery({
+    const { data, isLoading, isFetching, error, refetch } = useQuery<unknown, AppError>({
         queryKey: ['debug-feed', selectedCity, feedType],
         queryFn: () => apiFetch<unknown>(`/admin/${selectedCity}/debug-feed?type=${feedType}`),
         refetchOnWindowFocus: false,
@@ -53,9 +52,16 @@ export const FeedExplorer = () => {
         <AdminLayout title="Feed Explorer" headerActions={<RefreshButton onRefresh={() => refetch()} isRefreshing={isFetching} />}>
             <div className="flex shrink-0 flex-wrap items-center gap-2">
                 <div className="max-w-full overflow-x-auto no-scrollbar">
-                    <SegmentedControl size="sm" value={selectedCity} onChange={setSelectedCity} options={CITY_OPTIONS} />
+                    <Tabs value={selectedCity} onValueChange={setSelectedCity}>
+                        <TabsList size="sm">{CITY_LIST.map(city => <TabsTrigger key={city.slug} value={city.slug}>{city.name}</TabsTrigger>)}</TabsList>
+                    </Tabs>
                 </div>
-                <SegmentedControl size="sm" value={feedType} onChange={setFeedType} options={FEED_OPTIONS} />
+                <Tabs value={feedType} onValueChange={setFeedType}>
+                    <TabsList size="sm">
+                        <TabsTrigger value="vehicles">Vehicles</TabsTrigger>
+                        <TabsTrigger value="alerts">Alerts</TabsTrigger>
+                    </TabsList>
+                </Tabs>
             </div>
 
             {isLoading || error ? <AdminStatus error={error} onRetry={() => refetch()} /> : !!data && (

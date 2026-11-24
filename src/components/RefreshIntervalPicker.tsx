@@ -1,20 +1,19 @@
-import { SegmentedControl } from '@/components/SegmentedControl';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { REFRESH_INTERVAL_OPTIONS_S, type RefreshIntervalS } from '@/config/constants';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const OPTIONS = REFRESH_INTERVAL_OPTIONS_S.map(seconds => ({ value: String(seconds), label: `${seconds}s`, testId: `refresh-interval-${seconds}` }));
-
-/** Segmented picker for how often live data refreshes, shared by Settings and the system status modal. */
+/** How often live data refreshes, shared by Settings and the system status modal. */
 export const RefreshIntervalPicker = () => {
     const refreshIntervalS = usePreferencesStore(s => s.refreshIntervalS);
     const setRefreshIntervalS = usePreferencesStore(s => s.actions.setRefreshIntervalS);
 
     return (
-        <SegmentedControl
-            size="sm"
-            value={String(refreshIntervalS)}
-            onChange={(v) => setRefreshIntervalS(Number(v) as RefreshIntervalS)}
-            options={OPTIONS}
-        />
+        <Tabs value={String(refreshIntervalS)} onValueChange={(v: string) => setRefreshIntervalS(Number(v) as RefreshIntervalS)}>
+            <TabsList size="sm">
+                {REFRESH_INTERVAL_OPTIONS_S.map(seconds => (
+                    <TabsTrigger key={seconds} value={String(seconds)} data-testid={`refresh-interval-${seconds}`}>{seconds}s</TabsTrigger>
+                ))}
+            </TabsList>
+        </Tabs>
     );
 };

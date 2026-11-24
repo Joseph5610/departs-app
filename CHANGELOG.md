@@ -4,6 +4,17 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.97.8] - 2026-11-24
+
+### Changed
+
+- Segmented switches and filter chips are built on shared Tabs and Toggle components, so they can be reached and changed with the keyboard.
+- Notices, error screens, code blocks, tap-to-explain hints and list rows reuse the shared components, so they look and respond the same everywhere.
+
+### Fixed
+
+- The locate and compass buttons on the map no longer turn see-through when hovered or pressed, like the other map buttons.
+
 ## [0.97.7] - 2026-11-24
 
 ### Changed

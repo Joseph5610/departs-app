@@ -1,9 +1,11 @@
 import { useTheme } from 'next-themes';
 import { JsonView, darkStyles, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
-import { AlertCircle, Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/EmptyState';
+import { ErrorState } from '@/components/ErrorState';
+import type { AppError } from '@/types';
 
 /** The header's refresh button, spinning while a refetch runs. */
 export const RefreshButton = ({ onRefresh, isRefreshing }: { onRefresh: () => void; isRefreshing: boolean }) => (
@@ -13,10 +15,8 @@ export const RefreshButton = ({ onRefresh, isRefreshing }: { onRefresh: () => vo
 );
 
 /** A page's loading or failed state; a failure offers to try again. */
-export const AdminStatus = ({ error, onRetry }: { error?: unknown; onRetry?: () => void }) => error ? (
-    <EmptyState icon={AlertCircle} tone="error" title="Could not load" description={error instanceof Error ? error.message : String(error)}>
-        {onRetry && <Button variant="secondary" size="sm" onClick={onRetry}>Try again</Button>}
-    </EmptyState>
+export const AdminStatus = ({ error, onRetry }: { error?: AppError | null; onRetry?: () => void }) => error ? (
+    <ErrorState error={error} onRetry={onRetry} />
 ) : (
     <EmptyState icon={Loader2} title="Loading…" className="[&_svg]:animate-spin" />
 );
@@ -25,7 +25,7 @@ export const AdminStatus = ({ error, onRetry }: { error?: unknown; onRetry?: () 
 export const JsonPanel = ({ data, shouldExpandNode }: { data: object; shouldExpandNode: (level: number) => boolean }) => {
     const { resolvedTheme } = useTheme();
     return (
-        <div className="overflow-x-auto font-mono text-xs">
+        <div className="overflow-x-auto font-mono type-meta">
             <JsonView data={data} shouldExpandNode={shouldExpandNode} style={{ ...(resolvedTheme === 'light' ? defaultStyles : darkStyles), container: '' }} />
         </div>
     );

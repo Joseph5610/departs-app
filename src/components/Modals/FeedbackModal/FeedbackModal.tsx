@@ -20,7 +20,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { SegmentedControl } from '@/components/SegmentedControl';
 import { ToggleSection } from '@/components/Modals/SettingsModal/SettingsControls';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
@@ -31,6 +30,8 @@ import { getDiagnosticSnapshot } from '@/hooks/features/useDiagnosticData';
 import { FEEDBACK_LIMITS, TURNSTILE_SITE_KEY } from '@/config/constants';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PrivacyNote } from './PrivacyNote';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CodeBlock } from '@/components/CodeBlock';
 
 const baseFormSchema = feedbackPayloadSchema.omit({ diagnostics: true, turnstileToken: true });
 type FormValues = z.infer<typeof baseFormSchema>;
@@ -131,16 +132,13 @@ export const FeedbackModal = memo(() => {
                                     <FieldLabel className={FIELD_LABEL}>
                                         {t('feedback.type')}
                                     </FieldLabel>
-                                    <SegmentedControl
-                                        fill
-                                        value={field.value}
-                                        onChange={field.onChange}
-                                        options={[
-                                            { value: 'bug', label: <><Bug size={15} strokeWidth={1.75} />{t('feedback.typeBug')}</> },
-                                            { value: 'feature_request', label: <><Lightbulb size={15} strokeWidth={1.75} />{t('feedback.typeFeature')}</> },
-                                            { value: 'other', label: <><MessageSquare size={15} strokeWidth={1.75} />{t('feedback.typeOther')}</> },
-                                        ]}
-                                    />
+                                    <Tabs value={field.value} onValueChange={field.onChange}>
+                                        <TabsList>
+                                            <TabsTrigger value="bug"><Bug size={15} strokeWidth={1.75} />{t('feedback.typeBug')}</TabsTrigger>
+                                            <TabsTrigger value="feature_request"><Lightbulb size={15} strokeWidth={1.75} />{t('feedback.typeFeature')}</TabsTrigger>
+                                            <TabsTrigger value="other"><MessageSquare size={15} strokeWidth={1.75} />{t('feedback.typeOther')}</TabsTrigger>
+                                        </TabsList>
+                                    </Tabs>
                                     <FieldError className="type-meta" errors={[fieldState.error]} />
                                 </Field>
                             )}
@@ -202,9 +200,9 @@ export const FeedbackModal = memo(() => {
                                         >
                                             {diagnosticSnapshot && (
                                                 <div className="p-3.5">
-                                                    <pre className="max-h-48 overflow-auto rounded-nested bg-fill p-3 font-mono type-meta text-muted-foreground">
+                                                    <CodeBlock className="max-h-48">
                                                         {JSON.stringify(diagnosticSnapshot, null, 2)}
-                                                    </pre>
+                                                    </CodeBlock>
                                                 </div>
                                             )}
                                         </ToggleSection>

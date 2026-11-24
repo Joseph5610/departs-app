@@ -23,7 +23,7 @@ export const VehicleFilterNotice = ({ hiddenCount }: VehicleFilterNoticeProps) =
     ].join(', ');
 
     return (
-        <Alert variant="info" className="items-center *:[svg]:mt-0 *:[svg]:self-center" data-testid="vehicle-filter-notice">
+        <Alert variant="info" align="center" data-testid="vehicle-filter-notice">
             <ListFilter className="h-4 w-4 shrink-0" />
             <div className="flex min-w-0 items-center gap-2">
                 <AlertTitle className="min-w-0 flex-1">

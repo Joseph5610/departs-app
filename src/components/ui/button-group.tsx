@@ -1,5 +1,5 @@
-import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
+import { mergeProps } from "@base-ui/react/merge-props"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/cn"
@@ -37,6 +37,27 @@ function ButtonGroup({
   )
 }
 
+
+function ButtonGroupSeparator({
+  className,
+  orientation = "vertical",
+  ...props
+}: React.ComponentProps<"div"> & { orientation?: "horizontal" | "vertical" }) {
+  return (
+    <div
+      data-slot="button-group-separator"
+      data-orientation={orientation}
+      className={cn(
+        "bg-sep shrink-0",
+        orientation === "horizontal" ? "mx-2.5 h-[0.5px] w-auto self-stretch" : "my-2.5 w-[0.5px] h-auto self-stretch",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+
 function ButtonGroupText({
   className,
   render,
@@ -60,28 +81,8 @@ function ButtonGroupText({
   })
 }
 
-function ButtonGroupSeparator({
-  className,
-  orientation = "vertical",
-  ...props
-}: React.ComponentProps<"div"> & { orientation?: "horizontal" | "vertical" }) {
-  return (
-    <div
-      data-slot="button-group-separator"
-      data-orientation={orientation}
-      className={cn(
-        "bg-sep shrink-0",
-        orientation === "horizontal" ? "mx-2.5 h-[0.5px] w-auto self-stretch" : "my-2.5 w-[0.5px] h-auto self-stretch",
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
 export {
   ButtonGroup,
   ButtonGroupSeparator,
   ButtonGroupText,
-  buttonGroupVariants,
 }

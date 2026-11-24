@@ -25,10 +25,7 @@ const TRIP_MARK_LABEL: Record<TripMark, string | null> = {
     viewed: 'map.departures.viewedTrip',
 };
 
-/** How a departure row stands out when it is the ridden, followed or viewed trip. */
-export const MARKED_ROW = 'bg-primary/10 hover:bg-primary/15';
-
-/** MARKED_ROW for a row whose background is its `before` backdrop. */
+/** The marked (viewed or ridden) tint of a row whose background is its `before` backdrop. */
 export const MARKED_BACKDROP = '[--row-rest:color-mix(in_oklch,var(--primary)_10%,transparent)] [--row-hover-fill:color-mix(in_oklch,var(--primary)_15%,transparent)]';
 
 /** A departure's timetable time, struck through with the expected time beside it once live data moves it. */

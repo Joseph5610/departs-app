@@ -41,26 +41,7 @@ function ContextMenuContent({
   )
 }
 
-function ContextMenuGroup({ ...props }: ContextMenuPrimitive.Group.Props) {
-  return <ContextMenuPrimitive.Group data-slot="context-menu-group" {...props} />
-}
 
-function ContextMenuLabel({
-  className,
-  inset,
-  ...props
-}: ContextMenuPrimitive.GroupLabel.Props & {
-  inset?: boolean
-}) {
-  return (
-    <ContextMenuPrimitive.GroupLabel
-      data-slot="context-menu-label"
-      data-inset={inset}
-      className={cn("px-3 pt-2 pb-1.5 type-label text-muted-foreground data-inset:pl-7", className)}
-      {...props}
-    />
-  )
-}
 
 function ContextMenuItem({
   className,
@@ -85,6 +66,31 @@ function ContextMenuItem({
   )
 }
 
+
+
+function ContextMenuGroup({ ...props }: ContextMenuPrimitive.Group.Props) {
+  return <ContextMenuPrimitive.Group data-slot="context-menu-group" {...props} />
+}
+
+
+function ContextMenuLabel({
+  className,
+  inset,
+  ...props
+}: ContextMenuPrimitive.GroupLabel.Props & {
+  inset?: boolean
+}) {
+  return (
+    <ContextMenuPrimitive.GroupLabel
+      data-slot="context-menu-label"
+      data-inset={inset}
+      className={cn("px-3 pt-2 pb-1.5 type-label text-muted-foreground data-inset:pl-7", className)}
+      {...props}
+    />
+  )
+}
+
+
 function ContextMenuSeparator({
   className,
   ...props
@@ -102,8 +108,8 @@ export {
   ContextMenu,
   ContextMenuTrigger,
   ContextMenuContent,
+  ContextMenuItem,
   ContextMenuGroup,
   ContextMenuLabel,
-  ContextMenuItem,
   ContextMenuSeparator,
 }

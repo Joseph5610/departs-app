@@ -3,41 +3,36 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/cn"
 
+/** An on/off control on a field fill that turns solid mint while pressed. */
 const toggleVariants = cva(
-  "group/toggle inline-flex items-center justify-center gap-1 rounded-full type-row whitespace-nowrap transition-all outline-none hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-pressed:bg-muted data-[state=on]:bg-muted dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "hit-target inline-flex shrink-0 cursor-pointer items-center justify-center gap-1.5 bg-field type-control tabular-nums text-muted-foreground outline-none transition-colors select-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 data-pressed:bg-primary data-pressed:text-primary-foreground disabled:cursor-default disabled:opacity-50 [&_svg]:shrink-0",
   {
     variants: {
-      variant: {
-        default: "bg-transparent",
-        outline: "bg-field hover:bg-foreground/20",
-      },
       size: {
-        default:
-          "h-8 min-w-8 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        sm: "h-7 min-w-7 rounded-badge px-2.5 text-[0.8rem] has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 min-w-9 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        /** A filter chip with a label. */
+        chip: "h-control-sm rounded-full pr-2.75 pl-2.25",
+        /** A square icon filter, as tall as a line badge. */
+        icon: "size-6 rounded-badge",
       },
     },
     defaultVariants: {
-      variant: "default",
-      size: "default",
+      size: "chip",
     },
   }
 )
 
 function Toggle({
   className,
-  variant = "default",
-  size = "default",
+  size,
   ...props
 }: TogglePrimitive.Props & VariantProps<typeof toggleVariants>) {
   return (
     <TogglePrimitive
       data-slot="toggle"
-      className={cn(toggleVariants({ variant, size, className }))}
+      className={cn(toggleVariants({ size }), className)}
       {...props}
     />
   )
 }
 
-export { Toggle, toggleVariants }
+export { Toggle }

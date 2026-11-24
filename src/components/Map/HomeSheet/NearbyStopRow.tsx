@@ -29,8 +29,6 @@ export const NearbyStopRow = ({ nearby, location, departures }: NearbyStopRowPro
 
     return (
         <Item
-            variant="row"
-            size="none"
             className="[--row-sep:3.875rem]"
             render={<button type="button" onClick={open} data-testid={`nearby-stop-${stop.id}`} />}
         >
