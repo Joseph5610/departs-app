@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - The vehicle hero keeps room for its vehicle details while they load, so the card no longer jumps when they arrive.
+- Scrolled lists fade out visibly at their top edge again, and the light edge along dark surfaces is quieter.
 
 ## [0.97.4] - 2026-11-22
 

@@ -108,7 +108,7 @@
   --sep: rgb(255 255 255 / 0.13);
   --selected: oklch(0.42 0.105 162);
   --mat: oklch(0.23 0.014 255);
-  --edge-top: rgb(255 255 255 / 0.22);
+  --edge-top: rgb(255 255 255 / 0.1);
   --edge-bottom: rgb(255 255 255 / 0.05);
   --shadow-float: 0 8px 28px rgb(0 0 0 / 0.38);
   --tint-mint: oklch(0.8 0.17 162);
@@ -544,13 +544,13 @@
 
 @keyframes scroll-fade-top {
   to {
-    --scroll-fade-top: 1rem;
+    --scroll-fade-top: 1.5rem;
   }
 }
 
 @keyframes scroll-fade-bottom {
   from {
-    --scroll-fade-bottom: 1rem;
+    --scroll-fade-bottom: 1.5rem;
   }
   to {
     --scroll-fade-bottom: 0px;
@@ -559,8 +559,8 @@
 
 /* A scroller's content fades out at an edge it can still scroll past, instead of being cut there; put it on the element that scrolls. */
 @utility scroll-edge {
-  -webkit-mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.4), #000 var(--scroll-fade-top), #000 calc(100% - var(--scroll-fade-end, 0px) - var(--scroll-fade-bottom)), var(--scroll-fade-floor, rgb(0 0 0 / 0.4)) calc(100% - var(--scroll-fade-end, 0px)));
-  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.4), #000 var(--scroll-fade-top), #000 calc(100% - var(--scroll-fade-end, 0px) - var(--scroll-fade-bottom)), var(--scroll-fade-floor, rgb(0 0 0 / 0.4)) calc(100% - var(--scroll-fade-end, 0px)));
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-top), #000 calc(100% - var(--scroll-fade-end, 0px) - var(--scroll-fade-bottom)), var(--scroll-fade-floor, transparent) calc(100% - var(--scroll-fade-end, 0px)));
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--scroll-fade-top), #000 calc(100% - var(--scroll-fade-end, 0px) - var(--scroll-fade-bottom)), var(--scroll-fade-floor, transparent) calc(100% - var(--scroll-fade-end, 0px)));
 
   /* Without scroll timelines the animations would run once to their end and fade a list that sits at its top. */
   @supports (animation-timeline: scroll()) {
@@ -569,7 +569,7 @@
     animation-timing-function: linear;
     animation-fill-mode: both;
     animation-timeline: scroll(self);
-    animation-range: 0 1rem, calc(100% - 1rem) 100%;
+    animation-range: 0 1.5rem, calc(100% - 1.5rem) 100%;
   }
 
   @media (prefers-contrast: more), (prefers-reduced-transparency: reduce) {
