@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.97.6] - 2026-11-24
+
+### Changed
+
+- The admin pages use the app's own lists, controls and cards, on phones as on desktop.
+
 ## [0.97.5] - 2026-11-23
 
 ### Changed

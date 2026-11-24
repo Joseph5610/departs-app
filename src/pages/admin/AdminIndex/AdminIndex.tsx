@@ -1,34 +1,26 @@
-import { Link } from "wouter";
-import { AdminLayout } from "@/pages/admin/AdminLayout";
-import { Database, MessageSquare } from "lucide-react";
+import { Link } from 'wouter';
+import { Database, MessageSquare } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
+import { RowChevron } from '@/components/Chevron';
+import { RowText } from '@/components/Modals/SettingsModal/SettingsControls';
+import { AdminLayout } from '@/pages/admin/AdminLayout';
 
-export const AdminIndex = () => {
-  return (
-    <AdminLayout title="Admin Dashboard" backUrl="/" contentClassName="p-4 sm:p-8 max-w-4xl mx-auto w-full">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link href="/admin/explorer" className="group flex flex-col gap-3.5 p-6 bg-card/70 backdrop-blur-md border border-border/40 rounded-2xl shadow-xs hover:border-primary/40 hover:bg-card hover:shadow-md transition-all cursor-pointer h-full">
-            <div className="bg-primary/10 border border-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
-              <Database size={22} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h2 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">Feed Explorer</h2>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Inspect live GTFS RT feed entity payloads and system feeds in raw JSON format.
-              </p>
-            </div>
-        </Link>
-        <Link href="/admin/feedback" className="group flex flex-col gap-3.5 p-6 bg-card/70 backdrop-blur-md border border-border/40 rounded-2xl shadow-xs hover:border-primary/40 hover:bg-card hover:shadow-md transition-all cursor-pointer h-full">
-            <div className="bg-primary/10 border border-primary/20 w-12 h-12 rounded-xl flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
-              <MessageSquare size={22} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <h2 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">Feedback Hub</h2>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Review user bug reports, feature requests, and crash stack traces with diagnostic payloads.
-              </p>
-            </div>
-        </Link>
-      </div>
+const TOOLS = [
+    { href: '/admin/explorer', icon: Database, title: 'Feed Explorer', description: 'Inspect the live vehicle and alert feeds as raw JSON.' },
+    { href: '/admin/feedback', icon: MessageSquare, title: 'Feedback Hub', description: 'Review bug reports, feature requests and crashes with their diagnostics.' },
+] as const;
+
+export const AdminIndex = () => (
+    <AdminLayout title="Dashboard" backUrl="/" contentClassName="max-w-2xl">
+        <Card size="none">
+            {TOOLS.map(({ href, icon: Icon, title, description }) => (
+                <Item key={href} variant="row" size="none" render={<Link href={href} />}>
+                    <ItemMedia variant="rowIcon"><Icon strokeWidth={1.75} /></ItemMedia>
+                    <RowText title={title} description={description} />
+                    <ItemActions><RowChevron /></ItemActions>
+                </Item>
+            ))}
+        </Card>
     </AdminLayout>
-  );
-};
+);

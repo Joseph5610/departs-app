@@ -1,191 +1,78 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useCityConfig } from '@/hooks/data/useCities';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { CITY_LIST, DEFAULT_CITY_SLUG } from '@/config/cities';
 import { apiFetch } from '@/lib/apiClient';
-import { RefreshCw, AlertCircle, Bus, Info, Copy, Check, Maximize2, Minimize2 } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { JsonView, darkStyles, defaultStyles } from 'react-json-view-lite';
-import 'react-json-view-lite/dist/index.css';
+import { Button } from '@/components/ui/button';
+import { SegmentedControl } from '@/components/SegmentedControl';
+import { CopyButton } from '@/components/CopyButton';
 import { AdminLayout } from '@/pages/admin/AdminLayout';
-import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
+import { AdminStatus, JsonPanel, RefreshButton } from '@/pages/admin/AdminParts';
+
+type FeedType = 'vehicles' | 'alerts';
+type RssItems = { rss?: { channel?: { item?: unknown } } };
+
+const countOf = (items: unknown): number => Array.isArray(items) ? items.length : items ? 1 : 0;
+
+/** How many vehicles or alerts a raw upstream feed carries, whatever its shape. */
+const feedItemCount = (data: unknown, feedType: FeedType, isPrague: boolean): number => {
+    if (!data) return 0;
+    if (Array.isArray(data)) return data.length;
+    if (feedType === 'alerts') {
+        if (!isPrague) return 0;
+        const { incidents, exclusions } = data as { incidents?: RssItems & { entity?: unknown[] }; exclusions?: RssItems };
+        return countOf(incidents?.entity ?? incidents?.rss?.channel?.item) + countOf(exclusions?.rss?.channel?.item);
+    }
+    const { entity, features } = data as { entity?: unknown[]; features?: unknown[] };
+    return (entity ?? features ?? []).length;
+};
+
+const FEED_OPTIONS = [{ value: 'vehicles', label: 'Vehicles' }, { value: 'alerts', label: 'Alerts' }] as const;
+const CITY_OPTIONS = CITY_LIST.map(city => ({ value: city.slug, label: city.name }));
 
 export const FeedExplorer = () => {
     // Local, so browsing feeds here doesn't switch the city the map opens with.
     const [selectedCity, setSelectedCity] = useState(() => usePreferencesStore.getState().selectedCity);
     const { debugFeedLabels } = useCityConfig(selectedCity);
-    const [feedType, setFeedType] = useState<'vehicles' | 'alerts'>('vehicles');
-    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [feedType, setFeedType] = useState<FeedType>('vehicles');
     const [isExpandedAll, setIsExpandedAll] = useState(false);
     const { copiedKey, copy } = useCopyToClipboard();
-    const isDark = document.documentElement.classList.contains('dark');
 
-    const { data, isLoading, isError, error, refetch } = useQuery({
+    const { data, isLoading, isFetching, error, refetch } = useQuery({
         queryKey: ['debug-feed', selectedCity, feedType],
         queryFn: () => apiFetch<unknown>(`/admin/${selectedCity}/debug-feed?type=${feedType}`),
-        enabled: !!selectedCity,
         refetchOnWindowFocus: false,
     });
 
-    const handleRefresh = async () => {
-        setIsRefreshing(true);
-        await refetch();
-        setIsRefreshing(false);
-    };
-
-    const isCopied = copiedKey === 'feed';
-    const handleCopy = () => {
-        if (data) copy(JSON.stringify(data, null, 2), 'feed');
-    };
-
-    const getItemsCount = () => {
-        if (!data) return 0;
-        if (feedType === 'alerts') {
-            if (selectedCity === DEFAULT_CITY_SLUG) {
-                const prgData = data as { incidents?: { entity?: unknown[], rss?: { channel?: { item?: unknown } } }, exclusions?: { rss?: { channel?: { item?: unknown } } } };
-                const inc = prgData.incidents?.entity || prgData.incidents?.rss?.channel?.item;
-                const exc = prgData.exclusions?.rss?.channel?.item;
-                let count = 0;
-                if (Array.isArray(inc)) count += inc.length;
-                else if (inc) count += 1;
-                if (Array.isArray(exc)) count += exc.length;
-                else if (exc) count += 1;
-                return count;
-            }
-            return Array.isArray(data) ? data.length : 0; // gtfs array
-        }
-        if (Array.isArray(data)) return data.length;
-        const vehData = data as { entity?: unknown[], features?: unknown[] };
-        return vehData.entity ? vehData.entity.length : vehData.features ? vehData.features.length : 0;
-    };
-
-    const headerActions = (
-        <div className="flex items-center gap-2">
-            <Tabs value={selectedCity} onValueChange={(v) => setSelectedCity(v)} className="hidden sm:block">
-                <TabsList variant="pill">
-                    {CITY_LIST.map(city => (
-                        <TabsTrigger key={city.slug} value={city.slug}>{city.name}</TabsTrigger>
-                    ))}
-                </TabsList>
-            </Tabs>
-
-            <Tabs value={feedType} onValueChange={(v) => setFeedType(v as 'vehicles' | 'alerts')}>
-                <TabsList variant="pill">
-                    <TabsTrigger value="vehicles" className="gap-1.5">
-                        <Bus size={14} />
-                        <span>Vehicles</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="alerts" className="gap-1.5">
-                        <Info size={14} />
-                        <span>Alerts</span>
-                    </TabsTrigger>
-                </TabsList>
-            </Tabs>
-
-            <Button 
-                onClick={handleRefresh}
-                disabled={isLoading || isRefreshing}
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/10 shrink-0 cursor-pointer"
-                title="Refresh Feed"
-            >
-                <RefreshCw size={16} className={isRefreshing || isLoading ? "animate-spin text-primary" : ""} />
-            </Button>
-        </div>
-    );
-
-    const titleNode = (
-        <span className="flex items-center gap-2">
-            <span>Feed Explorer</span>
-        </span>
-    );
-
     return (
-        <AdminLayout title={titleNode} headerActions={headerActions} contentClassName="p-2 sm:p-4 flex flex-col min-h-0 h-full">
-            <div className="flex items-center gap-2 sm:hidden shrink-0">
-                <Tabs value={selectedCity} onValueChange={(v) => setSelectedCity(v)} className="w-full">
-                    <TabsList variant="default" className="flex w-full h-9 p-1 rounded-xl bg-muted/50 border border-border/50">
-                        {CITY_LIST.map(city => (
-                            <TabsTrigger key={city.slug} value={city.slug} className="flex-1 h-7 text-xs font-semibold rounded-lg">{city.name}</TabsTrigger>
-                        ))}
-                    </TabsList>
-                </Tabs>
+        <AdminLayout title="Feed Explorer" headerActions={<RefreshButton onRefresh={() => refetch()} isRefreshing={isFetching} />}>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+                <div className="max-w-full overflow-x-auto no-scrollbar">
+                    <SegmentedControl size="sm" value={selectedCity} onChange={setSelectedCity} options={CITY_OPTIONS} />
+                </div>
+                <SegmentedControl size="sm" value={feedType} onChange={setFeedType} options={FEED_OPTIONS} />
             </div>
 
-            {isLoading && (
-                <div className="flex h-full items-center justify-center text-muted-foreground flex-col gap-3">
-                    <RefreshCw size={32} className="animate-spin opacity-50" />
-                    <p className="font-mono text-sm">Loading upstream {feedType}...</p>
-                </div>
-            )}
-
-            {isError && (
-                <div className="flex h-full items-center justify-center p-4">
-                    <Alert variant="destructive" className="max-w-md p-6 flex flex-col items-center text-center">
-                        <AlertCircle size={40} className="mb-4 opacity-80" />
-                        <AlertTitle className="text-lg font-bold mb-2">Upstream Connection Error</AlertTitle>
-                        <AlertDescription className="text-sm opacity-90 font-mono wrap-break-word">
-                            {error instanceof Error ? error.message : 'Unknown error occurred'}
-                        </AlertDescription>
-                        <Button variant="secondary" onClick={handleRefresh} className="mt-4 hover:bg-destructive/10 text-destructive">
-                            Try Again
+            {isLoading || error ? <AdminStatus error={error} onRetry={() => refetch()} /> : !!data && (
+                <Card size="none" className="min-h-0 flex-1 overflow-hidden">
+                    <div className="flex shrink-0 items-center gap-2 border-b border-sep px-4 py-2.5">
+                        <span className="min-w-0 truncate type-meta text-muted-foreground">{debugFeedLabels[feedType]}</span>
+                        <Badge variant="count" className="ml-auto">{feedItemCount(data, feedType, selectedCity === DEFAULT_CITY_SLUG)} {feedType}</Badge>
+                        <Button variant="secondary" size="sm" className="gap-1.5 pl-2.5" onClick={() => setIsExpandedAll(!isExpandedAll)}>
+                            {isExpandedAll ? <Minimize2 className="size-3.75" /> : <Maximize2 className="size-3.75" />}
+                            {isExpandedAll ? 'Collapse' : 'Expand'}
                         </Button>
-                    </Alert>
-                </div>
-            )}
-
-            {!!data && !isLoading && !isError && (
-                <div className="bg-card/80 backdrop-blur-md rounded-2xl shadow-xs overflow-hidden flex-1 min-h-0 flex flex-col border border-border/40 relative mt-2 sm:mt-0">
-                    <div className="bg-foreground/2 px-4 py-2.5 flex items-center justify-between border-b border-border/40 select-none overflow-x-auto">
-                        <div className="text-xs text-muted-foreground/80 font-mono items-center gap-2 whitespace-nowrap hidden md:flex">
-                            <span className="font-semibold">{debugFeedLabels[feedType]}</span>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0 ml-auto">
-                            <Badge variant="outline" className="text-label font-mono font-bold uppercase tracking-wider bg-foreground/5 border-border/40 text-muted-foreground px-2.5 py-0.5 hidden sm:inline-flex">
-                                {getItemsCount()} {feedType === 'vehicles' ? 'vehicles' : 'alerts'}
-                            </Badge>
-                            <Button
-                                variant="secondary" size="sm"
-                                onClick={() => setIsExpandedAll(!isExpandedAll)}
-                                className="h-7 text-xs font-semibold gap-1.5 text-foreground transition-all cursor-pointer"
-                            >
-                                {isExpandedAll ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
-                                <span className="hidden sm:inline">{isExpandedAll ? 'Collapse All' : 'Expand All'}</span>
-                            </Button>
-                            <Button
-                                variant="secondary" size="sm"
-                                onClick={handleCopy}
-                                className="h-7 text-xs font-semibold gap-1.5 text-foreground transition-all cursor-pointer"
-                            >
-                                {isCopied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
-                                <span className="hidden sm:inline">{isCopied ? 'Copied' : 'Copy JSON'}</span>
-                            </Button>
-                        </div>
+                        <CopyButton label="Copy JSON" copiedLabel="Copied" isCopied={copiedKey === 'feed'} onCopy={() => copy(JSON.stringify(data, null, 2), 'feed')} />
                     </div>
-                    <div className="flex-1 overflow-auto p-4 text-xs sm:text-sm font-mono whitespace-pre text-foreground [&>div]:bg-transparent!">
-                        <JsonView 
-                            key={isExpandedAll ? 'expanded' : 'collapsed'}
-                            data={data as Record<string, unknown>} 
-                            shouldExpandNode={(level) => isExpandedAll ? true : level < 4} 
-                            style={{
-                                ...(isDark ? darkStyles : defaultStyles),
-                                container: '', // override default bg
-                            }} 
-                        />
+                    <div className="min-h-0 flex-1 overflow-auto p-4">
+                        <JsonPanel key={String(isExpandedAll)} data={data as object} shouldExpandNode={level => isExpandedAll || level < 4} />
                     </div>
-                    <Button 
-                        onClick={handleRefresh}
-                        disabled={isLoading || isRefreshing}
-                        className="absolute bottom-6 right-6 sm:hidden h-12 w-12 rounded-full shadow-lg z-20 hover:scale-105 active:scale-95 transition-transform p-0"
-                    >
-                        <RefreshCw size={20} className={isRefreshing || isLoading ? "animate-spin" : ""} />
-                    </Button>
-                </div>
+                </Card>
             )}
         </AdminLayout>
     );
