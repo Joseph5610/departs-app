@@ -5,6 +5,7 @@ import { usePreferencesStore } from '@/state/preferencesStore';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { CITY_LIST, DEFAULT_CITY_SLUG } from '@/config/cities';
+import type { AppError } from '@/types';
 import { apiFetch } from '@/lib/apiClient';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -41,7 +42,7 @@ export const FeedExplorer = () => {
     const [isExpandedAll, setIsExpandedAll] = useState(false);
     const { copiedKey, copy } = useCopyToClipboard();
 
-    const { data, isLoading, isFetching, error, refetch } = useQuery({
+    const { data, isLoading, isFetching, error, refetch } = useQuery<unknown, AppError>({
         queryKey: ['debug-feed', selectedCity, feedType],
         queryFn: () => apiFetch<unknown>(`/admin/${selectedCity}/debug-feed?type=${feedType}`),
         refetchOnWindowFocus: false,

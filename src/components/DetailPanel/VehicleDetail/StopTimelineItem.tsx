@@ -1,9 +1,8 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Hand } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { stopDisplayTimes } from '@/domain/vehicles';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useInterchanges } from '@/hooks/derived/useInterchanges';
 import { InterchangeBadges } from '@/components/InterchangeBadges';
 import { TimelineTime } from './TimelineTime';
@@ -11,6 +10,7 @@ import { StopConnections, StopContinuation } from './StopTransfers';
 import type { TimelineStop } from './types';
 import type { JourneyMark } from '@/types';
 import { Pressable } from '@/components/Pressable';
+import { RequestStopMark } from '@/components/RequestStopMark';
 
 export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequence, nextStopSequence, delay, isFirstTransfer, isLastStop, exitKind, isOnJourney = false, onOpenStop }: {
     stop: TimelineStop,
@@ -61,8 +61,8 @@ export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequen
                 <div className={cn(
                     "absolute top-1/2 -translate-y-1/2 rounded-full z-0 transition-colors duration-300",
                     isLastStop ? "-left-5.5 size-3" : "-left-5 size-2",
-                    exitKind === 'own' ? "bg-white ring-[3px] ring-(--line)"
-                        : isExit ? "bg-background ring-[3px] ring-(--line)"
+                    exitKind === 'own' ? "bg-white ring-3 ring-(--line)"
+                        : isExit ? "bg-background ring-3 ring-(--line)"
                         : isLastStop && !isPast ? "bg-white ring-3 ring-(--line) inset-ring inset-ring-black/40"
                         : isOnJourney ? "bg-white ring ring-black/40"
                         : isPast ? "bg-label-3" : "bg-white ring ring-black/40"
@@ -102,14 +102,7 @@ export const StopTimelineItem = memo(({ stop, routeName, isPast, effectiveSequen
                             </span>
                         )}
                         {stop.properties.is_request_stop && (
-                            <Popover>
-                                <PopoverTrigger className="flex items-center text-muted-foreground shrink-0 cursor-pointer outline-none hover:text-foreground transition-colors">
-                                    <Hand size={13} strokeWidth={1.5} />
-                                </PopoverTrigger>
-                                <PopoverContent side="top" className="w-auto px-3 py-1.5 min-w-30 text-center">
-                                    <span className="type-row">{t('map.vehicleDetails.requestStop')}</span>
-                                </PopoverContent>
-                            </Popover>
+                            <RequestStopMark size={14} />
                         )}
                         <div className="flex gap-1 shrink-0 translate-y-px">
                             <InterchangeBadges codes={forStop(stop.properties.stop_name, routeName)} />

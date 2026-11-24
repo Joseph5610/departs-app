@@ -37,7 +37,7 @@ export const VehicleMonitorRow = memo(({ item }: VehicleMonitorRowProps) => {
     const displayId = item.vehicleId ? `#${vehicleDisplayNumber(item.vehicleId)}` : '—';
 
     return (
-        <Item variant="row" size="none" render={<button type="button" onClick={handleClick} />} className="group justify-between [--row-sep:0.875rem]">
+        <Item render={<button type="button" onClick={handleClick} />} className="group justify-between [--row-sep:0.875rem]">
             <div className="flex items-center gap-2.5 shrink-0 min-w-36">
                 <LineBadge
                     name={item.line}

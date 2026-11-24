@@ -104,7 +104,7 @@ export const MobileSearch = ({ onMapPick }: MobileSearchProps) => {
                     aria-hidden={!isOpen}
                     data-testid="search-overlay"
                 >
-                    <div aria-hidden="true" className="absolute inset-0 bg-black/25" onClick={close} />
+                    <div aria-hidden="true" className="absolute inset-0 scrim" onClick={close} />
                     <div
                         className={cn(
                             "glassy glassy-edge-top absolute! inset-x-0 bottom-0 flex flex-col rounded-t-sheet pt-4 transition-transform duration-200 ease-out",

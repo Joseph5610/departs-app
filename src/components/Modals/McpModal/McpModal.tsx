@@ -15,12 +15,13 @@ import { Card } from '@/components/ui/card';
 import { useUiStore } from '@/state/uiStore';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { SITE } from '@shared/site';
+import { CodeBlock } from '@/components/CodeBlock';
 
 const CLAUDE_CODE_COMMAND = `claude mcp add --transport sse departs ${SITE.MCP_URL}`;
 const CURSOR_CONFIG = JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", SITE.MCP_URL] } } }, null, 2);
 
 const McpRow = ({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children?: React.ReactNode }) => (
-    <Item variant="row" size="none" className="min-h-12 after:hidden">
+    <Item className="min-h-12 after:hidden">
         <Icon size={20} strokeWidth={1.75} className="shrink-0 text-tint-mint" />
         <span className="min-w-0 flex-1 truncate type-row text-foreground">{title}</span>
         {children}
@@ -29,7 +30,7 @@ const McpRow = ({ icon: Icon, title, children }: { icon: LucideIcon; title: stri
 
 const McpCode = ({ children }: { children: React.ReactNode }) => (
     <div className="px-3.5 pb-3.5">
-        <pre className="overflow-x-auto rounded-nested bg-fill p-3 font-mono type-meta text-muted-foreground select-all">{children}</pre>
+        <CodeBlock className="select-all">{children}</CodeBlock>
     </div>
 );
 

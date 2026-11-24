@@ -85,11 +85,9 @@ const ConnectionRow = ({ tripId, vehicleId, line, routeColor, headsign, time, de
     );
     const row = "[--row-sep:3.625rem]";
 
-    if (!tripId) return <Item variant="row" size="none" className={row}>{content}</Item>;
+    if (!tripId) return <Item className={row}>{content}</Item>;
     return (
         <Item
-            variant="row"
-            size="none"
             render={<button type="button" onClick={() => navigate(paths.trip(selectedCity, tripId, vehicleId))} />}
             className={row}
         >

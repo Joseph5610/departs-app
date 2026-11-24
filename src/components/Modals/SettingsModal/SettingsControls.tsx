@@ -45,11 +45,9 @@ interface ToggleSectionProps {
 export const ToggleSection = ({ title, description, icon: Icon, isChecked, onToggle, children }: ToggleSectionProps) => (
     <>
         <Item
-            variant="row"
-            size="none"
             render={<button onClick={() => onToggle(!isChecked)} />}
         >
-            <ItemMedia variant="rowIcon">
+            <ItemMedia variant="icon">
                 <Icon strokeWidth={1.75} />
             </ItemMedia>
             <RowText title={title} description={description} />

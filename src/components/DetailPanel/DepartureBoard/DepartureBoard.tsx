@@ -8,7 +8,7 @@ import { VehicleFilterNotice } from './VehicleFilterNotice';
 import { MetroNightMessage } from './MetroNightMessage';
 import { DirectionRow } from './DirectionRow';
 import { DepartureBoardSkeleton } from './DepartureBoardSkeleton';
-import { ErrorState } from '@/components/DetailPanel/ErrorState';
+import { ErrorState } from '@/components/ErrorState';
 import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { groupsHidingTrips, isMetroClosed, sectionGroupId, sectionPreview, sectionsHidingTrips, stationBoardSections, type DepartureLineGroup, type PlatformSection } from '@/domain/departures';
 import { Button } from '@/components/ui/button';

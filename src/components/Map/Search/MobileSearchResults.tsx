@@ -22,8 +22,8 @@ interface MobileSearchResultsProps {
 const ResultRow = ({ row, location }: { row: SearchRow; location: [number, number] | null }) => {
     const distance = row.stop ? getStopDistanceInfo(location, row.stop.pos) : null;
     return (
-        <Item variant="row" size="none" render={<button type="button" onClick={row.onSelect} data-testid={row.testId} />}>
-            <ItemMedia variant="rowIcon">{row.icon}</ItemMedia>
+        <Item render={<button type="button" onClick={row.onSelect} data-testid={row.testId} />}>
+            <ItemMedia variant="icon">{row.icon}</ItemMedia>
             <SearchRowBody row={row} />
             {distance && <ItemActions className="shrink-0"><WalkDistance info={distance} className="type-meta" /></ItemActions>}
         </Item>

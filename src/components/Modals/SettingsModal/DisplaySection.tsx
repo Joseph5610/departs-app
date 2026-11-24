@@ -73,8 +73,8 @@ export const DisplaySection = () => {
             <section className="flex flex-col gap-2">
                 <SectionHeading>{t('settings.sections.data')}</SectionHeading>
                 <Card size="none">
-                    <Item variant="row" size="none" className="flex-wrap">
-                        <ItemMedia variant="rowIcon">
+                    <Item className="flex-wrap">
+                        <ItemMedia variant="icon">
                             <Timer strokeWidth={1.75} />
                         </ItemMedia>
                         <RowText title={t('settings.refreshInterval.title')} description={t('settings.refreshInterval.description')} className="basis-36" />

@@ -11,7 +11,7 @@ function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
       role="list"
       data-slot="item-group"
       className={cn(
-        "group/item-group flex w-full flex-col gap-4 has-data-[size=sm]:gap-2.5 has-data-[size=xs]:gap-2",
+        "group/item-group flex w-full flex-col gap-4",
         className
       )}
       {...props}
@@ -20,52 +20,19 @@ function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 
-const itemVariants = cva(
-  "group/item flex w-full flex-wrap items-center rounded-surface border type-row transition-colors duration-100 outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [a]:transition-colors [a]:hover:bg-muted",
-  {
-    variants: {
-      variant: {
-        default: "border-transparent",
-        outline: "border-border",
-        muted: "border-transparent bg-muted/50",
-        /** A row in a grouped list; its separator starts at the text, `--row-sep` from the left. */
-        row: "row-separator min-h-11 flex-nowrap gap-3 border-0 rounded-none bg-transparent px-3.5 py-2 text-left focus-visible:ring-0 [button&]:row-hover-group [a&]:row-hover-group",
-      },
-      size: {
-        default: "gap-2.5 px-3 py-2.5",
-        sm: "gap-2.5 px-3 py-2.5",
-        xs: "gap-2 px-2.5 py-2 in-data-[slot=dropdown-menu-content]:p-0",
-        none: "gap-3",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-)
+/** A row in a grouped list; its separator starts at the text, `--row-sep` from the left. */
+const ITEM_ROW = "group/item row-separator flex min-h-11 w-full flex-nowrap items-center gap-3 px-3.5 py-2 text-left type-row outline-none transition-colors duration-100 [button&]:row-hover-group [a&]:row-hover-group"
 
 function Item({
   className,
-  variant = "default",
-  size = "default",
   render,
   ...props
-}: useRender.ComponentProps<"div"> & VariantProps<typeof itemVariants>) {
+}: useRender.ComponentProps<"div">) {
   return useRender({
     defaultTagName: "div",
-    props: mergeProps<"div">(
-      {
-        className: cn(itemVariants({ variant, size, className })),
-      },
-      props
-    ),
+    props: mergeProps<"div">({ className: cn(ITEM_ROW, className) }, props),
     render,
-    state: {
-      slot: "item",
-      variant,
-      size,
-    },
+    state: { slot: "item" },
   })
 }
 
@@ -75,10 +42,8 @@ const itemMediaVariants = cva(
     variants: {
       variant: {
         default: "bg-transparent",
-        icon: "[&_svg:not([class*='size-'])]:size-4",
-        rowIcon: "text-muted-foreground group-has-data-[slot=item-description]/item:translate-y-0 group-has-data-[slot=item-description]/item:self-center [&_svg:not([class*='size-'])]:size-5",
-        image:
-          "size-10 overflow-hidden rounded-badge group-data-[size=sm]/item:size-8 group-data-[size=xs]/item:size-6 [&_img]:size-full [&_img]:object-cover",
+        /** A row's leading icon, muted and centred on its text. */
+        icon: "text-muted-foreground group-has-data-[slot=item-description]/item:translate-y-0 group-has-data-[slot=item-description]/item:self-center [&_svg:not([class*='size-'])]:size-5",
       },
     },
     defaultVariants: {
@@ -107,7 +72,7 @@ function ItemContent({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="item-content"
       className={cn(
-        "flex flex-1 flex-col gap-1 group-data-[size=xs]/item:gap-0 [&+[data-slot=item-content]]:flex-none",
+        "flex flex-1 flex-col gap-1 [&+[data-slot=item-content]]:flex-none",
         className
       )}
       {...props}

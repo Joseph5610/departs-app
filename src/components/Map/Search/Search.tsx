@@ -98,11 +98,11 @@ export const Search = memo(() => {
                         <div className="relative flex-1 group h-full" onClick={() => inputRef.current?.focus()}>
                             <Autocomplete.Input
                                 ref={inputRef}
-                                render={<Input />}
+                                render={<Input variant="bare" />}
                                 aria-label={s.lineFilterLabel ?? t('search.placeholder')}
                                 onFocus={() => setIsOpen(true)}
                                 placeholder={activeFilter ? undefined : t('search.placeholder')}
-                                className="h-full w-full bg-transparent border-0! pl-10 type-field truncate placeholder:text-muted-foreground focus-visible:ring-0! focus-visible:border-transparent! shadow-none! rounded-none outline-none"
+                                className="pl-10 truncate"
                                 data-testid="search-input"
                                 readOnly={!!activeFilter}
                             />

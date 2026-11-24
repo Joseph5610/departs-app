@@ -15,8 +15,8 @@ export const AdminIndex = () => (
     <AdminLayout title="Dashboard" backUrl="/" contentClassName="max-w-2xl">
         <Card size="none">
             {TOOLS.map(({ href, icon: Icon, title, description }) => (
-                <Item key={href} variant="row" size="none" render={<Link href={href} />}>
-                    <ItemMedia variant="rowIcon"><Icon strokeWidth={1.75} /></ItemMedia>
+                <Item key={href} render={<Link href={href} />}>
+                    <ItemMedia variant="icon"><Icon strokeWidth={1.75} /></ItemMedia>
                     <RowText title={title} description={description} />
                     <ItemActions><RowChevron /></ItemActions>
                 </Item>

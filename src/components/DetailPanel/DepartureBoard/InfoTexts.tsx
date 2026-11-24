@@ -52,7 +52,7 @@ export const InfoTexts = ({ selectedStop }: InfoTextsProps) => {
 };
 
 const alertVariant = (priority: Infotext['priority']) =>
-    priority === 'high' ? 'destructive' : priority === 'normal' ? 'warning' : 'subtle';
+    priority === 'high' ? 'destructive' : priority === 'normal' ? 'warning' : 'default';
 
 interface PlatformNoticesCardProps {
     codes: string[];
@@ -67,7 +67,7 @@ const PlatformNoticesCard = ({ codes, priority, platformIds, onOpen }: PlatformN
     const { t } = useTranslation();
 
     return (
-        <Alert variant={alertVariant(priority)} className="items-center *:[svg]:mt-0 *:[svg]:self-center">
+        <Alert variant={alertVariant(priority)} align="center">
             <AlertIcon className={cn("h-4 w-4 shrink-0", noticeIconTone(priority))} />
             <div className="flex min-w-0 items-center gap-2">
                 <AlertTitle className="min-w-0 flex-1">
@@ -91,7 +91,7 @@ const PlatformNoticeCode = ({ code, platformId, onOpen }: { code: string; platfo
         <Pressable
             onClick={() => onOpen(platformId)}
             aria-label={t('map.departures.platformCode', { code })}
-            className="flex rounded-full transition-transform active:scale-95 hover:brightness-110"
+            className="flex rounded-full"
         >
             {circle}
         </Pressable>

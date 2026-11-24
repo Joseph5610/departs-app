@@ -231,7 +231,7 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, fitsContent = false, col
             <div
                 ref={scrimRef}
                 aria-hidden="true"
-                className="pointer-events-none fixed inset-0 z-499 bg-black/25 opacity-0"
+                className="pointer-events-none fixed inset-0 z-499 scrim opacity-0"
             />
             <Drawer
                 open={true}

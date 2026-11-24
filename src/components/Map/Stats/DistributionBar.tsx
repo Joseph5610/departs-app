@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/cn';
+import { TapHint } from '@/components/TapHint';
 
 interface DistributionSegment {
     key: string;
@@ -25,14 +26,9 @@ export const DistributionBar = ({ segments, total }: DistributionBarProps) => {
         <div className="flex flex-col gap-2">
             <div className="h-3.5 w-full flex rounded-full overflow-hidden opacity-90 shadow-inner">
                 {segments.map(segment => (
-                    <Popover key={segment.key}>
-                        <PopoverTrigger className="h-full block p-0 border-none" style={{ width: `${(segment.count / total) * 100}%` }}>
-                            <div className={`${segment.barClass} h-full cursor-pointer hover:opacity-80 transition-opacity w-full`} />
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto px-3 py-1.5 type-row" side="top">
-                            {segment.label}: {segment.count} {t('stats.vehicles')}
-                        </PopoverContent>
-                    </Popover>
+                    <TapHint key={segment.key} className={cn("h-full", segment.barClass)} style={{ width: `${(segment.count / total) * 100}%` }} hint={`${segment.label}: ${segment.count} ${t('stats.vehicles')}`}>
+                        {null}
+                    </TapHint>
                 ))}
             </div>
             <div className="flex flex-wrap justify-between type-note font-medium text-muted-foreground gap-x-3 gap-y-1 mt-1">

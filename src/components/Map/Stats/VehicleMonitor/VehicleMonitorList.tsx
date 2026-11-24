@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Activity, Bus } from 'lucide-react';
+import { Bus } from 'lucide-react';
 import { Virtuoso } from 'react-virtuoso';
 import { useVehicles } from '@/hooks/data/useVehicles';
 import { useVehicleMonitor } from '@/hooks/derived/useVehicleMonitor';
@@ -14,6 +14,8 @@ import { SearchField } from '@/components/SearchField';
 import { EmptyState } from '@/components/EmptyState';
 import { ChipStrip } from '@/components/ChipStrip';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 export const VehicleMonitorList = () => {
@@ -90,12 +92,9 @@ export const VehicleMonitorList = () => {
             </div>
 
             {isLoading ? (
-                <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground opacity-60">
-                    <Activity className="animate-pulse" size={24} />
-                    <span className="type-note">{t('common.loading')}</span>
-                </div>
+                <Skeleton className="h-64 rounded-surface" aria-hidden="true" />
             ) : items.length > 0 ? (
-                <div ref={listRef} className="overflow-hidden rounded-surface bg-fill">
+                <Card ref={listRef} size="none">
                     {scroller && (
                         <Virtuoso
                             customScrollParent={scroller}
@@ -103,7 +102,7 @@ export const VehicleMonitorList = () => {
                             itemContent={(_index, item) => <VehicleMonitorRow key={item.id} item={item} />}
                         />
                     )}
-                </div>
+                </Card>
             ) : (
                 <EmptyState icon={Bus} title={t('stats.monitor.noVehiclesFound')} />
             )}

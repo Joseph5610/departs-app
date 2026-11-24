@@ -10,7 +10,6 @@ import { useDepartures } from '@/hooks/data/useDepartures';
 import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
 import { departureLines, lineChips } from '@/domain/departures';
 import { useRouteMetadata } from '@/hooks/data/useRouteMetadata';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/cn';
 import { LineBadge } from '@/components/LineBadge';
 import { ButtonTooltip } from '@/components/ButtonTooltip';
@@ -22,6 +21,7 @@ import { paths } from '@/lib/routes';
 import { Pressable } from '@/components/Pressable';
 import { ChipStrip } from '@/components/ChipStrip';
 import { Toggle } from '@/components/ui/toggle';
+import { TapHint } from '@/components/TapHint';
 
 /** Sticky subheader of a stop's board: distance and delay, stop actions and filters, then the line chips. */
 export const DepartureBoardHeader = memo(() => {
@@ -65,8 +65,7 @@ export const DepartureBoardHeader = memo(() => {
                     <NavigatePill />
 
                     {delayStats && delayStats.sampleSize >= 2 && (
-                        <Popover>
-                            <PopoverTrigger className="hit-target flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-badge type-meta text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
+                        <TapHint side="bottom" className="hit-target gap-1.5 whitespace-nowrap rounded-badge" hint={t('map.departures.delayStatsTooltip', { count: delayStats.sampleSize })}>
                                 <Activity size={14} strokeWidth={1.75} className={cn(
                                     delayStats.trend === 'worsening' ? "text-destructive" :
                                     delayStats.trend === 'improving' || delayStats.averageDelayMin === 0 ? "text-tint-mint" :
@@ -75,13 +74,7 @@ export const DepartureBoardHeader = memo(() => {
                                 {delayStats.averageDelayMin === 0
                                     ? t('map.departures.onTime')
                                     : `~${delayStats.averageDelayMin > 0 ? '+' : ''}${t('map.departures.minutes', { count: delayStats.averageDelayMin })}`}
-                            </PopoverTrigger>
-                            <PopoverContent side="bottom" align="center" className="w-auto">
-                                <span className="type-meta text-foreground/90">
-                                    {t('map.departures.delayStatsTooltip', { count: delayStats.sampleSize })}
-                                </span>
-                            </PopoverContent>
-                        </Popover>
+                        </TapHint>
                     )}
 
                     {twin && twinLabel && (
@@ -137,9 +130,10 @@ export const DepartureBoardHeader = memo(() => {
                                         <Pressable
                                             key={name}
                                             onClick={() => toggleLineFilter(name)}
+                                            aria-pressed={isActive}
                                             className={cn(
-                                                "hit-target flex transition-[transform,opacity] active:scale-95 select-none hover:brightness-110 rounded-badge",
-                                                isDimmed ? "opacity-30" : "opacity-100",
+                                                "hit-target flex select-none rounded-badge",
+                                                isDimmed && "opacity-30",
                                                 isActive && "z-10 ring-2 ring-primary/40"
                                             )}
                                         >

@@ -31,6 +31,7 @@ import { FEEDBACK_LIMITS, TURNSTILE_SITE_KEY } from '@/config/constants';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { PrivacyNote } from './PrivacyNote';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CodeBlock } from '@/components/CodeBlock';
 
 const baseFormSchema = feedbackPayloadSchema.omit({ diagnostics: true, turnstileToken: true });
 type FormValues = z.infer<typeof baseFormSchema>;
@@ -199,9 +200,9 @@ export const FeedbackModal = memo(() => {
                                         >
                                             {diagnosticSnapshot && (
                                                 <div className="p-3.5">
-                                                    <pre className="max-h-48 overflow-auto rounded-nested bg-fill p-3 font-mono type-meta text-muted-foreground">
+                                                    <CodeBlock className="max-h-48">
                                                         {JSON.stringify(diagnosticSnapshot, null, 2)}
-                                                    </pre>
+                                                    </CodeBlock>
                                                 </div>
                                             )}
                                         </ToggleSection>

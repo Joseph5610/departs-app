@@ -10,7 +10,7 @@ import { lastStopOf } from '@/domain/vehicles';
 import { formatClock } from '@/domain/time';
 import { Button } from '@/components/ui/button';
 import type { DisplayVehicle } from './types';
-import { HeroNotice } from './HeroNotice';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 /** Replaces a finished trip's live state: says it has ended, stops following it, and offers the vehicle's next trip when known. */
 export const TripEndedNotice = ({ vehicle, hasEnded }: { vehicle: DisplayVehicle; hasEnded: boolean }) => {
@@ -37,25 +37,24 @@ export const TripEndedNotice = ({ vehicle, hasEnded }: { vehicle: DisplayVehicle
     const arrival = lastStop?.properties.realtime_arrival_time || lastStop?.properties.arrival_time;
 
     return (
-        <HeroNotice
-            icon={Flag}
-            title={t('map.vehicleDetails.ended.title')}
-            description={arrival
-                ? t('map.vehicleDetails.ended.body', { stop: lastStop?.properties.stop_name, time: formatClock(arrival) })
-                : t('map.vehicleDetails.ended.bodyNoTime', { stop: lastStop?.properties.stop_name })}
-            tone="text-foreground/90"
-            descriptionTone="text-muted-foreground"
-        >
+        <Alert>
+            <Flag />
+            <AlertTitle>{t('map.vehicleDetails.ended.title')}</AlertTitle>
+            <AlertDescription className="type-note">
+                {arrival
+                    ? t('map.vehicleDetails.ended.body', { stop: lastStop?.properties.stop_name, time: formatClock(arrival) })
+                    : t('map.vehicleDetails.ended.bodyNoTime', { stop: lastStop?.properties.stop_name })}
+            </AlertDescription>
             {next && (
                 <Button
                     variant="secondary"
                     size="sm"
                     onClick={() => navigate(paths.trip(selectedCity, next.tripId, vehicle.vehicle_id))}
-                    className="mt-2 self-start"
+                    className="col-start-2 mt-1.5 justify-self-start"
                 >
                     {t('map.vehicleDetails.ended.nextTrip', { line: next.line })}
                 </Button>
             )}
-        </HeroNotice>
+        </Alert>
     );
 };

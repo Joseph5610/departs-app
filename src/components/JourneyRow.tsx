@@ -28,8 +28,6 @@ export const JourneyRow = ({ leg, title, summary, onClick, kind, isOpen = false,
     return (
         <div className="flex items-center">
             <Item
-                variant="row"
-                size="none"
                 render={<button type="button" onClick={onClick} aria-expanded={kind === 'toggle' ? isOpen : undefined} />}
                 className={cn("min-w-0 flex-1", !isCompact && "min-h-14")}
             >

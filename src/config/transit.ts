@@ -20,7 +20,6 @@ export const DELAY_TIERS = [
     { key: 'severe', maxDelayS: Infinity, color: '#6b21a8', includesUnknown: false },
 ] as const;
 
-export type DelayTierKey = typeof DELAY_TIERS[number]['key'];
 
 /** Thresholds for the city stats the app computes from the vehicle list. */
 export const STATS_AGGREGATION = {

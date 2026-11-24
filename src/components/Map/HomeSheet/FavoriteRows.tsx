@@ -46,7 +46,7 @@ export const FavoriteStopRow = ({ stop, departures, isLoading }: FavoriteStopRow
     const open = () => openStop(stop.id, { pos: stop.pos });
 
     return (
-        <Item variant="row" size="none" className="[--row-sep:3.875rem]" render={<button type="button" onClick={open} data-testid={`favorite-mini-stop-${stop.id}`} />}>
+        <Item className="[--row-sep:3.875rem]" render={<button type="button" onClick={open} data-testid={`favorite-mini-stop-${stop.id}`} />}>
             <ItemMedia className={LEAD}>
                 <span className="grid size-8 place-items-center rounded-full bg-fill-2 text-favorite"><Star size={16} strokeWidth={1.75} fill="currentColor" /></span>
             </ItemMedia>
@@ -88,7 +88,7 @@ export const FavoriteLineRow = ({ favorite, stop, departures, isLoading }: Favor
     const open = () => openStop(favorite.stopId, { pos: stop?.pos, city: favorite.city, line: favorite.line });
 
     return (
-        <Item variant="row" size="none" className="[--row-sep:3.875rem]" render={<button type="button" onClick={open} data-testid={`favorite-mini-line-${favorite.stopId}-${favorite.line}`} />}>
+        <Item className="[--row-sep:3.875rem]" render={<button type="button" onClick={open} data-testid={`favorite-mini-line-${favorite.stopId}-${favorite.line}`} />}>
             <ItemMedia className={LEAD}>
                 <LineBadge name={favorite.line} routeColor={routeColor} size="lg" />
             </ItemMedia>

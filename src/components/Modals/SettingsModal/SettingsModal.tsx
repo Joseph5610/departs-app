@@ -46,11 +46,9 @@ export const SettingsContent = () => {
                 <SectionHeading>{t('settings.sections.ai')}</SectionHeading>
                 <Card size="none">
                     <Item
-                        variant="row"
-                        size="none"
                         render={<button onClick={() => { setIsSettingsOpen(false); setTimeout(() => setIsMcpModalOpen(true), UI_TIMING_MS.MODAL_SWAP_DELAY); }} />}
                     >
-                        <ItemMedia variant="rowIcon"><Plug strokeWidth={1.75} /></ItemMedia>
+                        <ItemMedia variant="icon"><Plug strokeWidth={1.75} /></ItemMedia>
                         <RowText title={t('mcp.title')} description={t('mcp.subtitle')} />
                         <ItemActions><RowChevron /></ItemActions>
                     </Item>
