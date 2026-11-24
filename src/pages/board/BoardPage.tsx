@@ -13,7 +13,7 @@ import { useWakeLock } from '@/hooks/features/useWakeLock';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { BOARD_CONFIG } from '@/config/constants';
-import { SITE } from '@/config/site';
+import { SITE } from '@shared/site';
 import { LineBadge } from '@/components/LineBadge';
 import { StruckTime } from '@/components/StruckTime';
 import { PlatformCircle } from '@/components/PlatformCircle';

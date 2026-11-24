@@ -44,6 +44,7 @@
 | `npm run lint` | ESLint, including the architecture rules |
 | `npm run test:unit` | Vitest unit tests |
 | `npm test` | Playwright end-to-end tests against a production build on `http://localhost:8788` |
+| `npm run vapid` | Creates the ride-push VAPID keys ([Ride push deployment](./ride-push-deployment.md#1-vapid-keys)) |
 | `npm run docs:dev` | This documentation on `http://localhost:5174` |
 
 CI runs lint, both type checks, unit tests and end-to-end tests on every push and pull request to `master`.
@@ -58,6 +59,7 @@ src/
   components/  React components; shadcn primitives in components/ui
   config/      tunables and tables
   i18n/        cs, sk and en translations
+shared/       site config (hosts, contact) and transit rules both the app and functions/ use
 functions/
   api/         Pages Functions routes (/api/*)
   _cities/     one file per city: config and wiring
@@ -82,7 +84,7 @@ npx wrangler dev -c workers/ride-push/wrangler.toml --port 8790 --inspector-port
   --var API_ORIGIN:http://localhost:8788
 ```
 
-It reads its VAPID keys from `workers/ride-push/.dev.vars`, created as in [Ride push deployment, step 1](./ride-push-deployment.md#1-vapid-keys). `npm run dev` connects to it through Wrangler's local dev registry.
+It reads its VAPID private key from `workers/ride-push/.dev.vars`, created by `npm run vapid` as in [Ride push deployment, step 1](./ride-push-deployment.md#1-vapid-keys). `npm run dev` connects to it through Wrangler's local dev registry.
 
 To test the whole flow, serve a build, since only a build registers the service worker that receives pushes: `npm run build && npx wrangler pages dev dist`.
 

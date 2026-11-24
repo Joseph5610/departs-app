@@ -1,13 +1,13 @@
 import { DurableObject } from 'cloudflare:workers';
+import { SITE } from '../../shared/site';
 import { RIDE_PUSH } from '../_core/config';
 import { sendPush, vapidAuthorizer } from '../_core/push/webPush';
 import type { AppVehicleDetail } from '../_core/types';
 import { handleRequest, runAlarm, type RideTrip, type RideWatchRequest } from '../_domain/rides/watchRun';
 
 export interface RidePushEnv {
-    /** The departs.app origin whose `/api` answers vehicle details (a `[vars]` entry, overridden for local dev). */
-    API_ORIGIN: string;
-    VAPID_PUBLIC_KEY: string | undefined;
+    /** Origin whose `/api` answers vehicle details and alerts; unset in production (`SITE.URL`), a `--var` in local dev. */
+    API_ORIGIN?: string;
     VAPID_PRIVATE_KEY: string | undefined;
 }
 
@@ -19,13 +19,13 @@ export class RideWatch extends DurableObject<RidePushEnv> {
     }
 
     async alarm(): Promise<void> {
-        const { VAPID_PUBLIC_KEY: publicKey, VAPID_PRIVATE_KEY: privateKey } = this.env;
-        if (!publicKey || !privateKey) {
-            console.error('VAPID keys are not configured; ride pushes are off.');
+        const { VAPID_PRIVATE_KEY: privateKey } = this.env;
+        if (!privateKey) {
+            console.error('VAPID_PRIVATE_KEY is not configured; ride pushes are off.');
             return this.ctx.storage.deleteAll();
         }
         const now = Date.now();
-        const authorize = vapidAuthorizer({ publicKey, privateKey, subject: RIDE_PUSH.VAPID_SUBJECT }, Math.floor(now / 1000));
+        const authorize = vapidAuthorizer({ publicKey: SITE.VAPID_PUBLIC_KEY, privateKey, subject: RIDE_PUSH.VAPID_SUBJECT }, Math.floor(now / 1000));
         await runAlarm(this.ctx.storage, {
             readDetail: trip => this.readDetail(trip),
             // One broken subscription must not stop the trip's other riders.
@@ -38,7 +38,7 @@ export class RideWatch extends DurableObject<RidePushEnv> {
 
     /** The trip's detail; `missing` when the API knows no such trip, null when the read failed. */
     private async readDetail(trip: RideTrip): Promise<AppVehicleDetail | null | 'missing'> {
-        const url = new URL(`/api/${trip.city}/vehicle-detail`, this.env.API_ORIGIN);
+        const url = new URL(`/api/${trip.city}/vehicle-detail`, this.env.API_ORIGIN ?? SITE.URL);
         url.searchParams.set('tripId', trip.tripId);
         try {
             const response = await fetch(url);

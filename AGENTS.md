@@ -35,7 +35,7 @@ Non-negotiable. Any violation is a system-level bug.
 ### Source Layout
 
 - **`src/domain/<area>/`**: pure transit logic, one folder per area (`departures`, `vehicles`, `rides`, `realtime`, `routes`, `stops`, `alerts`, `cities`, `pointsOfSale`) plus `domain/time.ts` and `domain/delay.ts`. Functions over immutable data, no classes, no React, no stores. Code outside a folder imports only its `index.ts` (`@/domain/vehicles`); files inside an area import each other directly.
-- **`shared/`**: facts and transit rules both the app and `functions/` apply (e.g. `shared/cities.ts`: each city's location, zone and features; `shared/rides.ts`: when a vehicle left a stop, the delay at a stop, boarding grace), so the screen and the server agree. Plain TypeScript importing only its own files; the app imports it (values and types) as `@shared/…`, `functions/` by relative path.
+- **`shared/`**: facts and transit rules both the app and `functions/` apply (e.g. `shared/site.ts`: the app's hosts, contact and VAPID public key, the one file a fork edits; `shared/cities.ts`: each city's location, zone and features; `shared/rides.ts`: when a vehicle left a stop, the delay at a stop, boarding grace), so the screen and the server agree. Plain TypeScript importing only its own files; the app imports it (values and types) as `@shared/…`, `functions/` by relative path.
 - **`src/lib/`**: app infrastructure only (API client, memoization, history and URLs, device cache, geometry, search helpers, `map/` icons and initial view). Transit rules NEVER go here.
 - **No `utils/` folder.** A new helper goes into the `domain/` area it belongs to, or `lib/` if it is infrastructure.
 - `domain/` MUST NOT import hooks, stores or components; hooks and components import `domain/`.

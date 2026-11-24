@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import license from 'rollup-plugin-license'
-import { SITE, SITE_PLACEHOLDERS } from './src/config/site.ts'
+import { SITE, SITE_PLACEHOLDERS } from './shared/site.ts'
 
 const SITE_PLACEHOLDER = /%(SITE_[A-Z_]+)%/g
 
@@ -38,7 +38,7 @@ const thirdPartyNotices = (bundled: LicenseNotice[]): string =>
 const fillSitePlaceholders = (text: string): string =>
   text.replace(SITE_PLACEHOLDER, (_match, key: string) => {
     const value = SITE_PLACEHOLDERS[key]
-    if (value === undefined) throw new Error(`Unknown placeholder %${key}%; add it to SITE_PLACEHOLDERS in src/config/site.ts`)
+    if (value === undefined) throw new Error(`Unknown placeholder %${key}%; add it to SITE_PLACEHOLDERS in shared/site.ts`)
     return value
   })
 
@@ -47,7 +47,7 @@ const textFilesIn = (dir: string): string[] =>
   fs.readdirSync(dir, { recursive: true, encoding: 'utf8' })
     .filter((file) => /(\.(txt|json|html|xml)|_headers|_redirects)$/.test(file) && fs.statSync(path.join(dir, file)).isFile())
 
-/** Fills `src/config/site.ts` values into index.html and the copied public files. */
+/** Fills `shared/site.ts` values into index.html and the copied public files. */
 const siteTemplate = (): Plugin => {
   let outDir = 'dist'
   let publicDir = 'public'

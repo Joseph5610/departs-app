@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { paths } from '@/lib/routes';
-import { SITE } from '@/config/site';
+import { SITE } from '@shared/site';
 
 interface ShareOptions {
     title?: string;

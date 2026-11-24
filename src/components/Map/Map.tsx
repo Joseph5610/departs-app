@@ -22,7 +22,7 @@ import { RideBar } from './RideBar';
 import { getInitialViewState } from '@/lib/map/view';
 import { selfHostedGlyphs } from '@/lib/map/glyphs';
 import { EXTERNAL_URLS, MAP_CAMERA } from '@/config/constants';
-import { SITE } from '@/config/site';
+import { SITE } from '@shared/site';
 import { MapLayers } from './MapLayers';
 import { MAP_LAYERS, MAP_SOURCES, STOP_CLICK_LAYERS, VEHICLE_CLICK_LAYERS, INTERACTIVE_LAYER_IDS } from '@/config/mapLayers';
 import { MapController } from './MapController';

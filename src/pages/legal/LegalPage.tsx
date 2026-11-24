@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { SITE } from '@/config/site';
+import { SITE } from '@shared/site';
 import { formatDate } from '@/domain/time';
 import { LegalLayout, LegalSection } from './LegalLayout';
 

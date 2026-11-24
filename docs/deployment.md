@@ -1,6 +1,6 @@
 # Production deployment
 
-Set up a full departs.app deployment from scratch. Follow the steps in order; a step that can be verified ends with a **Check**.
+Set up your own departs.app from scratch. Follow the steps in order; a step that can be verified ends with a **Check**. Then add [Ride push](./ride-push-deployment.md) for notifications and the [Edge settings](./edge-settings.md) for caching and rate limiting.
 
 ## Overview
 
@@ -12,72 +12,66 @@ A deployment is two repositories and one Cloudflare account:
 | App | `departs-app` (this repo) | Cloudflare Pages + Pages Functions | The PWA and `/api/*`, `/mcp`, `/sitemap.xml` |
 | Ride push (optional) | `departs-app`, `workers/ride-push/` | Cloudflare Worker + Durable Objects | Web Push alerts for ride mode ([Ride push deployment](./ride-push-deployment.md)) |
 
-Scheduled GitHub Actions in `departs-data` download each network's timetables, cut them into small JSON chunks, and force-push them to the `data` branch. The browser and the Pages Functions then fetch only the chunks they need. Live positions and departures come from each network's realtime API, called by the Functions. Step 1 decides where this data comes from.
+Scheduled GitHub Actions in `departs-data` download each network's timetables, cut them into small JSON chunks, and force-push them to the `data` branch. The browser and the Pages Functions then fetch only the chunks they need. Live positions and departures come from each network's realtime API, called by the Functions.
 
 ### Placeholders
 
 | Placeholder | Meaning | Example (ours) |
 | ----------- | ------- | -------------- |
 | `<domain>` | Custom domain for the app | `departs.app` |
-| `<data-host>` | Base URL of the static data; only differs from ours if you self-host | `https://data.departs.app` |
 | `<project>` | Cloudflare Pages project name, served at `<project>.pages.dev` | `departs-app` |
+| `<host>` | Every hostname that serves production: `<domain>`, plus `<project>.pages.dev` unless it redirects to `<domain>` | `departs.app` |
 
 ### What you need
 
-- A Cloudflare account (free plan).
-- A GitHub account.
+- A Cloudflare account (free plan) and a GitHub account.
 - A Golemio API key from [api.golemio.cz](https://api.golemio.cz/api-keys/), for Prague's realtime data.
-- Optional: a domain with DNS on Cloudflare, for steps 5 and 7.
+- Optional: a domain with DNS on Cloudflare.
 
 ## 1. Choose the data source
 
-**Default: use ours.** The app is already configured to read `https://data.departs.app`, which is public, rebuilt daily and published under CC BY 4.0. Credit the sources as the [`departs-data` README](https://github.com/Joseph5610/departs-data#-license) lists them, then go to step 2.
+**Default: use ours.** `https://data.departs.app` is public, rebuilt daily and published under CC BY 4.0. Credit the sources as the [`departs-data` README](https://github.com/Joseph5610/departs-data#-license) lists them, then go to step 2.
 
-**Self-host** if you need your own schedule, networks or availability. Fork the [`departs-data` repository](https://github.com/Joseph5610/departs-data): its GitHub Actions build the data on a schedule and publish it to GitHub Pages. You can also run the build scripts yourself and host the output on any static host. With a domain on Cloudflare, serve the data through a proxied `data.<domain>` to get the edge caching from step 7.
+**Self-host** if you need your own schedule, networks or availability. Fork the [`departs-data` repository](https://github.com/Joseph5610/departs-data): its GitHub Actions build the data on a schedule and publish it to GitHub Pages. You can also run the build scripts yourself and host the output on any static host. With a domain on Cloudflare, serve the data through a proxied `data.<domain>` to get the edge caching from the [Edge settings](./edge-settings.md#cache-rules).
 
-**Check:** `curl -sI <data-host>/<city>/stops.json` returns `200` for each network you build, where `<city>` is the folder name the build publishes (e.g. `prague`).
+**Check:** `curl -sI <data URL>/<city>/stops.json` returns `200` for each network you build, where `<city>` is the folder name the build publishes (e.g. `prague`).
 
-## 2. Fork the app and set your hostnames
+## 2. Fork the app and set your site
 
-Fork this repository; Cloudflare Pages builds from your fork in step 4. Our hostnames are hard-coded, so replace the app's production URL (`https://<domain>`, or `https://<project>.pages.dev` without a custom domain) in:
+Fork this repository; Cloudflare Pages builds from your fork in step 4. Every hostname and address the app, the Functions and the ride-push Worker use lives in one file, **`shared/site.ts`**:
 
-| File | What |
-| ---- | ---- |
-| `src/config/site.ts` | `URL` (and `NAME` to rename the app); the build fills both into `index.html`, `robots.txt`, `llms.txt`, `.well-known/` and the 404 page |
-| `functions/_core/config.ts` | `SITE_URL` (the MCP server's advertised endpoint) |
+| Field | Set it to |
+| ----- | --------- |
+| `URL` | `https://<domain>`, or `https://<project>.pages.dev` without a custom domain |
+| `NAME`, `INSTALL_NAME`, `INSTALL_SHORT_NAME`, `TITLE` | Your app's name, if you rename it |
+| `CONTACT_EMAIL` | Your contact address: shown in the legal pages and sent with every push |
+| `STATIC_DATA_URL` | Your data URL, only if you self-host the data (step 1) |
+| `OPERATOR` | The data controller named in the privacy policy |
 
-If you self-host the data, also replace `https://data.departs.app` in:
-
-| File | What |
-| ---- | ---- |
-| `src/config/site.ts` | `STATIC_DATA_URL`; the build fills it into the CSP in `_headers` and into `_redirects` |
-| `functions/_core/config.ts` | `STATIC_DATA_URL` |
+The build fills these into `index.html`, `robots.txt`, `llms.txt`, `.well-known/`, the CSP in `_headers` and the 404 page. `VAPID_PUBLIC_KEY` is set by [Ride push deployment](./ride-push-deployment.md#1-vapid-keys).
 
 ## 3. Create Cloudflare resources
 
-1. **KV namespace** (Storage & Databases > KV): create one, e.g. `departs`. It stores user feedback. Note its ID.
-2. **Turnstile widget** (Turnstile > Add widget), mode *Managed*. Hostnames: every production host (`<domain>` and/or `<project>.pages.dev`), plus any preview hostnames where the feedback form must work. Note the site key and secret key.
+1. **KV namespace** (Storage & Databases > KV): create one, e.g. `departs`. It stores user feedback. Put its ID into the `[[kv_namespaces]]` block of `wrangler.toml`, so local development uses it too.
+2. **Turnstile widget** (Turnstile > Add widget), mode *Managed*. Hostnames: every `<host>`, plus any preview hostnames where the feedback form must work. Note the site key and secret key.
 
 ## 4. Create the Pages project
 
-1. Workers & Pages > Create > Pages > **Connect to Git**, and pick your fork from step 2.
-2. Build settings:
-   - Production branch: `master`
-   - Build command: `npm run build`
-   - Build output directory: `dist`
+1. Workers & Pages > Create > Pages > **Connect to Git**, and pick your fork.
+2. Build settings: production branch `master`, build command `npm run build`, output directory `dist`.
 3. Settings > Variables and Secrets, for **both Production and Preview**:
 
    | Name | Type | Value |
    | ---- | ---- | ----- |
    | `GOLEMIO_API_KEY` | Secret | Golemio API key |
    | `TURNSTILE_SECRET_KEY` | Secret | Turnstile secret key |
-   | `VITE_TURNSTILE_SITE_KEY` | Plain text or secret | Turnstile site key; read at **build** time, so redeploy after changing it |
+   | `VITE_TURNSTILE_SITE_KEY` | Plain text | Turnstile site key; read at **build** time, so redeploy after changing it |
 
 4. Settings > Bindings: add a **KV namespace** binding named `FEEDBACK_STORE` pointing to the namespace from step 3, for both environments.
-5. Settings > Runtime: set the compatibility date to match `compatibility_date` in `wrangler.toml`.
+5. Settings > Runtime: set the compatibility date to `compatibility_date` from `wrangler.toml`.
 6. Trigger a deployment (push to `master` or *Retry deployment*).
 
-Production runs with the dashboard settings above; `wrangler.toml` configures only local development. Put your KV ID into its `[[kv_namespaces]]` block so local dev uses the same namespace.
+Production runs with these dashboard settings; `wrangler.toml` configures only local development.
 
 **Check:** `https://<project>.pages.dev` loads the map with stops, and `curl -s https://<project>.pages.dev/api/cities` returns JSON.
 
@@ -95,63 +89,17 @@ Pages > `<project>` > Custom domains > *Set up a domain* > `<domain>`. For an ap
 - `<host>/adm*` and `<host>/adm*/*`: the admin hub.
 - `<host>/api/adm*` and `<host>/api/adm*/*`: the admin API.
 
-`<host>` is every hostname that serves production: `<domain>`, plus `<project>.pages.dev` unless it redirects to `<domain>` (step 7). Add one **Allow** policy listing the team members' emails.
+Add one **Allow** policy listing the team members' emails.
 
 **Check:** `https://<host>/admin` in a private window shows the Access login, not the dashboard.
-
-## 7. Configure the zone (optional, recommended)
-
-These are **zone-level** settings: they apply to traffic through your zone's hostnames (`<domain>`, and `data.<domain>` if it serves the data). Edge caching keeps Function CPU, the free plan's tightest limit, low as traffic grows.
-
-### Cache Rules (Caching > Cache Rules)
-
-Functions set their own `Cache-Control` per endpoint. These rules make that JSON cacheable at the edge, so most client polls are answered without running a Function.
-
-Create them in this order:
-
-| # | Name | Match | Settings |
-| - | ---- | ----- | -------- |
-| 1 | api cache | URI Path starts with `/api` | Eligible for cache; Edge TTL: **Use cache-control header if present** (respect origin). Leave Browser TTL alone. |
-| 2 | data cache (only for self-hosted data on your zone) | Hostname equals `data.<domain>` | Eligible for cache; Edge TTL **override, 5 h** (18000 s); Browser TTL **override, 5 h**; Serve stale content while revalidating **on**. |
-| 3 | sitemap | URI Path wildcard `/sitemap.xml` | Eligible for cache; Edge TTL and Browser TTL **respect origin**; Serve stale content while revalidating **on**. |
-
-- Rule 1 must respect origin: TTLs differ per endpoint (10 s for live feeds, longer for static data), and uncacheable answers use `max-age=0` or `no-store`. `/api/admin/*` sends `private, no-store`, so it is never cached despite matching.
-- Rule 2's 5 h TTL bounds how long a data rebuild takes to reach users. It overrides the origin because GitHub Pages sends only a 10-minute `max-age`.
-- Turn on **Tiered Cache** with Smart Topology (Caching > Tiered Cache), so cache misses across data centers collapse into one upstream fetch.
-
-### Rate limiting (Security > Security rules)
-
-The free plan allows one rule.
-
-| Name | Match | Counting | Limit | Action |
-| ---- | ----- | -------- | ----- | ------ |
-| api rate limit | URI Path wildcard `/api/*` **or** URI Path wildcard `/mcp` | per IP, per data center (`ip.src`, `cf.colo.id`) | 40 requests / 10 s | Block for 10 s |
-
-It catches scrapers and runaway clients; the app's own polling stays well below it.
-
-### Redirects (account level: Bulk Redirects, optional)
-
-- `www.<domain>` → `https://<domain>`. `www` needs a proxied placeholder DNS record (e.g. `A 192.0.2.1`) so the redirect can fire.
-- `<project>.pages.dev` → `https://<domain>`, so all traffic goes through the zone rules above.
-
-Use 301 and enable *preserve query string*, *subpath matching* and *preserve path suffix*, so deep links keep their path.
-
-### Other settings (as we run them)
-
-- **SSL/TLS**: Full; Always Use HTTPS on; HTTP/3 and 0-RTT on.
-- **Bots**: Bot Fight Mode on, with Cloudflare-managed `robots.txt`.
-- **Web Analytics**: enable it in one place, either for the zone (automatic injection) or in the Pages project; both together count each page view twice.
-- **Speed** (Speed > Optimization): Rocket Loader, Early Hints and Brotli on; Polish and Mirage off. Rocket Loader rewrites the page's `<script>` tags to defer them, so if the app or PWA boot misbehaves on `<domain>` but not on `pages.dev`, turn it off first.
-
-**Check:** run `curl -sI https://<domain>/api/cities` twice; the second response has `cf-cache-status: HIT`. If you serve the data through your zone, `curl -sI https://data.<domain>/<city>/stops.json` shows `cf-cache-status`.
 
 ## Ongoing operation
 
 - **App:** every push to `master` deploys production; every other branch and pull request gets a preview deployment behind Access.
-- **Ride push Worker:** see [Ride push deployment](./ride-push-deployment.md#operating-it).
-- **Data (self-hosted):** the workflows rebuild on schedule. To refresh a network immediately, run its workflow by hand; users see the change within the 5 h cache TTL.
-- **Adding an API route:** if it is outside `/api/*`, extend the Cache Rule and the rate limit to cover it.
+- **Data (self-hosted):** the workflows rebuild on schedule. To refresh a network immediately, run its workflow by hand; users see the change within the data cache TTL.
+- **Adding an API route:** if it is outside `/api/*`, extend the [Cache Rule and the rate limit](./edge-settings.md) to cover it.
 
 ## Next steps
 
-- [Ride push deployment](./ride-push-deployment.md): add Web Push for ride mode.
+- [Ride push deployment](./ride-push-deployment.md): Web Push for My trips and disruptions.
+- [Edge settings](./edge-settings.md): caching, rate limiting and redirects on your zone.
