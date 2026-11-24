@@ -4,6 +4,14 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.97.7] - 2026-11-24
+
+### Changed
+
+- A fork sets its hosts, contact and VAPID public key in one file, `shared/site.ts`, read by the app, the Functions and the ride-push Worker.
+- `npm run vapid` creates the ride-push keys; the Worker now needs only `VAPID_PRIVATE_KEY`.
+- The self-hosting docs are regrouped, with the zone settings on their own Edge settings page.
+
 ## [0.97.6] - 2026-11-24
 
 ### Changed

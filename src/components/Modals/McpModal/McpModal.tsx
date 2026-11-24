@@ -14,7 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { useUiStore } from '@/state/uiStore';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
-import { SITE } from '@/config/site';
+import { SITE } from '@shared/site';
 
 const CLAUDE_CODE_COMMAND = `claude mcp add --transport sse departs ${SITE.MCP_URL}`;
 const CURSOR_CONFIG = JSON.stringify({ mcpServers: { departs: { command: "npx", args: ["-y", "mcp-remote", SITE.MCP_URL] } } }, null, 2);

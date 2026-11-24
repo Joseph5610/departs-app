@@ -163,7 +163,7 @@ All tunables live in `DISRUPTION_PUSH` in `functions/_core/config.ts` and `DISRU
 | Subscription the push service no longer knows (404, 410) | dropped |
 | VAPID keys missing | the watch runs on without sending: subscribers survive a bad deploy and lapsed ones are still swept, but incidents that start meanwhile are not pushed later |
 
-Anyone can call the endpoint, as with My trips, but a subscription only reaches the device that owns it: its endpoint is unguessable and the push is encrypted for its keys. Removing a subscription needs its endpoint. The daily quota is what stops one address filling a city; the zone's rate limit on `/api/*` is too generous for that ([Production deployment, step 7](./deployment.md#rate-limiting-security--security-rules)). A flood from many addresses can still spend the free plan's daily requests, like one against any other endpoint.
+Anyone can call the endpoint, as with My trips, but a subscription only reaches the device that owns it: its endpoint is unguessable and the push is encrypted for its keys. Removing a subscription needs its endpoint. The daily quota is what stops one address filling a city; the zone's rate limit on `/api/*` is too generous for that ([Edge settings](./edge-settings.md#rate-limiting)). A flood from many addresses can still spend the free plan's daily requests, like one against any other endpoint.
 
 ### Costs on the free plan
 

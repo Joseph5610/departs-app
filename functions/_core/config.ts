@@ -2,13 +2,14 @@
  * Shared backend configuration.
  *
  * This is the `_core` counterpart to `GTFS_CONFIG` and `GOLEMIO_CONFIG`: values that apply across every
- * network live here, network-specific ones stay in `_feeds/<network>/config.ts`. Kept free of imports on
- * purpose, so any module - including `_core/schemas.ts` - can read it without pulling in the feeds.
+ * network live here, network-specific ones stay in `_feeds/<network>/config.ts`. Imports only `shared/site.ts`
+ * (itself import-free), so any module - including `_core/schemas.ts` - can read it without pulling in the feeds.
  */
+import { SITE } from '../../shared/site';
 
 /** Where the departs-data static files live (per-city folders). */
 export const STATIC_DATA_CONFIG = {
-    BASE_URL: 'https://data.departs.app',
+    BASE_URL: SITE.STATIC_DATA_URL,
     /** Bump when departs-data renames or moves stops (`departure_buckets/`, the stop search index): drops every cached copy at once. */
     INDEX_CACHE_GENERATION: 4,
 };
@@ -158,7 +159,7 @@ export const RIDE_PUSH = {
     /** A boarding alert due within this is sent now rather than after one more check. */
     SEND_WINDOW_MS: 30_000,
     /** VAPID `sub` claim; Apple rejects pushes without one. */
-    VAPID_SUBJECT: 'mailto:info@departs.app',
+    VAPID_SUBJECT: `mailto:${SITE.CONTACT_EMAIL}`,
     /** How long a VAPID token stays valid; push services refuse more than 24 h. */
     VAPID_EXP_S: 12 * 3600,
     /** `aes128gcm` record size; one record holds any ride notification. */

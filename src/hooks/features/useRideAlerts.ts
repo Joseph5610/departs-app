@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { RIDE_CONFIG } from '@/config/constants';
 import { RIDE_PROTOCOL, tripNotificationTag } from '@shared/rides';
-import { SITE } from '@/config/site';
+import { SITE } from '@shared/site';
 import type { RideKind, RideStatus } from '@/types';
 import { NO_RIDE_ALERTS, rideAlertStep, type RideAlertState } from '@/domain/rides';
 import { useWakeLock } from './useWakeLock';

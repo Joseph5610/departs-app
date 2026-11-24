@@ -1,140 +1,100 @@
-# CRITICAL CONSTRAINTS: departs-app
+# departs-app: rules for agents
 
-Real-time multi-city public transport tracking PWA (Prague PID, Brno IDS JMK, Prešov DPMP, Ústecký kraj DÚK). Vite + React 19 + TypeScript + Tailwind v4 + shadcn/ui. Backend: Cloudflare Pages Functions. Static GTFS-derived data (stops, routes, shapes, schedules) is built by the sibling repo `departs-data`.
+Real-time multi-city public transport PWA (Prague PID, Brno IDS JMK, Prešov DPMP, Ústecký kraj DÚK). Vite + React 19 + TypeScript + Tailwind v4 + shadcn/ui; backend on Cloudflare Pages Functions. Static GTFS-derived data (stops, routes, shapes, schedules) is built by the sibling repo `departs-data`; the app and `functions/` only read it. The rules below are mandatory; ESLint (`eslint.config.js`) enforces the ones marked so.
 
-## 1. ARCHITECTURAL INVARIANTS (MANDATORY)
+## 1. Architecture
 
-Non-negotiable. Any violation is a system-level bug.
+### State
 
-### State Model & Zustand Stores
+- **Server data lives in React Query** (`hooks/data/`); Zustand stores hold client state only. Never copy query data into a store.
+- **Minimal state**: stores hold IDs, settings and raw inputs (a ride, push patches). Anything derivable is derived in hooks or selectors.
+- **No React Context**: components read stores directly with granular selectors (`s => s.value`).
+- **Transient UI state** (drawer height, an open dropdown) stays local `useState`, never in a store.
+- **Persistence** goes through Zustand `persist`, never manual `localStorage` / `sessionStorage` or raw `JSON.parse`.
 
-- **Single Source of Truth**: Server data lives in React Query (`hooks/data/`); Zustand stores (table below) hold client state only. Never copy query data into a store.
-- **Minimal State**: Stores hold the minimum: IDs, settings and raw inputs (a ride, push patches). Anything derivable is derived in hooks or selectors, never stored.
-- **Zero-Context Architecture**: React Context providers are avoided. Components access global state and actions directly from modular stores using granular selectors (e.g., `s => s.value`).
-- **Pure Transformations**: `useMemo`, `select`, and data transforms MUST be pure. Non-trivial transforms live as plain functions in `src/domain/`; hooks only wire stores/queries to them and wrap them in a module-level `memoizeLast`. A transform that may change nothing returns its input itself (use `mapStable` from `@/lib/memoize`), since memoized consumers key on identity.
-
-| Store              | Key File              | Purpose                                                               |
+| Store              | File                  | Holds                                                                 |
 | ------------------ | --------------------- | --------------------------------------------------------------------- |
 | `SelectionStore`   | `selectionStore.ts`   | Following, line filter and highlighted trip (URL owns the IDs)        |
 | `ViewportStore`    | `viewportStore.ts`    | Map bounds, line route filter, selected geocoded place                |
-| `PreferencesStore` | `preferencesStore.ts` | User settings, favorites, search history (Persisted)                  |
+| `PreferencesStore` | `preferencesStore.ts` | User settings, favorites, search history (persisted)                  |
 | `GeolocationStore` | `geolocationStore.ts` | User location, focus requests, last coarse location                   |
 | `MapMetadataStore` | `mapMetadataStore.ts` | Map loaded state, label layer ID, MapRef and camera actions           |
 | `PWAStore`         | `pwaStore.ts`         | PWA installation and update status                                    |
-| `UiStore`          | `uiStore.ts`          | Which app-level modals are open (not persisted)                       |
-| `RideStore`        | `rideStore.ts`        | My trips (boarding stop, exit, alert lead) and a followed ride (Persisted) |
+| `UiStore`          | `uiStore.ts`          | Which app-level modals are open                                       |
+| `RideStore`        | `rideStore.ts`        | My trips (boarding stop, exit, alert lead) and a followed ride (persisted) |
 | `EnrichmentStore`  | `enrichmentStore.ts`  | WebSocket push patches by trip/vehicle ID, pruned after silence TTL   |
 
-### Hook Data Flow (Strict Hierarchy)
+### Hooks (one-way: 1 → 2 → 3, ESLint)
 
-- **Layer 1: `data/` (React Query)**: Talk to API, own cache. (e.g., `useVehicles`, `useDepartures`)
-- **Layer 2: `derived/` (Composition)**: Combine data hooks, stores and `domain/` functions into single objects; the rules themselves live in `domain/`. (e.g., `useSelectedVehicle`, `useStopSearch`)
-- **Layer 3: `features/` (UI Glue)**: Side-effects, URL sync, camera, animations. (e.g., `useMapInterface`)
-- **STRICT RULE**: Imports MUST flow one-way (1 -> 2 -> 3). NEVER import upward.
+1. **`data/`**: React Query hooks that talk to the API and own the cache (`useVehicles`, `useDepartures`).
+2. **`derived/`**: combine data hooks, stores and `domain/` functions into single objects (`useSelectedVehicle`, `useStopSearch`).
+3. **`features/`**: side effects, URL sync, camera, animations (`useMapInterface`).
 
-### Source Layout
+Transforms are pure. Non-trivial ones are plain functions in `src/domain/`; hooks only wire stores and queries to them, wrapped in a module-level `memoizeLast`. A transform that may change nothing returns its input itself (`mapStable` from `@/lib/memoize`), since memoized consumers key on identity.
 
-- **`src/domain/<area>/`**: pure transit logic, one folder per area (`departures`, `vehicles`, `rides`, `realtime`, `routes`, `stops`, `alerts`, `cities`, `pointsOfSale`) plus `domain/time.ts` and `domain/delay.ts`. Functions over immutable data, no classes, no React, no stores. Code outside a folder imports only its `index.ts` (`@/domain/vehicles`); files inside an area import each other directly.
-- **`shared/`**: facts and transit rules both the app and `functions/` apply (e.g. `shared/cities.ts`: each city's location, zone and features; `shared/rides.ts`: when a vehicle left a stop, the delay at a stop, boarding grace), so the screen and the server agree. Plain TypeScript importing only its own files; the app imports it (values and types) as `@shared/…`, `functions/` by relative path.
-- **`src/lib/`**: app infrastructure only (API client, memoization, history and URLs, device cache, geometry, search helpers, `map/` icons and initial view). Transit rules NEVER go here.
-- **No `utils/` folder.** A new helper goes into the `domain/` area it belongs to, or `lib/` if it is infrastructure.
-- `domain/` MUST NOT import hooks, stores or components; hooks and components import `domain/`.
-- **Components**: plain functions with typed props (`({ stop }: StopCardProps) => …`), never `React.FC`; React runtime APIs as named imports (`useMemo`, `memo`), types through the `React` namespace. No IIFEs in JSX: a branchy fragment becomes a small component.
-- **File names**: React components PascalCase (`DepartureBoard.tsx`); a file built around one class PascalCase after it (`VehiclesService.ts`); everything else camelCase (`apiClient.ts`, `vehicleCache.ts`). Never kebab-case, except the generated shadcn files in `components/ui/` and route files under `functions/api/`.
-- **Imports (frontend)**: `@/` alias across folders, `./` only within the same folder; never `../`. Outside `domain/`, import an area through its index (`@/domain/vehicles`), never its files. ESLint enforces these, the domain purity and the hook layer order (`eslint.config.js`). App types come from `@/types`, types defined in `shared/` from `@shared/…`; `@/types` does not re-export them.
-- **Components and hooks hold no transit rules.** Anything that filters, sorts, groups, counts or classifies transit data (phases, notices, line order, visibility rules) is a `domain/` function the component calls; components keep only rendering, `t()` texts and styling.
-- **`src/config/`** holds tunables and tables (`ROUTE_TYPE_ORDER`, `DELAY_TIERS`, thresholds), never the functions that apply them.
+### Source layout
 
-### Vehicle Data Priority
+- **`src/domain/<area>/`**: pure transit logic (`departures`, `vehicles`, `rides`, `realtime`, `routes`, `stops`, `alerts`, `cities`, `pointsOfSale`, plus `time.ts`, `delay.ts`). Functions over immutable data: no classes, React, hooks, stores or components (ESLint). Outside an area, import its `index.ts` only (`@/domain/vehicles`).
+- **Components and hooks hold no transit rules.** Anything that filters, sorts, groups, counts or classifies transit data is a `domain/` function; components keep rendering, `t()` texts and styling.
+- **`shared/`**: facts and rules both the app and `functions/` apply, so screen and server agree (`site.ts`: hosts, contact and VAPID public key, the one file a fork edits; `cities.ts`: each city's location, zone, timezone and features; `rides.ts`: when a vehicle left a stop, boarding grace). Imports only its own files (ESLint); the app reads it as `@shared/…`, `functions/` by relative path.
+- **`src/lib/`**: infrastructure only (API client, memoization, URLs, device cache, geometry, search helpers, map icons). No transit rules. There is no `utils/` folder.
+- **`src/config/`**: tunables and tables (`ROUTE_TYPE_ORDER`, `DELAY_TIERS`, thresholds), never the functions that apply them. Backend values go to `functions/_core/config.ts` (cross-network) or `_feeds/<network>/config.ts`. Never a loose `const` for a tunable.
+- **`functions/`**: `api/` endpoints → `_cities/<city>.ts` (city config and wiring) → `_domain/<network>/` services → `_feeds/<network>/` upstream clients → `_core/` shared infra (cache, time, decoding). Handlers go Validate → Fetch → Normalize → Cache.
+- **Imports** (ESLint): `@/` across folders, `./` within one, never `../`. App types from `@/types`, `shared/` types from `@shared/…` (`@/types` does not re-export them).
+- **File names**: components PascalCase, a file built around one class PascalCase after it, everything else camelCase. Kebab-case only for generated shadcn files in `components/ui/` and routes under `functions/api/`.
 
-`useSelectedVehicle` MUST merge sources with this priority (logic in `src/domain/vehicles/merge.ts`, covered by its tests):
+### Vehicle data priority
 
-1. **Detail API** (Metadata via `useVehicleDetail`)
-2. **Live Stream** (Positions via `useVehicles`)
-3. **Selection State** (IDs)
-   _If `is_static_fallback: true` in Detail API, preserve live position/delay from stream._
+`useSelectedVehicle` merges sources in this order (`src/domain/vehicles/merge.ts`, covered by tests): 1. Detail API (`useVehicleDetail`), 2. live stream (`useVehicles`), 3. selection state (IDs). If the detail has `is_static_fallback: true`, the live position and delay from the stream win.
 
-## 2. PERFORMANCE & MAP CONSTRAINTS
+## 2. Map performance
 
-Map MUST run at 60fps. React renders too slow for high-frequency updates.
+The map runs at 60 fps; React renders are too slow for high-frequency updates.
 
-- **Bypass React**: Visual updates to map layers (like the selected vehicle pulse) MUST bypass React state via `requestAnimationFrame` and direct map mutations.
-- **Direct Mutations**: ONLY use `map.setPaintProperty()` or `map.setLayoutProperty()` for high-frequency animations.
-- **Cleanup**: All `requestAnimationFrame` loops and map event listeners MUST have robust cleanup.
-- **Memoization**: Wrap map layer components in `React.memo` with primitive props only.
-- **React Query**: Live queries poll at the user's `refreshIntervalS` (preferences store); vehicle positions use `keepPreviousData` to prevent flicker.
+- High-frequency visuals (the selected vehicle pulse) bypass React: `requestAnimationFrame` plus `map.setPaintProperty()` / `map.setLayoutProperty()` only.
+- Every `requestAnimationFrame` loop and map listener is cleaned up.
+- Map layer components are `React.memo` with primitive props only.
+- Live queries poll at the user's `refreshIntervalS` (preferences store); vehicle positions use `keepPreviousData`.
 
-## 3. UI & DOMAIN RULES
+## 3. UI and domain rules
 
-- **DetailPanel Abstraction**: Mobile (Base UI Drawer) and Desktop (Sheet sidebar) MUST be managed by `DetailPanel`. DO NOT break responsive switch logic.
-- **GTFS Types**: `0` Tram, `1` Metro, `2` Rail, `3` Bus, `4` Ferry, `7` Funicular, `11` or `800` Trolleybus.
-- **Metro Logic**: Metro departures MUST be grouped by `(line + direction)` — lines A/B/C have distinct directional identities.
-- **Branding Authority**: Line colours come from each city's `routes.json` on the static data CDN, falling back to `routeTypeColors` in `src/config/cities.ts`; map icons from `src/lib/map/icons.ts`.
-- **Time Zones**: Times are shown and compared in the city's own `timezone` (`shared/cities.ts`, which both the app and `functions/` read), never the device's or a hard-coded zone: a board must agree with its trips' timetable times.
-- **Safe Areas**: Use `env(safe-area-inset-*)` for all layouts.
-- **UI Primitives**: options are a `SegmentedControl`, filters a `FilterChip`, grouped rows `Item variant="row"`, titles `SectionTitle`, small caps headings `SectionHeading`, read-only facts a row or `Badge variant="info"`, a tapped badge, row or card a `Pressable`, a styled control a `Button`. Corners are `rounded-full|surface|nested|badge|sheet` and glass comes from the `glassy*` utilities (ESLint enforces both).
-- **i18n**: Czech (`cs`), Slovak (`sk`) and English (`en`) locales via `react-i18next`; every key goes into all three. Translation files in `src/i18n/locales/`.
-- **Backend Layout**: `functions/api/` endpoints -> `_cities/<city>.ts` (city config + use-case wiring) -> `_domain/<network>/` services -> `_feeds/<network>/` upstream clients and config -> `_core/` shared infra (cache, time, decoding).
-- **Normalization**: Backend handlers in `functions/` MUST follow: Validate -> Fetch -> Normalize -> Cache.
+- **Components**: plain functions with typed props, never `React.FC`; React APIs as named imports, types through the `React` namespace. No IIFEs in JSX: a branchy fragment becomes a small component.
+- **DetailPanel** manages the mobile drawer and the desktop sheet; keep its responsive switch intact.
+- **Primitives**: options a `SegmentedControl`, filters a `FilterChip`, grouped rows `Item variant="row"`, titles `SectionTitle`, small-caps headings `SectionHeading`, read-only facts a row or `Badge variant="info"`, a tapped badge, row or card a `Pressable`, a styled control a `Button`, an empty state shadcn `Empty`.
+- **Styling** (partly ESLint): `cn` from `@/lib/cn`; corners `rounded-full|surface|nested|badge|sheet`; glass from `glassy*`; font sizes from Tailwind steps or the `index.css` scale (`text-body-sm`, `text-title`…), never pixels; design tokens (`bg-card`, `text-muted-foreground`), never hard-coded colours; a style several components share becomes a variant, never a copied class string. Layouts respect `env(safe-area-inset-*)`. No decorative emoji or icon filler.
+- **Vehicle types** are `AppRouteType` (`shared/api.ts`); `departs-data` translates GTFS codes, the app never uses them.
+- **Metro departures** are grouped by line + direction.
+- **Line colours** come from each city's `routes.json`, falling back to `routeTypeColors` in `src/config/cities.ts`; map icons from `src/lib/map/icons.ts`.
+- **Time zones**: times are shown and compared in the city's `timezone` (`shared/cities.ts`), never the device's or a hard-coded zone.
+- **i18n**: every key goes into `cs`, `sk` and `en` (`src/i18n/locales/`).
+- **Stops**: the app reads `stops.json` as a `StopModel` (`src/domain/stops/model.ts`), every id and alias resolving through `resolveStop`. A stop has one id (station or platform) in URLs, favourites and query keys; only `departuresRequestId` expands it for networks whose departures API knows no stations. The map gets a slim GeoJSON projection (`toMapStops`); nothing else uses GeoJSON stops.
 
-## 4. OPERATIONAL RULES (AGENT WORKFLOW)
+## 4. Code rules
 
-### Forbidden Patterns (STRICT NEGATIVES)
+- API calls use `apiFetch` (`@/lib/apiClient`), never raw `fetch()`.
+- Never `eslint-disable`; solve lint and type errors properly.
+- No classes of static members only (ESLint); classes are for state or an interface implementation.
+- Lookups over large collections (stops, vehicles, departures, routes) go through a `Map` or `Record` built once, never a `find` / `filter` / `some` / `includes` inside a loop.
+- Fetch independent large datasets in parallel (`Promise.all`).
+- Mappers return the app's typed shapes (`AppVehicleFeature`, `AppDeparture`).
+- Untrusted input (request bodies, MCP arguments, KV reads, third-party APIs such as Golemio, DÚK or Turnstile) is validated with Zod. Static data from `departs-data` is cast without Zod: its build checks the contract.
+- Comments only where the next reader would otherwise make a wrong edit, in one line stating the constraint, not the evidence. JSDoc on exports is fine; no narration of changes or findings.
+- Visual design does not change during refactors unless asked.
 
-- **NEVER** use raw `fetch()`. All internal API calls MUST use `apiFetch` (from `@/lib/apiClient`).
-- **NEVER** use manual `localStorage` / `sessionStorage` or raw `JSON.parse` for app state persistence; use Zustand stores with `persist` middleware.
-- **NEVER** use repetitive emojis, icons, or visual filler.
-- **NEVER** construct ad-hoc `border-dashed` or custom empty containers; use established shadcn `Empty` primitives.
-- **NEVER** modify visual design during architectural refactors unless explicitly requested.
-- **NEVER** import `cn` from the `cn` package; use `@/lib/cn`, which knows the app's type scale. Font sizes come from Tailwind's steps or that scale in `index.css` (`text-body-sm`, `text-title`, `text-heading`…), never pixel values like `text-[15px]`.
-- **NEVER** copy a class string between components or hard-code colours; use design tokens (`bg-card`, `text-muted-foreground`) and component variants. A style shared by several components becomes a variant (e.g. `Button variant="tinted"`).
-- **NEVER** put transient UI state (drawer height, an open dropdown) in a global store; it stays local `useState`.
-- **NEVER** write a class of static members only; the module is the namespace, so export functions (ESLint `no-extraneous-class`). Classes are for state or an interface implementation.
-- **NEVER** use `eslint-disable`. All TypeScript and ESLint errors MUST be solved architecturally or typing-wise. Disabling the linter is strictly forbidden.
-- **NEVER** nest a linear search (`find`, `filter`, `some`, `includes`) over a large collection (stops, vehicles, departures, routes) inside a loop or `.map()`; build a `Map` index once and look up in O(1).
-- **NEVER** write comments that restate the code, narrate why a change was made, or record findings and measurements. Comment ONLY where the next reader would otherwise make a wrong edit, and then in ONE line stating the constraint — not the evidence for it. JSDoc on exported symbols is fine; explanatory paragraphs inside function bodies are not.
-- **NEVER** introduce a loose `const` for a tunable value. Config belongs in a config object: `src/config/` on the frontend; `_core/config.ts` for cross-network and `_feeds/<network>/config.ts` for network-specific backend values.
+## 5. Testing
 
-### Mandatory Protocol
+- **Unit** (Vitest, `npm run test:unit`): `*.test.ts` next to the code, node environment; builders (`departure()`, `vehicle()`, `patch()`, `NOW`) in `src/test/factories.ts`.
+- **What gets tests**: logic that pairs, merges or derives transit data (push patches, vehicle merge, departure grouping, delay stats, route progress, time/DST, feed normalizers). Not trivial utils, components or map layers. Logic buried in a hook is extracted to `domain/` (or `functions/_core`, `_domain`) and tested there; no `renderHook` or jsdom.
+- **Deterministic**: never the real clock (`NOW`, `vi.setSystemTime`). Mock only boundaries (`apiFetch`, time, storage); never `vi.mock` the project's own modules.
+- **Readable**: names state the behaviour; explicit `toEqual` / `toMatchObject` over snapshots; at most a one-line comment naming the rule a test guards. Break the logic once to confirm a new test can fail.
+- **E2E** (Playwright, `npm test`): specs in `tests/e2e/`, page objects in `tests/page-objects/`, against `wrangler pages dev dist` on 8788, API mocked with `page.route`. Every new user-facing flow gets a spec.
+- **CI** (`.github/workflows/build.yml`) runs lint, `tsc`, unit and E2E tests on every push and PR to `master`.
 
-1. **Tool-First**: Execute tools immediately, then report.
-2. **Response Length (HARD LIMIT)**: Final responses MUST be under 6 sentences. No exceptions for "complex" work — complexity is a reason to write less, not more.
-   - **Forbidden**: recapping what you just did step by step, restating the user's question, tables or headings unless explicitly requested, listing what you did NOT do, previewing what you are about to do, apologising or self-critiquing at length.
-   - **Required**: lead with the answer or result. State caveats in one clause, not a section. If evidence is needed, show the command output, not prose about it.
-   - Offer detail instead of dumping it: "want the breakdown?" beats three paragraphs.
-3. **Build & Quality Integrity**: Before concluding, run `npm run build` (frontend `tsc -b` + Vite), `npx tsc -p functions` (backend), `npm run lint` and `npm run test:unit`; all must pass.
-4. **Versioning**: Increment `package.json` exactly ONCE per conversational session (or logical commit), NOT repeatedly on every prompt. Group all incremental changes made during the session under a single version bump. **NOTE: This rule applies ONLY to the main `departs-app` repository.**
-5. **Changelog**: Maintain a single version block in `CHANGELOG.md` for the entire session. **NOTE: This rule applies ONLY to the main `departs-app` repository.**
-   - **Scope**: Record ONLY **new features** (short 1-line description), **important bug fixes**, and **important architectural changes**.
-   - **Forbidden**: NEVER log internal code refactors, minor typing/lint fixes, variable renames, dev tool scripts, or transient bugs introduced and resolved within the same session.
-   - **Format**: Keep descriptions concise (max 1 short sentence per entry). DO NOT use nested sub-bullet lists detailing individual files or internal functions. Group all incremental session work under a single clean version header.
-6. **Scratch & Testing**: All scratch files, testing scripts, and temporary data MUST live in the `/scratch` folder at the root of the repository. This folder is git-ignored, ensuring the repository is not cluttered.
+## 6. Workflow
 
-## 5. DATA PIPELINE & NORMALIZATION (BACKEND)
-
-- **Static Data**: Stop lists (`stops.json`: stations, their platforms and entrances), routes, shapes and schedules are built by `departs-data`; the app and `functions/` only read them.
-- **Stop Model**: The frontend reads `stops.json` as a `StopModel` (`src/domain/stops/model.ts`): stations holding their platforms, every id and alias resolving through `resolveStop`. A stop has ONE id (station id or platform id) in URLs, favourites and query keys; only `departuresRequestId` expands it for a network whose departures API knows no stations (`departuresByPlatforms`). The map gets a slim GeoJSON projection (`toMapStops`); nothing else uses GeoJSON stops.
-- **Parallel Fetching**: Fetch large independent datasets in parallel via `Promise.all` where possible.
-- **O(1) Lookups**: Use `Map` or `Record` for transit metadata lookups. Sequential array search (O(N)) is FORBIDDEN.
-- **Strict Typing**: All internal mapping methods must return strictly typed objects adhering to internal generic types (e.g., `AppVehicleFeature`, `AppDeparture`).
-- **Zod Validation Boundaries**: Untrusted inputs (request bodies, MCP tool arguments, KV reads, third-party API responses such as Golemio, DÚK or Turnstile) MUST be validated with Zod before use. The app's own static data from `departs-data` is cast without Zod: its build checks the contract, and parsing large files with Zod costs cold-start CPU.
-
-## 6. TESTING
-
-- **Unit (Vitest)**: `npm run test:unit`. `*.test.ts` next to the code under `src/` or `functions/`, node environment. Shared builders (`departure()`, `vehicle()`, `patch()`, fixed `NOW`) live in `src/test/factories.ts`.
-- **What Gets Unit Tests**: logic that pairs, merges or derives transit data: enrichment and push patches, vehicle source merge, departure grouping and delay stats, route progress, time/DST handling, feed normalizers. NOT trivial utils, React components or map layers.
-- **Testability First**: if logic is buried in a hook, extract it to a pure function in its `src/domain/` area (or `functions/_core` / `_domain`) and test that. Do not reach for `renderHook` or jsdom.
-- **Deterministic**: never depend on the real clock; pass `NOW` in or use `vi.setSystemTime`. Mock only boundaries (`apiFetch`, time, storage); NEVER `vi.mock` the project's own modules.
-- **Readable Assertions**: test names state the behaviour; explicit `toEqual`/`toMatchObject` over snapshots for small outputs. At most a one-line comment above a test, stating the domain rule it guards.
-- **Must Be Able To Fail**: after writing a test, break the logic once and confirm it fails.
-- **E2E (Playwright)**: `npm test`, specs in `tests/e2e/`, page objects in `tests/page-objects/`, runs against `wrangler pages dev dist` on 8788. Mock the API with `page.route`. Every new user-facing flow gets a spec.
-- **CI**: `.github/workflows/build.yml` runs lint, `tsc`, unit tests and E2E on every push and PR to `master`.
-
-## 7. LOCAL ENVIRONMENT
-
-- **Port:** Dev server always runs on `http://localhost:8788` (Cloudflare Pages proxy). Do NOT use `5173`.
-
-### API Endpoints & Logic Authority
-
-- **USER IS THE SOLE AUTHORITY ON ENDPOINTS AND LOGIC.** NEVER alter, "fix", format, or restructure existing API endpoints, URL paths or remote calls. If an endpoint looks weird (like using a semicolon `;gtfsTripId=`), ASSUME IT IS CORRECT.
-- **Refactors preserve behaviour.** Code may be moved, split or simplified, but what it computes stays the same; prove it with the existing tests, or compare the old and new versions on varied inputs before swapping them.
+- **The user is the authority on endpoints and logic.** Never alter, "fix" or restructure existing API endpoints, URL paths or remote calls; an odd one (`;gtfsTripId=`) is correct. Refactors preserve behaviour: prove it with the existing tests or by comparing old and new on varied inputs.
+- **Dev server** is `http://localhost:8788` (`npm run dev`), never `5173`.
+- **Before concluding**, run `npm run build`, `npx tsc -p functions`, `npm run lint` and `npm run test:unit`; all must pass.
+- **Version**: bump `package.json` once per session or logical commit, and keep one matching block in `CHANGELOG.md`. Log only new features, important fixes and important architectural changes, one short sentence each; never refactors, lint fixes, renames, dev scripts or bugs made and fixed in the same session.
+- **Scratch files** go to `/scratch` (git-ignored).
+- **Replies** stay under 6 sentences and lead with the result. No step-by-step recap, restating the question, tables or headings unless asked, lists of what was not done, previews or long apologies. State caveats in one clause, show command output rather than prose, and offer detail instead of dumping it.

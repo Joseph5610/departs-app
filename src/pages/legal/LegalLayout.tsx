@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'wouter';
 import { ArrowLeft } from 'lucide-react';
-import { SITE } from '@/config/site';
+import { SITE } from '@shared/site';
 import { paths } from '@/lib/routes';
 
 export type LegalDocument = 'privacy' | 'terms' | 'licenses';

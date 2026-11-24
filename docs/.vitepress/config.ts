@@ -28,11 +28,16 @@ export default withMermaid(defineConfig({
                 ],
             },
             {
-                text: 'Deployment',
+                text: 'Self-hosting',
                 items: [
                     { text: 'Production deployment', link: '/deployment' },
                     { text: 'Ride push deployment', link: '/ride-push-deployment' },
+                    { text: 'Edge settings', link: '/edge-settings' },
                 ],
+            },
+            {
+                text: 'Integrations',
+                items: [{ text: 'Remote MCP server', link: '/mcp-server' }],
             },
             {
                 text: 'Internals',
@@ -40,10 +45,7 @@ export default withMermaid(defineConfig({
             },
             {
                 text: 'Reference',
-                items: [
-                    { text: 'Remote MCP server', link: '/mcp-server' },
-                    { text: 'Data sources and licences', link: '/data-sources' },
-                ],
+                items: [{ text: 'Data sources and licences', link: '/data-sources' }],
             },
         ],
         outline: { level: [2, 3] },

@@ -55,6 +55,7 @@ Everything runs on free plans: Cloudflare for the app, GitHub Pages for the data
 - [Local development](./local-development.md): run the app on your machine.
 - [Production deployment](./deployment.md): set up the app on Cloudflare, step by step.
 - [Ride push deployment](./ride-push-deployment.md): add Web Push for ride mode.
+- [Edge settings](./edge-settings.md): caching, rate limiting and redirects on your zone.
 - [Push notifications](./ride-notifications.md): how My trips and disruption pushes work inside.
 - [Remote MCP server](./mcp-server.md): connect AI assistants to live transit data.
 - [Data sources and licences](./data-sources.md): where the data comes from and on what terms.

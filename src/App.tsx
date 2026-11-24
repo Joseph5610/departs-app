@@ -8,7 +8,7 @@ import { useEnrichmentChannel } from './hooks/features/useEnrichmentChannel';
 import { DisruptionPushSync } from '@/components/Alerts/DisruptionPushSync';
 import { useCityConfig } from './hooks/data/useCities';
 import { pushChannelOf } from '@/domain/cities';
-import { SITE } from './config/site';
+import { SITE } from '@shared/site';
 import { BOARD_ROUTE, decodeRouteParam, paths } from './lib/routes';
 
 const TOASTER_MOBILE_OFFSET = { top: 'calc(env(safe-area-inset-top, 0px) + var(--top-controls-gap))' };
