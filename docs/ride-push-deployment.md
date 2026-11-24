@@ -11,30 +11,25 @@ Each trip, and each city's disruption subscriptions, is watched by a Durable Obj
 | Part | Lives in | Deployed by |
 | ---- | -------- | ----------- |
 | `/api/<city>/ride` and `/api/<city>/disruptions` endpoints, app, service worker | Pages project | Pages Git integration |
-| `RideWatch` and `DisruptionWatch` Durable Objects | `departs-ride-push` Worker | Workers Builds (step 5) |
+| `RideWatch` and `DisruptionWatch` Durable Objects | `departs-ride-push` Worker | Workers Builds (step 4) |
 
 ## 1. VAPID keys
 
-VAPID keys sign every push, so push services know it comes from you. Generate a pair once:
+VAPID keys sign every push, so push services know it comes from you. Generate the pair once:
 
 ```bash
-node -e "crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign']).then(async k=>{console.log('VAPID_PUBLIC_KEY='+Buffer.from(await crypto.subtle.exportKey('raw',k.publicKey)).toString('base64url'));console.log('VAPID_PRIVATE_KEY='+(await crypto.subtle.exportKey('jwk',k.privateKey)).d)})" > workers/ride-push/.dev.vars
+npm run vapid
 ```
 
-- `workers/ride-push/.dev.vars` is git-ignored. Keep the private key there and in the Worker's secrets, nowhere else.
-- Copy the **public** key into `RIDE_PUSH_CONFIG.VAPID_PUBLIC_KEY` in `src/config/constants.ts`. The browser needs it to subscribe.
-- Changing the keys later invalidates every existing subscription.
+- The private key goes to `workers/ride-push/.dev.vars` (git-ignored). Keep it there and in the Worker's secrets, nowhere else.
+- The public key replaces `VAPID_PUBLIC_KEY` in `shared/site.ts`, which the app and the Worker both read. Commit it.
+- Changing the keys later invalidates every existing subscription, so the script refuses to run while `.dev.vars` already holds a key.
 
-## 2. Hostnames and contact
+The Worker takes its other settings from `shared/site.ts` as well: it reads `/api` from `URL` and sends `CONTACT_EMAIL` as the push contact ([Production deployment, step 2](./deployment.md#2-fork-the-app-and-set-your-site)).
 
-| File | Setting | Value |
-| ---- | ------- | ----- |
-| `workers/ride-push/wrangler.toml` | `API_ORIGIN` under `[vars]` | Your production URL; the Worker reads vehicle details and alerts from its `/api` |
-| `functions/_core/config.ts` | `RIDE_PUSH.VAPID_SUBJECT` | `mailto:` your contact address; Apple rejects pushes without one |
+## 2. First deploy
 
-## 3. First deploy
-
-Deploy the Worker with the secrets from step 1:
+Deploy the Worker with the private key from step 1:
 
 ```bash
 npx wrangler deploy -c workers/ride-push/wrangler.toml --secrets-file workers/ride-push/.dev.vars
@@ -42,9 +37,9 @@ npx wrangler deploy -c workers/ride-push/wrangler.toml --secrets-file workers/ri
 
 This creates the Worker and its `RideWatch` and `DisruptionWatch` Durable Object namespaces (migrations `v1` and `v2`), with SQLite storage, which the free plan includes.
 
-**Check:** `npx wrangler secret list -c workers/ride-push/wrangler.toml` lists `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`.
+**Check:** `npx wrangler secret list -c workers/ride-push/wrangler.toml` lists `VAPID_PRIVATE_KEY`.
 
-## 4. Bind it to Pages
+## 3. Bind it to Pages
 
 Pages > `<project>` > Settings > Bindings > Add > **Durable Object**:
 
@@ -64,7 +59,7 @@ Add a second binding the same way for disruption notifications:
 
 The bindings apply from the next Pages deployment.
 
-## 5. Deploy automatically
+## 4. Deploy automatically
 
 Workers & Pages > `departs-ride-push` > Settings > Build > **Connect** your fork:
 
@@ -79,9 +74,9 @@ Workers & Pages > `departs-ride-push` > Settings > Build > **Connect** your fork
 
 - `-c` points at this Worker's config; the root `wrangler.toml` belongs to the Pages project.
 - The watch paths build the Worker only when its code or its dependencies change; `shared/` holds trip rules it compiles in.
-- The secrets from step 3 persist across builds.
+- The secret from step 2 persists across builds.
 
-## 6. Check it end to end
+## 5. Check it end to end
 
 1. Open the app as an installed PWA on iOS, or in desktop Safari or Chrome.
 2. Open a running vehicle, tap **I'm taking this trip**, pick an exit two or three stops ahead, save and allow notifications.
@@ -94,7 +89,7 @@ For disruptions, pin a line in Prague or Brno and turn on **Disruptions on my li
 ## Operating it
 
 - **Updates:** Workers Builds deploys the Worker from `master` when its watch paths change.
-- **Previews:** a preview deployment talks to the production Worker, so a change to `RideWatch` reaches previews only after it is merged. To test one first, deploy it by hand with the command from step 5.
+- **Previews:** a preview deployment talks to the production Worker, so a change to `RideWatch` reaches previews only after it is merged. To test one first, deploy it by hand with the command from step 4.
 - **Compatibility:** the Pages endpoints and the Worker deploy separately. A change to the message between them (`RideWatchRequest`, `DisruptionWatchRequest`) must keep accepting the old shape until both are out.
 - **Order of the first deploy:** deploy the Worker (migration `v2`) and add the `DISRUPTION_WATCH` binding before the Pages deployment that shows the switch; until then the endpoint answers 503 and the switch shows an error.
 - **Disruptions:** `DisruptionWatch` (one per city with alerts) reads `/api/<city>/alerts` every 5 minutes (its cache lifetime) while anyone is subscribed and logs `{"push":"disruption","status":201}` for each push; the first read after it starts only marks what is running as seen.

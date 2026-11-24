@@ -7,7 +7,7 @@ import { ItemGroup, Item, ItemMedia, ItemContent, ItemTitle, ItemDescription, It
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { DATA_LICENSE_URLS, PROCESSED_DATA_URL, SHARED_DATA_ATTRIBUTIONS, type DataAttribution } from '@/config/attributions';
 import { EXTERNAL_URLS } from '@/config/constants';
-import { SITE } from '@/config/site';
+import { SITE } from '@shared/site';
 import { isCityVisible } from '@/domain/cities';
 import { LegalLayout, LegalSection } from './LegalLayout';
 import { ExternalLinkIcon } from '@/components/ExternalLinkIcon';

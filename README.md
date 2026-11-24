@@ -14,6 +14,7 @@ Full documentation: **[docs.departs.app](https://docs.departs.app)**
 - [Local development](./docs/local-development.md): run the app on your machine.
 - [Production deployment](./docs/deployment.md): set up the app on Cloudflare, step by step.
 - [Ride push deployment](./docs/ride-push-deployment.md): add Web Push for ride mode.
+- [Edge settings](./docs/edge-settings.md): caching, rate limiting and redirects on your zone.
 - [Ride notifications](./docs/ride-notifications.md): how ride-mode push works inside.
 - [Remote MCP server](./docs/mcp-server.md): connect AI assistants to live transit data.
 - [Data sources and licences](./docs/data-sources.md): where the data comes from and on what terms.

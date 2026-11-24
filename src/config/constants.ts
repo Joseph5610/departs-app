@@ -1,5 +1,5 @@
 
-import { SITE } from './site';
+import { SITE } from '@shared/site';
 
 /**
  * UI and Layout constants
@@ -424,12 +424,6 @@ export const MY_TRIP_CONFIG = {
     WITHDRAWAL_KEEP_MS: DAY_MS,
     /** How often the trip re-checks which reminder leads still fit before the departure. */
     CLOCK_MS: 30_000,
-};
-
-/** Ride-mode Web Push through the `departs-ride-push` Worker. */
-export const RIDE_PUSH_CONFIG = {
-    /** VAPID public key; its private half is that Worker's `VAPID_PRIVATE_KEY` secret. */
-    VAPID_PUBLIC_KEY: 'BOg0cjMBsc0ZcGSg1MglKtCPV2ZCuGl1yQulhaknouJAs0T2kJVPrTn4f7odTc173XYIVP-f4oLTdN_JR0qJL2Q',
 };
 
 /** Pushes of new disruptions on pinned lines, through the same Worker. */

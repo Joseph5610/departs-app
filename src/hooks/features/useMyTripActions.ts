@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { MY_TRIP_CONFIG } from '@/config/constants';
 import { RIDE_PROTOCOL } from '@shared/rides';
-import { SITE } from '@/config/site';
+import { SITE } from '@shared/site';
 import { registrationChange, tripPushKey, withPushState } from '@/domain/rides';
 import { requestNotificationPermission } from '@/lib/notifications';
 import { startTripPush, stopTripPush } from '@/lib/push';

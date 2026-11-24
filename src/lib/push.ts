@@ -1,8 +1,8 @@
-import { RIDE_PUSH_CONFIG } from '@/config/constants';
 import { apiFetch } from '@/lib/apiClient';
 import { watchFrom } from '@/domain/rides';
 import type { AppError, MyTrip } from '@/types';
 import type { WatchedLine } from '@shared/alerts';
+import { SITE } from '@shared/site';
 
 type PushText = { title: string; body: string };
 
@@ -15,7 +15,7 @@ export interface TripPushTexts {
 }
 
 const applicationServerKey = (): Uint8Array<ArrayBuffer> => {
-    const base64 = RIDE_PUSH_CONFIG.VAPID_PUBLIC_KEY.replace(/-/g, '+').replace(/_/g, '/');
+    const base64 = SITE.VAPID_PUBLIC_KEY.replace(/-/g, '+').replace(/_/g, '/');
     return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
 };
 
