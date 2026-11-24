@@ -1,201 +1,37 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useHistoryLines } from '@/hooks/derived/useHistoryLines';
-import { Search as SearchIcon, Star, Building2, Ticket, BusFront } from 'lucide-react';
-import { SearchItem } from './SearchItem';
-import { HistoryItemIcon } from './HistoryItemIcon';
-import { historyItemSubtitle, historyItemTitle, posResultSubtitle, stopResultSubtitle, vehicleResultLines } from './searchItemText';
-import type { LineBadgeData } from '@/domain/routes';
-import { searchHistoryKey } from '@/lib/searchHistory';
+import { Search as SearchIcon } from 'lucide-react';
 import { Autocomplete } from '@base-ui/react/autocomplete';
-import { cn } from '@/lib/cn';
+import { useHistoryLines } from '@/hooks/derived/useHistoryLines';
+import type { useSearch } from '@/hooks/features/useSearch';
 import { SectionHeading } from '@/components/SectionHeading';
-import { StopModeIcon } from '@/components/StopModeIcon';
 import { EmptyState } from '@/components/EmptyState';
 import { STOP_SEARCH } from '@/config/constants';
-
-import type { Stop, ShownHistoryItem, VehicleFeature } from '@/types';
-import { vehicleDisplayNumber } from '@/domain/vehicles';
-import type { GeocodingResult } from '@/hooks/data/useGeocoding';
-import type { PosSearchResult } from '@/domain/pointsOfSale';
+import type { Stop } from '@/types';
+import { SearchItem } from './SearchItem';
+import { hasNoResults, searchSections } from './searchSections';
 
 interface SearchDropdownProps {
-    results: Stop[];
-    searchHistory: readonly ShownHistoryItem[];
-    /** The pinned stops, by the ids results carry. */
-    favoriteStopIds: ReadonlySet<string>;
-    query: string;
-    activeFilter: string[] | null;
-    queryLines: string[] | null;
-    queryLineBadges: LineBadgeData[] | null;
-    vehicleResults: VehicleFeature[];
-    geocodingResults: GeocodingResult[];
-    posResults: PosSearchResult[];
-    onStopSelect: (stop: Stop) => void;
-    onHistorySelect: (item: ShownHistoryItem) => void;
-    onLineSelect: (lines: string[]) => void;
-    onPlaceSelect: (result: GeocodingResult) => void;
-    onPosSelect: (result: PosSearchResult) => void;
-    onVehicleSelect: (vehicle: VehicleFeature) => void;
+    search: ReturnType<typeof useSearch>;
+    /** The stops the box lists: the pinned ones before typing, the matches after. */
+    stops: readonly Stop[];
 }
 
-const SearchGroup = ({ heading, count, className, children }: { heading?: React.ReactNode; count?: number; className?: string; children: React.ReactNode }) => (
-    <Autocomplete.Group className={cn('overflow-hidden text-foreground p-0', className)}>
-        {heading && (
-            <Autocomplete.GroupLabel render={<SectionHeading count={count} className="px-3.5 pt-3 pb-2">{heading}</SectionHeading>} />
-        )}
-        {children}
-    </Autocomplete.Group>
-);
-
-/**
- * SearchDropdown
- *
- * Renders the dropdown panel below the search input as the Base UI Autocomplete list owned by Search.
- * Shows recent searches, favorites, line filter suggestions, and stop results.
- */
-export const SearchDropdown = ({
-    results,
-    searchHistory,
-    favoriteStopIds,
-    query,
-    activeFilter,
-    queryLines,
-    queryLineBadges,
-    vehicleResults,
-    geocodingResults,
-    posResults,
-    onStopSelect,
-    onHistorySelect,
-    onLineSelect,
-    onPlaceSelect,
-    onPosSelect,
-    onVehicleSelect,
-}: SearchDropdownProps) => {
+/** The dropdown under the desktop search box, as the Base UI Autocomplete list owned by Search. */
+export const SearchDropdown = ({ search, stops }: SearchDropdownProps) => {
     const { t } = useTranslation();
-    const historyLines = useHistoryLines(searchHistory);
-
-    const showHistory = query === '' && !activeFilter && searchHistory.length > 0;
-
-    const renderStopResults = (testIdPrefix: 'fav' | 'res') => results.map((stop) => {
-        const isFavorite = favoriteStopIds.has(stop.id);
-        return (
-            <SearchItem
-                key={stop.id}
-                icon={isFavorite ? <Star size={20} fill="currentColor" strokeWidth={1.5} /> : <StopModeIcon lines={stop.lines} size={20} />}
-                title={stop.name}
-                subtitle={stopResultSubtitle(stop, t)}
-                lines={stop.lines}
-                highlight={isFavorite}
-                testId={`search-item-${testIdPrefix}-stop-${stop.id}`}
-                onClick={() => onStopSelect(stop)}
-            />
-        );
-    });
-
-    const hasResults = results.length > 0 || vehicleResults.length > 0 || posResults.length > 0 || geocodingResults.length > 0 || !!queryLines;
+    const historyLines = useHistoryLines(search.searchHistory);
+    const sections = searchSections({ search, stops, hidesHistory: !!search.activeFilter, t, historyLines });
 
     return (
         <div className="mt-2 overflow-hidden rounded-surface glassy p-1.5">
             <Autocomplete.List className="max-h-[60vh] overflow-y-auto scroll-edge custom-scrollbar space-y-1">
-                {showHistory && (
-                    <SearchGroup
-                        heading={t('search.recent')}
-                        count={searchHistory.length}
-                    >
-                        {searchHistory.map((item) => (
-                            <SearchItem
-                                key={searchHistoryKey(item)}
-                                icon={<HistoryItemIcon type={item.type} />}
-                                title={historyItemTitle(item)}
-                                subtitle={historyItemSubtitle(item, t)}
-                                lines={historyLines(item)}
-                                testId={`search-item-hist-${searchHistoryKey(item)}`}
-                                onClick={() => onHistorySelect(item)}
-                            />
-                        ))}
-                    </SearchGroup>
-                )}
-
-                {query === '' && results.length > 0 && (
-                    <SearchGroup
-                        heading={t('search.favorites')}
-                        count={results.length}
-                    >
-                        {renderStopResults('fav')}
-                    </SearchGroup>
-                )}
-
-                {queryLines && (
-                    <SearchGroup heading={t('search.lines')}>
-                        <SearchItem
-                            icon={<SearchIcon size={20} strokeWidth={1.5} />}
-                            title={t('search.filterByLine')}
-                            lines={queryLineBadges ?? undefined}
-                            variant="primary"
-                            testId={`search-item-line-${queryLines.join('-')}`}
-                            onClick={() => onLineSelect(queryLines)}
-                        />
-                    </SearchGroup>
-                )}
-
-                {query !== '' && results.length > 0 && (
-                    <SearchGroup heading={t('search.stops')}>
-                        {renderStopResults('res')}
-                    </SearchGroup>
-                )}
-
-                {vehicleResults.length > 0 && (
-                    <SearchGroup heading={t('search.vehicles')}>
-                        {vehicleResults.map((vehicle) => {
-                            const p = vehicle.properties;
-                            const vehicleId = p.vehicle_id ?? '';
-                            return (
-                                <SearchItem
-                                    key={vehicleId}
-                                    icon={<BusFront size={20} strokeWidth={1.5} />}
-                                    title={t('search.vehicleNumber', { number: vehicleDisplayNumber(vehicleId) })}
-                                    subtitle={p.trip_headsign}
-                                    lines={vehicleResultLines(vehicle)}
-                                    testId={`search-item-vehicle-${vehicleId}`}
-                                    onClick={() => onVehicleSelect(vehicle)}
-                                />
-                            );
-                        })}
-                    </SearchGroup>
-                )}
-
-                {geocodingResults.length > 0 && (
-                    <SearchGroup heading={t('search.places')}>
-                        {geocodingResults.map((place) => (
-                            <SearchItem
-                                key={place.id}
-                                icon={<Building2 size={20} strokeWidth={1.5} />}
-                                title={place.name}
-                                subtitle={place.subtitle || undefined}
-                                testId={`search-item-place-${place.id}`}
-                                onClick={() => onPlaceSelect(place)}
-                            />
-                        ))}
-                    </SearchGroup>
-                )}
-
-                {posResults.length > 0 && (
-                    <SearchGroup heading={t('search.pointsOfSale')}>
-                        {posResults.map((result) => (
-                            <SearchItem
-                                key={result.pos.id}
-                                icon={<Ticket size={20} strokeWidth={1.5} />}
-                                title={result.pos.name}
-                                subtitle={posResultSubtitle(result, t)}
-                                testId={`search-item-pos-${result.pos.id}`}
-                                onClick={() => onPosSelect(result)}
-                            />
-                        ))}
-                    </SearchGroup>
-                )}
-
-                {query.length >= STOP_SEARCH.MIN_QUERY_LENGTH && !hasResults && (
+                {sections.map(section => (
+                    <Autocomplete.Group key={section.id} className="overflow-hidden p-0 text-foreground">
+                        <Autocomplete.GroupLabel render={<SectionHeading count={section.count} className="px-3.5 pt-3 pb-2">{section.title}</SectionHeading>} />
+                        {section.rows.map(row => <SearchItem key={row.key} row={row} />)}
+                    </Autocomplete.Group>
+                ))}
+                {hasNoResults(sections, search.query, STOP_SEARCH.MIN_QUERY_LENGTH) && (
                     <EmptyState icon={SearchIcon} title={t('search.noResults')} description={t('search.noResultsHint')} className="py-8" />
                 )}
             </Autocomplete.List>

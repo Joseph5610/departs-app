@@ -11,6 +11,12 @@ interface EnrichmentState {
     pruneExpired: () => void;
 }
 
+/** The patches heard from within the silence TTL; the map itself when none expired. */
+const withoutExpired = (patches: Map<string, StoredEnrichmentPatch>, now: number): Map<string, StoredEnrichmentPatch> => {
+    const fresh = new Map([...patches].filter(([, patch]) => now - patch.receivedAt <= ENRICHMENT_CONFIG.SILENCE_TTL_MS));
+    return fresh.size === patches.size ? patches : fresh;
+};
+
 export const useEnrichmentStore = create<EnrichmentState>((set) => {
     return {
         byTripId: new Map(),
@@ -57,32 +63,9 @@ export const useEnrichmentStore = create<EnrichmentState>((set) => {
         pruneExpired: () => {
             set((state) => {
                 const now = Date.now();
-                const nextByTripId = new Map(state.byTripId);
-                const nextByVehicleId = new Map(state.byVehicleId);
-                let changed = false;
-
-                for (const [tripId, patch] of nextByTripId.entries()) {
-                    if (now - patch.receivedAt > ENRICHMENT_CONFIG.SILENCE_TTL_MS) {
-                        nextByTripId.delete(tripId);
-                        changed = true;
-                    }
-                }
-
-                for (const [vehicleId, patch] of nextByVehicleId.entries()) {
-                    if (now - patch.receivedAt > ENRICHMENT_CONFIG.SILENCE_TTL_MS) {
-                        nextByVehicleId.delete(vehicleId);
-                        changed = true;
-                    }
-                }
-
-                if (changed) {
-                    return {
-                        byTripId: nextByTripId,
-                        byVehicleId: nextByVehicleId,
-                    };
-                }
-
-                return state;
+                const byTripId = withoutExpired(state.byTripId, now);
+                const byVehicleId = withoutExpired(state.byVehicleId, now);
+                return byTripId === state.byTripId && byVehicleId === state.byVehicleId ? state : { byTripId, byVehicleId };
             });
         },
     };

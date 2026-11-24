@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useCityConfig } from './useCities';
 import { apiFetch } from '@/lib/apiClient';
-import { bucketOf } from '@/lib/staticBuckets';
+import { bucketOf } from '@shared/buckets';
 import { createTimetablePersister } from '@/lib/deviceCache';
 import { EXTERNAL_URLS, QUERY_TIMING_MS, TRIP_SHAPES_CONFIG } from '@/config/constants';
 import type { TripShape } from '@/domain/routes';

@@ -6,13 +6,12 @@ import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
 import { safeHexColor } from '@/lib/color';
 import { usePreferencesStore } from '@/state/preferencesStore';
-import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { useGeolocationStore } from '@/state/geolocationStore';
 import { formatStopDistance } from '@/hooks/derived/useStopDistance';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { getStopDistanceInfo } from '@/domain/stops';
 import { boardingPlace, departureKey, nextDepartures } from '@/domain/departures';
-import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR, MAP_CAMERA } from '@/config/constants';
+import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SectionTitle } from '@/components/SectionTitle';
@@ -22,6 +21,7 @@ import { NextDepartureRow } from '@/components/DetailPanel/DepartureBoard/NextDe
 import { BoardRow, RowTimeLine } from '@/components/DetailPanel/DepartureBoard/BoardRow';
 import { StopLead } from './StopLead';
 import type { BoardStop, Departure, DepartureClickHandler, FavoriteStop } from '@/types';
+import { useOpenStop } from '@/hooks/features/useOpenStop';
 
 interface FavoriteStopSectionProps {
     /** The pins that open this stop, all of which unpinning removes. */
@@ -35,7 +35,7 @@ interface FavoriteStopSectionProps {
 export const FavoriteStopSection = ({ pins, stop, departures, isError }: FavoriteStopSectionProps) => {
     const { t, i18n } = useTranslation();
     const { timezone } = useCityConfig();
-    const flyTo = useMapMetadataStore(s => s.actions.flyTo);
+    const openStop = useOpenStop();
     const userLocation = useGeolocationStore(s => s.userLocation);
     const { removeFavoriteStops } = usePreferencesStore(s => s.actions);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
@@ -43,10 +43,7 @@ export const FavoriteStopSection = ({ pins, stop, departures, isError }: Favorit
     const distance = useMemo(() => getStopDistanceInfo(userLocation, stop.pos), [userLocation, stop.pos]);
     const next = useMemo(() => nextDepartures(departures, DEPARTURES_CONFIG.FAVORITE_CARD_COUNT), [departures]);
 
-    const openBoard = () => {
-        flyTo({ center: stop.pos, zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
-        navigate(paths.stop(selectedCity, stop.id));
-    };
+    const openBoard = () => openStop(stop.id, { pos: stop.pos });
     const openTrip = useCallback<DepartureClickHandler>(
         (tripId, vehicleId) => navigate(paths.trip(selectedCity, tripId, vehicleId)),
         [selectedCity],

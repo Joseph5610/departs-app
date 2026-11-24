@@ -6,17 +6,16 @@ import { paths } from '@/lib/routes';
 import { safeHexColor } from '@/lib/color';
 import { nextDeparturesOf } from '@/domain/departures';
 import { lineColorAt } from '@/domain/stops';
-import { useSelectionStore } from '@/state/selectionStore';
-import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { usePinLine } from '@/hooks/features/usePinLine';
-import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR, MAP_CAMERA } from '@/config/constants';
+import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import { Button } from '@/components/ui/button';
 import { LineBadge } from '@/components/LineBadge';
 import { DirectionRow } from '@/components/DetailPanel/DepartureBoard/DirectionRow';
 import { RowSeparator } from '@/components/DetailPanel/DepartureBoard/RowSeparator';
 import { BoardRow, BoardSection, RowHeadsign, RowTimeLine } from '@/components/DetailPanel/DepartureBoard/BoardRow';
 import type { BoardStop, FavoriteLine, Departure, DepartureClickHandler } from '@/types';
+import { useOpenStop } from '@/hooks/features/useOpenStop';
 
 interface FavoriteLineRowProps {
     favorite: FavoriteLine;
@@ -29,8 +28,7 @@ interface FavoriteLineRowProps {
 export const FavoriteLineRow = ({ favorite, stop, departures, isFirst }: FavoriteLineRowProps) => {
     const { t } = useTranslation();
     const { timezone } = useCityConfig();
-    const { presetLineFilter } = useSelectionStore(s => s.actions);
-    const flyTo = useMapMetadataStore(s => s.actions.flyTo);
+    const openStop = useOpenStop();
     const pin = usePinLine(favorite.stopId, favorite.line, favorite.headsign);
 
     const next = useMemo(
@@ -40,11 +38,7 @@ export const FavoriteLineRow = ({ favorite, stop, departures, isFirst }: Favorit
     const routeColor = safeHexColor(next[0]?.route_color || lineColorAt(stop, favorite.line)) || FALLBACK_ROUTE_COLOR;
     const stopName = stop?.name;
 
-    const openBoard = () => {
-        if (stop) flyTo({ center: stop.pos, zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
-        presetLineFilter(favorite.line);
-        navigate(paths.stop(favorite.city, favorite.stopId));
-    };
+    const openBoard = () => openStop(favorite.stopId, { pos: stop?.pos, city: favorite.city, line: favorite.line });
     const openTrip = useCallback<DepartureClickHandler>(
         (tripId, vehicleId) => navigate(paths.trip(favorite.city, tripId, vehicleId)),
         [favorite.city],

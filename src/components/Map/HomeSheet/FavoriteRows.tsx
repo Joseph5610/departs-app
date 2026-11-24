@@ -1,20 +1,16 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Star } from 'lucide-react';
-import { navigate } from '@/lib/history';
-import { paths } from '@/lib/routes';
-import { usePreferencesStore } from '@/state/preferencesStore';
-import { useMapMetadataStore } from '@/state/mapMetadataStore';
-import { useSelectionStore } from '@/state/selectionStore';
 import { nextDepartures, nextDeparturesOf } from '@/domain/departures';
 import { lineColorAt } from '@/domain/stops';
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LineBadge } from '@/components/LineBadge';
 import { MinutesUntil } from '@/components/MinutesUntil';
-import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR, MAP_CAMERA } from '@/config/constants';
+import { DEPARTURES_CONFIG, FALLBACK_ROUTE_COLOR } from '@/config/constants';
 import type { BoardStop, Departure, FavoriteLine } from '@/types';
 import { RowChevron } from '@/components/Chevron';
+import { useOpenStop } from '@/hooks/features/useOpenStop';
 
 /** Lead column of a favourite row, as wide as a line badge so names line up under each other. */
 const LEAD = 'w-9 shrink-0 justify-center';
@@ -44,14 +40,10 @@ interface FavoriteStopRowProps {
 
 /** A pinned stop on the home sheet: its name and next departures in one line; opens its board. */
 export const FavoriteStopRow = ({ stop, departures, isLoading }: FavoriteStopRowProps) => {
-    const selectedCity = usePreferencesStore(s => s.selectedCity);
-    const flyTo = useMapMetadataStore(s => s.actions.flyTo);
+    const openStop = useOpenStop();
     const next = useMemo(() => nextDepartures(departures, DEPARTURES_CONFIG.FAVORITE_STOP_ROW_COUNT, true), [departures]);
 
-    const open = () => {
-        flyTo({ center: stop.pos, zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
-        navigate(paths.stop(selectedCity, stop.id));
-    };
+    const open = () => openStop(stop.id, { pos: stop.pos });
 
     return (
         <Item variant="row" size="none" className="[--row-sep:3.875rem]" render={<button type="button" onClick={open} data-testid={`favorite-mini-stop-${stop.id}`} />}>
@@ -86,19 +78,14 @@ interface FavoriteLineRowProps {
 /** A pinned line and direction on the home sheet: where it goes and from where, its next departure and the one after; opens the stop's board filtered to the line. */
 export const FavoriteLineRow = ({ favorite, stop, departures, isLoading }: FavoriteLineRowProps) => {
     const { t } = useTranslation();
-    const { presetLineFilter } = useSelectionStore(s => s.actions);
-    const flyTo = useMapMetadataStore(s => s.actions.flyTo);
+    const openStop = useOpenStop();
     const next = useMemo(
         () => nextDeparturesOf(departures, favorite.line, favorite.headsign, DEPARTURES_CONFIG.FAVORITE_CARD_COUNT),
         [departures, favorite.line, favorite.headsign],
     );
     const routeColor = next[0]?.route_color || lineColorAt(stop, favorite.line) || FALLBACK_ROUTE_COLOR;
 
-    const open = () => {
-        if (stop) flyTo({ center: stop.pos, zoom: MAP_CAMERA.STOP_SELECT_ZOOM, duration: MAP_CAMERA.FLY_MS });
-        presetLineFilter(favorite.line);
-        navigate(paths.stop(favorite.city, favorite.stopId));
-    };
+    const open = () => openStop(favorite.stopId, { pos: stop?.pos, city: favorite.city, line: favorite.line });
 
     return (
         <Item variant="row" size="none" className="[--row-sep:3.875rem]" render={<button type="button" onClick={open} data-testid={`favorite-mini-line-${favorite.stopId}-${favorite.line}`} />}>

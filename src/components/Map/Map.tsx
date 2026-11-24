@@ -65,7 +65,7 @@ import { FavoritesReorderButton } from '@/components/DetailPanel/FavoritesPanel/
 import { useBrowserThemeColor } from '@/hooks/features/useBrowserThemeColor';
 
 const renderSheetControls = (hidden: boolean) => <MapControls placement="sheet" hidden={hidden} />;
-const renderBoardToolbar = (collapsed: boolean) => <PanelActions layout="toolbar" collapsed={collapsed} />;
+const renderBoardToolbar = (collapsed: boolean) => <PanelActions collapsed={collapsed} />;
 const renderMobileHome = (isFull: boolean, isPeek: boolean) => <HomeSections isFull={isFull} isPeek={isPeek} />;
 
 /**
@@ -153,9 +153,8 @@ const MapInner = () => {
         (isFavoritesRoute ? <FavoritesTabs /> : <DepartureBoardHeader />)
     ), [isStatsRoute, isFavoritesRoute, selectedPos]);
 
-    // A phone's stop board keeps its actions in the floating toolbar instead.
-    const hasPanelActions = !isStatsRoute && !isFavoritesRoute && !selectedPos && (Boolean(selectedVehicle) || (!isMobile && Boolean(selectedStop)));
-    const detailActions = useMemo(() => (isFavoritesRoute ? <FavoritesReorderButton /> : hasPanelActions ? <PanelActions /> : undefined), [isFavoritesRoute, hasPanelActions]);
+    const hasTripActions = !isStatsRoute && !isFavoritesRoute && !selectedPos && Boolean(selectedVehicle);
+    const detailActions = useMemo(() => (isFavoritesRoute ? <FavoritesReorderButton /> : undefined), [isFavoritesRoute]);
 
     const detailContent = useMemo(() => (
         isStatsRoute ? <Suspense fallback={null}><StatsPanel /></Suspense> : isFavoritesRoute ? <FavoritesPanel /> : <DetailPanelContent />
@@ -355,11 +354,11 @@ const MapInner = () => {
                 title={sheetCard ? sheetCardTitle : detailTitle}
                 platformCode={showsStopBoard ? selectedStop?.board?.code : undefined}
                 subHeader={sheetCard ? undefined : detailSubHeader}
-                actions={sheetCard || (isMobile && hasPanelActions) ? undefined : detailActions}
+                actions={sheetCard ? undefined : detailActions}
                 collapseRequest={drawerCollapseRequest}
                 floating={renderSheetControls}
                 homeHeader={mobileSearch}
-                toolbar={!sheetCard && (hasPanelActions || (showsStopBoard && selectedStop?.board)) ? renderBoardToolbar : undefined}
+                toolbar={!sheetCard && (hasTripActions || (showsStopBoard && selectedStop?.board)) ? renderBoardToolbar : undefined}
                 home={renderMobileHome}
                 minSnap={sheetCard === 'settings' || sheetCard === 'alerts' ? 'full' : 'half'}
                 selfScrolling={sheetCard === 'alerts' || sheetCard === 'myTrip'}

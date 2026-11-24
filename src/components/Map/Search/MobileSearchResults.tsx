@@ -1,226 +1,69 @@
-import type React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Search as SearchIcon } from 'lucide-react';
 import { useHistoryLines } from '@/hooks/derived/useHistoryLines';
-import { Building2, BusFront, Search as SearchIcon, Star, Ticket } from 'lucide-react';
-import { searchHistoryKey } from '@/lib/searchHistory';
+import type { useSearch } from '@/hooks/features/useSearch';
 import { STOP_SEARCH } from '@/config/constants';
-import type { LineBadgeData } from '@/domain/routes';
 import { getStopDistanceInfo } from '@/domain/stops';
-import { vehicleDisplayNumber } from '@/domain/vehicles';
-import type { PosSearchResult } from '@/domain/pointsOfSale';
-import type { GeocodingResult } from '@/hooks/data/useGeocoding';
 import { WalkDistance } from '@/components/WalkDistance';
-import { StopModeIcon } from '@/components/StopModeIcon';
-import type { ShownHistoryItem, Stop, VehicleFeature } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
-import { HistoryItemIcon } from './HistoryItemIcon';
-import { historyItemSubtitle, historyItemTitle, posResultSubtitle, stopResultSubtitle, vehicleResultLines } from './searchItemText';
-import { SearchRowBody } from './SearchItem';
 import { SheetSection as Section } from '@/components/Map/HomeSheet/SheetSection';
 import { EmptyState } from '@/components/EmptyState';
+import { SearchRowBody } from './SearchItem';
+import { hasNoResults, searchSections, type SearchRow } from './searchSections';
 
 interface MobileSearchResultsProps {
-    query: string;
-    stopResults: Stop[];
-    favoriteStops: Stop[];
+    search: ReturnType<typeof useSearch>;
     location: [number, number] | null;
-    searchHistory: readonly ShownHistoryItem[];
-    queryLines: string[] | null;
-    queryLineBadges: LineBadgeData[] | null;
-    vehicleResults: VehicleFeature[];
-    geocodingResults: GeocodingResult[];
-    posResults: PosSearchResult[];
-    onStopSelect: (stop: Stop) => void;
-    onHistorySelect: (item: ShownHistoryItem) => void;
     onClearHistory: () => void;
-    onLineSelect: (lines: string[]) => void;
-    onPlaceSelect: (result: GeocodingResult) => void;
-    onPosSelect: (result: PosSearchResult) => void;
-    onVehicleSelect: (vehicle: VehicleFeature) => void;
 }
 
-interface ResultRowProps {
-    icon: React.ReactNode;
-    title?: string;
-    subtitle?: string;
-    /** Shown on the right, such as the walking distance. */
-    meta?: React.ReactNode;
-    onClick: () => void;
-    testId: string;
-    lines?: LineBadgeData[];
-}
-
-const ResultRow = ({ icon, title, subtitle, lines, meta, onClick, testId }: ResultRowProps) => (
-    <Item variant="row" size="none" render={<button type="button" onClick={onClick} data-testid={testId} />}>
-        <ItemMedia variant="rowIcon">{icon}</ItemMedia>
-        <SearchRowBody title={title} subtitle={subtitle} lines={lines} />
-        {meta && <ItemActions className="shrink-0">{meta}</ItemActions>}
-    </Item>
-);
+const ResultRow = ({ row, location }: { row: SearchRow; location: [number, number] | null }) => {
+    const distance = row.stop ? getStopDistanceInfo(location, row.stop.pos) : null;
+    return (
+        <Item variant="row" size="none" render={<button type="button" onClick={row.onSelect} data-testid={row.testId} />}>
+            <ItemMedia variant="rowIcon">{row.icon}</ItemMedia>
+            <SearchRowBody row={row} />
+            {distance && <ItemActions className="shrink-0"><WalkDistance info={distance} className="type-meta" /></ItemActions>}
+        </Item>
+    );
+};
 
 /**
- * The phone's full-screen search results: favourite chips and recent searches before typing,
+ * The phone's full-screen search results: recent searches and favourites before typing,
  * then grouped cards for lines, stops, vehicles, places and points of sale.
  */
-export const MobileSearchResults = ({
-    query, stopResults, favoriteStops, location, searchHistory, queryLines, queryLineBadges, vehicleResults, geocodingResults, posResults,
-    onStopSelect, onHistorySelect, onClearHistory, onLineSelect, onPlaceSelect, onPosSelect, onVehicleSelect,
-}: MobileSearchResultsProps) => {
+export const MobileSearchResults = ({ search, location, onClearHistory }: MobileSearchResultsProps) => {
     const { t } = useTranslation();
-    const historyLines = useHistoryLines(searchHistory);
-    const isEmptyQuery = query === '';
-    const hasResults = stopResults.length > 0 || vehicleResults.length > 0 || posResults.length > 0 || geocodingResults.length > 0 || !!queryLines;
-
-    const distanceTo = (stop: Stop) => {
-        const info = getStopDistanceInfo(location, stop.pos);
-        return info ? <WalkDistance info={info} className="type-meta" /> : undefined;
-    };
-
-    const stopRow = (stop: Stop) => (
-        <ResultRow
-            key={stop.id}
-            icon={<StopModeIcon lines={stop.lines} />}
-            title={stop.name}
-            subtitle={stopResultSubtitle(stop, t)}
-            meta={distanceTo(stop)}
-            onClick={() => onStopSelect(stop)}
-            testId={`search-item-res-stop-${stop.id}`}
-            lines={stop.lines}
-        />
-    );
+    const historyLines = useHistoryLines(search.searchHistory);
+    const stops = search.query === '' ? search.pinnedStopList : search.stopResults;
+    const sections = searchSections({ search, stops, t, historyLines });
 
     return (
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain scroll-edge px-(--panel-gutter) pt-1 pb-[45dvh] flex flex-col gap-5" data-testid="search-results">
-            {isEmptyQuery && searchHistory.length > 0 && (
+            {sections.map(section => (
                 <Section
-                    title={t('search.recent')}
-                    count={searchHistory.length}
-                    action={
+                    key={section.id}
+                    title={section.title}
+                    count={section.count}
+                    action={section.id === 'recent' && (
                         <Button variant="ghost" size="chip" className="-mr-1" onClick={onClearHistory} data-testid="search-clear-history">
                             {t('search.clearRecent')}
                         </Button>
-                    }
+                    )}
                 >
                     <Card size="none">
-                        {searchHistory.map(item => (
-                            <ResultRow
-                                key={searchHistoryKey(item)}
-                                icon={<HistoryItemIcon type={item.type} />}
-                                title={historyItemTitle(item)}
-                                subtitle={historyItemSubtitle(item, t)}
-                                lines={historyLines(item)}
-                                onClick={() => onHistorySelect(item)}
-                                testId={`search-item-hist-${searchHistoryKey(item)}`}
-                            />
-                        ))}
+                        {section.rows.map(row => <ResultRow key={row.key} row={row} location={location} />)}
                     </Card>
                 </Section>
-            )}
+            ))}
 
-            {isEmptyQuery && favoriteStops.length > 0 && (
-                <Section title={t('search.favorites')} count={favoriteStops.length}>
-                    <Card size="none">
-                        {favoriteStops.map(stop => (
-                            <ResultRow
-                                key={stop.id}
-                                icon={<Star size={20} fill="currentColor" strokeWidth={1.5} className="text-favorite" />}
-                                title={stop.name}
-                                subtitle={stopResultSubtitle(stop, t)}
-                                lines={stop.lines}
-                                meta={distanceTo(stop)}
-                                onClick={() => onStopSelect(stop)}
-                                testId={`search-item-fav-stop-${stop.id}`}
-                            />
-                        ))}
-                    </Card>
-                </Section>
-            )}
-
-            {queryLines && (
-                <Section title={t('search.lines')}>
-                    <Card size="none">
-                        <ResultRow
-                            icon={<SearchIcon />}
-                            title={t('search.filterByLine')}
-                            lines={queryLineBadges ?? undefined}
-                            onClick={() => onLineSelect(queryLines)}
-                            testId={`search-item-line-${queryLines.join('-')}`}
-                        />
-                    </Card>
-                </Section>
-            )}
-
-            {!isEmptyQuery && stopResults.length > 0 && (
-                <Section title={t('search.stops')}>
-                    <Card size="none">
-                        {stopResults.map(stopRow)}
-                    </Card>
-                </Section>
-            )}
-
-            {vehicleResults.length > 0 && (
-                <Section title={t('search.vehicles')}>
-                    <Card size="none">
-                        {vehicleResults.map(vehicle => {
-                            const p = vehicle.properties;
-                            const vehicleId = p.vehicle_id ?? '';
-                            return (
-                                <ResultRow
-                                    key={vehicleId}
-                                    icon={<BusFront size={20} strokeWidth={1.5} />}
-                                    title={t('search.vehicleNumber', { number: vehicleDisplayNumber(vehicleId) })}
-                                    subtitle={p.trip_headsign}
-                                    onClick={() => onVehicleSelect(vehicle)}
-                                    testId={`search-item-vehicle-${vehicleId}`}
-                                    lines={vehicleResultLines(vehicle)}
-                                />
-                            );
-                        })}
-                    </Card>
-                </Section>
-            )}
-
-            {geocodingResults.length > 0 && (
-                <Section title={t('search.places')}>
-                    <Card size="none">
-                        {geocodingResults.map(place => (
-                            <ResultRow
-                                key={place.id}
-                                icon={<Building2 size={20} strokeWidth={1.5} />}
-                                title={place.name}
-                                subtitle={place.subtitle || undefined}
-                                onClick={() => onPlaceSelect(place)}
-                                testId={`search-item-place-${place.id}`}
-                            />
-                        ))}
-                    </Card>
-                </Section>
-            )}
-
-            {posResults.length > 0 && (
-                <Section title={t('search.pointsOfSale')}>
-                    <Card size="none">
-                        {posResults.map(result => (
-                            <ResultRow
-                                key={result.pos.id}
-                                icon={<Ticket size={20} strokeWidth={1.5} />}
-                                title={result.pos.name}
-                                subtitle={posResultSubtitle(result, t)}
-                                onClick={() => onPosSelect(result)}
-                                testId={`search-item-pos-${result.pos.id}`}
-                            />
-                        ))}
-                    </Card>
-                </Section>
-            )}
-
-            {isEmptyQuery && searchHistory.length === 0 && (
+            {search.query === '' && search.searchHistory.length === 0 && (
                 <p className="px-1 pt-2 type-meta text-muted-foreground">{t('search.emptyHint')}</p>
             )}
 
-            {query.length >= STOP_SEARCH.MIN_QUERY_LENGTH && !hasResults && (
+            {hasNoResults(sections, search.query, STOP_SEARCH.MIN_QUERY_LENGTH) && (
                 <EmptyState icon={SearchIcon} title={t('search.noResults')} description={t('search.noResultsHint')} />
             )}
         </div>

@@ -4,9 +4,14 @@ import { cn } from "@/lib/cn"
 
 function ScrollArea({
   className,
+  viewportClassName,
+  onViewportScroll,
   children,
   ...props
-}: ScrollAreaPrimitive.Root.Props) {
+}: ScrollAreaPrimitive.Root.Props & {
+  viewportClassName?: string
+  onViewportScroll?: React.UIEventHandler<HTMLDivElement>
+}) {
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
@@ -15,7 +20,8 @@ function ScrollArea({
     >
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
-        className="size-full rounded-[inherit] scroll-edge transition-[color,box-shadow] outline-none px-px"
+        className={cn("size-full rounded-[inherit] scroll-edge transition-[color,box-shadow] outline-none px-px", viewportClassName)}
+        onScroll={onViewportScroll}
       >
         {children}
       </ScrollAreaPrimitive.Viewport>

@@ -1,3 +1,5 @@
+import { bucketOf } from "../../../shared/buckets";
+
 /**
  * Configuration constants for the GTFS stack (Brno, Prešov, DÚK).
  */
@@ -54,17 +56,6 @@ export const GTFS_CONFIG = {
  * departs-data build script: change one side and the Worker requests files that do not exist.
  * Route shapes are read by the app itself (`TRIP_SHAPES_CONFIG` in src/config/constants.ts).
  */
-
-const utf8 = new TextEncoder();
-
-/** FNV-1a (32-bit) of the id's UTF-8 bytes, modulo `count` - must match `bucketOf` in the build script. */
-export function bucketOf(id: string, count: number): string {
-    let hash = 0x811c9dc5;
-    for (const byte of utf8.encode(id)) {
-        hash = Math.imul(hash ^ byte, 0x01000193) >>> 0;
-    }
-    return String(hash % count);
-}
 
 /** departure_buckets/<bucket>.json, hashed by the stop's parent station so a station's platforms share one file. */
 export function departuresBucketId(stopId: string, parentOf: ReadonlyMap<string, string>): string {

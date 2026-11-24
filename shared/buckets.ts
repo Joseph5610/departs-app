@@ -2,7 +2,7 @@ const utf8 = new TextEncoder();
 
 /**
  * The file an id is hashed into on the static data CDN: FNV-1a (32-bit) of its UTF-8 bytes, modulo
- * `count`. Must match `bucketOf` in the departs-gtfs-data build script.
+ * `count`. Must match `bucketOf` in the departs-data build script; the app and the Worker both address static files by it.
  */
 export function bucketOf(id: string, count: number): string {
     let hash = 0x811c9dc5;
