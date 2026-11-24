@@ -14,6 +14,7 @@ import { PlatformCircle } from '@/components/PlatformCircle';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToolbarFold } from '@/hooks/features/useToolbarFold';
 import { MobileSheet } from './MobileSheet';
 import { SidebarResizeHandle } from './SidebarResizeHandle';
 import { CloseIcon } from '@/components/CloseIcon';
@@ -34,7 +35,7 @@ interface DetailPanelProps {
     floating?: (hidden: boolean) => React.ReactNode;
     /** Mobile only: the home's top row, in the sheet header while no panel is open. */
     homeHeader?: React.ReactNode;
-    /** The phone's bottom toolbar of a card, told whether scrolling folded it. */
+    /** The card's floating bottom toolbar, told whether scrolling folded it. */
     toolbar?: (collapsed: boolean) => React.ReactNode;
     /** Mobile only: shown in the sheet while no panel is open; told whether the sheet is at full height and whether at its peek. */
     home?: (isFull: boolean, isPeek: boolean) => React.ReactNode;
@@ -54,6 +55,7 @@ interface DetailPanelProps {
  * Uses a sidebar (Sheet) on desktop; on mobile, the one bottom sheet that also holds the home content.
  */
 export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformCode, subHeader, actions, fitsContent, collapseRequest, floating, homeHeader, toolbar, home, minSnap = 'half', selfScrolling, children }: DetailPanelProps) => {
+    const { folded: isToolbarFolded, onScroll: onPanelScroll } = useToolbarFold(id ?? 'panel');
     const isMobile = useIsMobile();
     const { t } = useTranslation();
 
@@ -167,10 +169,11 @@ export const DetailPanel = memo(({ isOpen, onClose, onBack, title, id, platformC
                             </div>
                         )}
                     </div>
-                    <ScrollArea className="flex-1 min-h-0">
-                        <div className="px-(--panel-gutter) pb-6">{children}</div>
+                    <ScrollArea className="flex-1 min-h-0" viewportClassName={cn(toolbar && "scroll-edge-toolbar")} onViewportScroll={toolbar ? onPanelScroll : undefined}>
+                        <div className={cn("px-(--panel-gutter)", toolbar ? "pb-20" : "pb-6")}>{children}</div>
                     </ScrollArea>
                 </div>
+                {toolbar?.(isToolbarFolded)}
                 <SidebarResizeHandle />
             </SheetContent>
         </Sheet>

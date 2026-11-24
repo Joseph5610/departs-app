@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Phone search results mark favourite stops with a star, as on desktop.
+- Desktop panels show their favourite, share and menu in the same floating toolbar as the phone, leaving the title row to the name.
 
 ### Fixed
 

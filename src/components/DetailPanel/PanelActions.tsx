@@ -36,22 +36,43 @@ import { favoriteStopsIn, pinsOf } from '@/domain/stops';
 import { queryKeys } from '@/lib/queryKeys';
 import { ExternalLinkIcon } from '@/components/ExternalLinkIcon';
 
+const TOOLBAR_FOLD = 'duration-400 ease-[cubic-bezier(.32,.72,0,1)]';
+
+interface ToolbarButtonProps extends React.ComponentProps<typeof Button> {
+    label: string;
+    /** Folded away while the list scrolls; the menu then offers what it did. */
+    isFolded?: boolean;
+}
+
+/** One round button of the panel toolbar, with its tooltip. */
+const ToolbarButton = ({ label, isFolded, className, ...props }: ToolbarButtonProps) => (
+    <ButtonTooltip label={label}>
+        <Button
+            variant="quiet"
+            size="icon"
+            aria-label={label}
+            {...(isFolded && { tabIndex: -1, 'aria-hidden': true })}
+            className={cn(
+                "relative mx-0.5 size-10 shrink-0 rounded-full text-foreground after:absolute after:-inset-0.5 transition-[width,margin,opacity,background-color] duration-200 [&_svg]:size-4.75",
+                isFolded !== undefined && TOOLBAR_FOLD,
+                isFolded && "mx-0 w-0 overflow-hidden opacity-0",
+                className
+            )}
+            {...props}
+        />
+    </ButtonTooltip>
+);
+
 /**
- * PanelActions
- *
- * Actions for the selected stop or vehicle. A vehicle shows share next to the menu. A stop shows its
- * favorite toggle there, with departure sort and the official board in the menu, and share there too unless the toolbar shows it.
+ * The floating toolbar of a stop board or a trip, on every device: a stop's favourite, share and the menu
+ * (departure sort, the official board, feedback). While the list scrolls it folds to the menu, which then offers the rest.
  */
 interface PanelActionsProps {
-    /** `toolbar` is the phone's floating capsule, with share beside the menu. */
-    layout?: 'header' | 'toolbar';
-    /** The toolbar folded to its menu button while the list scrolls. */
+    /** Folded to its menu button while the list scrolls. */
     collapsed?: boolean;
 }
 
-const TOOLBAR_FOLD = 'duration-400 ease-[cubic-bezier(.32,.72,0,1)]';
-
-export const PanelActions = memo(({ layout = 'header', collapsed = false }: PanelActionsProps) => {
+export const PanelActions = memo(({ collapsed = false }: PanelActionsProps) => {
     const { t } = useTranslation();
     const { share } = useShare();
     const shareTrip = useShareTrip();
@@ -107,10 +128,6 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
 
     if (!tripId && !stopId) return null;
 
-    const toolbar = layout === 'toolbar';
-    const toolbarButton = toolbar ? 'relative mx-0.5 size-10 rounded-full text-foreground after:absolute after:-inset-0.5 transition-[width,margin,opacity,background-color] duration-200' : undefined;
-    const toolbarFold = toolbar ? cn(TOOLBAR_FOLD, collapsed && 'mx-0 w-0 overflow-hidden opacity-0') : undefined;
-    const foldHidden = toolbar && collapsed ? { tabIndex: -1, 'aria-hidden': true } : undefined;
     // A stop pinned under an older id (an alias, a pre-stops.json PID id) counts as pinned, and unpinning drops every such id.
     const cityPins = favoriteStopsIn(favoriteStops, boardCity);
     const pins = stopId ? pinsOf(model, cityPins, stopId) : [];
@@ -128,60 +145,38 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
         toggleFavorite({ city: boardCity, stopId });
     };
 
-    const content = (
-        <>
-            {stopId ? (
-                <ButtonTooltip label={isFavorite ? t('map.departures.removeFromFavorites') : t('map.departures.addToFavorites')}>
-                <Button
-                    variant={toolbar ? 'quiet' : 'ghost'}
-                    size="icon-xs"
+    return (
+        <div
+            data-testid="sheet-toolbar"
+            className={cn(
+                "glassy max-md:fixed! md:absolute! bottom-[max(1rem,calc(env(safe-area-inset-bottom,0px)-0.375rem))] z-20 flex h-12 items-center justify-end rounded-full px-0.5 transition-[width,right] duration-450 ease-[cubic-bezier(.32,.72,0,1)]",
+                collapsed ? "right-4 w-12" : stopId ? "right-[calc(50%-4.25rem)] w-34" : "right-[calc(50%-2.875rem)] w-23"
+            )}
+        >
+            {stopId && (
+                <ToolbarButton
+                    label={isFavorite ? t('map.departures.removeFromFavorites') : t('map.departures.addToFavorites')}
+                    isFolded={collapsed}
                     onClick={handleToggleFavorite}
-                    aria-label={isFavorite ? t('map.departures.removeFromFavorites') : t('map.departures.addToFavorites')}
                     aria-pressed={isFavorite}
                     data-testid="favorite-btn"
-                    {...foldHidden}
-                    className={cn("shrink-0 text-muted-foreground", toolbarButton, toolbarFold, isFavorite && "text-favorite hover:text-favorite-hover")}
+                    className={cn(isFavorite && "text-favorite hover:text-favorite-hover")}
                 >
-                    <Star size={19} fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={1.75} className={toolbar ? 'size-4.75' : undefined} />
-                </Button>
-                </ButtonTooltip>
-            ) : (
-                <ButtonTooltip label={t('common.share')}>
-                <Button
-                    variant={toolbar ? 'quiet' : 'ghost'}
-                    size="icon-xs"
-                    onClick={handleShare}
-                    aria-label={t('common.share')}
-                    data-testid="share-btn"
-                    {...foldHidden}
-                    className={cn("shrink-0 text-muted-foreground", toolbarButton, toolbarFold)}
-                >
-                    <Share size={19} strokeWidth={1.75} className={toolbar ? 'size-4.75' : undefined} />
-                </Button>
-                </ButtonTooltip>
+                    <Star fill={isFavorite ? 'currentColor' : 'none'} strokeWidth={1.75} />
+                </ToolbarButton>
             )}
-            {toolbar && stopId && (
-                <Button variant={toolbar ? 'quiet' : 'ghost'} size="icon" onClick={handleShare} aria-label={t('common.share')} data-testid="share-btn" className={cn("shrink-0", toolbarButton, toolbarFold)} {...foldHidden}>
-                    <Share strokeWidth={1.75} className="size-4.75" />
-                </Button>
-            )}
+            <ToolbarButton label={t('common.share')} isFolded={collapsed} onClick={handleShare} data-testid="share-btn">
+                <Share strokeWidth={1.75} />
+            </ToolbarButton>
             <DropdownMenu>
-                <ButtonTooltip label={t('common.moreOptions')}>
                 <DropdownMenuTrigger render={
-                    <Button
-                        variant={toolbar ? 'quiet' : 'ghost'}
-                        size="icon-xs"
-                        aria-label={t('common.moreOptions')}
-                        data-testid="more-options-btn"
-                        className={cn("shrink-0 text-muted-foreground", toolbarButton)}
-                    >
-                        <MoreHorizontal size={19} strokeWidth={1.75} className={toolbar ? 'size-4.75' : undefined} />
-                    </Button>
+                    <ToolbarButton label={t('common.moreOptions')} data-testid="more-options-btn">
+                        <MoreHorizontal strokeWidth={1.75} />
+                    </ToolbarButton>
                 } />
-                </ButtonTooltip>
                 <DropdownMenuContent align="end" className="w-68">
                     {/* The folded toolbar shows only this menu, so it takes over the buttons that folded away. */}
-                    {toolbar && collapsed && (
+                    {collapsed && (
                         <>
                             <DropdownMenuGroup>
                                 {stopId && (
@@ -214,12 +209,6 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
                                 </DropdownMenuRadioGroup>
                             </DropdownMenuGroup>
                             <DropdownMenuSeparator />
-                            {!toolbar && (
-                                <DropdownMenuItem render={<div data-testid="share-btn" onClick={handleShare} />} closeOnClick={false}>
-                                    <Share size={14} strokeWidth={1.75} />
-                                    {t('common.share')}
-                                </DropdownMenuItem>
-                            )}
                             <DropdownMenuSub>
                                 <DropdownMenuSubTrigger data-testid="board-btn">
                                     <Monitor size={14} strokeWidth={1.75} />
@@ -246,19 +235,6 @@ export const PanelActions = memo(({ layout = 'header', collapsed = false }: Pane
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-        </>
-    );
-
-    if (!toolbar) return content;
-    return (
-        <div
-            data-testid="sheet-toolbar"
-            className={cn(
-                "glassy fixed! bottom-[max(1rem,calc(env(safe-area-inset-bottom,0px)-0.375rem))] flex h-12 items-center justify-end rounded-full px-0.5 transition-[width,right] duration-450 ease-[cubic-bezier(.32,.72,0,1)]",
-                collapsed ? "right-4 w-12" : stopId ? "right-[calc(50%-4.25rem)] w-34" : "right-[calc(50%-2.875rem)] w-23"
-            )}
-        >
-            {content}
         </div>
     );
 });
