@@ -181,7 +181,7 @@ const BarMinutes = ({ minutes, subtle }: { minutes: number; subtle: string }) =>
 
 /** One of a bar's small buttons on its right. */
 const BarAction = ({ onClick, label, testId, children }: { onClick: () => void; label: string; testId?: string; children: React.ReactNode }) => (
-    <Button variant="quiet" size="icon-2xs" type="button" onClick={onClick} aria-label={label} title={label} data-testid={testId} className="shrink-0">
+    <Button variant="ghost" size="icon-2xs" type="button" onClick={onClick} aria-label={label} title={label} data-testid={testId} className="shrink-0 text-inherit hover:text-inherit">
         {children}
     </Button>
 );

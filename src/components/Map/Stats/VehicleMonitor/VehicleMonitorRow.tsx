@@ -55,12 +55,12 @@ export const VehicleMonitorRow = memo(({ item }: VehicleMonitorRowProps) => {
 
             <div className="flex items-center gap-2 shrink-0">
                 {delaySeconds === null ? (
-                    <Badge variant="muted" className="type-badge text-muted-foreground">
+                    <Badge variant="label" className="type-badge text-muted-foreground">
                         {t('map.vehicleDetails.notAvailable')}
                     </Badge>
                 ) : (
                     <Badge
-                        variant="muted"
+                        variant="label"
                         className={cn("type-badge tabular-nums", isLate ? "bg-destructive/10 text-destructive" : isEarly ? "bg-tint-sky/10 text-tint-sky" : "bg-tint-mint/10 text-tint-mint")}
                     >
                         {isLate

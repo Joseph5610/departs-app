@@ -48,7 +48,7 @@ interface ToolbarButtonProps extends React.ComponentProps<typeof Button> {
 const ToolbarButton = ({ label, isFolded, className, ...props }: ToolbarButtonProps) => (
     <ButtonTooltip label={label}>
         <Button
-            variant="quiet"
+            variant="ghost"
             size="icon"
             aria-label={label}
             {...(isFolded && { tabIndex: -1, 'aria-hidden': true })}

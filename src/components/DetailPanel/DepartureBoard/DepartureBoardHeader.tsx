@@ -20,6 +20,7 @@ import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
 import { Pressable } from '@/components/Pressable';
+import { ChipStrip } from '@/components/ChipStrip';
 
 /** Sticky subheader of a stop's board: distance and delay, stop actions and filters, then the line chips. */
 export const DepartureBoardHeader = memo(() => {
@@ -99,7 +100,7 @@ export const DepartureBoardHeader = memo(() => {
 
             {(uniqueLines.length > 0 || hasVehicleFilters) && (
                 // One scrolling strip: the vehicle filters lead, then the line chips.
-                <ChipStrip>
+                <ChipStrip bleed>
                         {hasVehicleFilters && (
                             <div role="group" aria-label={t('map.departures.vehicleFilters')} className="flex items-center gap-1.5">
                                 {hasAirConditioningData && (
@@ -154,16 +155,6 @@ export const DepartureBoardHeader = memo(() => {
 });
 
 DepartureBoardHeader.displayName = 'DepartureBoardHeader';
-
-/** A row of filter chips scrolling sideways under the board header, fading out at its right edge. */
-const ChipStrip = ({ children }: { children: React.ReactNode }) => (
-    <div className="-mx-(--panel-gutter) -my-2 overflow-x-auto px-(--panel-gutter) pt-2.5 pb-2.5 no-scrollbar fade-end">
-        <div className="flex w-max items-center gap-1.5">
-            {children}
-            <div className="h-1 w-6 shrink-0" aria-hidden="true" />
-        </div>
-    </div>
-);
 
 /** One vehicle-property filter, shaped like the line chips it leads; the line chips filter by line instead. */
 const PropertyToggle = ({ isActive, onToggle, label, testId, children }: {

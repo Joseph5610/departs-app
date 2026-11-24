@@ -13,6 +13,7 @@ import { routeTypeRank } from '@/domain/routes';
 import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
 import { SearchField } from '@/components/SearchField';
 import { EmptyState } from '@/components/EmptyState';
+import { ChipStrip } from '@/components/ChipStrip';
 
 
 export const VehicleMonitorList = () => {
@@ -65,7 +66,7 @@ export const VehicleMonitorList = () => {
                 }
             />
 
-            <div className="-my-2 flex items-center gap-1.5 overflow-x-auto py-2.5 no-scrollbar">
+            <ChipStrip>
                 <FilterChip label={t('common.all')} count={totalCount} isActive={modeFilter === 'all'} onClick={() => setModeFilter('all')} />
                 {allowedVehicleTypes.map(slug => {
                     const count = modeCounts[slug] ?? 0;
@@ -83,7 +84,7 @@ export const VehicleMonitorList = () => {
                         />
                     );
                 })}
-            </div>
+            </ChipStrip>
 
             <div className="flex items-center justify-between type-note text-muted-foreground px-0.5">
                 <span>

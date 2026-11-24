@@ -76,7 +76,8 @@ export const VehicleHero = ({
                     <div className="flex gap-2 shrink-0">
                         {!displayVehicle.isStaticFallback && (
                             <Button
-                                variant={isFollowing ? 'selected' : 'pill'}
+                                variant="pill"
+                                aria-pressed={isFollowing}
                                 size="icon-xs"
                                 onClick={onToggleFollow}
                                 className="shrink-0"

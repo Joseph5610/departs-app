@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - The admin pages use the app's own lists, controls and cards, on phones as on desktop.
 
+### Fixed
+
+- The locate and compass buttons on the map no longer turn see-through when hovered or pressed, like the other map buttons.
+
 ## [0.97.5] - 2026-11-23
 
 ### Changed

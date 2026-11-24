@@ -12,6 +12,7 @@ import { VehicleMonitorRow } from '@/components/Map/Stats/VehicleMonitor/Vehicle
 import type { EnrichedVehicleItem } from '@/domain/vehicles';
 
 import type { CityStats } from '@/types';
+import { ChipStrip } from '@/components/ChipStrip';
 
 const knownId = (id: string) => (id && id !== STATS_AGGREGATION.MISSING_ID ? id : undefined);
 
@@ -59,12 +60,12 @@ export const MostDelayedCard = ({ stats }: MostDelayedCardProps) => {
         <StatsCard icon={AlertTriangle} title={t('stats.biggestDelays')} iconClassName="text-destructive">
             <div className="flex flex-col gap-3">
                 {delayTypes.length > 1 && (
-                    <div className="-my-2 flex gap-1.5 overflow-x-auto py-2 no-scrollbar">
+                    <ChipStrip>
                         <FilterChip label={t('common.all')} isActive={delayFilterType === 'all'} onClick={() => setDelayFilterType('all')} />
                         {delayTypes.map(tType => (
                             <FilterChip key={tType} icon={ROUTE_TYPE_ICONS[tType as keyof typeof ROUTE_TYPE_ICONS]} label={t(getRouteTypeI18nKey(tType))} isActive={delayFilterType === tType} onClick={() => setDelayFilterType(tType)} />
                         ))}
-                    </div>
+                    </ChipStrip>
                 )}
 
                 <div className="flex flex-col -mx-3.5">

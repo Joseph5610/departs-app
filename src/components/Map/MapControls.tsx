@@ -20,7 +20,8 @@ import { MAP_CAMERA } from '@/config/constants';
 import { Badge } from '@/components/ui/badge';
 
 // The fade stays on the glass itself: on a parent it would cut the glass off from the map behind it.
-const SHEET_PILL = 'glassy rounded-full overflow-hidden opacity-(--sheet-controls-opacity,1)';
+const PILL = 'glassy rounded-full overflow-hidden';
+const SHEET_PILL = cn(PILL, 'opacity-(--sheet-controls-opacity,1)');
 
 interface MapControlsProps {
     /** `corner` floats top-right of the map; `sheet` rides above the mobile sheet's top edge with only settings and locate. */
@@ -116,7 +117,6 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
 
     const settingsButton = (
         <ControlButton
-            inPill
             inSheet={placement === 'sheet'}
             onClick={onSettings}
             title={t('map.controls.settings')}
@@ -135,7 +135,6 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
         <>
             <ButtonGroupSeparator orientation="horizontal" />
             <ControlButton
-                inPill
                 onClick={onAlerts}
                 title={t('alerts.title')}
                 testId="map-alerts-btn"
@@ -150,7 +149,6 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
 
     const compassButton = showCompass && (
         <ControlButton
-            inPill={placement === 'sheet'}
             inSheet={placement === 'sheet'}
             onClick={onResetBearing}
             title={t('map.controls.resetBearing')}
@@ -173,7 +171,6 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                     {settingsButton}
                     <ButtonGroupSeparator orientation="horizontal" />
                     <ControlButton
-                        inPill
                         inSheet
                         onClick={(e) => onLocate(e)}
                         title={t('map.controls.myLocation')}
@@ -189,20 +186,21 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
     return (
         <div className="fixed top-0 md:top-(--chrome-top) right-0 safe-top safe-right p-4 md:p-0 md:right-5 z-40 pointer-events-none" data-testid="map-controls">
             <div className="flex flex-col gap-2 items-end pointer-events-auto">
-                <ControlButton
-                    onClick={(e) => onLocate(e)}
-                    title={t('map.controls.myLocation')}
-                    testId="map-locate-btn"
-                >
-                    {locateIcon}
-                </ControlButton>
+                <ButtonGroup orientation="vertical" className={PILL}>
+                    <ControlButton
+                        onClick={(e) => onLocate(e)}
+                        title={t('map.controls.myLocation')}
+                        testId="map-locate-btn"
+                    >
+                        {locateIcon}
+                    </ControlButton>
+                </ButtonGroup>
 
-                <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden">
+                <ButtonGroup orientation="vertical" className={PILL}>
                     {settingsButton}
                     {alertsButton}
                     <ButtonGroupSeparator orientation="horizontal" />
                     <ControlButton
-                        inPill
                         onClick={onToggleFavorites}
                         title={t('favorites.title')}
                         testId="map-favorites-btn"
@@ -217,7 +215,6 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                     </ControlButton>
                     <ButtonGroupSeparator orientation="horizontal" />
                     <ControlButton
-                        inPill
                         onClick={onStats}
                         title={t('stats.title')}
                         testId="map-stats-btn"
@@ -232,9 +229,8 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                     </ControlButton>
                 </ButtonGroup>
 
-                <ButtonGroup orientation="vertical" className="glassy rounded-full overflow-hidden">
+                <ButtonGroup orientation="vertical" className={PILL}>
                     <ControlButton
-                        inPill
                         onClick={onZoomIn}
                         title={t('map.controls.zoomIn')}
                     >
@@ -242,7 +238,6 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                     </ControlButton>
                     <ButtonGroupSeparator orientation="horizontal" />
                     <ControlButton
-                        inPill
                         onClick={onZoomOut}
                         title={t('map.controls.zoomOut')}
                     >
@@ -250,7 +245,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                     </ControlButton>
                 </ButtonGroup>
 
-                {compassButton}
+                {compassButton && <ButtonGroup orientation="vertical" className={PILL}>{compassButton}</ButtonGroup>}
             </div>
         </div>
     );
@@ -263,19 +258,17 @@ interface ControlButtonProps {
     onClick: (e: React.MouseEvent) => void;
     title: string;
     testId?: string;
-    /** Borderless segment inside a ButtonGroup pill instead of a standalone round button. */
-    inPill?: boolean;
 }
 
-const ControlButton = ({ children, onClick, title, testId, inPill = false, inSheet = false }: ControlButtonProps) => (
+const ControlButton = ({ children, onClick, title, testId, inSheet = false }: ControlButtonProps) => (
     <Tooltip>
         <TooltipTrigger render={
             <Button
-                variant={inPill ? 'ghost' : 'tinted'}
+                variant="ghost"
                 size="icon"
                 onClick={onClick}
                 aria-label={title}
-                className={cn(inPill ? "relative rounded-none shrink-0 h-11 w-11" : "shrink-0", inSheet && "size-12 text-foreground [&>svg]:size-5.25 [&>svg]:stroke-[1.75]")}
+                className={cn("relative shrink-0 rounded-none", inSheet && "size-12 text-foreground [&>svg]:size-5.25 [&>svg]:stroke-[1.75]")}
                 data-testid={testId}
             >
                 {children}

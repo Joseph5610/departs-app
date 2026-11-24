@@ -11,12 +11,8 @@ import { CitySelectionList } from './CitySelectionList';
 import { cn } from '@/lib/cn';
 import { useSelectCity } from '@/hooks/features/useSelectCity';
 
-interface CitySwitcherProps {
-    className?: string;
-    variant?: "default" | "destructive" | "secondary" | "ghost" | "link" | "tinted";
-}
-
-export const CitySwitcher = ({ className, variant = "tinted" }: CitySwitcherProps) => {
+/** The globe in the desktop search pill that opens the city picker. */
+export const CitySwitcher = ({ className }: { className?: string }) => {
     const { t } = useTranslation();
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const [open, setOpen] = useState(false);
@@ -39,7 +35,7 @@ export const CitySwitcher = ({ className, variant = "tinted" }: CitySwitcherProp
                 <TooltipTrigger render={
                     <DialogTrigger render={
                         <Button
-                            variant={variant}
+                            variant="ghost"
                             size="icon"
                             aria-label={t('map.controls.switchCity')}
                             className={cn("h-11 w-11 shrink-0", className)}

@@ -93,7 +93,7 @@ export const Search = memo(() => {
                         className="flex h-11 glassy rounded-full overflow-hidden transition-colors items-center focus-within:ring-2 focus-within:ring-primary/20"
                         data-testid="search-container"
                     >
-                        <CitySwitcher variant="ghost" className="w-12 pl-1 rounded-l-full rounded-r-none border-r border-sep" />
+                        <CitySwitcher className="w-12 pl-1 rounded-l-full rounded-r-none border-r border-sep" />
 
                         <div className="relative flex-1 group h-full" onClick={() => inputRef.current?.focus()}>
                             <Autocomplete.Input
