@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SearchField } from '@/components/SearchField';
-import { SegmentedControl } from '@/components/SegmentedControl';
 import { SectionHeading } from '@/components/SectionHeading';
 import { EmptyState } from '@/components/EmptyState';
 import { CopyButton } from '@/components/CopyButton';
@@ -23,6 +22,7 @@ import { AdminLayout } from '@/pages/admin/AdminLayout';
 import { AdminStatus, JsonPanel, RefreshButton } from '@/pages/admin/AdminParts';
 import { buildAgentPrompt } from './agentPrompt';
 import { filterFeedback, type FeedbackKind } from './feedbackFilter';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const TYPE_ICONS: Record<StoredFeedback['type'], { icon: LucideIcon; tone: string }> = {
     crash: { icon: AlertOctagon, tone: 'text-destructive' },
@@ -124,11 +124,13 @@ export const AdminFeedback = () => {
                 <>
                     <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
                         <SearchField value={query} onValueChange={setQuery} clearLabel="Clear" placeholder="Message, email, ID or IP" className="sm:flex-1" />
-                        <SegmentedControl value={kind} onChange={setKind} options={[
-                            { value: 'all', label: `All (${items.length})` },
-                            { value: 'feedback', label: 'Feedback' },
-                            { value: 'crash', label: 'Crashes' },
-                        ]} />
+                        <Tabs value={kind} onValueChange={setKind}>
+                            <TabsList>
+                                <TabsTrigger value="all">All ({items.length})</TabsTrigger>
+                                <TabsTrigger value="feedback">Feedback</TabsTrigger>
+                                <TabsTrigger value="crash">Crashes</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
                     </div>
 
                     <div className="flex min-h-0 flex-1 gap-4">

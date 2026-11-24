@@ -3,7 +3,6 @@ import { useTheme } from 'next-themes';
 import { Eye, EyeOff, MapPin, Type, Map as MapIcon, Palette, Ticket, Construction, Timer, Waypoints, Sun, Moon, SunMoon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Item, ItemActions, ItemMedia } from '@/components/ui/item';
-import { SegmentedControl } from '@/components/SegmentedControl';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { ROUTE_TYPE_ORDER } from '@/config/transit';
@@ -14,6 +13,7 @@ import { FilterChip } from '@/components/FilterChip';
 import { FilterGroup, RowDetails, RowText, ToggleSection } from './SettingsControls';
 import { SectionHeading } from '@/components/SectionHeading';
 import { DelayFilter } from './DelayFilter';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const vehicleTypes = ROUTE_TYPE_ORDER.map(id => ({ id, icon: ROUTE_TYPE_ICONS[id as keyof typeof ROUTE_TYPE_ICONS] }));
 
@@ -61,12 +61,13 @@ export const DisplaySection = () => {
         <>
             <section className="flex flex-col gap-2">
                 <SectionHeading>{t('settings.theme.title')}</SectionHeading>
-                <SegmentedControl
-                    fill
-                    value={theme ?? 'system'}
-                    onChange={setTheme}
-                    options={THEMES.map(({ id, icon: Icon }) => ({ value: id, label: <><Icon size={15} strokeWidth={1.75} />{t(`settings.theme.${id}`)}</>, testId: `theme-${id}` }))}
-                />
+                <Tabs value={theme ?? 'system'} onValueChange={setTheme}>
+                    <TabsList>
+                        {THEMES.map(({ id, icon: Icon }) => (
+                            <TabsTrigger key={id} value={id} data-testid={`theme-${id}`}><Icon size={15} strokeWidth={1.75} />{t(`settings.theme.${id}`)}</TabsTrigger>
+                        ))}
+                    </TabsList>
+                </Tabs>
             </section>
 
             <section className="flex flex-col gap-2">

@@ -21,6 +21,7 @@ import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
 import { Pressable } from '@/components/Pressable';
 import { ChipStrip } from '@/components/ChipStrip';
+import { Toggle } from '@/components/ui/toggle';
 
 /** Sticky subheader of a stop's board: distance and delay, stop actions and filters, then the line chips. */
 export const DepartureBoardHeader = memo(() => {
@@ -165,17 +166,8 @@ const PropertyToggle = ({ isActive, onToggle, label, testId, children }: {
     children: React.ReactNode;
 }) => (
     <ButtonTooltip label={label}>
-    <Pressable
-        onClick={onToggle}
-        aria-pressed={isActive}
-        aria-label={label}
-        data-testid={testId}
-        className={cn(
-            "hit-target flex size-6 shrink-0 items-center justify-center rounded-badge transition-[transform,colors] active:scale-95 select-none focus-visible:ring-primary/50",
-            isActive ? "bg-primary text-primary-foreground" : "bg-field text-muted-foreground hover:text-foreground"
-        )}
-    >
-        {children}
-    </Pressable>
+        <Toggle size="icon" pressed={isActive} onPressedChange={onToggle} aria-label={label} data-testid={testId}>
+            {children}
+        </Toggle>
     </ButtonTooltip>
 );

@@ -7,13 +7,13 @@ import { useVehicleMonitor } from '@/hooks/derived/useVehicleMonitor';
 import type { SearchField as VehicleSearchField } from '@/domain/vehicles';
 import { VehicleMonitorRow } from './VehicleMonitorRow';
 import { FilterChip } from '@/components/FilterChip';
-import { SegmentedControl } from '@/components/SegmentedControl';
 import { useCityConfig } from '@/hooks/data/useCities';
 import { routeTypeRank } from '@/domain/routes';
 import { ROUTE_TYPE_ICONS } from '@/components/routeTypeIcons';
 import { SearchField } from '@/components/SearchField';
 import { EmptyState } from '@/components/EmptyState';
 import { ChipStrip } from '@/components/ChipStrip';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 
 export const VehicleMonitorList = () => {
@@ -54,15 +54,12 @@ export const VehicleMonitorList = () => {
                 aria-label={searchField === 'vehicle' ? t('stats.monitor.searchByVehicle') : t('stats.monitor.searchByLine')}
                 clearLabel={t('search.clearFilter')}
                 lead={
-                    <SegmentedControl
-                        size="sm"
-                        value={searchField}
-                        onChange={setSearchField}
-                        options={[
-                            { value: 'line', label: t('stats.monitor.fieldLine') },
-                            { value: 'vehicle', label: t('stats.monitor.fieldVehicle') },
-                        ]}
-                    />
+                    <Tabs value={searchField} onValueChange={setSearchField}>
+                        <TabsList size="sm">
+                            <TabsTrigger value="line">{t('stats.monitor.fieldLine')}</TabsTrigger>
+                            <TabsTrigger value="vehicle">{t('stats.monitor.fieldVehicle')}</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
                 }
             />
 
