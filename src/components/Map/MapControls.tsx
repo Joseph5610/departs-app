@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
+import { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Settings, LocateFixed, Plus, Minus, Compass, Star, AlertTriangle, BarChart3, Filter } from 'lucide-react';
 import { closeDetail, navigate } from '@/lib/history';
@@ -11,13 +11,13 @@ import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { useGeolocationStore } from '@/state/geolocationStore';
 import { cn } from '@/lib/cn';
 import { useLocate } from '@/hooks/features/useGeolocation';
-import { Button } from '@/components/ui/button';
 import { ButtonGroup, ButtonGroupSeparator } from '@/components/ui/button-group';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { MAP_CAMERA } from '@/config/constants';
 import { Badge } from '@/components/ui/badge';
+import { FloorSwitcher } from './FloorSwitcher';
+import { MapControlButton } from './MapControlButton';
 
 // The fade stays on the glass itself: on a parent it would cut the glass off from the map behind it.
 const PILL = 'glassy rounded-full overflow-hidden';
@@ -116,7 +116,7 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
     );
 
     const settingsButton = (
-        <ControlButton
+        <MapControlButton
             inSheet={placement === 'sheet'}
             onClick={onSettings}
             title={t('map.controls.settings')}
@@ -128,13 +128,13 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                     <Filter className="size-2.5" strokeWidth={2.5} />
                 </span>
             )}
-        </ControlButton>
+        </MapControlButton>
     );
 
     const alertsButton = hasAlerts && (
         <>
             <ButtonGroupSeparator orientation="horizontal" />
-            <ControlButton
+            <MapControlButton
                 onClick={onAlerts}
                 title={t('alerts.title')}
                 testId="map-alerts-btn"
@@ -143,18 +143,18 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                 {incidentsCount > 0 && (
                     <Badge variant="alert" className="pointer-events-none absolute top-1 right-1 shadow-sm">{incidentsCount}</Badge>
                 )}
-            </ControlButton>
+            </MapControlButton>
         </>
     );
 
     const compassButton = showCompass && (
-        <ControlButton
+        <MapControlButton
             inSheet={placement === 'sheet'}
             onClick={onResetBearing}
             title={t('map.controls.resetBearing')}
         >
             <Compass size={20} strokeWidth={1.5} className="transition-transform" />
-        </ControlButton>
+        </MapControlButton>
     );
 
     if (placement === 'sheet') {
@@ -166,18 +166,19 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                 )}
                 data-testid="map-controls"
             >
+                <FloorSwitcher className={SHEET_PILL} inSheet />
                 {compassButton && <ButtonGroup orientation="vertical" className={SHEET_PILL}>{compassButton}</ButtonGroup>}
                 <ButtonGroup orientation="vertical" className={SHEET_PILL}>
                     {settingsButton}
                     <ButtonGroupSeparator orientation="horizontal" />
-                    <ControlButton
+                    <MapControlButton
                         inSheet
                         onClick={(e) => onLocate(e)}
                         title={t('map.controls.myLocation')}
                         testId="map-locate-btn"
                     >
                         {locateIcon}
-                    </ControlButton>
+                    </MapControlButton>
                 </ButtonGroup>
             </div>
         );
@@ -187,20 +188,20 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
         <div className="fixed top-0 md:top-(--chrome-top) right-0 safe-top safe-right p-4 md:p-0 md:right-5 z-40 pointer-events-none" data-testid="map-controls">
             <div className="flex flex-col gap-2 items-end pointer-events-auto">
                 <ButtonGroup orientation="vertical" className={PILL}>
-                    <ControlButton
+                    <MapControlButton
                         onClick={(e) => onLocate(e)}
                         title={t('map.controls.myLocation')}
                         testId="map-locate-btn"
                     >
                         {locateIcon}
-                    </ControlButton>
+                    </MapControlButton>
                 </ButtonGroup>
 
                 <ButtonGroup orientation="vertical" className={PILL}>
                     {settingsButton}
                     {alertsButton}
                     <ButtonGroupSeparator orientation="horizontal" />
-                    <ControlButton
+                    <MapControlButton
                         onClick={onToggleFavorites}
                         title={t('favorites.title')}
                         testId="map-favorites-btn"
@@ -212,9 +213,9 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                                 isFavoritesRoute && "fill-primary text-tint-mint"
                             )}
                          />
-                    </ControlButton>
+                    </MapControlButton>
                     <ButtonGroupSeparator orientation="horizontal" />
-                    <ControlButton
+                    <MapControlButton
                         onClick={onStats}
                         title={t('stats.title')}
                         testId="map-stats-btn"
@@ -226,58 +227,31 @@ export const MapControls = memo(({ placement = 'corner', hidden = false }: MapCo
                                 isStatsRoute && "text-tint-mint"
                             )}
                         />
-                    </ControlButton>
+                    </MapControlButton>
                 </ButtonGroup>
 
                 <ButtonGroup orientation="vertical" className={PILL}>
-                    <ControlButton
+                    <MapControlButton
                         onClick={onZoomIn}
                         title={t('map.controls.zoomIn')}
                     >
                         <Plus size={20} strokeWidth={1.5} />
-                    </ControlButton>
+                    </MapControlButton>
                     <ButtonGroupSeparator orientation="horizontal" />
-                    <ControlButton
+                    <MapControlButton
                         onClick={onZoomOut}
                         title={t('map.controls.zoomOut')}
                     >
                         <Minus size={20} strokeWidth={1.5} />
-                    </ControlButton>
+                    </MapControlButton>
                 </ButtonGroup>
 
                 {compassButton && <ButtonGroup orientation="vertical" className={PILL}>{compassButton}</ButtonGroup>}
+
+                <FloorSwitcher className={PILL} />
             </div>
         </div>
     );
 });
-
-interface ControlButtonProps {
-    /** Sized for the phone, riding above the sheet. */
-    inSheet?: boolean;
-    children: React.ReactNode;
-    onClick: (e: React.MouseEvent) => void;
-    title: string;
-    testId?: string;
-}
-
-const ControlButton = ({ children, onClick, title, testId, inSheet = false }: ControlButtonProps) => (
-    <Tooltip>
-        <TooltipTrigger render={
-            <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClick}
-                aria-label={title}
-                className={cn("relative shrink-0 rounded-none", inSheet && "size-12 text-foreground [&>svg]:size-5.25 [&>svg]:stroke-[1.75]")}
-                data-testid={testId}
-            >
-                {children}
-            </Button>
-        } />
-        <TooltipContent side="left" sideOffset={8}>
-            <p className="type-note">{title}</p>
-        </TooltipContent>
-    </Tooltip>
-);
 
 MapControls.displayName = 'MapControls';

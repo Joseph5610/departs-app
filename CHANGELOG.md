@@ -4,6 +4,13 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.98.0] - 2026-11-25
+
+### Added
+
+- Station floor plans from OpenStreetMap appear when zoomed in close, with a switcher between floors.
+- Tram and train platforms are drawn on the map when zoomed in close.
+
 ## [0.97.8] - 2026-11-24
 
 ### Changed

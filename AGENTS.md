@@ -15,7 +15,7 @@ Real-time multi-city public transport PWA (Prague PID, Brno IDS JMK, Prešov DPM
 | Store              | File                  | Holds                                                                 |
 | ------------------ | --------------------- | --------------------------------------------------------------------- |
 | `SelectionStore`   | `selectionStore.ts`   | Following, line filter and highlighted trip (URL owns the IDs)        |
-| `ViewportStore`    | `viewportStore.ts`    | Map bounds, line route filter, selected geocoded place                |
+| `ViewportStore`    | `viewportStore.ts`    | Map bounds, line route filter, selected geocoded place, floor picked on a station plan |
 | `PreferencesStore` | `preferencesStore.ts` | User settings, favorites, search history (persisted)                  |
 | `GeolocationStore` | `geolocationStore.ts` | User location, focus requests, last coarse location                   |
 | `MapMetadataStore` | `mapMetadataStore.ts` | Map loaded state, label layer ID, MapRef and camera actions           |
@@ -34,7 +34,7 @@ Transforms are pure. Non-trivial ones are plain functions in `src/domain/`; hook
 
 ### Source layout
 
-- **`src/domain/<area>/`**: pure transit logic (`departures`, `vehicles`, `rides`, `realtime`, `routes`, `stops`, `alerts`, `cities`, `pointsOfSale`, plus `time.ts`, `delay.ts`). Functions over immutable data: no classes, React, hooks, stores or components (ESLint). Outside an area, import its `index.ts` only (`@/domain/vehicles`).
+- **`src/domain/<area>/`**: pure transit logic (`departures`, `vehicles`, `rides`, `realtime`, `routes`, `stops`, `alerts`, `cities`, `pointsOfSale`, `indoor`, plus `time.ts`, `delay.ts`). Functions over immutable data: no classes, React, hooks, stores or components (ESLint). Outside an area, import its `index.ts` only (`@/domain/vehicles`).
 - **Components and hooks hold no transit rules.** Anything that filters, sorts, groups, counts or classifies transit data is a `domain/` function; components keep rendering, `t()` texts and styling.
 - **`shared/`**: facts and rules both the app and `functions/` apply, so screen and server agree (`site.ts`: hosts, contact and VAPID public key, the one file a fork edits; `cities.ts`: each city's location, zone, timezone and features; `rides.ts`: when a vehicle left a stop, boarding grace). Imports only its own files (ESLint); the app reads it as `@shared/…`, `functions/` by relative path.
 - **`src/lib/`**: infrastructure only (API client, memoization, URLs, device cache, geometry, search helpers, map icons). No transit rules. There is no `utils/` folder.

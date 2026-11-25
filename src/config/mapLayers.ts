@@ -1,5 +1,7 @@
 import type {
+    BackgroundLayerSpecification,
     CircleLayerSpecification,
+    FillLayerSpecification,
     SymbolLayerSpecification,
     LineLayerSpecification,
     ExpressionSpecification,
@@ -24,6 +26,8 @@ export const MAP_SOURCES = {
     USER_LOCATION: 'user-location',
     POINTS_OF_SALE: 'points-of-sale-source',
     ALERTS: 'alerts-source',
+    INDOOR: 'indoor-source',
+    PLATFORMS: 'platforms-source',
 } as const;
 
 /** Canvas-drawn images registered by lib/map/icons.ts. */
@@ -34,6 +38,9 @@ export const MAP_ICONS = {
     POS_MACHINE: 'pos-machine-icon',
     POS_INFO: 'pos-info-icon',
     POS_OFFICE: 'pos-office-icon',
+    INDOOR_ELEVATOR: 'indoor-elevator-icon',
+    INDOOR_TOILETS: 'indoor-toilets-icon',
+    INDOOR_TICKETS: 'indoor-tickets-icon',
     /** Prefix of the alert marker images (`alert-marker:<icon kind>:<tone>`), drawn by lib/map/alertMarkers.ts. */
     ALERT_MARKER_PREFIX: 'alert-marker:',
 } as const;
@@ -62,6 +69,19 @@ export const MAP_LAYERS = {
     USER_LOCATION_POINT: 'user-location-point',
     POINTS_OF_SALE: 'pos-point',
     ALERTS: 'alerts-point',
+    PLATFORMS_AREA: 'platforms-area',
+    PLATFORMS_LINE: 'platforms-line',
+    INDOOR_DIM: 'indoor-dim',
+    INDOOR_FLOOR: 'indoor-floor',
+    INDOOR_PLATFORM: 'indoor-platform',
+    INDOOR_PLATFORM_LINE: 'indoor-platform-line',
+    INDOOR_UNIT: 'indoor-unit',
+    INDOOR_WALL: 'indoor-wall',
+    INDOOR_FOOTWAY: 'indoor-footway',
+    INDOOR_STAIRS: 'indoor-stairs',
+    INDOOR_ELEVATOR: 'indoor-elevator',
+    INDOOR_POINT: 'indoor-point',
+    INDOOR_LABEL: 'indoor-label',
 } as const;
 
 /** Layers whose click opens a stop's departures. */
@@ -350,6 +370,23 @@ export const platformBadges: SymbolLayerSpecification = {
     },
 };
 
+/** The halo map labels sit on, so they read on each basemap. */
+export const MAP_LABEL_HALO = { dark: '#111111', light: '#ffffff' } as const;
+
+/** The map's small grey labels of places inside stations (entrances, rooms on floor plans). */
+const PLACE_LABEL = {
+    layout: {
+        'text-font': MAP_FONT_STACK,
+        'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 8, 18, 10],
+    },
+    paint: {
+        'text-color': '#64748b',
+        'text-halo-color': MAP_TOKENS.colors.stroke,
+        'text-halo-width': 1,
+        'text-halo-blur': 0.2,
+    },
+} satisfies Pick<SymbolLayerSpecification, 'layout' | 'paint'>;
+
 export const stopEntrances: SymbolLayerSpecification = {
     id: MAP_LAYERS.STOP_ENTRANCES,
     type: 'symbol',
@@ -358,23 +395,19 @@ export const stopEntrances: SymbolLayerSpecification = {
     // Not before the platforms: an entrance's name would push the station badges out of placement.
     minzoom: MAP_TOKENS.zoom.platforms,
     layout: {
+        ...PLACE_LABEL.layout,
         'text-field': ['get', 'stop_name'],
-        'text-font': MAP_FONT_STACK,
-        'text-size': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 8, 18, 10],
-        'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
-        'text-radial-offset': 1.2,
         'text-letter-spacing': 0.1,
         'text-transform': 'uppercase',
+        'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
+        'text-radial-offset': 1.2,
         'text-padding': 10,
         'text-allow-overlap': false,
         'text-ignore-placement': false,
         'symbol-sort-key': 10
     },
     paint: {
-        'text-color': '#64748b',
-        'text-halo-color': MAP_TOKENS.colors.stroke,
-        'text-halo-width': 1,
-        'text-halo-blur': 0.2,
+        ...PLACE_LABEL.paint,
         'text-opacity': ['interpolate', ['linear'], ['zoom'], MAP_TOKENS.zoom.platforms, 0, MAP_TOKENS.zoom.platforms + 0.5, 1]
     }
 };
@@ -744,4 +777,177 @@ export const alertMarkers: SymbolLayerSpecification = {
         'text-halo-color': ALERT_MARKER.LABEL.dark.halo,
         'text-halo-width': 1.5,
     }
+};
+
+// -----------------------------------------------------------------------------
+// INDOOR (station floor plans)
+// -----------------------------------------------------------------------------
+
+/** The feature property holding a floor plan feature's floors as `;-1;0;` tokens. */
+export const INDOOR_LEVELS_PROPERTY = 'lvs';
+
+const INDOOR_COLORS = {
+    dark: {
+        dim: '#05070b', floor: '#373c48', floorEdge: '#5b6375', platform: '#2b3550', platformEdge: '#4b5b85',
+        unit: '#4a3a5c', unitEdge: '#6d5888', wall: '#8a93a6', footway: '#7dd3fc', stairs: '#9aa3b5',
+        elevator: '#c9ced8', halo: '#0b0d12',
+    },
+    light: {
+        dim: '#ffffff', floor: '#e4e6eb', floorEdge: '#b9bec9', platform: '#d5ddf0', platformEdge: '#9fb0d6',
+        unit: '#e7dcf2', unitEdge: '#b9a3d1', wall: '#7c8496', footway: '#0284c7', stairs: '#6b7384',
+        elevator: '#4b5262', halo: '#ffffff',
+    },
+} as const;
+
+const INDOOR_DIM_OPACITY = { dark: 0.5, light: 0.55 } as const;
+
+/** A platform mapped as a line, drawn about as wide as a real one. */
+const PLATFORM_LINE_WIDTH: ExpressionSpecification = ['interpolate', ['exponential', 2], ['zoom'], 16, 4, 19, 28];
+
+const INDOOR_POLYGON: ExpressionSpecification = ['in', ['geometry-type'], ['literal', ['Polygon', 'MultiPolygon']]];
+const indoorKindIs = (...kinds: string[]): ExpressionSpecification => ['in', ['get', 'k'], ['literal', kinds]];
+
+/**
+ * Station floor plans showing one floor: `levelToken` is that floor's token in `INDOOR_LEVELS_PROPERTY`.
+ * The dim layer greys the basemap out under the plan while `hasPlan`.
+ */
+export const createIndoorLayers = (
+    theme: 'dark' | 'light',
+    levelToken: string,
+    minzoom: number,
+    hasPlan: boolean,
+): [BackgroundLayerSpecification, ...(FillLayerSpecification | LineLayerSpecification | SymbolLayerSpecification)[]] => {
+    const c = INDOOR_COLORS[theme];
+    const onLevel: ExpressionSpecification = ['in', levelToken, ['get', INDOOR_LEVELS_PROPERTY]];
+    const base = { source: MAP_SOURCES.INDOOR, minzoom } as const;
+    return [
+        {
+            id: MAP_LAYERS.INDOOR_DIM,
+            type: 'background',
+            minzoom,
+            layout: { visibility: hasPlan ? 'visible' : 'none' },
+            paint: { 'background-color': c.dim, 'background-opacity': INDOOR_DIM_OPACITY[theme] },
+        },
+        {
+            ...base,
+            id: MAP_LAYERS.INDOOR_FLOOR,
+            type: 'fill',
+            filter: ['all', onLevel, INDOOR_POLYGON, indoorKindIs('area', 'room', 'corridor', 'footway')],
+            paint: { 'fill-color': c.floor, 'fill-outline-color': c.floorEdge },
+        },
+        {
+            ...base,
+            id: MAP_LAYERS.INDOOR_PLATFORM,
+            type: 'fill',
+            filter: ['all', onLevel, INDOOR_POLYGON, indoorKindIs('platform')],
+            paint: { 'fill-color': c.platform, 'fill-outline-color': c.platformEdge },
+        },
+        {
+            ...base,
+            // Many platforms are mapped as a line along the track, not as an area.
+            id: MAP_LAYERS.INDOOR_PLATFORM_LINE,
+            type: 'line',
+            filter: ['all', onLevel, ['==', ['geometry-type'], 'LineString'], indoorKindIs('platform')],
+            layout: { 'line-cap': 'round' },
+            paint: { 'line-color': c.platform, 'line-width': PLATFORM_LINE_WIDTH },
+        },
+        {
+            ...base,
+            id: MAP_LAYERS.INDOOR_UNIT,
+            type: 'fill',
+            filter: ['all', onLevel, INDOOR_POLYGON, indoorKindIs('shop', 'toilets')],
+            paint: { 'fill-color': c.unit, 'fill-outline-color': c.unitEdge },
+        },
+        {
+            ...base,
+            id: MAP_LAYERS.INDOOR_WALL,
+            type: 'line',
+            // Walls, and the outlines of spaces mapped as open lines rather than areas.
+            filter: ['any',
+                ['all', onLevel, indoorKindIs('wall')],
+                ['all', onLevel, ['==', ['geometry-type'], 'LineString'], indoorKindIs('area', 'room', 'corridor', 'shop')],
+            ],
+            paint: { 'line-color': c.wall, 'line-width': 1.5 },
+        },
+        {
+            ...base,
+            id: MAP_LAYERS.INDOOR_FOOTWAY,
+            type: 'line',
+            filter: ['all', onLevel, ['==', ['geometry-type'], 'LineString'], indoorKindIs('footway')],
+            paint: { 'line-color': c.footway, 'line-opacity': 0.5, 'line-width': 1.5, 'line-dasharray': [2, 1.5] },
+        },
+        {
+            ...base,
+            id: MAP_LAYERS.INDOOR_STAIRS,
+            type: 'line',
+            filter: ['all', onLevel, indoorKindIs('steps', 'escalator')],
+            // Short dashes across a wide line read as treads.
+            paint: {
+                'line-color': c.stairs,
+                'line-width': ['interpolate', ['linear'], ['zoom'], 16, 2.5, 19, 6],
+                'line-dasharray': [0.25, 0.35],
+            },
+        },
+        {
+            ...base,
+            id: MAP_LAYERS.INDOOR_ELEVATOR,
+            type: 'symbol',
+            filter: ['all', onLevel, indoorKindIs('elevator')],
+            layout: {
+                'icon-image': MAP_ICONS.INDOOR_ELEVATOR,
+                'icon-size': ['interpolate', ['linear'], ['zoom'], 16, 0.25, 19, 0.45],
+                'icon-allow-overlap': true,
+            },
+            paint: { 'icon-color': c.elevator, 'icon-halo-color': c.halo, 'icon-halo-width': 1.5 },
+        },
+        {
+            ...base,
+            id: MAP_LAYERS.INDOOR_POINT,
+            type: 'symbol',
+            minzoom: minzoom + 1,
+            filter: ['all', onLevel, ['==', ['geometry-type'], 'Point'], indoorKindIs('toilets', 'tickets')],
+            layout: {
+                'icon-image': ['match', ['get', 'k'], 'toilets', MAP_ICONS.INDOOR_TOILETS, MAP_ICONS.INDOOR_TICKETS],
+                'icon-size': ['interpolate', ['linear'], ['zoom'], 17, 0.3, 19, 0.45],
+                'icon-allow-overlap': true,
+            },
+            paint: { 'icon-color': c.elevator, 'icon-halo-color': c.halo, 'icon-halo-width': 1.5 },
+        },
+        {
+            ...base,
+            id: MAP_LAYERS.INDOOR_LABEL,
+            type: 'symbol',
+            minzoom: minzoom + 1,
+            filter: ['all', onLevel, ['has', 'name'], indoorKindIs('platform', 'room', 'shop')],
+            layout: { ...PLACE_LABEL.layout, 'text-field': ['get', 'name'], 'text-max-width': 8 },
+            paint: { ...PLACE_LABEL.paint, 'text-halo-color': MAP_LABEL_HALO[theme] },
+        },
+    ];
+};
+
+/**
+ * Street-level platforms (tram and train), drawn like a floor plan's platforms but on every floor and
+ * beside every stop; laid under the floor plans, above their dimming.
+ */
+export const createPlatformLayers = (theme: 'dark' | 'light', minzoom: number): [FillLayerSpecification, LineLayerSpecification] => {
+    const c = INDOOR_COLORS[theme];
+    return [
+        {
+            id: MAP_LAYERS.PLATFORMS_AREA,
+            type: 'fill',
+            source: MAP_SOURCES.PLATFORMS,
+            minzoom,
+            filter: INDOOR_POLYGON,
+            paint: { 'fill-color': c.platform, 'fill-outline-color': c.platformEdge },
+        },
+        {
+            id: MAP_LAYERS.PLATFORMS_LINE,
+            type: 'line',
+            source: MAP_SOURCES.PLATFORMS,
+            minzoom,
+            filter: ['==', ['geometry-type'], 'LineString'],
+            layout: { 'line-cap': 'round' },
+            paint: { 'line-color': c.platform, 'line-width': PLATFORM_LINE_WIDTH },
+        },
+    ];
 };

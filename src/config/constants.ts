@@ -158,6 +158,16 @@ export const POS_SEARCH = {
     },
 };
 
+/** Floor plans of stations (`indoor/` on the static data CDN, from OpenStreetMap). */
+export const INDOOR_MAP = {
+    /** Floor plans and the floor switcher appear from this zoom. */
+    MIN_ZOOM: 16,
+    /** Street level: a station's plan opens there, or on the floor nearest it. */
+    DEFAULT_LEVEL: 0,
+    /** The index URL changes this often, so a CDN copy cached for hours is never read past a republish by more than this. */
+    INDEX_REFRESH_MS: 5 * 60_000,
+};
+
 /** When the map asks for data for its view. */
 export const MAP_DATA = {
     BOUNDS_DEBOUNCE_MS: 800,

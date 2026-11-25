@@ -85,11 +85,64 @@ const drawPosOffice = (ctx: CanvasRenderingContext2D) => {
     ctx.fillRect(39, 28, 4, 11);
 };
 
+/** A lift: up and down arrows in a rounded frame, as a single-colour mask tinted by its layer. */
+const drawElevator = (ctx: CanvasRenderingContext2D) => {
+    ctx.strokeStyle = 'white';
+    ctx.fillStyle = 'white';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    roundRectPath(ctx, 16, 12, 32, 40, 6);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(32, 18);
+    ctx.lineTo(24, 29);
+    ctx.lineTo(40, 29);
+    ctx.closePath();
+    ctx.moveTo(32, 46);
+    ctx.lineTo(24, 35);
+    ctx.lineTo(40, 35);
+    ctx.closePath();
+    ctx.fill();
+};
+
+/** Toilets on floor plans: the letters WC in a rounded frame, as a single-colour mask. */
+const drawIndoorToilets = (ctx: CanvasRenderingContext2D) => {
+    ctx.strokeStyle = 'white';
+    ctx.fillStyle = 'white';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    roundRectPath(ctx, 8, 14, 48, 36, 6);
+    ctx.stroke();
+    ctx.font = 'bold 22px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('WC', 32, 33);
+};
+
+/** A ticket machine on floor plans: a ticket with a notch on each side, as a single-colour mask. */
+const drawIndoorTickets = (ctx: CanvasRenderingContext2D) => {
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    roundRectPath(ctx, 10, 18, 44, 28, 4);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(10, 32, 6, 0, Math.PI * 2);
+    ctx.arc(54, 32, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(30, 22, 4, 20);
+    ctx.globalCompositeOperation = 'source-over';
+};
+
 export const addAllIcons = (map: Map) => {
     registerIcon(map, MAP_ICONS.VEHICLE_ARROW, true, drawArrow);
     registerIcon(map, MAP_ICONS.POS_MACHINE, false, drawPosMachine);
     registerIcon(map, MAP_ICONS.POS_INFO, false, drawPosInfo);
     registerIcon(map, MAP_ICONS.POS_OFFICE, false, drawPosOffice);
+    registerIcon(map, MAP_ICONS.INDOOR_ELEVATOR, true, drawElevator);
+    registerIcon(map, MAP_ICONS.INDOOR_TOILETS, true, drawIndoorToilets);
+    registerIcon(map, MAP_ICONS.INDOOR_TICKETS, true, drawIndoorTickets);
     addAlertMarkers(map);
     provideStopBadges(map);
 };

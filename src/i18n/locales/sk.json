@@ -151,7 +151,10 @@
       "zoomOut": "Oddialiť",
       "resetBearing": "Vycentrovať na sever",
       "switchCity": "Zmeniť mesto",
-      "switchedCity": "Prepnuté na {{city}}"
+      "switchedCity": "Prepnuté na {{city}}",
+      "floor": "Poschodie",
+      "floorUp": "O poschodie vyššie",
+      "floorDown": "O poschodie nižšie"
     },
     "vehicleDetails": {
       "previousTrip": "Spoj zatiaľ nevyšiel",
