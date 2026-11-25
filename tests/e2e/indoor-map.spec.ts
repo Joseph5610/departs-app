@@ -49,16 +49,16 @@ test.describe('Station floor plans', () => {
         await expect(mapPage.floorLevel).toHaveText('-3', { timeout: 20000 });
     });
 
-    // Most stations have a single mapped floor (Karlovo náměstí: its platform at -3); the switcher still names it.
-    test('names the floor of a single-floor plan', async ({ page }) => {
+    // A single floor leaves nothing to switch between.
+    test('shows no floor switcher for a single-floor plan', async ({ page }) => {
         const mapPage = new MapPage(page);
-        await mockIndoor(page, [-3]);
+        await mockIndoor(page, [0]);
         await openMapAt(page, 17);
         await mapPage.goto('/prague');
 
-        await expect(mapPage.floorLevel).toHaveText('-3', { timeout: 20000 });
-        await expect(mapPage.floorUp).toBeDisabled();
-        await expect(mapPage.floorDown).toBeDisabled();
+        await expect(mapPage.mapControls).toBeVisible({ timeout: 15000 });
+        await page.waitForTimeout(3000);
+        await expect(mapPage.floorLevel).toHaveCount(0);
     });
 
     test('hides the floor switcher when zoomed out', async ({ page }) => {

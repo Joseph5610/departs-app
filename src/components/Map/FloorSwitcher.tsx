@@ -15,12 +15,12 @@ interface FloorSwitcherProps {
     inSheet?: boolean;
 }
 
-/** The floor of the station plan in view, with steps to the others; nothing without a plan. */
+/** The floor of the station plan in view, with steps to the others; nothing for a plan of a single floor. */
 export const FloorSwitcher = ({ className, inSheet = false }: FloorSwitcherProps) => {
     const { t } = useTranslation();
     const { station, levels, level } = useIndoorMap(useIndoorView());
     const setIndoorFloor = useViewportStore(s => s.actions.setIndoorFloor);
-    if (station === null) return null;
+    if (station === null || levels.length < 2) return null;
 
     const above = adjacentIndoorLevel(levels, level, 'up');
     const below = adjacentIndoorLevel(levels, level, 'down');
