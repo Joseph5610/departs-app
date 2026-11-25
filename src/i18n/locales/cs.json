@@ -151,7 +151,10 @@
       "zoomOut": "Oddálit",
       "resetBearing": "Vycentrovat na sever",
       "switchCity": "Změnit město",
-      "switchedCity": "Přepnuto na {{city}}"
+      "switchedCity": "Přepnuto na {{city}}",
+      "floor": "Patro",
+      "floorUp": "O patro výš",
+      "floorDown": "O patro níž"
     },
     "vehicleDetails": {
       "previousTrip": "Spoj zatím nevyjel",

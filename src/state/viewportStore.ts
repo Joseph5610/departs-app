@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { LOCATION_PRIVACY } from '@/config/constants';
 import type { Camera } from '@/domain/cities';
+import type { IndoorFloorPick } from '@/domain/indoor';
 
 interface ViewportState {
     bounds: string | null;
@@ -13,6 +14,8 @@ interface ViewportState {
     savedCameraAt: number;
     /** When the user last moved the map themselves; a later automatic move must not undo it. */
     userMovedAt: number;
+    /** The floor last picked on a station's floor plan, with that station. */
+    indoorFloor: IndoorFloorPick | null;
 }
 
 interface ViewportActions {
@@ -22,6 +25,7 @@ interface ViewportActions {
     setSelectedPlaceId: (id: string | null) => void;
     saveCamera: (camera: Camera, at: number) => void;
     markUserMoved: (at: number) => void;
+    setIndoorFloor: (pick: IndoorFloorPick) => void;
 }
 
 export interface ViewportStore extends ViewportState {
@@ -41,6 +45,7 @@ export const useViewportStore = create<ViewportStore>()(
             savedCamera: null,
             savedCameraAt: 0,
             userMovedAt: 0,
+            indoorFloor: null,
 
             actions: {
                 setBounds: (bounds) => set({ bounds }),
@@ -49,6 +54,7 @@ export const useViewportStore = create<ViewportStore>()(
                 setSelectedPlaceId: (selectedPlaceId) => set({ selectedPlaceId }),
                 saveCamera: ({ lat, lng, zoom }, at) => set({ savedCamera: { lat: coarsen(lat), lng: coarsen(lng), zoom: Math.round(zoom * 10) / 10 }, savedCameraAt: at }),
                 markUserMoved: (userMovedAt) => set({ userMovedAt }),
+                setIndoorFloor: (indoorFloor) => set({ indoorFloor }),
             },
         }),
         {

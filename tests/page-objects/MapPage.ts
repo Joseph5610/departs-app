@@ -5,6 +5,11 @@ export class MapPage extends BasePage {
     readonly mapControls: Locator = this.page.getByTestId('map-controls');
     readonly detailPanel: Locator = this.page.getByTestId('detail-panel');
 
+    /** The floor shown on station floor plans, and the buttons stepping to the next one. */
+    readonly floorLevel: Locator = this.page.getByTestId('floor-level');
+    readonly floorUp: Locator = this.page.getByTestId('floor-up');
+    readonly floorDown: Locator = this.page.getByTestId('floor-down');
+
     async isMapVisible() {
         // MapLibre canvas is usually nested in the MapGL container or we check for controls
         return await this.mapControls.isVisible();

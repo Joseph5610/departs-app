@@ -148,7 +148,10 @@
       "zoomOut": "Zoom Out",
       "resetBearing": "Reset bearing to north",
       "switchCity": "Switch City",
-      "switchedCity": "Switched to {{city}}"
+      "switchedCity": "Switched to {{city}}",
+      "floor": "Floor",
+      "floorUp": "Floor up",
+      "floorDown": "Floor down"
     },
     "vehicleDetails": {
       "previousTrip": "Trip has not started yet",

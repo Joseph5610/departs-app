@@ -37,6 +37,8 @@ import { useRememberedPlace } from '@/hooks/data/useGeocoding';
 import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { MapControls } from './MapControls';
 import { PointsOfSaleLayer } from './PointsOfSaleLayer';
+import { IndoorLayer } from './IndoorLayer';
+import { PlatformsLayer } from './PlatformsLayer';
 import { DetailPanelContent } from '@/components/DetailPanel/DetailPanelContent';
 import { VehicleTitle } from '@/components/DetailPanel/VehicleDetail/VehicleTitle';
 import { usePointsOfSale } from '@/hooks/data/usePointsOfSale';
@@ -300,6 +302,8 @@ const MapInner = () => {
                 }}
                 interactiveLayerIds={INTERACTIVE_LAYER_IDS}
             >
+                <IndoorLayer mapLoaded={mapLoaded} />
+                <PlatformsLayer mapLoaded={mapLoaded} />
                 <PointsOfSaleLayer mapLoaded={mapLoaded} />
                 <MapLayers mapLoaded={mapLoaded} />
                 

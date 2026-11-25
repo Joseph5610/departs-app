@@ -20,5 +20,9 @@ export const queryKeys = {
     stopTimeSlice: (city: string, hour: string) => ['stop-time-slice', city, hour] as const,
     tripShapeIds: (city: string, bucket: string | undefined) => ['trip-shape-ids', city, bucket] as const,
     networkLines: (city: string) => ['network-lines', city] as const,
+    indoorIndex: () => ['indoor-index'] as const,
+    platformsIndex: () => ['platforms-index'] as const,
+    platforms: (city: string, version: string | undefined) => ['platforms', city, version] as const,
+    indoorPlan: (station: string | null, version: string | undefined) => ['indoor-plan', station, version] as const,
     tripShapeGeometry: (city: string, bucket: string | undefined) => ['trip-shape-geometry', city, bucket] as const,
 };

@@ -45,6 +45,7 @@ import {
     userLocationPoint,
     getVehicleColorExpression,
     MAP_SOURCES,
+    MAP_LABEL_HALO,
     STATION_CLUSTER_MAX_ZOOM,
 } from '@/config/mapLayers';
 import { STATION_CLUSTER_PROPERTIES, stopGlowColor, platformSortKey, stopBadgeImage } from '@/lib/map/stopExpressions';
@@ -112,7 +113,7 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const stationText = showStopLabels ? stationBadges.layout?.['text-field'] : '';
 
     const { resolvedTheme } = useTheme();
-    const haloColor = resolvedTheme === 'dark' ? '#111111' : '#ffffff';
+    const haloColor = MAP_LABEL_HALO[resolvedTheme === 'dark' ? 'dark' : 'light'];
     const textColor = resolvedTheme === 'dark' ? '#bdbdbd' : '#111111';
     const glowColor = useMemo(() => stopGlowColor(modeColorsOf(selectedCity), resolvedTheme === 'light' ? 'light' : 'dark'), [selectedCity, resolvedTheme]);
 
