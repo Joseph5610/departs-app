@@ -31,7 +31,7 @@ export const DATA_LICENSE_URLS: Record<DataLicenseId, string | null> = {
 
 /** Sources behind every city: the base map and place search. */
 export const SHARED_DATA_ATTRIBUTIONS: DataAttribution[] = [
-    { creator: 'OpenStreetMap contributors', title: 'Map data (CARTO basemaps), station floor plans and place search (Photon by komoot)', url: 'https://www.openstreetmap.org/copyright', license: 'odbl1' },
+    { creator: 'OpenStreetMap contributors', title: 'Map data (CARTO basemaps), station floor plans and platforms, and place search (Photon by komoot)', url: 'https://www.openstreetmap.org/copyright', license: 'odbl1' },
 ];
 
 /** Where departs.app documents its processed static data: sources, changes and the licence each city's data is republished under. */
