@@ -926,11 +926,12 @@ export const createIndoorLayers = (
 };
 
 /**
- * Street-level platforms (tram and train), drawn like a floor plan's platforms but on every floor and
- * beside every stop; laid under the floor plans, above their dimming.
+ * Street-level platforms (tram and train), drawn like a floor plan's platforms beside every stop, hidden
+ * while `visible` is false; laid under the floor plans, above their dimming.
  */
-export const createPlatformLayers = (theme: 'dark' | 'light', minzoom: number): [FillLayerSpecification, LineLayerSpecification] => {
+export const createPlatformLayers = (theme: 'dark' | 'light', minzoom: number, visible: boolean): [FillLayerSpecification, LineLayerSpecification] => {
     const c = INDOOR_COLORS[theme];
+    const visibility = visible ? 'visible' : 'none';
     return [
         {
             id: MAP_LAYERS.PLATFORMS_AREA,
@@ -938,6 +939,7 @@ export const createPlatformLayers = (theme: 'dark' | 'light', minzoom: number): 
             source: MAP_SOURCES.PLATFORMS,
             minzoom,
             filter: INDOOR_POLYGON,
+            layout: { visibility },
             paint: { 'fill-color': c.platform, 'fill-outline-color': c.platformEdge },
         },
         {
@@ -946,7 +948,7 @@ export const createPlatformLayers = (theme: 'dark' | 'light', minzoom: number): 
             source: MAP_SOURCES.PLATFORMS,
             minzoom,
             filter: ['==', ['geometry-type'], 'LineString'],
-            layout: { 'line-cap': 'round' },
+            layout: { 'line-cap': 'round', visibility },
             paint: { 'line-color': c.platform, 'line-width': PLATFORM_LINE_WIDTH },
         },
     ];
