@@ -30,12 +30,12 @@ const ExitRow = ({ name, sign, cars, isStepFree = false }: { name: string; sign:
     const { t } = useTranslation();
     return (
         <Item className="justify-between gap-3 [--row-sep:0.875rem]">
-            <span className="flex min-w-0 items-center gap-1.5 type-row">
-                {isStepFree && <Accessibility size={15} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-label={t('metroExit.stepFree')} />}
-                <span className="truncate">
-                    <span className="text-foreground">{name}</span>
-                    {sign && <span className="text-muted-foreground"> · {sign}</span>}
+            <span className="flex min-w-0 flex-col">
+                <span className="flex min-w-0 items-center gap-1.5 type-row text-foreground">
+                    {isStepFree && <Accessibility size={15} strokeWidth={2} className="shrink-0 text-muted-foreground" aria-label={t('metroExit.stepFree')} />}
+                    <span className="truncate">{name}</span>
                 </span>
+                {sign && <span className="line-clamp-2 type-note text-muted-foreground">{sign}</span>}
             </span>
             <TrainCars cars={cars} />
         </Item>
