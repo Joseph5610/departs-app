@@ -187,12 +187,7 @@ const MyTripSheetBody = ({ target, onClose, inCard = false }: { target: MyTripTa
                         onPick={pickExit}
                     />
                 )}
-                {metroExit && open !== 'exit' && (
-                    <>
-                        <Separator className="bg-sep data-horizontal:h-[0.5px]" />
-                        <MetroExitHint advice={metroExit} />
-                    </>
-                )}
+                {metroExit && open !== 'exit' && <MetroExitHint advice={metroExit} />}
             </Card>
 
             <div className="flex shrink-0 flex-col items-center gap-1 pt-1">

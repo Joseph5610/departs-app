@@ -7,7 +7,6 @@ import type { MyTrip } from '@/types';
 import { SectionHeading } from '@/components/SectionHeading';
 import { CloseIcon } from '@/components/CloseIcon';
 import { MetroExitHint } from '@/components/MetroExitHint';
-import { Separator } from '@/components/ui/separator';
 import type { MetroExitAdvice } from '@/domain/rides';
 
 interface MyTripCardProps {
@@ -63,12 +62,7 @@ export const MyTripCard = ({ trip, exit, lastStopName, metroExit, onOpen, onEnd 
                 summary={trip.toEnd ? t('myTrip.terminus') : exitMeta || t('myTrip.exitTitle')}
                 onClick={() => onOpen('exit')}
             />
-            {metroExit && (
-                <>
-                    <Separator className="bg-sep data-horizontal:h-[0.5px]" />
-                    <MetroExitHint advice={metroExit} />
-                </>
-            )}
+            {metroExit && <MetroExitHint advice={metroExit} />}
         </Card>
     );
 };

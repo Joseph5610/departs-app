@@ -19,8 +19,11 @@ describe('carSpans', () => {
 describe('metroExitAdvice', () => {
     it('finds the exit platform by the stop id at the exit sequence, front cars first', () => {
         expect(metroExitAdvice(file, stops, 2)).toEqual({
-            exits: [{ name: 'E8', sign: null, cars: [[1, 3]] }, { name: 'E14', sign: 'Václavské náměstí', cars: [[4, 5]] }],
-            stepFree: { name: 'E1', cars: [[1, 2]] },
+            exits: [
+                { name: 'E8', sign: null, cars: [1, 2, 3], spans: [[1, 3]] },
+                { name: 'E14', sign: 'Václavské náměstí', cars: [4, 5], spans: [[4, 5]] },
+            ],
+            stepFree: { name: 'E1', cars: [1, 2], spans: [[1, 2]] },
         });
     });
 
