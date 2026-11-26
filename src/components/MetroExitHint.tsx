@@ -61,11 +61,11 @@ const TrainCars = ({ cars }: { cars: CarSpan[] }) => {
                             className={cn(
                                 "relative flex h-4 items-center type-micro tabular-nums",
                                 isFront ? "w-7 rounded-tr-full rounded-br-badge pl-1.5" : "w-5 justify-center",
-                                isLit ? "bg-tint-mint text-primary-foreground" : "bg-fill-2 text-muted-foreground",
+                                isLit ? "bg-tint-mint text-card dark:text-primary-foreground" : "bg-fill-2 text-muted-foreground",
                             )}
                         >
                             {n}
-                            {isFront && <span className={cn("absolute top-0.75 right-1.5 h-1.5 w-2 rounded-tr-full", isLit ? "bg-card/60" : "bg-card/40")} />}
+                            {isFront && <span className={cn("absolute top-0.75 right-1.5 h-1.5 w-2 rounded-tr-full", isLit ? "bg-card/25" : "bg-card/20")} />}
                         </span>
                         {!isFront && <span className="h-0.5 w-0.75 bg-fill-2" />}
                     </span>
