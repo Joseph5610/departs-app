@@ -20,15 +20,17 @@ describe('metroExitAdvice', () => {
     it('finds the exit platform by the stop id at the exit sequence, front cars first', () => {
         expect(metroExitAdvice(file, stops, 2)).toEqual({
             exits: [
-                { name: 'E8', sign: null, cars: [1, 2, 3], spans: [[1, 3]] },
-                { name: 'E14', sign: 'Václavské náměstí', cars: [4, 5], spans: [[4, 5]] },
+                { name: 'E8', sign: null, cars: [1, 2, 3], spans: [[1, 3]], isStepFree: false },
+                { name: 'E14', sign: 'Václavské náměstí', cars: [4, 5], spans: [[4, 5]], isStepFree: false },
             ],
             stepFree: { name: 'E1', cars: [1, 2], spans: [[1, 2]] },
         });
     });
 
-    it('leaves out a step-free way that repeats an exit with the same cars', () => {
-        expect(metroExitAdvice(file, stops, 1)?.stepFree).toBeNull();
+    it('marks an exit that is also the step-free way with the same cars instead of repeating it', () => {
+        const advice = metroExitAdvice(file, stops, 1);
+        expect(advice?.stepFree).toBeNull();
+        expect(advice?.exits).toMatchObject([{ name: 'E7', isStepFree: true }]);
     });
 
     it('gives nothing for a platform the file does not know or before anything loaded', () => {

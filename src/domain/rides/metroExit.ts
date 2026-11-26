@@ -10,9 +10,9 @@ export interface MetroCars {
 }
 
 export interface MetroExitAdvice {
-    /** Each way out with the cars nearest to it, front of the train first. */
-    exits: (MetroCars & { name: string; sign: string | null })[];
-    /** The way out avoiding stairs and escalators; null when it is one of `exits` with the same cars. */
+    /** Each way out with the cars nearest to it, front of the train first; `isStepFree` when it is also the way avoiding stairs. */
+    exits: (MetroCars & { name: string; sign: string | null; isStepFree: boolean })[];
+    /** The way out avoiding stairs and escalators; null when it is one of `exits` with the same cars, marked there instead. */
     stepFree: (MetroCars & { name: string }) | null;
 }
 
@@ -39,10 +39,12 @@ export const metroExitAdvice = (file: MetroExitsFile | undefined, stops: readonl
     const platform = stop ? file[stop.properties.stop_id] : undefined;
     if (!platform || platform.exits.length === 0) return null;
 
-    const exits = platform.exits
-        .map(([name, sign, cars]) => ({ name, sign, ...metroCars(cars) }))
-        .sort((a, b) => (a.cars[0] ?? 0) - (b.cars[0] ?? 0));
     const free = platform.stepFree && { name: platform.stepFree[0], ...metroCars(platform.stepFree[1]) };
-    const isCovered = free && exits.some(exit => exit.name === free.name && exit.cars.join() === free.cars.join());
-    return { exits, stepFree: free && !isCovered ? free : null };
+    const exits = platform.exits
+        .map(([name, sign, cars]) => {
+            const exit = { name, sign, ...metroCars(cars) };
+            return { ...exit, isStepFree: !!free && free.name === name && free.cars.join() === exit.cars.join() };
+        })
+        .sort((a, b) => (a.cars[0] ?? 0) - (b.cars[0] ?? 0));
+    return { exits, stepFree: free && !exits.some(exit => exit.isStepFree) ? free : null };
 };

@@ -21,7 +21,7 @@ export const MetroExitHint = ({ advice }: { advice: MetroExitAdvice }) => {
                 </span>
             </div>
             {advice.exits.map(exit => (
-                <ExitRow key={`${exit.name}|${exit.sign ?? ''}`} name={exit.name} sign={exit.sign} cars={exit} />
+                <ExitRow key={`${exit.name}|${exit.sign ?? ''}`} name={exit.name} sign={exit.sign} cars={exit} isStepFree={exit.isStepFree} />
             ))}
             {advice.stepFree && <ExitRow name={advice.stepFree.name} sign={null} cars={advice.stepFree} isStepFree />}
         </div>

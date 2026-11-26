@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.99.1] - 2026-11-26
+
+### Fixed
+
+- A metro exit that is also the step-free way out keeps its wheelchair mark instead of losing it.
+
 ## [0.99.0] - 2026-11-26
 
 ### Added
