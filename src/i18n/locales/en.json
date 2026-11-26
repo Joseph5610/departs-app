@@ -336,12 +336,13 @@
     "noAlertShort": "no alert"
   },
   "metroExit": {
-    "title": "Nearest the exit",
+    "title": "Which car",
     "cars_one": "car {{cars}}",
     "cars_other": "cars {{cars}}",
     "car": "{{n}}",
     "span": "{{from}}–{{to}}",
-    "stepFree": "Step-free"
+    "stepFree": "Step-free",
+    "direction": "direction of travel"
   },
   "board": {
     "open": "Full-screen board",

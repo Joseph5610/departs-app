@@ -424,6 +424,9 @@ export const RIDE_CONFIG = {
 };
 
 /** My trip: a trip the user takes, from a stop (with an alert before it leaves) and/or to an exit (with an alert before it). */
+/** Prague metro trains: five cars, numbered from the front as PID's `vehicle_couplings` does. */
+export const METRO_TRAIN_CARS = 5;
+
 export const MY_TRIP_CONFIG = {
     /** Trips the user can have active at once, e.g. a tram and the metro they change to. */
     MAX_TRIPS: 3,

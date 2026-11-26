@@ -115,7 +115,7 @@ test.describe('My trip', () => {
         const hint = page.getByTestId('my-trip-card').getByTestId('metro-exit-hint');
         await expect(hint).toContainText('E1 (C)');
         await expect(hint).toContainText('Křižíkova');
-        await expect(hint).toContainText(/2\.–4\.|2–4/);
+        await expect(hint.getByRole('img', { name: /cars 2–4|2\.–4\./ })).toBeVisible();
         await expect(hint).toContainText('E2 (B)');
 
         await page.getByTestId('my-trip-card').getByRole('button', { name: /Florenc/ }).click();

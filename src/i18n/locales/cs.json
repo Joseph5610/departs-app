@@ -349,11 +349,12 @@
     "noAlertShort": "bez upozornění"
   },
   "metroExit": {
-    "title": "Nejblíž k výstupu",
+    "title": "Kterým vozem",
     "cars": "{{cars}} vůz",
     "car": "{{n}}.",
     "span": "{{from}}.–{{to}}.",
-    "stepFree": "Bez schodů"
+    "stepFree": "Bez schodů",
+    "direction": "směr jízdy"
   },
   "board": {
     "open": "Tabule na celou obrazovku",
