@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/component
 import { useSearch } from 'wouter';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { useRideStore } from '@/state/rideStore';
+import { useMetroExitAdvice } from '@/hooks/derived/useMetroExitAdvice';
 import { MyTripCard } from './MyTripCard';
 import type { JourneyLeg } from '@/components/JourneyRow';
 import { StopTimelineItem } from './StopTimelineItem';
@@ -30,7 +31,7 @@ import { CloseIcon } from '@/components/CloseIcon';
 import { ExpandChevron } from '@/components/Chevron';
 
 /** The trip's stops on a vertical line, with past stops collapsed behind a toggle. */
-export const StopTimeline = ({ stopTimes, routeName, routeColor, effectiveSequence, delay, tripId, vehicleId, hasEnded }: StopTimelineProps) => {
+export const StopTimeline = ({ stopTimes, routeName, routeType, routeColor, effectiveSequence, delay, tripId, vehicleId, hasEnded }: StopTimelineProps) => {
     const { t } = useTranslation();
     const [showPastStops, setShowPastStops] = useState(false);
     const searchString = useSearch();
@@ -115,6 +116,7 @@ export const StopTimeline = ({ stopTimes, routeName, routeColor, effectiveSequen
     const journey = journeySpan(myTrip, effectiveSequence, sharedExitSequence);
     const rideExit = rideExitSequence !== null ? exitArrival(stopTimes, rideExitSequence, delay) : null;
     const rideExitStopName = rideExitSequence === null ? null : rideExit?.stopName ?? '';
+    const metroExit = useMetroExitAdvice(selectedCity, routeType, stopTimes, myTrip?.exitSequence ?? null);
     const rideStopsLeft = useMemo(
         () => (rideExitSequence === null || effectiveSequence === null ? null : countStopsLeft(stopTimes, effectiveSequence, rideExitSequence)),
         [stopTimes, effectiveSequence, rideExitSequence],
@@ -130,6 +132,7 @@ export const StopTimeline = ({ stopTimes, routeName, routeColor, effectiveSequen
                         trip={myTrip}
                         exit={rideExitStopName === null ? null : { stopName: rideExitStopName, stopsLeft: rideStopsLeft, arrivalTime: rideExit?.time ?? null }}
                         lastStopName={lastStop?.properties.stop_name ?? ''}
+                        metroExit={metroExit}
                         onOpen={openMyTripSheet}
                         onEnd={endMyTrip}
                     />

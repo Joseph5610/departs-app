@@ -102,6 +102,30 @@ test.describe('My trip', () => {
         expect(await storedTrips(page)).toMatchObject([{ tripId: 'trip-1', exitSequence: 2, board: { sequence: 1, leadMin: null } }]);
     });
 
+    test('shows which metro car is nearest the way out at the exit, on the trip card and in the sheet', async ({ page }) => {
+        await mockTrip(page);
+        await page.route('**/prague/metro_exits.json', route => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ U2222: { exits: [['E1 (C)', 'Křižíkova', [2, 3, 4]], ['E6', null, [5]]], stepFree: ['E2 (B)', [1, 2]] } }),
+        }));
+        await seedTrips(page, [savedTrip('trip-1')]);
+        await page.goto('/prague/trip/trip-1/veh-1');
+
+        const hint = page.getByTestId('my-trip-card').getByTestId('metro-exit-hint');
+        await expect(hint).toContainText('E1 (C)');
+        await expect(hint).toContainText('Křižíkova');
+        await expect(hint.getByRole('img', { name: /cars 2–4|2\.–4\./ })).toBeVisible();
+        await expect(hint).toContainText('E2 (B)');
+
+        await page.getByTestId('my-trip-card').getByRole('button', { name: /Florenc/ }).click();
+        const sheet = page.getByRole('dialog').filter({ has: page.getByTestId('my-trip-save') });
+        await expect(sheet).toBeVisible();
+        // The exit list is open on its section; closing it shows the hint.
+        await sheet.getByRole('button', { name: /Getting off|Výstup/ }).click();
+        await expect(sheet.getByTestId('metro-exit-hint')).toContainText('E6');
+    });
+
     test('follows a trip shared with its boarding stop and exit', async ({ page }) => {
         await mockTrip(page);
         await page.goto('/prague/trip/trip-1/veh-1?board=1&exit=2');

@@ -20,6 +20,8 @@ export interface CityFacts {
     /** Kept out of the city lists; reachable by its URL and unlocked for a device with `?beta=<slug>`. */
     isHidden?: boolean;
     hasPointsOfSale?: boolean;
+    /** Whether departs-data publishes `metro_exits.json`: the metro car nearest to each way out. */
+    hasMetroExits?: boolean;
     /** Whether the city has a service-alerts source; the app hides the alerts UI otherwise. */
     hasAlerts?: boolean;
     /** Whether its alerts carry a location, so they can be drawn on the map. */
@@ -40,6 +42,7 @@ export const CITY_FACTS = {
         center: [14.4212, 50.0875],
         bounds: [14.22, 49.94, 14.71, 50.18],
         hasPointsOfSale: true,
+        hasMetroExits: true,
         hasAlerts: true,
         filters: {
             vehicles: ['metro', 'tram', 'bus', 'trolleybus', 'train', 'ferry', 'funicular'],

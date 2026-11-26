@@ -5,6 +5,7 @@ export * from './enrichment';
 export * from './error';
 export * from './favorites';
 export * from './indoor';
+export * from './metroExits';
 export * from './network';
 export * from './feedback';
 export * from './pointsOfSale';

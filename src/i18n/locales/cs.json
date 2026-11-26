@@ -348,6 +348,14 @@
     "terminus": "konečná",
     "noAlertShort": "bez upozornění"
   },
+  "metroExit": {
+    "title": "Kterým vozem",
+    "cars": "{{cars}} vůz",
+    "car": "{{n}}.",
+    "span": "{{from}}.–{{to}}.",
+    "stepFree": "Bez schodů",
+    "direction": "směr jízdy"
+  },
   "board": {
     "open": "Tabule na celou obrazovku",
     "noWalk": "Bez času chůze",
