@@ -80,16 +80,12 @@ export const DUK_CONFIG = {
     TERMINATING_DIRECTION: 'konečná zastávka',
     /** Board note marking a trip run with a step-free vehicle. */
     STEP_FREE_NOTE: 'bezbariérově přístupným vozidlem',
-    /** Train routes from the static rail timetable (departs-data `rail_trips/`), by train number. */
-    RAIL: {
-        /** The feed's train reference: kind and train number, then the feed's own serial (`Os-6414-1073`). */
-        FEED_TRIP_PATTERN: /^([A-Za-z]+)-(\d+)(?:-|$)/,
-        /** Mirrors RAIL_TRIPS_DIR and RAIL_TRIP_BUCKETS in departs-data. */
-        TRIPS_DIR: 'rail_trips',
-        TRIP_BUCKETS: 32,
-        /** How long before its first or after its last stop a run still counts as the one under way. */
-        RUN_MARGIN_S: 1_800,
-    },
+    /** The feed's train reference: kind and train number, then the feed's own serial (`Os-6414-1073`). */
+    FEED_TRAIN_PATTERN: /^([A-Za-z]+)-(\d+)(?:-|$)/,
+    /** Trains are timetable trips `<numbers>-rail-<variant>`; mirrors RAIL_TRIP_LINE in departs-data. */
+    TRAIN_TRIP_LINE: 'rail',
+    /** Joins the numbers a train runs under in its trip id; mirrors RAIL_TRIP_NUMBER_SEPARATOR in departs-data. */
+    TRIP_NUMBER_SEPARATOR: '_',
     /** Portabo `Traction` codes; 0 means unknown and defers to the timetable. */
     TRACTION_ROUTE_TYPES: { 1: 'tram', 2: 'trolleybus', 3: 'bus', 5: 'train', 6: 'ferry' } as Record<number, string>,
 } as const;

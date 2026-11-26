@@ -1,5 +1,7 @@
 import { dayBit, isWithinMatchWindow, operatesOnDay, type Schedule } from '../../../_feeds/gtfs/schedule';
 import { DAY_MINS, type LocalClock } from '../../../_core/utils/time';
+import { DUK_CONFIG } from '../../../_feeds/duk/config';
+import type { DukVehicleReport } from '../../../_feeds/duk/dukTrafficFeed';
 
 const ANY_DAY = -1;
 
@@ -12,18 +14,19 @@ export interface TripMatch {
 /** line -> ids of its trips in the hour's schedule, built once per loaded schedule and collected with it. */
 const indexes = new WeakMap<Schedule, Map<string, string[]>>();
 
-const SEPARATOR = '-'.charCodeAt(0);
-
-/** Whether a static trip id starts with `<spoj>-<line>`, whole parts only. */
-const hasNumber = (tripId: string, numberAndLine: string) =>
-    tripId.startsWith(numberAndLine) && (tripId.length === numberAndLine.length || tripId.charCodeAt(numberAndLine.length) === SEPARATOR);
+/** Whether a static trip id's spoj is `number`; a train's spoj joins every number it runs under. */
+function hasNumber(tripId: string, number: string): boolean {
+    const spoj = tripId.slice(0, tripId.indexOf('-'));
+    return spoj === number || (spoj.includes(DUK_CONFIG.TRIP_NUMBER_SEPARATOR) && spoj.split(DUK_CONFIG.TRIP_NUMBER_SEPARATOR).includes(number));
+}
 
 /**
  * Resolves Portabo vehicles to static trips by CIS JŘ line and trip number.
  *
- * Static trip ids are `<spoj>-<line>-<timetable>` (departs-data `build-duk.mjs`). A number can
- * exist in several timetables, but the build lets only one of them run on a given service day, so
- * the candidate operating on the day whose window contains now wins.
+ * Static trip ids are `<spoj>-<line>-<timetable>` (departs-data `build-duk.ts`); trains are
+ * `<numbers>-rail-<variant>`, matched by train number under the line `rail`. A number can exist in
+ * several timetables, but the build lets only one of them run on a given service day, so the
+ * candidate operating on the day whose window contains now wins.
  */
 export class DukTripMatcher {
     constructor(private readonly schedule: Schedule) {}
@@ -48,9 +51,15 @@ export class DukTripMatcher {
         return index.get(lineNumber);
     }
 
+    /** The trip a report names: a bus by its CIS line and spoj, a train by its number. */
+    matchReport(report: Pick<DukVehicleReport, 'lineNumber' | 'tripNumber' | 'trainNumber'>, ctx: LocalClock): TripMatch | null {
+        if (report.lineNumber) return report.tripNumber !== null ? this.match(report.lineNumber, report.tripNumber, ctx) : null;
+        return report.trainNumber !== null ? this.match(DUK_CONFIG.TRAIN_TRIP_LINE, report.trainNumber, ctx) : null;
+    }
+
     match(lineNumber: string, tripNumber: number, ctx: LocalClock): TripMatch | null {
-        const numberAndLine = `${tripNumber}-${lineNumber}`;
-        const candidates = this.tripsOf(lineNumber)?.filter(tripId => hasNumber(tripId, numberAndLine));
+        const number = String(tripNumber);
+        const candidates = this.tripsOf(lineNumber)?.filter(tripId => hasNumber(tripId, number));
         if (!candidates?.length) return null;
 
         // Yesterday's trips are shifted back a day, so one still running past midnight is placed correctly.
