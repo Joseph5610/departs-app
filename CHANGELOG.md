@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.100.0] - 2026-11-26
+
+### Changed
+
+- Ústecký kraj trains are ordinary timetable trips: their departures stay on boards when Portabo is down, and their detail shows zones and links to each station.
+
 ## [0.99.1] - 2026-11-26
 
 ### Fixed

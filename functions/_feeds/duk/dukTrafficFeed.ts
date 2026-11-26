@@ -21,6 +21,8 @@ export interface DukVehicleReport {
     lineNumber: string | null;
     /** CIS JŘ trip (spoj) number within the line. */
     tripNumber: number | null;
+    /** A train's number, from the feed's train reference; null for vehicles with a CIS line. */
+    trainNumber: number | null;
     lineName: string;
     /** Seconds; positive is late. */
     delay: number | null;
@@ -78,10 +80,13 @@ function toReport(raw: unknown): DukVehicleReport | null {
     const cisLineId = num(raw.CISLineID);
     const lineName = str(raw.qride_linename);
     const delay = num(raw.Delay);
+    const feedTripId = str(raw.qride_tripID) || null;
+    const train = !cisLineId && feedTripId ? DUK_CONFIG.FEED_TRAIN_PATTERN.exec(feedTripId) : null;
     return {
         vehicleId: String(id),
         lineNumber: cisLineId ? String(cisLineId).padStart(DUK_CONFIG.LINE_NUMBER_LENGTH, '0') : null,
         tripNumber: num(raw.RouteID) ?? null,
+        trainNumber: train ? Number(train[2]) : null,
         lineName: cisLineId ? lineName || String(lineId ?? '') : trainLineName(lineName, lineId),
         delay: delay !== undefined ? delay * 60 : null,
         latitude,
@@ -95,7 +100,7 @@ function toReport(raw: unknown): DukVehicleReport | null {
         timestamp: reportTime(str(raw.LastActivityDT), str(raw.GPSPositionDT)),
         isLowFloor: bool(raw.HasLowfloor) ?? null,
         isAirConditioned: bool(raw.isAirConditioned) ?? null,
-        feedTripId: str(raw.qride_tripID) || null,
+        feedTripId,
     };
 }
 

@@ -6,7 +6,7 @@ import type { VehiclesService } from '../../vehicles/VehiclesService';
 import type { FleetBuild, NetworkVehicles, SingleLiveVehicle } from '../../vehicles/vehicleSource';
 import { mapVehicle } from '../../gtfs/vehicles/vehiclesMapper';
 import { getGtfsRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfsData';
-import { getSchedule } from '../../../_feeds/gtfs/schedule';
+import { getSchedule, routeIdOf } from '../../../_feeds/gtfs/schedule';
 import { getTripStops, isLocated } from '../../../_feeds/gtfs/tripStops';
 import { bearingDeg, distanceMeters, distanceToSegmentMeters } from '../../../../shared/geo';
 import { MovementBearings } from '../../../_core/utils/MovementBearings';
@@ -18,7 +18,6 @@ import { TripTrackLookup, type TripTrack } from '../../../_feeds/duk/dukTripTrac
 import { DUK_STATE_MAPPING } from '../dukConstants';
 import { DukTripMatcher, type TripMatch } from './DukTripMatcher';
 import { DUK_CONFIG } from '../../../_feeds/duk/config';
-import { getRailCalls, type RailCall } from '../../../_feeds/duk/railTrips';
 
 
 /** Headings from movement, where the feed has none. */
@@ -45,9 +44,9 @@ function getReportIndex(reports: DukVehicleReport[]): Map<string, DukVehicleRepo
 }
 
 /**
- * Vehicles for Ústecký kraj from the Portabo traffic feed, matched to the JDF-built static trips by
- * CIS JŘ line and trip number. Vehicles without a timetable (trains, trolleybuses, lines licensed
- * outside the kraj) are still shown, keeping the feed's own trip reference.
+ * Vehicles for Ústecký kraj from the Portabo traffic feed, matched to the static trips by CIS JŘ line
+ * and trip number, trains by train number. Vehicles without a timetable (lines licensed outside the
+ * kraj) are still shown, keeping the feed's own trip reference.
  */
 export class DukVehicleSource implements NetworkVehicles {
     constructor(private readonly city: CityConfig) {}
@@ -80,11 +79,11 @@ export class DukVehicleSource implements NetworkVehicles {
             const reportedMs = Number.isNaN(timestampMs) ? nowMs : timestampMs;
             if (nowMs - reportedMs > GTFS_CONFIG.VEHICLES_STALE_THRESHOLD_MS) return null;
 
-            const match = matcher && report.lineNumber && report.tripNumber !== null
-                ? matcher.match(report.lineNumber, report.tripNumber, ctx)
-                : null;
-            const tripId = matcher && report.lineNumber ? await this.runningTrip(report, match, matcher, ctx, tracks) : null;
-            const route = report.lineNumber ? routes.routes[report.lineNumber] : undefined;
+            const match = matcher?.matchReport(report, ctx) ?? null;
+            // A train's number is unique in a day, so only a bus may be on another trip of its line than reported.
+            const tripId = matcher && report.lineNumber ? await this.runningTrip(report, match, matcher, ctx, tracks) : match?.tripId ?? null;
+            const routeId = (tripId && schedule ? routeIdOf(schedule, tripId) : undefined) ?? report.lineNumber;
+            const route = routeId ? routes.routes[routeId] : undefined;
             const bearing = report.bearing ?? await this.deriveBearing(report, tripId, tracks);
             return this.mapReport({ ...report, bearing }, reportedMs, tripId, route, stationNames);
         }));
@@ -302,45 +301,9 @@ export class DukVehicleSource implements NetworkVehicles {
     }
 }
 
-/** Service-day `HH:MM:SS` moved by `delaySecs`; past midnight it stays past 24:00:00, as the timetable's own times do. */
-function shiftServiceTime(time: string, delaySecs: number): string {
-    if (!time || delaySecs === 0) return time;
-    const secs = timeToSeconds(time) + delaySecs;
-    const part = (n: number) => String(Math.floor(n)).padStart(2, '0');
-    return `${part(secs / 3600)}:${part((secs % 3600) / 60)}:${part(secs % 60)}`;
-}
-
 /**
- * A train's timeline from its calls: the timetable shifted by its current delay, reached up to the
- * station the feed last reported. A train does not leave early, so running ahead shifts nothing.
- */
-function railStopTimes(calls: RailCall[], delay: number | null, stationNode: number | null): Pick<AppVehicleDetail, 'stop_times' | 'last_stop_sequence'> {
-    const late = Math.max(0, delay ?? 0);
-    const reported = stationNode !== null ? `${stationNode}-` : null;
-    let lastReached: number | undefined;
-    const features = calls.map((call, i) => {
-        if (reported && call.stopId?.startsWith(reported)) lastReached = i + 1;
-        return {
-            type: 'Feature' as const,
-            geometry: { type: 'Point', coordinates: call.coordinates },
-            properties: {
-                stop_id: call.stopId ?? '',
-                stop_name: call.name,
-                stop_sequence: i + 1,
-                arrival_time: call.arrival,
-                departure_time: call.departure,
-                realtime_arrival_time: shiftServiceTime(call.arrival, late),
-                realtime_departure_time: shiftServiceTime(call.departure, late),
-            },
-        };
-    });
-    return { stop_times: { features }, last_stop_sequence: lastReached };
-}
-
-/**
- * Detail for a DÚK vehicle the static data has no trip for. A train gets its route and stop
- * times from the rail timetable; otherwise its live state plus the last reached and final stop, with
- * gaps marking the unknown rest of the route.
+ * Detail for a DÚK vehicle the static data has no trip for: its live state plus the last reached and
+ * final stop, with gaps marking the unknown rest of the route.
  */
 export async function getDukLiveOnlyDetail(
     vehicles: VehiclesService,
@@ -359,12 +322,6 @@ export async function getDukLiveOnlyDetail(
         getDukStationNames(city),
     ]);
     const report = reports ? getReportIndex(reports).get(feature.properties.vehicle_id) : undefined;
-
-    const calls = report?.feedTripId ? await getRailCalls(city, report.feedTripId, getLocalClock(city.timezone)) : null;
-    if (calls) {
-        // The feed's final node for a train is often a nearby bus station, not its terminus.
-        return { ...feature.properties, trip_headsign: calls[calls.length - 1].name, geometry: feature.geometry, ...railStopTimes(calls, report?.delay ?? null, report?.stationNode ?? null) };
-    }
 
     const features: NonNullable<AppVehicleDetail['stop_times']>['features'] = [];
     const localTime = (ms: number | null) => (ms === null ? '' : formatTime(new Date(ms), city.timezone));
