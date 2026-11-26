@@ -42,7 +42,7 @@ const ExitRow = ({ name, sign, cars, isStepFree = false }: { name: string; sign:
     );
 };
 
-/** The train drawn left to right with its front on the right, the given cars lit; read out as their numbers. */
+/** The train drawn left to right with its front on the right, each car numbered and the given ones lit; read out as their numbers. */
 const TrainCars = ({ cars }: { cars: CarSpan[] }) => {
     const { t } = useTranslation();
     const label = t('metroExit.cars', {
@@ -59,11 +59,12 @@ const TrainCars = ({ cars }: { cars: CarSpan[] }) => {
                     <span key={n} className="flex items-center">
                         <span
                             className={cn(
-                                "relative h-3.5",
-                                isFront ? "w-7 rounded-tr-full rounded-br-badge" : "w-5",
-                                isLit ? "bg-tint-mint" : "bg-fill-2",
+                                "relative flex h-4 items-center type-micro tabular-nums",
+                                isFront ? "w-7 rounded-tr-full rounded-br-badge pl-1.5" : "w-5 justify-center",
+                                isLit ? "bg-tint-mint text-primary-foreground" : "bg-fill-2 text-muted-foreground",
                             )}
                         >
+                            {n}
                             {isFront && <span className={cn("absolute top-0.75 right-1.5 h-1.5 w-2 rounded-tr-full", isLit ? "bg-card/60" : "bg-card/40")} />}
                         </span>
                         {!isFront && <span className="h-0.5 w-0.75 bg-fill-2" />}
