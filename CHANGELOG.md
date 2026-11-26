@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.100.2] - 2026-11-26
+
+### Fixed
+
+- Ústecký kraj vehicles no longer vanish from the map when Portabo briefly lists only part of its fleet.
+
 ## [0.100.1] - 2026-11-26
 
 ### Fixed
