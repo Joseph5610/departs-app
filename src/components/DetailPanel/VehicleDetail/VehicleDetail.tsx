@@ -115,6 +115,7 @@ export const VehicleDetail = memo<VehicleDetailProps>(({
                             stopTimes={displayVehicle.stop_times.features}
                             hasEnded={hasEnded}
                             routeName={displayVehicle.routeName}
+                            routeType={displayVehicle.route_type}
                             routeColor={safeHexColor(displayVehicle.route_color) ?? FALLBACK_ROUTE_COLOR}
                             effectiveSequence={displayVehicle.effectiveSequence}
                             delay={displayVehicle.delay}

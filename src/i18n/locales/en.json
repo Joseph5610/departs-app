@@ -335,6 +335,14 @@
     "terminus": "end of the line",
     "noAlertShort": "no alert"
   },
+  "metroExit": {
+    "title": "Nearest the exit",
+    "cars_one": "car {{cars}}",
+    "cars_other": "cars {{cars}}",
+    "car": "{{n}}",
+    "span": "{{from}}–{{to}}",
+    "stepFree": "Step-free"
+  },
   "board": {
     "open": "Full-screen board",
     "noWalk": "Without walking time",

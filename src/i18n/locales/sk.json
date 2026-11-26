@@ -348,6 +348,13 @@
     "terminus": "konečná",
     "noAlertShort": "bez upozornenia"
   },
+  "metroExit": {
+    "title": "Najbližšie k východu",
+    "cars": "{{cars}} vozeň",
+    "car": "{{n}}.",
+    "span": "{{from}}.–{{to}}.",
+    "stepFree": "Bez schodov"
+  },
   "board": {
     "open": "Tabuľa na celú obrazovku",
     "noWalk": "Bez času chôdze",

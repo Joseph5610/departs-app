@@ -8,6 +8,7 @@ export const queryKeys = {
     routeMetadata: (city: string) => ['route-metadata', city] as const,
     vehicleMetadata: (city: string, file: string | undefined) => ['vehicle-metadata', city, file] as const,
     pointsOfSale: (city: string) => ['pointsOfSale', city] as const,
+    metroExits: (city: string) => ['metro-exits', city] as const,
     vehicles: (city: string) => ['vehicles', city] as const,
     vehicleDetail: (city: string, vehicleId: string | null, tripId: string | null, fleetUpdatedAt: number) => ['vehicle-detail', city, vehicleId, tripId, fleetUpdatedAt] as const,
     departures: (city: string, stopId: string | null) => ['departures', city, stopId] as const,

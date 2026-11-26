@@ -5,3 +5,4 @@ export * from './sheet';
 export * from './journey';
 export * from './alerts';
 export * from './bars';
+export * from './metroExit';

@@ -11,9 +11,11 @@ import { FilterChip } from '@/components/FilterChip';
 import { JourneyRow } from '@/components/JourneyRow';
 import { LineBadge } from '@/components/LineBadge';
 import { MinutesUntil } from '@/components/MinutesUntil';
+import { MetroExitHint } from '@/components/MetroExitHint';
 import { MY_TRIP_CONFIG } from '@/config/constants';
 import { expectedDepartureMs, sheetSelection, tripFromSheet, type TripDraft } from '@/domain/rides';
 import { useMyTripSheet } from '@/hooks/derived/useMyTripSheet';
+import { useMetroExitAdvice } from '@/hooks/derived/useMetroExitAdvice';
 import { useMyTripActions } from '@/hooks/features/useMyTripActions';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
@@ -72,6 +74,7 @@ const MyTripSheetBody = ({ target, onClose, inCard = false }: { target: MyTripTa
     const line = detail?.route_short_name ?? '';
     const selection = sheetSelection({ draft, existing, openedAt, isRunning, boardings, exits });
     const { boarding, lead, exit, exits: exitsAfterBoard, boardings: boardsBeforeExit } = selection;
+    const metroExit = useMetroExitAdvice(target.city, detail?.route_type, detail?.stop_times?.features, exit?.sequence ?? lastStop?.sequence ?? null);
     const toggle = (section: Section) => setOpen(current => (current === section ? null : section));
 
     const pickBoarding = (sequence: number | null) => {
@@ -183,6 +186,12 @@ const MyTripSheetBody = ({ target, onClose, inCard = false }: { target: MyTripTa
                         selected={exit?.sequence ?? null}
                         onPick={pickExit}
                     />
+                )}
+                {metroExit && open !== 'exit' && (
+                    <>
+                        <Separator className="bg-sep data-horizontal:h-[0.5px]" />
+                        <MetroExitHint advice={metroExit} />
+                    </>
                 )}
             </Card>
 

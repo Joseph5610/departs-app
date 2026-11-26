@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.99.0] - 2026-11-26
+
+### Added
+
+- My trip shows which Prague metro car rides nearest to each way out at the exit stop, and the one avoiding stairs.
+
 ## [0.98.0] - 2026-11-25
 
 ### Added

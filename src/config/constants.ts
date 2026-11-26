@@ -303,6 +303,9 @@ export const QUERY_TIMING_MS = {
     /** Points of sale change roughly monthly. */
     POINTS_OF_SALE_STALE: DAY_MS,
     POINTS_OF_SALE_GC: 7 * DAY_MS,
+    /** Metro exits change only with the station layouts in the PID GTFS. */
+    METRO_EXITS_STALE: DAY_MS,
+    METRO_EXITS_GC: 7 * DAY_MS,
     GEOCODING_STALE: 5 * MINUTE_MS,
     /** Route shapes change only with a timetable export. */
     TRIP_SHAPES_STALE: 4 * HOUR_MS,

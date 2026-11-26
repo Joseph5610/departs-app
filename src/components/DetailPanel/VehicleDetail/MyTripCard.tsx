@@ -6,6 +6,9 @@ import { JourneyRow, type JourneyLeg } from '@/components/JourneyRow';
 import type { MyTrip } from '@/types';
 import { SectionHeading } from '@/components/SectionHeading';
 import { CloseIcon } from '@/components/CloseIcon';
+import { MetroExitHint } from '@/components/MetroExitHint';
+import { Separator } from '@/components/ui/separator';
+import type { MetroExitAdvice } from '@/domain/rides';
 
 interface MyTripCardProps {
     /** The user's trip on this trip, if they take it. */
@@ -13,13 +16,15 @@ interface MyTripCardProps {
     /** The picked exit's progress; null for a trip ridden to its end. */
     exit: { stopName: string; stopsLeft: number | null; arrivalTime: string | null } | null;
     lastStopName: string;
+    /** Which metro car to ride for the way out at the exit; null off the metro or where unknown. */
+    metroExit: MetroExitAdvice | null;
     /** Opens the My trip sheet, on a section when given. */
     onOpen: (section?: JourneyLeg) => void;
     onEnd: () => void;
 }
 
 /** My trip on the trip's page: the offer to take it, or its boarding and exit, each opening the sheet on its section. */
-export const MyTripCard = ({ trip, exit, lastStopName, onOpen, onEnd }: MyTripCardProps) => {
+export const MyTripCard = ({ trip, exit, lastStopName, metroExit, onOpen, onEnd }: MyTripCardProps) => {
     const { t } = useTranslation();
 
     if (!trip) {
@@ -58,6 +63,12 @@ export const MyTripCard = ({ trip, exit, lastStopName, onOpen, onEnd }: MyTripCa
                 summary={trip.toEnd ? t('myTrip.terminus') : exitMeta || t('myTrip.exitTitle')}
                 onClick={() => onOpen('exit')}
             />
+            {metroExit && (
+                <>
+                    <Separator className="bg-sep data-horizontal:h-[0.5px]" />
+                    <MetroExitHint advice={metroExit} />
+                </>
+            )}
         </Card>
     );
 };
