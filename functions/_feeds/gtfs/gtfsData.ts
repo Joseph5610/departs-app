@@ -52,7 +52,7 @@ export async function getGtfsRoutes(city: CityConfig): Promise<GtfsRoutesData> {
 
     return getOrFetch(cacheKey, MEMORY_CACHE_TTL.TWO_HOURS_MS, async () => {
         try {
-            const rRes = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${citySlug}/routes.json`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
+            const rRes = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${citySlug}/routes.json?g=${STATIC_DATA_CONFIG.INDEX_CACHE_GENERATION}`, { cacheTtl: UPSTREAM_TTL_S.STATIC_DATA });
 
             if (!rRes.ok) {
                 console.error(`Error fetching GTFS static data for ${citySlug}. Routes: ${rRes.status}`);
