@@ -201,6 +201,19 @@
   --text-title: 0.9375rem;    /* 15px  row and item titles, e.g. a headsign */
   --text-heading: 1.0625rem;  /* 17px  section headings, the live countdown */
 
+  /* The full-screen board's scale, growing with the screen from a phone to a wall display. */
+  --text-board-display: clamp(1.5rem, 4vw, 4rem);           /* stop name, clock, countdown */
+  --text-board-headsign: clamp(1.1rem, 2.6vw, 2.6rem);
+  --text-board-badge: clamp(1rem, 2.3vw, 2.25rem);
+  --text-board-empty: clamp(1.25rem, 3vw, 3rem);
+  --text-board-notice: clamp(0.85rem, 1.6vw, 1.5rem);
+  --text-board-meta: clamp(0.75rem, 1.4vw, 1.3rem);         /* times, amenities, walk hints, the app's name */
+  --spacing-board-gutter: clamp(1rem, 3vw, 3rem);
+  --spacing-board-gap: clamp(0.75rem, 2vw, 2rem);
+  --spacing-board-badge-col: clamp(3rem, 7vw, 7rem);
+  --spacing-board-badge: clamp(2rem, 4.5vw, 4.25rem);
+  --spacing-board-tile: clamp(3.5rem, 7vw, 7rem);
+
   /* Favourite stops and lines: stars and pins. */
   --color-favorite: var(--tint-amber);
   --color-on-favorite: var(--on-favorite);
@@ -249,6 +262,8 @@
   --radius-surface: 22px;
   --radius-nested: 1rem;
   --radius-badge: 6px;
+  /* rounded-badge's proportion (a quarter of the badge's height) for badges that scale with their text. */
+  --radius-badge-fluid: 0.5em;
   --color-label-3: var(--label-3);
   --color-handle: var(--handle);
   --color-thumb: var(--thumb);

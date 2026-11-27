@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MIN, NOW, at, departure, stopModel } from '@/test/factories';
-import { computeDelayStats, departuresByStop, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, sectionPreview, sectionsHidingTrips, sectionGroupId, withStopPlatforms, isMetroClosed, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
+import { computeDelayStats, departuresByStop, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, sectionPreview, sectionsHidingTrips, sectionGroupId, withStopPlatforms, isMetroClosed, leaveInMinutes, offeredWalkMins, otherPlatform, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
 
 // AGENTS.md: metro departures group by line + direction, since each direction of A/B/C is its own platform.
 describe('groupDepartures', () => {
@@ -317,5 +317,37 @@ describe('departuresByStop', () => {
         const deps = [departure({ tripId: 'a', stopId: 'P1,P2' }), departure({ tripId: 'b', stopId: 'Q' })];
         const byStop = departuresByStop(deps, new Map([['S', 'P1,P2'], ['P1,P2', 'P1,P2'], ['Q', 'Q'], ['R', 'R']]));
         expect([...byStop].map(([id, list]) => [id, list.map(d => d.tripId)])).toEqual([['S', ['a']], ['P1,P2', ['a']], ['Q', ['b']]]);
+    });
+});
+
+describe('leaveInMinutes', () => {
+    it('counts whole minutes left after the walk, reaching 0 in the last minute before setting out', () => {
+        const dep = departure({ timestamp: at(8 * MIN + 30_000) });
+        expect(leaveInMinutes(dep, NOW, 5)).toBe(3);
+        expect(leaveInMinutes(dep, NOW + 3 * MIN, 5)).toBe(0);
+        expect(leaveInMinutes(dep, NOW + 4 * MIN, 5)).toBe(-1);
+    });
+
+    it('is null without a walk or for a cancelled departure', () => {
+        expect(leaveInMinutes(departure({ timestamp: at(8 * MIN) }), NOW, 0)).toBeNull();
+        expect(leaveInMinutes(departure({ timestamp: at(8 * MIN), isCanceled: true }), NOW, 5)).toBeNull();
+    });
+});
+
+describe('offeredWalkMins', () => {
+    it('keeps a walk the board offers and drops anything else to no walk', () => {
+        expect(offeredWalkMins(5)).toBe(5);
+        expect(offeredWalkMins(7)).toBe(0);
+        expect(offeredWalkMins(Number.NaN)).toBe(0);
+    });
+});
+
+describe('otherPlatform', () => {
+    // Metro tracks lead the headsign in a circle, so the time line never repeats them.
+    it('names a platform other than the board\'s own, never a metro track', () => {
+        expect(otherPlatform(departure({ type: 'tram', platform: 'B' }), 'A')).toBe('B');
+        expect(otherPlatform(departure({ type: 'tram', platform: 'A' }), 'A')).toBeNull();
+        expect(otherPlatform(departure({ type: 'metro', platform: '1' }), 'A')).toBeNull();
+        expect(otherPlatform(departure({ type: 'bus', platform: undefined }))).toBeNull();
     });
 });

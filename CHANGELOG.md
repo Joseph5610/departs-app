@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.100.3] - 2026-11-27
+
+### Fixed
+
+- The full-screen board's line badges keep the app's corner shape instead of turning into pills.
+
 ## [0.100.2] - 2026-11-26
 
 ### Fixed

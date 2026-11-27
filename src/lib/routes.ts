@@ -28,6 +28,9 @@ export const paths = {
     licenses: '/licenses',
 };
 
+/** The board URL's `?walk=` minutes as `paths.board` writes them; NaN or 0 when missing or malformed. */
+export const boardWalkParam = (search: string): number => Number(new URLSearchParams(search).get('walk'));
+
 /** The full-screen departure board; outside the map, so not in ROUTE_PATTERNS. */
 export const BOARD_ROUTE = '/:city/board/:stopId';
 

@@ -1,5 +1,7 @@
 import { isWithinLocalHours } from '@/domain/time';
 import type { Departure } from '@/types';
+import { BOARD_CONFIG } from '@/config/constants';
+import { boardingPlace } from './status';
 
 /** The board's departures after the line and vehicle filters; `hiddenByVehicleFilters` counts what the vehicle filters alone removed. */
 export const filterDepartures = (departures: Departure[], selectedLine: string | null, requireAirConditioned: boolean, requireWheelchairAccessible: boolean) => {
@@ -38,6 +40,18 @@ export const nextDepartures = (departures: Departure[], count: number, excludeCa
 /** Departures still catchable after a walk of `walkMins` minutes; all of them without a walk. */
 export const catchableDepartures = (departures: Departure[], now: number, walkMins: number): Departure[] =>
     walkMins > 0 ? departures.filter(d => Date.parse(d.timestamp) - now >= walkMins * 60_000) : departures;
+
+/** A requested walk in minutes if it is one the board offers, else 0 (no walk). */
+export const offeredWalkMins = (minutes: number): number =>
+    (BOARD_CONFIG.WALK_OPTIONS_MIN as readonly number[]).includes(minutes) ? minutes : 0;
+
+/** Whole minutes left to set out for `dep` after a walk of `walkMins`, 0 or less once it is time; null without a walk or when cancelled. */
+export const leaveInMinutes = (dep: Pick<Departure, 'timestamp' | 'isCanceled'>, now: number, walkMins: number): number | null =>
+    walkMins === 0 || dep.isCanceled ? null : Math.floor((Math.floor((Date.parse(dep.timestamp) - now) / 1000) - walkMins * 60) / 60);
+
+/** A departure's platform worth naming on a stop's board: not a metro track (shown as a circle) nor the board's own platform. */
+export const otherPlatform = (dep: Pick<Departure, 'type' | 'platform'>, boardPlatform?: string): string | null =>
+    !boardingPlace(dep).track && dep.platform && dep.platform !== boardPlatform ? dep.platform : null;
 
 /** A pinned line's next departures in its direction. */
 export const nextDeparturesOf = (departures: Departure[], line: string, headsign: string, count: number): Departure[] =>
