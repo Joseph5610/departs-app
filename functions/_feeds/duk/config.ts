@@ -33,6 +33,8 @@ export const DUK_CONFIG = {
 
     /** A feed time further ahead of now than this is a broken clock, not a newer position. */
     MAX_CLOCK_SKEW_MS: 120_000,
+    /** Portabo now and then lists only part of its fleet; a vehicle missing from a read is kept this long past its own last report. */
+    MISSING_REPORT_HOLD_MS: 120_000,
 
     /** Minimum distance before a heading is derived towards a stop or from movement. */
     BEARING_MIN_MOVE_M: 15,

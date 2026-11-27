@@ -105,9 +105,26 @@ function toReport(raw: unknown): DukVehicleReport | null {
 }
 
 /**
+ * `next` with the vehicles of `previous` it lacks, while their own last report is within `holdMs` of
+ * `nowMs`: Portabo alternates whole and partial lists, so a vehicle left out of one read is not gone.
+ */
+export function mergeTrafficReports(previous: readonly DukVehicleReport[], next: readonly DukVehicleReport[], nowMs: number, holdMs: number): DukVehicleReport[] {
+    const listed = new Set(next.map(r => r.vehicleId));
+    const merged = [...next];
+    for (const report of previous) {
+        if (listed.has(report.vehicleId) || !report.timestamp) continue;
+        if (nowMs - Date.parse(report.timestamp) <= holdMs) merged.push(report);
+    }
+    return merged;
+}
+
+/** The last merged list per city, which the next read is merged onto. */
+const lastReports = new Map<string, DukVehicleReport[]>();
+
+/**
  * The Portabo traffic feed as a snapshot, shared by the vehicles, detail and debug paths. A failed
  * read keeps the last good snapshot; null only when there has never been one. An empty list (e.g.
- * overnight) is a valid snapshot.
+ * overnight) is a valid snapshot. Each read is merged onto the previous one (`mergeTrafficReports`).
  */
 export async function getDukTrafficSnapshot(city: CityConfig): Promise<Snapshot<DukVehicleReport[]> | null> {
     const baseUrl = city.feed?.baseUrl;
@@ -136,7 +153,9 @@ export async function getDukTrafficSnapshot(city: CityConfig): Promise<Snapshot<
                 const report = toReport(raw);
                 if (report) out.push(report);
             }
-            return out;
+            const merged = mergeTrafficReports(lastReports.get(city.slug) ?? [], out, Date.now(), DUK_CONFIG.MISSING_REPORT_HOLD_MS);
+            lastReports.set(city.slug, merged);
+            return merged;
         },
     })();
 }
