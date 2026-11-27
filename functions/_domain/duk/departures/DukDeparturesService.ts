@@ -61,13 +61,18 @@ export class DukDeparturesService implements DeparturesUseCase {
             console.warn('[DUK] Timetable unavailable for board linking:', e);
             return [] as DepartureSource[];
         });
-        const [boards, tuples, { routes }, vehicles] = await Promise.all([
-            Promise.all(requests.map(r => this.getBoard(r, ctx))),
+        // A board Portabo is slow to answer is finished in the background, for the next poll, and this one is answered from the timetable.
+        const boardsRead = Promise.all(requests.map(r => this.getBoard(r, ctx)));
+        ctx.waitUntil(boardsRead);
+        const late = new Promise<null>(resolve => setTimeout(() => resolve(null), DUK_CONFIG.BOARD_ANSWER_DEADLINE_MS));
+        const [boardsOrLate, tuples, { routes }, vehicles] = await Promise.all([
+            Promise.race([boardsRead, late]),
             tuplesRead,
             getGtfsRoutes(this.city),
             tuplesRead.then(rows => boardVehicles(this.vehiclesService, collectTripIds(rows), ctx.waitUntil)),
         ]);
 
+        const boards = boardsOrLate ?? requests.map(() => null);
         const boardOf = new Map(requests.map((r, i) => [r.id, boards[i]]));
         if (boards.some(board => board === null)) {
             return this.timetableOnly(requests, tuples, routes, vehicles);

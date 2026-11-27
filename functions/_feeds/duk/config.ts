@@ -62,6 +62,8 @@ export const DUK_CONFIG = {
     BOARD_MAX_STALE_MS: 120_000,
     /** Portabo answers a busy station in about 3s; beyond this it is stuck, not slow. */
     BOARD_TIMEOUT_MS: 6_000,
+    /** A request waits this long for Portabo's board, then answers from the timetable; under the app's 10 s request timeout. */
+    BOARD_ANSWER_DEADLINE_MS: 5_000,
     /** Portabo's catch-all platform, which carries no platform of its own. */
     VIRTUAL_POST: 999,
     /** Code of the platform (the virtual post) a node's city lines are published at; mirrors CITY_POST_CODE in departs-data. */
