@@ -262,6 +262,7 @@
       "lineFilters": "Filtre liniek",
       "platformSection": "Nástupište {{code}}",
       "towardsSection": "Smer {{stop}}",
+      "otherSection": "Ostatné odchody",
       "stationNotices": "Zmeny premávky na nástupišti",
       "viewedTrip": "Prezeraný spoj",
       "watchedTrip": "Sledovaný spoj",

@@ -255,6 +255,7 @@
       "lineFilters": "Line filters",
       "platformSection": "Platform {{code}}",
       "towardsSection": "Towards {{stop}}",
+      "otherSection": "Other departures",
       "stationNotices": "Service changes at platform",
       "viewedTrip": "Viewed trip",
       "watchedTrip": "Followed trip",
