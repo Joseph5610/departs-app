@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.100.4] - 2026-11-27
+
+### Fixed
+
+- Ústecký kraj city buses stay on the map through Portabo's few-minute outages of their source.
+
 ## [0.100.3] - 2026-11-27
 
 ### Fixed
