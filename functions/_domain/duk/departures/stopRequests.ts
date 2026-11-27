@@ -1,5 +1,6 @@
 import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
 import { parseStopRequest, requestParts } from '../../../../shared/stopIds';
+import { DUK_CONFIG } from '../../../_feeds/duk/config';
 
 /** A requested stop resolved to its Portabo node and the posts to read; null posts read the whole station. */
 export interface StopRequest {
@@ -46,3 +47,14 @@ export function stationOfRequest(id: string, relations: ReadonlyMap<string, Stop
     if (!first || !relation) return null;
     return relation[0] === null ? first : relation[0];
 }
+
+/**
+ * The code a board entry's post shows as: a numbered platform's number, `CITY_POST_CODE` for the virtual post where
+ * the node publishes one beside its real posts (its city lines), none for rail posts or a post the stop list lacks.
+ */
+export function platformCode(post: string | null, node: string, knownPlatforms: ReadonlySet<string>): string | null {
+    if (post === null || !knownPlatforms.has(`${node}-${post}`)) return null;
+    if (post === String(DUK_CONFIG.VIRTUAL_POST)) return knownPlatforms.size > 1 ? DUK_CONFIG.CITY_POST_CODE : null;
+    return Number(post) < DUK_CONFIG.FIRST_UNNUMBERED_POST ? post : null;
+}
+

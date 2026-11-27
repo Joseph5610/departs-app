@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StopRelation } from '../../../_feeds/gtfs/departureRows';
-import { stationOfRequest, toStopRequest } from './stopRequests';
+import { platformCode, stationOfRequest, toStopRequest } from './stopRequests';
 
 const relations = new Map<string, StopRelation>([
     ['952', [null, '952-1', '952-2', '952-3']],
@@ -49,5 +49,24 @@ describe('stationOfRequest', () => {
         expect(stationOfRequest('952-1,952-3', relations)).toBe('952');
         expect(stationOfRequest('77-1', relations)).toBeNull();
         expect(stationOfRequest('77:77-1', relations)).toBe('77');
+    });
+});
+
+describe('platformCode', () => {
+    const hranicar = new Set(['1738-1', '1738-3', '1738-999']);
+
+    it('shows a numbered post as its number', () => {
+        expect(platformCode('3', '1738', hranicar)).toBe('3');
+    });
+
+    // Portabo lists city lines on its virtual post; the node publishes it as its MHD platform.
+    it('shows the virtual post as MHD where the node has real posts too', () => {
+        expect(platformCode('999', '1738', hranicar)).toBe('MHD');
+        expect(platformCode('999', '152489', new Set(['152489-999']))).toBeNull();
+    });
+
+    it('shows nothing for a rail post or a post the stop list lacks', () => {
+        expect(platformCode('92', '1737', new Set(['1737-92', '1737-1']))).toBeNull();
+        expect(platformCode('4', '1738', hranicar)).toBeNull();
     });
 });
