@@ -18,8 +18,8 @@ test.describe('Full-screen board', () => {
         await expect(rows).toHaveCount(2);
         await expect(rows.nth(0)).toContainText('Spojovací');
         // Only a platform other than the board's own (C) is named.
-        await expect(rows.nth(0)).not.toContainText('C');
-        await expect(rows.nth(1)).toContainText('D');
+        await expect(rows.nth(0)).not.toContainText('platform C');
+        await expect(rows.nth(1)).toContainText('platform D');
 
         const badge = rows.nth(0).getByText('9', { exact: true });
         const { radius, height } = await badge.evaluate(el => ({ radius: parseFloat(getComputedStyle(el).borderTopLeftRadius), height: el.getBoundingClientRect().height }));

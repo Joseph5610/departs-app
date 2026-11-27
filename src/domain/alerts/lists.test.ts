@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AlertLine, Infotext, RSSItem } from '@/types';
 import { MIN, NOW, at } from '@/test/factories';
-import { activeNotices, alertSections, alertsForLine, countIncidents, incidentsOnLines, boardNotices } from './lists';
+import { activeNotices, rotatingNotice, alertSections, alertsForLine, countIncidents, incidentsOnLines, boardNotices } from './lists';
 
 const alert = (title: string, overrides: Partial<RSSItem> = {}): RSSItem => ({
     type: 'exclusion',
@@ -100,6 +100,23 @@ describe('alertsForLine', () => {
         ], '22');
 
         expect(result.map((a) => a.title)).toEqual(['high', 'normal']);
+    });
+});
+
+describe('rotatingNotice', () => {
+    const notice = (id: string): Infotext => ({
+        id, text: id, textEn: null, priority: 'normal', displayType: 'inline', relatedStopIds: [], valid_from: at(-MIN), valid_to: null,
+    });
+
+    it('shows each notice for one period in turn, wrapping after the last', () => {
+        const notices = [notice('a'), notice('b'), notice('c')];
+        expect(rotatingNotice(notices, 0, 1000)).toEqual({ notice: notices[0], index: 0 });
+        expect(rotatingNotice(notices, 1999, 1000)).toEqual({ notice: notices[1], index: 1 });
+        expect(rotatingNotice(notices, 3000, 1000)).toEqual({ notice: notices[0], index: 0 });
+    });
+
+    it('is null without notices', () => {
+        expect(rotatingNotice([], NOW, 1000)).toBeNull();
     });
 });
 

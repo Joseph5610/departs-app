@@ -52,7 +52,7 @@ export const BoardDepartureRow = ({ departure: dep, timeZone, now, walkMins, boa
                     <span className="text-[0.45em] font-semibold text-destructive">{t('map.departures.canceled')}</span>
                 ) : (
                     <span className="flex items-center justify-end gap-[0.3em]">
-                        <LiveSignal status={liveStatus(dep)} className="size-[0.45em]" />
+                        <LiveSignal status={liveStatus(dep)} className="size-[clamp(0.8rem,1.8vw,1.6rem)]" />
                         <Countdown timestamp={dep.timestamp} />
                     </span>
                 )}

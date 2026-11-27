@@ -10,8 +10,8 @@ import { useCityConfig } from '@/hooks/data/useCities';
 import { usePreferencesStore } from '@/state/preferencesStore';
 import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { BOARD_CONFIG } from '@/config/constants';
-import { boardWalkMins } from '@/lib/routes';
-import { catchableDepartures, departureKey } from '@/domain/departures';
+import { boardWalkParam } from '@/lib/routes';
+import { catchableDepartures, departureKey, offeredWalkMins } from '@/domain/departures';
 import { EmptyState } from '@/components/EmptyState';
 import { BoardHeader } from '@/components/Board/BoardHeader';
 import { BoardDepartureRow } from '@/components/Board/BoardDepartureRow';
@@ -24,7 +24,7 @@ const BoardPage = ({ city, stopId }: { city: string; stopId: string }) => {
     const { timezone } = useCityConfig(city);
     const selectedCity = usePreferencesStore(s => s.selectedCity);
     const { setSelectedCity } = usePreferencesStore(s => s.actions);
-    const [walkMins] = useState(() => boardWalkMins(window.location.search));
+    const [walkMins] = useState(() => offeredWalkMins(boardWalkParam(window.location.search)));
     const isKnownCity = !!FRONTEND_CITIES_CONFIG[city];
 
     useEffect(() => {

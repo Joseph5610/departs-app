@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MIN, NOW, at, departure, stopModel } from '@/test/factories';
-import { computeDelayStats, departuresByStop, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, sectionPreview, sectionsHidingTrips, sectionGroupId, withStopPlatforms, isMetroClosed, leaveInMinutes, otherPlatform, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
+import { computeDelayStats, departuresByStop, favoriteKey, favoriteKeysAt, favoritesFirst, filterDepartures, groupDepartures, groupsHidingTrips, platformSections, sectionPreview, sectionsHidingTrips, sectionGroupId, withStopPlatforms, isMetroClosed, leaveInMinutes, offeredWalkMins, otherPlatform, favoriteLinesIn, favoriteLineNames, favoritesView, moveShown, nextDeparturesOf, reorderShown, withDelayDeltas } from './index';
 
 // AGENTS.md: metro departures group by line + direction, since each direction of A/B/C is its own platform.
 describe('groupDepartures', () => {
@@ -331,6 +331,14 @@ describe('leaveInMinutes', () => {
     it('is null without a walk or for a cancelled departure', () => {
         expect(leaveInMinutes(departure({ timestamp: at(8 * MIN) }), NOW, 0)).toBeNull();
         expect(leaveInMinutes(departure({ timestamp: at(8 * MIN), isCanceled: true }), NOW, 5)).toBeNull();
+    });
+});
+
+describe('offeredWalkMins', () => {
+    it('keeps a walk the board offers and drops anything else to no walk', () => {
+        expect(offeredWalkMins(5)).toBe(5);
+        expect(offeredWalkMins(7)).toBe(0);
+        expect(offeredWalkMins(Number.NaN)).toBe(0);
     });
 });
 

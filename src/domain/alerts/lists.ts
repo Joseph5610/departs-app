@@ -158,6 +158,13 @@ export const boardNotices = (
 export const noticeText = (info: Infotext, language: string | undefined): string =>
     language === 'en' && info.textEn ? info.textEn : info.text;
 
+/** The notice a rotation showing each of `notices` for `periodMs` in turn shows at `now`, with its place; null when none. */
+export const rotatingNotice = (notices: Infotext[], now: number, periodMs: number): { notice: Infotext; index: number } | null => {
+    if (notices.length === 0) return null;
+    const index = Math.floor(now / periodMs) % notices.length;
+    return { notice: notices[index], index };
+};
+
 /** Notices whose validity window holds `now`; one without an end stays valid. */
 export const activeNotices = (notices: Infotext[], now: number): Infotext[] =>
     notices.filter(info => Date.parse(info.valid_from) <= now && (!info.valid_to || Date.parse(info.valid_to) > now));

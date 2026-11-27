@@ -14,7 +14,7 @@ const SIZES = {
     board: {
         root: 'flex-1',
         header: 'max-w-[min(90vw,48rem)] gap-[0.5em]',
-        tile: 'size-board-tile [&_svg:not([class*=size-])]:size-[55%]',
+        tile: "size-board-tile [&_svg:not([class*='size-'])]:size-[55%]",
         title: 'text-board-empty font-bold leading-tight text-foreground',
         description: 'text-board-headsign',
     },

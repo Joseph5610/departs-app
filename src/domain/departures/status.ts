@@ -47,9 +47,9 @@ export const departureClock = (
     return { scheduled, expected: expected === scheduled ? null : expected };
 };
 
-/** A stable React key for a departure row, unique per trip and scheduled time. */
-export const departureKey = (dep: Pick<Departure, 'tripId' | 'scheduled'>): string =>
-    dep.tripId ? `${dep.tripId}-${dep.scheduled}` : dep.scheduled;
+/** A stable React key for a departure row, unique per trip (or, without one, line) and scheduled time. */
+export const departureKey = (dep: Pick<Departure, 'tripId' | 'line' | 'scheduled'>): string =>
+    `${dep.tripId ?? dep.line}-${dep.scheduled}`;
 
 /** Where a departure boards when riders choose between places: a metro track, or a train platform. */
 export const boardingPlace = (dep: Pick<Departure, 'type' | 'platform'>): { track: string | null; platform: string | null } => ({
