@@ -1,3 +1,4 @@
+import type React from 'react';
 import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, Footprints } from 'lucide-react';
@@ -49,7 +50,7 @@ export const MyTripCardContent = () => {
     const { closeMyTrip } = useUiStore(s => s.actions);
     if (!target) return null;
     return (
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain scroll-edge px-(--panel-gutter) pt-1.5 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] [--stop-list-max:none]">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 px-(--panel-gutter) pt-1.5 pb-[calc(env(safe-area-inset-bottom,0px)+0.5rem)] [--stop-list-max:none]">
             <MyTripSheetBody key={target.tripId} target={target} onClose={closeMyTrip} inCard />
         </div>
     );
@@ -123,72 +124,72 @@ const MyTripSheetBody = ({ target, onClose, inCard = false }: { target: MyTripTa
                     <DialogDescription className="sr-only">{detail?.trip_headsign ?? ''}</DialogDescription>
                 </DialogHeader>
             )}
-            {(
-                <div className="flex shrink-0 items-start gap-3 px-1">
-                    {line && <LineBadge name={line} routeColor={detail?.route_color ?? ''} size="lg" />}
-                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="type-headsign text-foreground">{detail?.trip_headsign ?? ''}</span>
-                        <span className="type-meta text-muted-foreground">
-                            {boarding ? t('myTrip.fromStop', { stop: boarding.stopName, time: boarding.time ?? '' }) : isLoading ? t('myTrip.loading') : t('myTrip.onBoard')}
-                        </span>
-                    </div>
-                    {boardMs !== null && <span className="shrink-0 type-headsign tabular-nums"><MinutesUntil timestamp={new Date(boardMs).toISOString()} /></span>}
-                </div>
-            )}
-
-            <Card size="none" className={cn(inCard ? "shrink-0" : "min-h-0 shrink overflow-y-auto overscroll-contain")}>
-                <JourneyRow leg="board" kind="toggle" title={t('myTrip.boardTitle')} summary={boardSummary} isOpen={open === 'board'} onClick={() => toggle('board')} />
-                {open === 'board' && (isChoosingBoard || !boarding ? (
-                        <StopList
-                            leading={isRunning ? { label: t('myTrip.aboard'), isSelected: !boarding, onPick: () => pickBoarding(null) } : null}
-                            stops={boardsBeforeExit}
-                            selected={boarding?.sequence ?? null}
-                            onPick={pickBoarding}
-                        />
-                    ) : (
-                        <div className="flex flex-col gap-2.5 px-4 py-3">
-                            <span className="type-note text-muted-foreground">{t('myTrip.leadLabel')}</span>
-                            {boarding.leads.length === 0 && boarding.walkLead === null ? (
-                                <span className="type-note text-muted-foreground">{t('myTrip.tooLate')}</span>
-                            ) : (
-                                <div role="group" aria-label={t('myTrip.leadLabel')} className="flex flex-wrap gap-x-1.5 gap-y-2">
-                                    <FilterChip label={t('myTrip.leadOff')} isActive={lead === null} onClick={() => pickLead(null)} />
-                                    {boarding.walkLead !== null && (
-                                        <FilterChip
-                                            icon={Footprints}
-                                            label={t('myTrip.walkOption', { count: boarding.walkLead })}
-                                            isActive={lead === boarding.walkLead}
-                                            onClick={() => pickLead(boarding.walkLead)}
-                                        />
-                                    )}
-                                    {MY_TRIP_CONFIG.LEAD_MINUTES.filter(m => m !== boarding.walkLead).map(minutes => (
-                                        <FilterChip
-                                            key={minutes}
-                                            label={t('myTrip.leadOption', { count: minutes })}
-                                            isActive={lead === minutes}
-                                            isDisabled={!boarding.leads.includes(minutes) && lead !== minutes}
-                                            onClick={() => pickLead(minutes)}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                            <Button variant="link" size="inline" onClick={() => setIsChoosingBoard(true)} className="self-start">
-                                {t('myTrip.changeStop')}
-                            </Button>
+            <CardScroller inCard={inCard}>
+                    <div className="flex shrink-0 items-start gap-3 px-1">
+                        {line && <LineBadge name={line} routeColor={detail?.route_color ?? ''} size="lg" />}
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                            <span className="type-headsign text-foreground">{detail?.trip_headsign ?? ''}</span>
+                            <span className="type-meta text-muted-foreground">
+                                {boarding ? t('myTrip.fromStop', { stop: boarding.stopName, time: boarding.time ?? '' }) : isLoading ? t('myTrip.loading') : t('myTrip.onBoard')}
+                            </span>
                         </div>
-                ))}
-                <Separator className="ml-11.5 bg-sep data-horizontal:h-[0.5px] data-horizontal:w-auto" />
-                <JourneyRow leg="exit" kind="toggle" title={t('myTrip.exitTitle')} summary={exitSummary} isOpen={open === 'exit'} onClick={() => toggle('exit')} />
-                {open === 'exit' && (
-                    <StopList
-                        leading={{ label: t('myTrip.toEnd', { stop: lastStop?.stopName ?? '' }), isSelected: !exit, onPick: () => pickExit(null) }}
-                        stops={exitsAfterBoard}
-                        selected={exit?.sequence ?? null}
-                        onPick={pickExit}
-                    />
-                )}
-                {metroExit && open !== 'exit' && <MetroExitHint advice={metroExit} />}
-            </Card>
+                        {boardMs !== null && <span className="shrink-0 type-headsign tabular-nums"><MinutesUntil timestamp={new Date(boardMs).toISOString()} /></span>}
+                    </div>
+
+                <Card size="none" className={cn(inCard ? "shrink-0" : "min-h-0 shrink overflow-y-auto overscroll-contain")}>
+                    <JourneyRow leg="board" kind="toggle" title={t('myTrip.boardTitle')} summary={boardSummary} isOpen={open === 'board'} onClick={() => toggle('board')} />
+                    {open === 'board' && (isChoosingBoard || !boarding ? (
+                            <StopList
+                                leading={isRunning ? { label: t('myTrip.aboard'), isSelected: !boarding, onPick: () => pickBoarding(null) } : null}
+                                stops={boardsBeforeExit}
+                                selected={boarding?.sequence ?? null}
+                                onPick={pickBoarding}
+                            />
+                        ) : (
+                            <div className="flex flex-col gap-2.5 px-4 py-3">
+                                <span className="type-note text-muted-foreground">{t('myTrip.leadLabel')}</span>
+                                {boarding.leads.length === 0 && boarding.walkLead === null ? (
+                                    <span className="type-note text-muted-foreground">{t('myTrip.tooLate')}</span>
+                                ) : (
+                                    <div role="group" aria-label={t('myTrip.leadLabel')} className="flex flex-wrap gap-x-1.5 gap-y-2">
+                                        <FilterChip label={t('myTrip.leadOff')} isActive={lead === null} onClick={() => pickLead(null)} />
+                                        {boarding.walkLead !== null && (
+                                            <FilterChip
+                                                icon={Footprints}
+                                                label={t('myTrip.walkOption', { count: boarding.walkLead })}
+                                                isActive={lead === boarding.walkLead}
+                                                onClick={() => pickLead(boarding.walkLead)}
+                                            />
+                                        )}
+                                        {MY_TRIP_CONFIG.LEAD_MINUTES.filter(m => m !== boarding.walkLead).map(minutes => (
+                                            <FilterChip
+                                                key={minutes}
+                                                label={t('myTrip.leadOption', { count: minutes })}
+                                                isActive={lead === minutes}
+                                                isDisabled={!boarding.leads.includes(minutes) && lead !== minutes}
+                                                onClick={() => pickLead(minutes)}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                                <Button variant="link" size="inline" onClick={() => setIsChoosingBoard(true)} className="self-start">
+                                    {t('myTrip.changeStop')}
+                                </Button>
+                            </div>
+                    ))}
+                    <Separator className="ml-11.5 bg-sep data-horizontal:h-[0.5px] data-horizontal:w-auto" />
+                    <JourneyRow leg="exit" kind="toggle" title={t('myTrip.exitTitle')} summary={exitSummary} isOpen={open === 'exit'} onClick={() => toggle('exit')} />
+                    {open === 'exit' && (
+                        <StopList
+                            leading={{ label: t('myTrip.toEnd', { stop: lastStop?.stopName ?? '' }), isSelected: !exit, onPick: () => pickExit(null) }}
+                            stops={exitsAfterBoard}
+                            selected={exit?.sequence ?? null}
+                            onPick={pickExit}
+                        />
+                    )}
+                    {metroExit && open !== 'exit' && <MetroExitHint advice={metroExit} />}
+                </Card>
+            </CardScroller>
 
             <div className="flex shrink-0 flex-col items-center gap-1 pt-1">
                 <Button size="lg" onClick={saveTrip} disabled={!lastStop} className="w-full" data-testid="my-trip-save">{existing ? t('myTrip.save') : t('myTrip.take')}</Button>
@@ -199,6 +200,13 @@ const MyTripSheetBody = ({ target, onClose, inCard = false }: { target: MyTripTa
         </>
     );
 };
+
+/** In the phone's card the trip scrolls on its own, so the buttons under it stay on screen; the dialog's card scrolls itself. */
+const CardScroller = ({ inCard, children }: { inCard: boolean; children: React.ReactNode }) => (
+    inCard
+        ? <div data-fit-scroller className="min-h-0 shrink overflow-y-auto overscroll-contain scroll-edge"><div className="flex flex-col gap-3">{children}</div></div>
+        : <>{children}</>
+);
 
 /** The stops a section picks from, with their times, after a leading choice if any (aboard already, to the end); the picked one checked. */
 const StopList = ({ leading, stops, selected, onPick }: {
