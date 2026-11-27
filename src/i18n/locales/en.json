@@ -235,6 +235,7 @@
       "delayStatsTooltip": "Average delay based on {{count}} vehicles",
       "openInMaps": "Open in Maps",
       "otherNetworkBoard": "{{network}} departures here",
+      "otherNetworkShort": "{{network}} departures",
       "atStop": "You are at the stop",
       "addToFavorites": "Add to favorites",
       "removeFromFavorites": "Remove from favorites",

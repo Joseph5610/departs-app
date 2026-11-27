@@ -3,7 +3,7 @@ import type { StopModel } from '@/types';
 import { useOverlayNetworks } from '@/hooks/data/useOverlayNetworks';
 import { useNetworksInView } from './useNetworksInView';
 import { useSelectedStop } from './useSelectedStop';
-import { indexStops, stopNameKey, stopNear } from '@/domain/stops';
+import { indexStops, stopNear } from '@/domain/stops';
 import { memoizeLast } from '@/lib/memoize';
 import { SHARED_GROUND } from '@/config/constants';
 
@@ -29,7 +29,7 @@ export const useStopTwin = (): StopTwin | null => {
     return useMemo(() => {
         if (!stop?.board) return null;
         const { pos, name } = stop.board;
-        const twin = stopNear(platformGrid(overlay), pos) ?? stopNear(stationGrid(overlay), pos, stopNameKey(name));
+        const twin = stopNear(platformGrid(overlay), pos) ?? stopNear(stationGrid(overlay), pos, name);
         return twin?.city ? { city: twin.city, stopId: twin.id } : null;
     }, [stop, overlay]);
 };

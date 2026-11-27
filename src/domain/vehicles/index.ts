@@ -11,3 +11,4 @@ export * from './status';
 export * from './timeline';
 export * from './tripEnd';
 export * from './viewFilter';
+export * from './twins';

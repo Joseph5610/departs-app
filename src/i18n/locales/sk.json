@@ -242,6 +242,7 @@
       "delayStatsTooltip": "Priemerné meškanie na základe {{count}} spojov",
       "openInMaps": "Otvoriť Mapy",
       "otherNetworkBoard": "Odchody {{network}} tu",
+      "otherNetworkShort": "Odchody {{network}}",
       "atStop": "Ste na zastávke",
       "addToFavorites": "Pridať do obľúbených",
       "removeFromFavorites": "Odobrať z obľúbených",

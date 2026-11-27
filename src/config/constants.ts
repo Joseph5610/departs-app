@@ -211,6 +211,8 @@ export const SHARED_GROUND = {
     TWIN_STOP_RADIUS_M: 15,
     /** Another network's station of the same name this close has its label left out. */
     TWIN_STATION_RADIUS_M: 250,
+    /** Another network's vehicle of the same line this close to one of the selected network's, with a delay this near, is that vehicle: only one is drawn. */
+    TWIN_VEHICLE: { radiusM: 500, maxDelayGapS: 180 },
 } as const;
 
 export const VEHICLE_ANIMATION = {

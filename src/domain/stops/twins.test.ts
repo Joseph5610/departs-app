@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { stopModel, stopTime } from '@/test/factories';
-import { boardableStopId, indexStops } from './twins';
+import { boardableStopId, indexStops, sameStopName } from './twins';
 
 const AT: [number, number] = [14.42, 50.08];
 const NEAR: [number, number] = [14.4205, 50.0801];
@@ -34,5 +34,26 @@ describe('boardableStopId', () => {
     it('falls back to a nearby same-named stop where the whole station is arrival-only, or the list lacks the stop', () => {
         expect(open('T-arr', 'Smyčka')).toBe('U');
         expect(open('X1', 'Smyčka', NEAR)).toBe('U');
+    });
+});
+
+describe('sameStopName', () => {
+    it('reads an abbreviated word as any word it begins', () => {
+        expect(sameStopName('Roudnice n.L.,aut.nádr.', 'Roudnice nad Labem,autobusové nádraží')).toBe(true);
+        expect(sameStopName('Chomutov,žel.st.', 'Chomutov,železniční stanice')).toBe(true);
+        expect(sameStopName('Zlonín,rozcestí', 'Zlonín,rozc.')).toBe(true);
+    });
+
+    // DÚK names Prague stops with their town; PID leaves it out.
+    it('matches a name prefixed by its town', () => {
+        expect(sameStopName('Praha,Letňany', 'Letňany')).toBe(true);
+        expect(sameStopName('K Letňanům', 'Praha,K Letňanům')).toBe(true);
+    });
+
+    it('keeps different stops apart', () => {
+        expect(sameStopName('Louny,Osvoboditelů', 'Louny,autobusové nádraží')).toBe(false);
+        expect(sameStopName('Líbeznice,škola', 'Líbeznice,II')).toBe(false);
+        expect(sameStopName('Postoloprty,nám.', 'Postoloprty')).toBe(false);
+        expect(sameStopName('Nádraží', 'Náměstí')).toBe(false);
     });
 });

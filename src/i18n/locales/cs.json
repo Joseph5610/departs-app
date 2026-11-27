@@ -242,6 +242,7 @@
       "delayStatsTooltip": "Průměrné zpoždění na základě {{count}} spojů",
       "openInMaps": "Otevřít Mapy",
       "otherNetworkBoard": "Odjezdy {{network}} zde",
+      "otherNetworkShort": "Odjezdy {{network}}",
       "atStop": "Jste na zastávce",
       "addToFavorites": "Přidat do oblíbených",
       "removeFromFavorites": "Odebrat z oblíbených",

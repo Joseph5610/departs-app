@@ -1,14 +1,46 @@
 import type { StopModel, StopTimeFeature } from '@/types';
 import { DEG } from '@/lib/geo';
-import { nameKey } from '@shared/text';
+import { foldDiacritics, nameKey } from '@shared/text';
 import { EARTH_RADIUS_M } from '@shared/geo';
 
 /** Grid cell for the twin lookup: a latitude degree is about this many metres. */
 const METRES_PER_DEG_LAT = DEG * EARTH_RADIUS_M;
 
-/** Name compared across networks, which punctuate and space stop names differently. */
-export const stopNameKey = (name: string | undefined): string =>
-    nameKey(name ?? '');
+/** One word of a stop name; `short` when written abbreviated (`nádr.`), so it stands for any word it begins. */
+interface NameWord { text: string; short: boolean }
+type NameWords = { town: number; words: NameWord[] };
+
+const wordsCache = new Map<string, NameWords>();
+
+/** The name's words, and how many lead it before its first comma (its town, where it names one). */
+function nameWords(name: string): NameWords {
+    const cached = wordsCache.get(name);
+    if (cached) return cached;
+    const [head, ...rest] = foldDiacritics(name).split(',');
+    const split = (part: string): NameWord[] => [...part.matchAll(/([a-z0-9]+)(\.?)/g)].map(m => ({ text: m[1], short: m[2] === '.' }));
+    const town = rest.length > 0 ? split(head).length : 0;
+    const result = { town, words: [...split(head), ...rest.flatMap(split)] };
+    wordsCache.set(name, result);
+    return result;
+}
+
+const sameWord = (a: NameWord, b: NameWord) =>
+    a.text === b.text || (a.short && b.text.startsWith(a.text)) || (b.short && a.text.startsWith(b.text));
+
+const sameWords = (a: readonly NameWord[], b: readonly NameWord[]) => a.length === b.length && a.every((w, i) => sameWord(w, b[i]));
+
+/**
+ * Whether two networks name the same stop: alike once punctuation is set aside, an abbreviated word standing
+ * for any it begins (`Roudnice n.L.,aut.nádr.` is `Roudnice nad Labem,autobusové nádraží`), and one name
+ * possibly prefixed by its town (`Praha,Letňany` is `Letňany`).
+ */
+export function sameStopName(a: string, b: string): boolean {
+    if (nameKey(a) === nameKey(b)) return true;
+    const wa = nameWords(a), wb = nameWords(b);
+    return sameWords(wa.words, wb.words)
+        || (wa.town > 0 && sameWords(wa.words.slice(wa.town), wb.words))
+        || (wb.town > 0 && sameWords(wa.words, wb.words.slice(wb.town)));
+}
 
 /** What the twin lookup reads of a stop. */
 type Placed = { pos: [number, number]; name: string };
@@ -36,8 +68,8 @@ export function indexStops<T extends Placed>(stops: readonly T[], radiusM: numbe
     return { radiusM, cells };
 }
 
-/** The indexed stop nearest `point` within the grid's radius, optionally only one with the given name key. */
-export function stopNear<T extends Placed>(grid: StopGrid<T>, point: [number, number], nameKey?: string): T | undefined {
+/** The indexed stop nearest `point` within the grid's radius, optionally only one of the same name (`sameStopName`). */
+export function stopNear<T extends Placed>(grid: StopGrid<T>, point: [number, number], name?: string): T | undefined {
     const [x, y] = cellOf(point, grid.radiusM);
     const kx = Math.cos(point[1] * DEG) * METRES_PER_DEG_LAT;
     let best: T | undefined;
@@ -45,7 +77,7 @@ export function stopNear<T extends Placed>(grid: StopGrid<T>, point: [number, nu
     for (let dx = -1; dx <= 1; dx++) {
         for (let dy = -1; dy <= 1; dy++) {
             for (const f of grid.cells.get(`${x + dx}|${y + dy}`) ?? []) {
-                if (nameKey !== undefined && stopNameKey(f.name) !== nameKey) continue;
+                if (name !== undefined && !sameStopName(f.name, name)) continue;
                 const [lng, lat] = f.pos;
                 const ex = (lng - point[0]) * kx;
                 const ey = (lat - point[1]) * METRES_PER_DEG_LAT;
@@ -63,7 +95,7 @@ export function stopNear<T extends Placed>(grid: StopGrid<T>, point: [number, nu
  */
 export function withoutTwins<T extends Placed>(other: readonly T[], own: StopGrid, byName: boolean): readonly T[] {
     if (!other.length || own.cells.size === 0) return other;
-    const kept = other.filter(f => !stopNear(own, f.pos, byName ? stopNameKey(f.name) : undefined));
+    const kept = other.filter(f => !stopNear(own, f.pos, byName ? f.name : undefined));
     return kept.length === other.length ? other : kept;
 }
 
@@ -79,7 +111,7 @@ export function boardableStopId(stop: StopTimeFeature, model: StopModel | null, 
     const station = known?.kind === 'platform' ? model?.stationsById.get(known.station) : undefined;
     if (station && !station.alightOnly) return station.id;
     const point = (stop.geometry?.coordinates ?? known?.pos) as [number, number] | undefined;
-    const nameKey = stopNameKey(stop.properties.stop_name);
-    const boardable = point && (stopNear(stations, point, nameKey) ?? stopNear(platforms, point, nameKey));
+    const name = stop.properties.stop_name ?? '';
+    const boardable = point && (stopNear(stations, point, name) ?? stopNear(platforms, point, name));
     return boardable ? boardable.id : known?.id ?? stopId;
 }

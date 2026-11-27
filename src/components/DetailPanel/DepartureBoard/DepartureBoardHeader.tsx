@@ -19,6 +19,7 @@ import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
 import { Pressable } from '@/components/Pressable';
+import { Button } from '@/components/ui/button';
 import { ChipStrip } from '@/components/ChipStrip';
 import { Toggle } from '@/components/ui/toggle';
 import { TapHint } from '@/components/TapHint';
@@ -79,14 +80,16 @@ export const DepartureBoardHeader = memo(() => {
 
                     {twin && twinLabel && (
                         <ButtonTooltip label={t('map.departures.otherNetworkBoard', { network: twinLabel })}>
-                        <Pressable
-                            onClick={() => navigate(paths.stop(twin.city, twin.stopId))}
-                            aria-label={t('map.departures.otherNetworkBoard', { network: twinLabel })}
-                            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-badge font-medium text-foreground transition-colors hover:text-tint-mint"
-                        >
-                            <ArrowLeftRight size={14} strokeWidth={1.5} className="text-muted-foreground" />
-                            {twinLabel}
-                        </Pressable>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => navigate(paths.stop(twin.city, twin.stopId))}
+                                aria-label={t('map.departures.otherNetworkBoard', { network: twinLabel })}
+                                className="shrink-0 gap-1.5 pl-2.5"
+                            >
+                                <ArrowLeftRight strokeWidth={1.75} className="size-3.75" />
+                                {t('map.departures.otherNetworkShort', { network: twinLabel })}
+                            </Button>
                         </ButtonTooltip>
                     )}
                 </div>
