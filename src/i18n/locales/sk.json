@@ -181,6 +181,7 @@
       "lineTitle": "Linka <badge/>",
       "runNumber": "Obeh",
       "fleetRegisterLink": "Vozidlo na seznam-autobusu.cz",
+      "otherNetwork": "Zobraziť v {{network}}",
       "delaySource": {
         "live": "Meškanie posiela priamo vozidlo v reálnom čase.",
         "estimated": "Meškanie odhadujeme z cestovného poriadku a aktuálnej polohy vozidla.",
@@ -242,6 +243,7 @@
       "delayStatsTooltip": "Priemerné meškanie na základe {{count}} spojov",
       "openInMaps": "Otvoriť Mapy",
       "otherNetworkBoard": "Odchody {{network}} tu",
+      "otherNetworkShort": "Odchody {{network}}",
       "atStop": "Ste na zastávke",
       "addToFavorites": "Pridať do obľúbených",
       "removeFromFavorites": "Odobrať z obľúbených",
@@ -260,6 +262,7 @@
       "lineFilters": "Filtre liniek",
       "platformSection": "Nástupište {{code}}",
       "towardsSection": "Smer {{stop}}",
+      "otherSection": "Ostatné odchody",
       "stationNotices": "Zmeny premávky na nástupišti",
       "viewedTrip": "Prezeraný spoj",
       "watchedTrip": "Sledovaný spoj",

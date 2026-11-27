@@ -38,23 +38,6 @@ const boardCache = new LruCache<{ board: DukBoardDeparture[]; fetchedAt: number 
     ttlMs: DUK_CONFIG.BOARD_MAX_STALE_MS,
 });
 
-/**
- * Lines a station's own platform boards never list, which Portabo only ever reports on its virtual
- * post (Most's trams). Reading it costs one board per platform, so it is surveyed in the background
- * and kept for hours: which operator gets a platform changes with the timetable, not during the day.
- */
-const unplacedLinesCache = new LruCache<string[]>({
-    maxEntries: DUK_CONFIG.BOARD_CACHE_MAX_ENTRIES,
-    ttlMs: DUK_CONFIG.UNPLACED_LINES_TTL_MS,
-});
-
-/**
- * Started-at per node under survey. A `waitUntil` task killed or cancelled mid-flight never reaches
- * its `finally`, so a bare in-flight flag would wedge that station's survey for the isolate's life;
- * an entry older than `UNPLACED_SURVEY_ABANDON_MS` is treated as orphaned and retried instead.
- */
-const surveysInFlight = new Map<string, number>();
-
 /** `H:MM:SS`, optionally negative, to seconds. */
 function parseDelay(value: string | null | undefined): number | null {
     const m = /^(-)?(\d+):(\d{2}):(\d{2})$/.exec(value?.trim() ?? '');
@@ -137,38 +120,5 @@ async function fetchBoard(baseUrl: string, node: string, post: string): Promise<
     } catch (e) {
         console.warn(`[DUK] Board fetch error for node ${node}:`, e);
         return null;
-    }
-}
-
-/** The lines this station only ever shows on the virtual post, or null until the survey has run. */
-export function getDukUnplacedLines(city: CityConfig, node: string): Set<string> | null {
-    const lines = unplacedLinesCache.get(`${city.slug}:${node}`);
-    return lines === undefined ? null : new Set(lines);
-}
-
-/**
- * Walks a station's platform boards once to learn which lines never appear on any of them. Slow by
- * design (Portabo degrades when a station is asked for in parallel), so callers run it detached.
- */
-export async function surveyDukUnplacedLines(city: CityConfig, node: string, posts: string[]): Promise<void> {
-    const cacheKey = `${city.slug}:${node}`;
-    const startedAt = surveysInFlight.get(cacheKey);
-    if (unplacedLinesCache.get(cacheKey) !== undefined) return;
-    if (startedAt !== undefined && Date.now() - startedAt < DUK_CONFIG.UNPLACED_SURVEY_ABANDON_MS) return;
-    surveysInFlight.set(cacheKey, Date.now());
-    try {
-        const placed = new Set<string>();
-        for (let i = 0; i < posts.length; i += DUK_CONFIG.UNPLACED_SURVEY_CONCURRENCY) {
-            const boards = await Promise.all(posts.slice(i, i + DUK_CONFIG.UNPLACED_SURVEY_CONCURRENCY)
-                .map(post => getDukStationBoard(city, node, post)));
-            // A station whose boards cannot all be read is left unsurveyed rather than half-learned.
-            if (boards.some(board => board === null)) return;
-            for (const board of boards) for (const entry of board ?? []) placed.add(entry.line);
-        }
-        const virtual = await getDukStationBoard(city, node, String(DUK_CONFIG.VIRTUAL_POST));
-        if (!virtual) return;
-        unplacedLinesCache.set(cacheKey, [...new Set(virtual.map(entry => entry.line).filter(line => !placed.has(line)))]);
-    } finally {
-        surveysInFlight.delete(cacheKey);
     }
 }

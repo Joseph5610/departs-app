@@ -34,8 +34,6 @@ export interface CityConfig extends CityFacts {
     dataProvider: { nameKey: string; url: string };
     /** Data sources credited on the licences page, in display order. */
     attributions: DataAttribution[];
-    /** Line chips list the lines of the loaded departures, not the stop's timetable lines (DÚK: the platform comes from the live board). */
-    lineChipsFromDepartures?: boolean;
     /** Upstream feed descriptions shown in the admin Feed Explorer. */
     debugFeedLabels: { vehicles: string; alerts: string };
     /** Local line conventions; cities without them get DEFAULT_LINE_RULES. */
@@ -146,6 +144,7 @@ export const FRONTEND_CITIES_CONFIG: Record<string, CityConfig> = Object.assign(
     duk: {
         ...CITY_FACTS.duk,
         networkLabel: 'DÚK',
+        hasTripShapes: true,
         modeColors: { train: '#004B90', tram: '#CF003D', trolleybus: '#00829B', bus: '#5E9E1F', funicular: '#C9A100' },
         hasInfotexts: false,
         dataProvider: { nameKey: 'liveStatus.providerDuk', url: 'https://tabule.portabo.cz' },
@@ -153,8 +152,8 @@ export const FRONTEND_CITIES_CONFIG: Record<string, CityConfig> = Object.assign(
             { creator: 'Ústecký kraj (Portabo)', title: 'DÚK stops, departure boards and vehicle positions', url: 'https://lkod.portabo.cz/datasets', license: 'czOpenData' },
             { creator: 'Ministerstvo dopravy ČR (CIS JŘ)', title: 'Jízdní řády veřejné linkové dopravy (JDF)', url: 'https://data.gov.cz/datová-sada?iri=https%3A%2F%2Fdata.gov.cz%2Fzdroj%2Fdatové-sady%2F66003008%2F1463646434', license: 'czOpenData' },
             { creator: 'Spojenka', title: 'Train timetables (Data jízdních řádů, GTFS)', url: 'https://www.spojenka.cz/jrdata', license: 'nonCommercial' },
+            { creator: 'OpenStreetMap contributors', title: 'Route shapes (map-matched with pfaedle)', url: 'https://www.openstreetmap.org/copyright', license: 'odbl1' },
         ],
-        lineChipsFromDepartures: true,
         routeTypeColors: { train: '#004B90' },
         debugFeedLabels: { vehicles: 'Portabo GetTraffic -> JSON', alerts: 'No alerts source' },
     },

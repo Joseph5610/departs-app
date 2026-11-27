@@ -27,6 +27,12 @@ const movementBearings = new MovementBearings(DUK_CONFIG.BEARING_MIN_MOVE_M, DUK
 /** The mapped fleet per traffic snapshot: built once per feed read, however many requests read it. */
 const collections = new WeakMap<object, AppVehicleCollection>();
 
+/** Whether a trip stop id, a node (`952`) or one of its posts (`952-92`), is at the feed's `node`. */
+const isAtNode = (stopId: string, node: number): boolean => {
+    const n = String(node);
+    return stopId === n || (stopId.startsWith(n) && stopId[n.length] === '-');
+};
+
 /** Reports by vehicle id, built once per cached feed and collected with it. */
 const reportIndexes = new WeakMap<DukVehicleReport[], Map<string, DukVehicleReport>>();
 
@@ -107,7 +113,7 @@ export class DukVehicleSource implements NetworkVehicles {
         let bestDistance: number = DUK_CONFIG.RUNNING_TRIP_FIT_M;
         for (const candidate of matcher.runningNow(report.lineNumber, ctx, DUK_CONFIG.SCHEDULE_FIT_MARGIN_S / 60)) {
             const lastStopId = await this.lastStopId(candidate.tripId, tracks);
-            if (report.finalNode !== null && lastStopId && !lastStopId.startsWith(`${report.finalNode}-`)) continue;
+            if (report.finalNode !== null && lastStopId && !isAtNode(lastStopId, report.finalNode)) continue;
             const distance = await this.distanceFromSchedule(report, candidate, ctx, tracks);
             if (distance !== null && distance < bestDistance) { bestDistance = distance; best = candidate.tripId; }
         }
@@ -224,12 +230,11 @@ export class DukVehicleSource implements NetworkVehicles {
      */
     private lastPassedIndex(report: DukVehicleReport, track: TripTrack): number | null {
         if (report.stationNode === null) return null;
-        const prefix = `${report.stationNode}-`;
         const dueSecs = getLocalClock(this.city.timezone).secs - (report.delay ?? 0);
         let reported = -1;
         let closestGap = Infinity;
         track.stopIds.forEach((id, i) => {
-            if (!id.startsWith(prefix)) return;
+            if (!isAtNode(id, report.stationNode!)) return;
             const gap = Math.abs(wrapDaySeconds(track.departureSecs[i] - dueSecs));
             if (gap < closestGap) { closestGap = gap; reported = i; }
         });

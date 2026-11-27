@@ -4,6 +4,15 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.101.0] - 2026-11-27
+
+### Changed
+
+- Where two networks meet, each stop's glow and each cluster take their own network's colours, and a bus or train both networks report is drawn once.
+- A stop's board links to the same stop in the neighbouring network more often (abbreviated names, a town prefix) and shows the link as a button.
+- A vehicle both networks report links from its panel to the same vehicle in the other network.
+- A station board split by platform titles the departures without one as other departures.
+
 ## [0.100.4] - 2026-11-27
 
 ### Fixed

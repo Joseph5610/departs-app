@@ -15,6 +15,8 @@ import { useNetworksInView } from '@/hooks/derived/useNetworksInView';
 import { favoriteMarks, mapStopsWithOverlay, pinsByNetwork, toMapStops, type HiddenNightLinesOf } from '@/domain/stops';
 import { memoizeLast } from '@/lib/memoize';
 import { hasDrawnLine } from '@/domain/routes';
+import { withoutTwinVehicles } from '@/domain/vehicles';
+import { SHARED_GROUND } from '@/config/constants';
 import { useRouteShape } from '@/hooks/derived/useRouteShape';
 import { useNetworkLayer } from '@/hooks/derived/useNetworkLayer';
 import { useMapFilters } from '@/hooks/derived/useMapFilters';
@@ -49,7 +51,6 @@ import {
     STATION_CLUSTER_MAX_ZOOM,
 } from '@/config/mapLayers';
 import { STATION_CLUSTER_PROPERTIES, stopGlowColor, platformSortKey, stopBadgeImage } from '@/lib/map/stopExpressions';
-import { modeColorsOf } from '@/lib/map/stopBadges';
 import { EMPTY_FEATURE_COLLECTION } from '@/lib/geojson';
 import { safeHexColor } from '@/lib/color';
 import { AlertsLayer } from './AlertsLayer';
@@ -96,7 +97,7 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const hiddenNightLines = useHiddenNightLines();
     const networksInView = useNetworksInView();
     const overlay = useOverlayNetworks(networksInView);
-    const displayVehicles = useMemo(() => withOverlay(ownVehicles, overlay.vehicles), [ownVehicles, overlay.vehicles]);
+    const displayVehicles = useMemo(() => withOverlay(ownVehicles, withoutTwinVehicles(overlay.vehicles, ownVehicles, SHARED_GROUND.TWIN_VEHICLE)), [ownVehicles, overlay.vehicles]);
     const shown = shownStops(model, overlay.networks, stopTypeFilter);
     const stationsData = stationFeatures(shown.stations, hiddenNightLines);
     const stopsData = platformFeatures(shown.platforms, hiddenNightLines);
@@ -115,7 +116,7 @@ export const MapLayers = memo(({ mapLoaded }: MapLayersProps) => {
     const { resolvedTheme } = useTheme();
     const haloColor = MAP_LABEL_HALO[resolvedTheme === 'dark' ? 'dark' : 'light'];
     const textColor = resolvedTheme === 'dark' ? '#bdbdbd' : '#111111';
-    const glowColor = useMemo(() => stopGlowColor(modeColorsOf(selectedCity), resolvedTheme === 'light' ? 'light' : 'dark'), [selectedCity, resolvedTheme]);
+    const glowColor = useMemo(() => stopGlowColor(selectedCity, resolvedTheme === 'light' ? 'light' : 'dark'), [selectedCity, resolvedTheme]);
 
     const routeColor = safeHexColor(routeShapeData?.features[0]?.properties?.route_color as string | undefined);
     const routeLine = useMemo(() => createRouteLine(routeColor, resolvedTheme === 'light' ? 'light' : 'dark'), [routeColor, resolvedTheme]);

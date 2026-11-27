@@ -235,7 +235,7 @@ const PlatformSectionView = memo(({ section, platformStopId, badgeColumn, rowPro
     const groups = showAll ? section.groups : shown;
     return (
         <section className="flex flex-col">
-            {section.key && <PlatformHeader section={section} platformStopId={platformStopId} />}
+            {section.key ? <PlatformHeader section={section} platformStopId={platformStopId} /> : <OtherDeparturesHeader />}
             <div style={badgeColumn}>
                 {/* A metro line's rows name their track, which is the line's own. */}
                 <DirectionRows groups={groups} inPlatformSection={!section.metroLine} {...rowProps} />
@@ -258,6 +258,12 @@ interface PlatformHeaderProps {
     /** The platform's own board; null when the stop list does not know the platform. */
     platformStopId: string | null;
 }
+
+/** The title of a station board's departures whose platform the feed does not name, after the sections that have one. */
+const OtherDeparturesHeader = () => {
+    const { t } = useTranslation();
+    return <div className="mb-2 flex min-h-6 items-center"><SectionTitle>{t('map.departures.otherSection')}</SectionTitle></div>;
+};
 
 /** A station board's platform section title, opening that platform's own board. */
 const PlatformHeader = ({ section, platformStopId }: PlatformHeaderProps) => {

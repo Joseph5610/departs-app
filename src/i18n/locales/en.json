@@ -178,6 +178,7 @@
       "lineTitle": "Line <badge/>",
       "runNumber": "Run",
       "fleetRegisterLink": "This vehicle on seznam-autobusu.cz",
+      "otherNetwork": "View in {{network}}",
       "delaySource": {
         "live": "The delay comes straight from the vehicle in real time.",
         "estimated": "The delay is estimated from the timetable and the vehicle’s current position.",
@@ -235,6 +236,7 @@
       "delayStatsTooltip": "Average delay based on {{count}} vehicles",
       "openInMaps": "Open in Maps",
       "otherNetworkBoard": "{{network}} departures here",
+      "otherNetworkShort": "{{network}} departures",
       "atStop": "You are at the stop",
       "addToFavorites": "Add to favorites",
       "removeFromFavorites": "Remove from favorites",
@@ -253,6 +255,7 @@
       "lineFilters": "Line filters",
       "platformSection": "Platform {{code}}",
       "towardsSection": "Towards {{stop}}",
+      "otherSection": "Other departures",
       "stationNotices": "Service changes at platform",
       "viewedTrip": "Viewed trip",
       "watchedTrip": "Followed trip",

@@ -7,9 +7,8 @@ import { usePreferencesStore } from '@/state/preferencesStore';
 import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { useDepartures } from '@/hooks/data/useDepartures';
-import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
-import { departureLines, lineChips } from '@/domain/departures';
-import { useRouteMetadata } from '@/hooks/data/useRouteMetadata';
+import { useLineRules } from '@/hooks/data/useCities';
+import { lineChips } from '@/domain/departures';
 import { cn } from '@/lib/cn';
 import { LineBadge } from '@/components/LineBadge';
 import { ButtonTooltip } from '@/components/ButtonTooltip';
@@ -19,6 +18,7 @@ import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
 import { navigate } from '@/lib/history';
 import { paths } from '@/lib/routes';
 import { Pressable } from '@/components/Pressable';
+import { Button } from '@/components/ui/button';
 import { ChipStrip } from '@/components/ChipStrip';
 import { Toggle } from '@/components/ui/toggle';
 import { TapHint } from '@/components/TapHint';
@@ -37,20 +37,18 @@ export const DepartureBoardHeader = memo(() => {
     const selectedStop = useSelectedStop();
     const { tripId } = useRouteParams();
 
-    const { liveDepartures, delayStats, isError, hasAirConditioningData, hasAccessibilityData } = useDepartures();
+    const { delayStats, isError, hasAirConditioningData, hasAccessibilityData } = useDepartures();
 
-    const { lineChipsFromDepartures } = useCityConfig();
     const twin = useStopTwin();
     const twinLabel = twin ? FRONTEND_CITIES_CONFIG[twin.city]?.networkLabel : undefined;
     const lineRules = useLineRules();
-    const { byShortName } = useRouteMetadata();
 
     const showHeader = !!selectedStop && !tripId && !isError;
 
     const uniqueLines = useMemo(() => {
-        const source = lineChipsFromDepartures ? departureLines(liveDepartures, byShortName) : selectedStop?.board?.lines;
+        const source = selectedStop?.board?.lines;
         return source ? lineChips(source, lineRules) : [];
-    }, [selectedStop, lineRules, lineChipsFromDepartures, liveDepartures, byShortName]);
+    }, [selectedStop, lineRules]);
 
     const hasVehicleFilters = hasAirConditioningData || hasAccessibilityData;
 
@@ -79,14 +77,16 @@ export const DepartureBoardHeader = memo(() => {
 
                     {twin && twinLabel && (
                         <ButtonTooltip label={t('map.departures.otherNetworkBoard', { network: twinLabel })}>
-                        <Pressable
-                            onClick={() => navigate(paths.stop(twin.city, twin.stopId))}
-                            aria-label={t('map.departures.otherNetworkBoard', { network: twinLabel })}
-                            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-badge font-medium text-foreground transition-colors hover:text-tint-mint"
-                        >
-                            <ArrowLeftRight size={14} strokeWidth={1.5} className="text-muted-foreground" />
-                            {twinLabel}
-                        </Pressable>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => navigate(paths.stop(twin.city, twin.stopId))}
+                                aria-label={t('map.departures.otherNetworkBoard', { network: twinLabel })}
+                                className="shrink-0 gap-1.5 pl-2.5"
+                            >
+                                <ArrowLeftRight strokeWidth={1.75} className="size-3.75" />
+                                {t('map.departures.otherNetworkShort', { network: twinLabel })}
+                            </Button>
                         </ButtonTooltip>
                     )}
                 </div>

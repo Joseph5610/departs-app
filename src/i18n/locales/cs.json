@@ -181,6 +181,7 @@
       "lineTitle": "Linka <badge/>",
       "runNumber": "Oběh",
       "fleetRegisterLink": "Vozidlo na seznam-autobusu.cz",
+      "otherNetwork": "Zobrazit v {{network}}",
       "delaySource": {
         "live": "Zpoždění posílá přímo vozidlo v reálném čase.",
         "estimated": "Zpoždění odhadujeme z jízdního řádu a aktuální polohy vozidla.",
@@ -242,6 +243,7 @@
       "delayStatsTooltip": "Průměrné zpoždění na základě {{count}} spojů",
       "openInMaps": "Otevřít Mapy",
       "otherNetworkBoard": "Odjezdy {{network}} zde",
+      "otherNetworkShort": "Odjezdy {{network}}",
       "atStop": "Jste na zastávce",
       "addToFavorites": "Přidat do oblíbených",
       "removeFromFavorites": "Odebrat z oblíbených",
@@ -260,6 +262,7 @@
       "lineFilters": "Filtry linek",
       "platformSection": "Nástupiště {{code}}",
       "towardsSection": "Směr {{stop}}",
+      "otherSection": "Ostatní odjezdy",
       "stationNotices": "Změny provozu na nástupišti",
       "viewedTrip": "Prohlížený spoj",
       "watchedTrip": "Sledovaný spoj",

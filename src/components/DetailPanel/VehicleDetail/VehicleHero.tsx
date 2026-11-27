@@ -1,6 +1,6 @@
 import { Children, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, MapPin, MapPinOff, History } from 'lucide-react';
+import { Info, MapPin, MapPinOff, History, ArrowLeftRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,6 +22,10 @@ import { usePreferencesStore } from '@/state/preferencesStore';
 import { HeroFooter } from '@/components/DetailPanel/HeroFooter';
 import { HeroFooterSkeleton } from './VehicleDetailSkeleton';
 import { TapHint } from '@/components/TapHint';
+import { useVehicleTwin } from '@/hooks/derived/useVehicleTwin';
+import { FRONTEND_CITIES_CONFIG } from '@/config/cities';
+import { navigate } from '@/lib/history';
+import { paths } from '@/lib/routes';
 
 export const VehicleHero = ({
     displayVehicle,
@@ -116,6 +120,8 @@ export const VehicleHero = ({
                 )}
 
                 <TripEndedNotice vehicle={displayVehicle} hasEnded={hasEnded} />
+
+                <VehicleTwinLink />
             </div>
 
             {descriptor ? (
@@ -140,6 +146,25 @@ export const VehicleHero = ({
                 </HeroFooter>
             ) : isDetailLoading && <HeroFooterSkeleton />}
         </Card>
+    );
+};
+
+/** The same vehicle in the neighbouring network that also reports it, where it has its own zones and destination. */
+const VehicleTwinLink = () => {
+    const { t } = useTranslation();
+    const twin = useVehicleTwin();
+    const network = twin ? FRONTEND_CITIES_CONFIG[twin.city]?.networkLabel : undefined;
+    if (!twin || !network) return null;
+    return (
+        <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate(paths.trip(twin.city, twin.tripId, twin.vehicleId))}
+            className="self-start gap-1.5 pl-2.5"
+        >
+            <ArrowLeftRight strokeWidth={1.75} className="size-3.75" />
+            {t('map.vehicleDetails.otherNetwork', { network })}
+        </Button>
     );
 };
 

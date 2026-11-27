@@ -10,10 +10,10 @@ import { indexVehiclesByTrip, mapDepartures, type DepartureSource } from '../../
 import type { GtfsDepartureTuple } from '../../../_feeds/gtfs/types';
 import type { VehiclesService } from '../../vehicles/VehiclesService';
 import { getGtfsRoutes, type GtfsRoute } from '../../../_feeds/gtfs/gtfsData';
-import { getDukStationBoard, getDukUnplacedLines, surveyDukUnplacedLines, type DukBoardDeparture } from '../../../_feeds/duk/dukStationBoard';
+import { getDukStationBoard, type DukBoardDeparture } from '../../../_feeds/duk/dukStationBoard';
 import { DUK_CONFIG } from '../../../_feeds/duk/config';
 import { getStationPlatforms, getStopRelations, type StopRelation } from '../../../_feeds/gtfs/departureRows';
-import { stationOfRequest, toStopRequest, type StopRequest } from './stopRequests';
+import { platformCode, stationOfRequest, toStopRequest, type StopRequest } from './stopRequests';
 import { checkRequestedStops } from '../../gtfs/index/stopTargets';
 import { nameKey } from '../../../../shared/text';
 
@@ -61,13 +61,18 @@ export class DukDeparturesService implements DeparturesUseCase {
             console.warn('[DUK] Timetable unavailable for board linking:', e);
             return [] as DepartureSource[];
         });
-        const [boards, tuples, { routes }, vehicles] = await Promise.all([
-            Promise.all(requests.map(r => this.getBoard(r, platformsOf(r), ctx))),
+        // A board Portabo is slow to answer is finished in the background, for the next poll, and this one is answered from the timetable.
+        const boardsRead = Promise.all(requests.map(r => this.getBoard(r, ctx)));
+        ctx.waitUntil(boardsRead);
+        const late = new Promise<null>(resolve => setTimeout(() => resolve(null), DUK_CONFIG.BOARD_ANSWER_DEADLINE_MS));
+        const [boardsOrLate, tuples, { routes }, vehicles] = await Promise.all([
+            Promise.race([boardsRead, late]),
             tuplesRead,
             getGtfsRoutes(this.city),
             tuplesRead.then(rows => boardVehicles(this.vehiclesService, collectTripIds(rows), ctx.waitUntil)),
         ]);
 
+        const boards = boardsOrLate ?? requests.map(() => null);
         const boardOf = new Map(requests.map((r, i) => [r.id, boards[i]]));
         if (boards.some(board => board === null)) {
             return this.timetableOnly(requests, tuples, routes, vehicles);
@@ -114,8 +119,7 @@ export class DukDeparturesService implements DeparturesUseCase {
                 const link = pickLink(links.get(key), entry, used, isOneWay) ?? nearbyLink(links, entry, request.node, used);
                 if (link) used.add(link);
 
-                // Portabo's virtual post means it does not know the platform.
-                const platform = entry.post !== String(DUK_CONFIG.VIRTUAL_POST) && knownPlatforms.has(`${request.node}-${entry.post}`) ? entry.post : null;
+                const platform = platformCode(entry.post, request.node, knownPlatforms);
 
                 // Boards label some through trips "konečná zastávka"; only a timetable link tells them from arrivals.
                 const isTerminating = entry.direction === DUK_CONFIG.TERMINATING_DIRECTION;
@@ -130,31 +134,16 @@ export class DukDeparturesService implements DeparturesUseCase {
     }
 
     /**
-     * A platform's board is Portabo's board for its post; a stop of several platforms reads each post. Departures
-     * of lines Portabo never places on any platform of the station (Most's trams) are added from its virtual post;
-     * which lines those are is surveyed in the background, since reading it costs a board per platform.
+     * A platform's board is Portabo's board for its post, the virtual one a node's city lines (published as the
+     * `CITY_POST_CODE` platform); a stop of several platforms reads each post. A station reads the whole node and its
+     * virtual post, which the whole node's board does not always include.
      */
-    private async getBoard(request: StopRequest, platforms: string[], ctx: CityRequestContext): Promise<DukBoardDeparture[] | null> {
-        const virtualPost = String(DUK_CONFIG.VIRTUAL_POST);
+    private async getBoard(request: StopRequest, ctx: CityRequestContext): Promise<DukBoardDeparture[] | null> {
         const schedule = (task: Promise<unknown>) => ctx.waitUntil(task);
-        const ownPosts = request.posts?.filter(post => post !== virtualPost) ?? [];
-        if (!request.posts || ownPosts.length === 0) {
-            return getDukStationBoard(this.city, request.node, request.posts ? virtualPost : DUK_CONFIG.WHOLE_STATION_POST, schedule);
-        }
-
-        const posts = [...new Set([...ownPosts, ...platforms.map(id => id.split('-')[1])])].filter(post => post !== virtualPost);
-        const unplaced = getDukUnplacedLines(this.city, request.node);
-        if (!unplaced) ctx.waitUntil(surveyDukUnplacedLines(this.city, request.node, posts));
-
-        const [own, virtual] = await Promise.all([
-            Promise.all(ownPosts.map(post => getDukStationBoard(this.city, request.node, post, schedule))),
-            // Until the survey answers, the virtual post is read too, so nothing is missing meanwhile.
-            unplaced?.size === 0 ? null : getDukStationBoard(this.city, request.node, virtualPost, schedule),
-        ]);
-        const boards = own.filter((board): board is DukBoardDeparture[] => board !== null);
-        if (boards.length < own.length) return null;
-        const elsewhere = (virtual ?? []).filter(entry => !unplaced || unplaced.has(entry.line));
-        return [...boards.flat(), ...elsewhere].sort((a, b) => a.scheduledMs - b.scheduledMs);
+        const posts = request.posts ?? [DUK_CONFIG.WHOLE_STATION_POST, String(DUK_CONFIG.VIRTUAL_POST)];
+        const boards = await Promise.all(posts.map(post => getDukStationBoard(this.city, request.node, post, schedule)));
+        if (boards.some(board => board === null)) return null;
+        return boards.flatMap(board => board ?? []).sort((a, b) => a.scheduledMs - b.scheduledMs);
     }
 
     /** The timetable's departures for the requested stops, for when Portabo has no board. */
@@ -210,7 +199,7 @@ export class DukDeparturesService implements DeparturesUseCase {
             timestamp: new Date(isLive ? expectedMs : entry.scheduledMs).toISOString(),
             delay,
             isCanceled: false,
-            platform: platform && Number(platform) < DUK_CONFIG.FIRST_UNNUMBERED_POST ? platform : undefined,
+            platform: platform ?? undefined,
             stopId,
             is_air_conditioned: vehicle?.vehicle_descriptor?.is_air_conditioned ?? null,
             is_wheelchair_accessible: isStepFree || vehicle?.vehicle_descriptor?.is_wheelchair_accessible === true ? true : link?.isWheelchairAccessible ?? null,
