@@ -135,12 +135,13 @@ export class DukDeparturesService implements DeparturesUseCase {
 
     /**
      * A platform's board is Portabo's board for its post, the virtual one a node's city lines (published as the
-     * `CITY_POST_CODE` platform); a stop of several platforms reads each post, a station the whole node.
+     * `CITY_POST_CODE` platform); a stop of several platforms reads each post. A station reads the whole node and its
+     * virtual post, which the whole node's board does not always include.
      */
     private async getBoard(request: StopRequest, ctx: CityRequestContext): Promise<DukBoardDeparture[] | null> {
         const schedule = (task: Promise<unknown>) => ctx.waitUntil(task);
-        if (!request.posts) return getDukStationBoard(this.city, request.node, DUK_CONFIG.WHOLE_STATION_POST, schedule);
-        const boards = await Promise.all(request.posts.map(post => getDukStationBoard(this.city, request.node, post, schedule)));
+        const posts = request.posts ?? [DUK_CONFIG.WHOLE_STATION_POST, String(DUK_CONFIG.VIRTUAL_POST)];
+        const boards = await Promise.all(posts.map(post => getDukStationBoard(this.city, request.node, post, schedule)));
         if (boards.some(board => board === null)) return null;
         return boards.flatMap(board => board ?? []).sort((a, b) => a.scheduledMs - b.scheduledMs);
     }
