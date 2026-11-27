@@ -7,9 +7,8 @@ import { usePreferencesStore } from '@/state/preferencesStore';
 import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
 import { useRouteParams } from '@/hooks/useRouteParams';
 import { useDepartures } from '@/hooks/data/useDepartures';
-import { useCityConfig, useLineRules } from '@/hooks/data/useCities';
-import { departureLines, lineChips } from '@/domain/departures';
-import { useRouteMetadata } from '@/hooks/data/useRouteMetadata';
+import { useLineRules } from '@/hooks/data/useCities';
+import { lineChips } from '@/domain/departures';
 import { cn } from '@/lib/cn';
 import { LineBadge } from '@/components/LineBadge';
 import { ButtonTooltip } from '@/components/ButtonTooltip';
@@ -38,20 +37,18 @@ export const DepartureBoardHeader = memo(() => {
     const selectedStop = useSelectedStop();
     const { tripId } = useRouteParams();
 
-    const { liveDepartures, delayStats, isError, hasAirConditioningData, hasAccessibilityData } = useDepartures();
+    const { delayStats, isError, hasAirConditioningData, hasAccessibilityData } = useDepartures();
 
-    const { lineChipsFromDepartures } = useCityConfig();
     const twin = useStopTwin();
     const twinLabel = twin ? FRONTEND_CITIES_CONFIG[twin.city]?.networkLabel : undefined;
     const lineRules = useLineRules();
-    const { byShortName } = useRouteMetadata();
 
     const showHeader = !!selectedStop && !tripId && !isError;
 
     const uniqueLines = useMemo(() => {
-        const source = lineChipsFromDepartures ? departureLines(liveDepartures, byShortName) : selectedStop?.board?.lines;
+        const source = selectedStop?.board?.lines;
         return source ? lineChips(source, lineRules) : [];
-    }, [selectedStop, lineRules, lineChipsFromDepartures, liveDepartures, byShortName]);
+    }, [selectedStop, lineRules]);
 
     const hasVehicleFilters = hasAirConditioningData || hasAccessibilityData;
 

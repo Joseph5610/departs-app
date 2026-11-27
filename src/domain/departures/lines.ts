@@ -1,7 +1,7 @@
 import type { LineRules } from '@/config/cities';
 import { ROUTE_TYPE_ORDER } from '@/config/transit';
-import { lineLabel, routeJoinKey, routeTypeRank, type RouteLookup } from '@/domain/routes';
-import type { Departure, DepartureFeeder } from '@/types';
+import { lineLabel, routeTypeRank } from '@/domain/routes';
+import type { DepartureFeeder } from '@/types';
 
 interface LineChip {
     name: string;
@@ -37,10 +37,6 @@ export const lineChips = <T extends LineChip>(lines: T[], rules: LineRules): T[]
         return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
     });
 };
-
-/** A board's departures as line chips, each night line flagged as the routes file marks it. */
-export const departureLines = (departures: readonly Departure[], routes: RouteLookup): LineChip[] =>
-    departures.map(dep => ({ name: dep.line, type: dep.type, route_color: dep.route_color ?? '', night: routes.get(routeJoinKey(dep.type, dep.line))?.night }));
 
 /** `[line, colour]` per distinct line name, in first-seen order. */
 export const distinctLines = (items: ReadonlyArray<{ line?: string; route_id?: string; route_color?: string }>): Array<[string, string]> => {

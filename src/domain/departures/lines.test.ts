@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_LINE_RULES } from '@/config/cities';
 import { departure, feeder } from '@/test/factories';
 import { DEPARTURES_CONFIG } from '@/config/constants';
-import { departureLines, distinctLines, lineChips, summarizeFeeders } from './lines';
+import { distinctLines, lineChips, summarizeFeeders } from './lines';
 import { visibleInGroup } from './grouping';
 
 const chip = (name: string, type: string, night?: boolean) => ({ name, type, route_color: '', night });
@@ -16,13 +16,6 @@ describe('lineChips', () => {
         ], DEFAULT_LINE_RULES);
 
         expect(chips.map((c) => c.name)).toEqual(['B', 'S7', '9', '22', '136', '91', '907']);
-    });
-
-    // A board built from departures tells its night lines from the routes file, by mode and name.
-    it('flags a departure\'s line as night when its route is', () => {
-        const routes = new Map([['bus|N89', { name: 'N89', type: 'bus' as const, route_color: '', night: true as const }]]);
-        const lines = departureLines([departure({ line: 'N89', type: 'bus' }), departure({ line: 'N89', type: 'tram' })], routes);
-        expect(lines.map(l => l.night)).toEqual([true, undefined]);
     });
 });
 
