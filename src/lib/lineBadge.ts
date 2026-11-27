@@ -6,8 +6,8 @@ export const LINE_BADGE_SIZES = {
     row: { baseWidth: 22, columnWidth: 22, charWidth: 6, classes: 'h-4.5 rounded-badge px-1.5 text-label font-bold' },
     /** Leading a row, and the filters above it. */
     lg: { baseWidth: 32, columnWidth: 36, charWidth: 7, classes: 'h-6 rounded-badge px-2 text-caption font-bold' },
-    /** The full-screen board. */
-    xl: { baseWidth: 30, columnWidth: 30, charWidth: 8, classes: 'h-7 rounded-badge px-2.5 text-body-sm font-extrabold' },
+    /** The full-screen board: fills its column and scales with the screen. */
+    xl: { baseWidth: 30, columnWidth: 30, charWidth: 8, classes: 'h-board-badge w-full rounded-badge-fluid px-2.5 text-board-badge font-extrabold' },
 } as const;
 
 export type LineBadgeSize = keyof typeof LINE_BADGE_SIZES;

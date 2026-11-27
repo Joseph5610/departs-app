@@ -1,3 +1,5 @@
+import { BOARD_CONFIG } from '@/config/constants';
+
 const enc = encodeURIComponent;
 
 /** Route patterns matched by `useRouteParams`; `paths` builds URLs of the same shapes. */
@@ -26,6 +28,12 @@ export const paths = {
     privacy: '/privacy',
     terms: '/terms',
     licenses: '/licenses',
+};
+
+/** The board URL's `?walk=` minutes, as `paths.board` writes them; 0 when missing or not one of the offered walks. */
+export const boardWalkMins = (search: string): number => {
+    const value = Number(new URLSearchParams(search).get('walk'));
+    return (BOARD_CONFIG.WALK_OPTIONS_MIN as readonly number[]).includes(value) ? value : 0;
 };
 
 /** The full-screen departure board; outside the map, so not in ROUTE_PATTERNS. */
