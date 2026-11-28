@@ -10,8 +10,8 @@ import { SITE } from '../../shared/site';
 /** Where the departs-data static files live (per-city folders). */
 export const STATIC_DATA_CONFIG = {
     BASE_URL: SITE.STATIC_DATA_URL,
-    /** Bump when departs-data renames or moves stops or routes (`departure_buckets/`, `routes.json`, the stop search index): drops every cached copy at once. */
-    INDEX_CACHE_GENERATION: 5,
+    /** Bump when departs-data renames or moves stops or routes (`departure_buckets/`, `schedule/`, `routes.json`, the stop search index): drops every cached copy at once. */
+    INDEX_CACHE_GENERATION: 6,
 };
 
 /**

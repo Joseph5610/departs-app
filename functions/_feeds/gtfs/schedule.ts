@@ -29,7 +29,7 @@ export async function getSchedule(city: CityConfig, clock: LocalClock): Promise<
         MEMORY_CACHE_TTL.TWO_HOURS_MS,
         async () => {
             try {
-                const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/schedule/${hour}.json`, { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA, cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA } });
+                const res = await appClient.fetch(`${STATIC_DATA_CONFIG.BASE_URL}/${city.slug}/schedule/${hour}.json?g=${STATIC_DATA_CONFIG.INDEX_CACHE_GENERATION}`, { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA, cf: { cacheTtl: UPSTREAM_TTL_S.SCHEDULE_DATA } });
                 if (!res.ok) {
                     console.error(`Failed to fetch schedule/${hour}.json for ${city.slug}: ${res.status}`);
                     return null;
