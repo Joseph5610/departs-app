@@ -15,7 +15,7 @@ const stop = (sequence: number, id: string, name: string, offsetMs: number) => (
 });
 
 /** A trip leaving Hlavní nádraží in 20 min with two stops after it; `running`: its vehicle has left the first stop. */
-async function mockTrip(page: Page, { running = false } = {}) {
+async function mockTrip(page: Page, { running = false, extraStops = 0 } = {}) {
     await mockStops(page, hlavniNadrazi());
     await page.route('**/api/*/departures*', route => route.fulfill({
         status: 200,
@@ -34,7 +34,8 @@ async function mockTrip(page: Page, { running = false } = {}) {
         body: JSON.stringify({
             gtfs_trip_id: new URL(route.request().url()).searchParams.get('tripId') ?? 'trip-1', vehicle_id: 'veh-1', route_short_name: 'C', trip_headsign: 'Letňany', route_type: 'metro',
             route_color: 'C0115E', delay: 0, is_static_fallback: !running, state_position: running ? 'on_track' : 'unknown', last_stop_sequence: running ? 1 : null,
-            stop_times: { features: [stop(1, 'U1111Z1P', 'Hlavní nádraží', 20 * MIN), stop(2, 'U2222', 'Florenc', 25 * MIN), stop(3, 'U3333', 'Vysočanská', 30 * MIN)] },
+            stop_times: { features: [stop(1, 'U1111Z1P', 'Hlavní nádraží', 20 * MIN), stop(2, 'U2222', 'Florenc', 25 * MIN), stop(3, 'U3333', 'Vysočanská', 30 * MIN),
+                ...Array.from({ length: extraStops }, (_, i) => stop(4 + i, `U9${i}`, `Stop ${i + 1}`, (32 + 2 * i) * MIN))] },
         }),
     }));
 }
@@ -237,6 +238,25 @@ test.describe('My trip', () => {
         await expect(panel.getByRole('button', { name: /End trip|Ukončit cestu/ })).toBeInViewport();
         await panel.getByTestId('detail-panel-close').click();
         await expect(page.getByTestId('departure-item-trip-1')).toBeVisible();
+    });
+
+    test('on a phone, a long stop list lifts the card to full height, scrolls, and keeps the save button on screen', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await mockTrip(page, { extraStops: 25 });
+        await seedTrips(page, [savedTrip('trip-1')]);
+        await page.goto('/prague/stop/U1111Z1P');
+        await page.getByTestId('my-trip-chip').first().click();
+
+        const panel = page.getByTestId('detail-panel');
+        await panel.getByRole('button', { name: /Getting off|Výstup/ }).click();
+        await expect.poll(() => panel.evaluate(el => el.getBoundingClientRect().top)).toBeLessThan(844 * 0.2);
+        await expect(panel.getByTestId('my-trip-save')).toBeInViewport();
+
+        const lastStop = panel.getByRole('button', { name: /^Stop 25/ });
+        await expect(lastStop).not.toBeInViewport();
+        await lastStop.scrollIntoViewIfNeeded();
+        await expect(lastStop).toBeInViewport();
+        await expect(panel.getByTestId('my-trip-save')).toBeInViewport();
     });
 
     test('stacks two trips behind a tab and fans them out', async ({ page }) => {

@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.100.6] - 2026-11-28
+
+### Fixed
+
+- On phones, My trip rises to full height when a stop list is opened, scrolls, and keeps its Save button on screen.
+
 ## [0.100.5] - 2026-11-28
 
 ### Fixed

@@ -40,8 +40,19 @@ const useFitHeight = (active: boolean, header: React.RefObject<HTMLDivElement | 
     useLayoutEffect(() => {
         const headerEl = header.current, cardEl = card.current;
         if (!active || !headerEl || !cardEl) return;
+        // A card that scrolls inside itself marks its scroller, whose hidden overflow counts too; it may mount after the card (lazy).
+        let scroller: Element | null = null;
         // Rendered before the browser paints, so the sheet never shows a frame at a stale height.
-        const observer = new ResizeObserver(() => flushSync(() => setFit({ key: cardKey, height: Math.ceil(headerEl.offsetHeight + cardEl.scrollHeight) })));
+        const observer = new ResizeObserver(() => {
+            const next = cardEl.querySelector('[data-fit-scroller]');
+            if (next !== scroller) {
+                scroller = next;
+                if (next) observer.observe(next);
+                if (next?.firstElementChild) observer.observe(next.firstElementChild);
+            }
+            const hidden = scroller ? scroller.scrollHeight - scroller.clientHeight : 0;
+            flushSync(() => setFit({ key: cardKey, height: Math.ceil(headerEl.offsetHeight + cardEl.scrollHeight + hidden) }));
+        });
         observer.observe(headerEl);
         observer.observe(cardEl);
         return () => observer.disconnect();
@@ -203,6 +214,15 @@ export const MobileSheet = ({ isOpen, cardKey, minSnap, fitsContent = false, col
             if (prevCardKey === null) setHomeDetent(current);
             setDetent(fitsContent ? 'half' : atLeast(current, minSnap));
         }
+    }
+
+    // A fitted card that outgrows the screen (a stop list opened) rises to full, where it scrolls; shrunk back, it returns to its fit.
+    const overflowsFull = fitsContent && isOpen && fitHeight !== null && fitHeight >= heightOf(heights.full);
+    const [prevOverflowsFull, setPrevOverflowsFull] = useState(overflowsFull);
+    if (overflowsFull !== prevOverflowsFull) {
+        setPrevOverflowsFull(overflowsFull);
+        if (overflowsFull && detent === 'half') setDetent('full');
+        else if (!overflowsFull && detent === 'full' && fitsContent && isOpen) setDetent('half');
     }
 
     const [prevCollapseRequest, setPrevCollapseRequest] = useState(collapseRequest);
