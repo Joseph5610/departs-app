@@ -5,7 +5,7 @@ import { useMapMetadataStore } from '@/state/mapMetadataStore';
 import { useIsPanelRoute } from '@/hooks/useIsPanelRoute';
 import { useSidebarWidthPx } from '@/hooks/derived/useSidebarWidthPx';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { MAP_LAYERS } from '@/config/mapLayers';
+import { MAP_LAYERS, PLATFORMS_MIN_ZOOM } from '@/config/mapLayers';
 import { hasPosition } from '@/lib/geo';
 import { useSelectedStop } from '@/hooks/derived/useSelectedStop';
 import { useSelectedVehicle } from '@/hooks/derived/useSelectedVehicle';
@@ -32,7 +32,10 @@ export const useMapInterface = () => {
     const mapLoaded = useMapMetadataStore(s => s.mapLoaded);
     const { flyTo, easeTo } = useMapMetadataStore(s => s.actions);
 
-    const selectedStopPos = useSelectedStop()?.board?.pos;
+    const selectedBoard = useSelectedStop()?.board;
+    const selectedStopPos = selectedBoard?.pos;
+    // A platform's board must open where the map draws platforms, or the camera centres on nothing visible.
+    const minStopZoom = selectedBoard?.kind === 'platform' ? PLATFORMS_MIN_ZOOM : MAP_CAMERA.MIN_STOP_ZOOM;
     const selectedVehicle = useSelectedVehicle();
     const isMobile = useIsMobile();
 
@@ -89,12 +92,12 @@ export const useMapInterface = () => {
             lastFlownStopId.current = selectedStopId || null;
             easeTo({
                 center: selectedStopPos,
-                zoom: Math.max(currentMap.getZoom(), MAP_CAMERA.MIN_STOP_ZOOM),
+                zoom: Math.max(currentMap.getZoom(), minStopZoom),
                 duration: MAP_CAMERA.EASE_MS,
                 padding
             });
         }
-    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, flyTo, easeTo, selectedStopPos, selectedTripId, selectedVehicleId, selectedStopId, isMobile, mapLoaded]);
+    }, [selectedVehicle?.geometry?.coordinates, isFollowing, mapRef, flyTo, easeTo, selectedStopPos, minStopZoom, selectedTripId, selectedVehicleId, selectedStopId, isMobile, mapLoaded]);
 
     // A resized panel or window keeps the map's centre in the middle of the part the open panel leaves visible.
     const isPanelRoute = useIsPanelRoute();

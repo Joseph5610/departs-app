@@ -4,6 +4,12 @@ All notable changes to `departs.app` will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.100.5] - 2026-11-28
+
+### Fixed
+
+- Opening a platform's board zooms the map in until its platforms are drawn.
+
 ## [0.100.4] - 2026-11-27
 
 ### Fixed

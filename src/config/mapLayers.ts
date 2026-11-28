@@ -214,6 +214,8 @@ const MAP_TOKENS = {
 };
 
 /** Zoom up to which stations are clustered; below the glows' morph, so each station morphs alone. */
+/** The zoom from which platforms are drawn instead of their station's badge. */
+export const PLATFORMS_MIN_ZOOM = MAP_TOKENS.zoom.platforms;
 export const STATION_CLUSTER_MAX_ZOOM = MAP_TOKENS.zoom.glowToBadge.from - 1;
 
 /** Station glows below the badges' zoom: a soft halo over a brighter core, both growing with the stations they hold. */
